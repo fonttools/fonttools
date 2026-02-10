@@ -1,0 +1,5 @@
+feature derp {
+    sub x by y;
+    lookupflag IgnoreLigatures;
+    sub f i by one;
+} derp;

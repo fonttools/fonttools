@@ -1,12 +1,8 @@
-from fontTools.varLib import _add_avar, load_designspace
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl
-from fontTools.misc.cliTools import makeOutputFileName
 from itertools import product
-import logging
-
-log = logging.getLogger("fontTools.varLib.avar")
+import sys
 
 
 def _denormalize(v, axis):
@@ -182,76 +178,91 @@ def mappings_from_avar(font, denormalize=True):
     return axisMaps, mappings
 
 
+def unbuild(font, f=sys.stdout):
+    fvar = font["fvar"]
+    axes = fvar.axes
+    segments, mappings = mappings_from_avar(font)
+
+    if "name" in font:
+        name = font["name"]
+        axisNames = {axis.axisTag: name.getDebugName(axis.axisNameID) for axis in axes}
+    else:
+        axisNames = {a.axisTag: a.axisTag for a in axes}
+
+    print("<?xml version='1.0' encoding='UTF-8'?>", file=f)
+    print('<designspace format="5.1">', file=f)
+    print("  <axes>", file=f)
+    for axis in axes:
+
+        axisName = axisNames[axis.axisTag]
+
+        triplet = (axis.minValue, axis.defaultValue, axis.maxValue)
+        triplet = [int(v) if v == int(v) else v for v in triplet]
+
+        axisMap = segments.get(axis.axisTag)
+        closing = "/>" if axisMap is None else ">"
+
+        print(
+            f'    <axis tag="{axis.axisTag}" name="{axisName}" minimum="{triplet[0]}" maximum="{triplet[2]}" default="{triplet[1]}"{closing}',
+            file=f,
+        )
+        if axisMap is not None:
+            for k in sorted(axisMap.keys()):
+                v = axisMap[k]
+                k = int(k) if k == int(k) else k
+                v = int(v) if v == int(v) else v
+                print(f'      <map input="{k}" output="{v}"/>', file=f)
+            print("    </axis>", file=f)
+    if mappings:
+        print("    <mappings>", file=f)
+        for inputLoc, outputLoc in mappings:
+            print("      <mapping>", file=f)
+            print("        <input>", file=f)
+            for tag in sorted(inputLoc.keys()):
+                v = inputLoc[tag]
+                v = int(v) if v == int(v) else v
+                print(
+                    f'          <dimension name="{axisNames[tag]}" xvalue="{v}"/>',
+                    file=f,
+                )
+            print("        </input>", file=f)
+            print("        <output>", file=f)
+            for tag in sorted(outputLoc.keys()):
+                v = outputLoc[tag]
+                v = int(v) if v == int(v) else v
+                print(
+                    f'          <dimension name="{axisNames[tag]}" xvalue="{v}"/>',
+                    file=f,
+                )
+            print("        </output>", file=f)
+            print("      </mapping>", file=f)
+        print("    </mappings>", file=f)
+    print("  </axes>", file=f)
+    print("</designspace>", file=f)
+
+
 def main(args=None):
-    """Add `avar` table from designspace file to variable font."""
+    """Print `avar` table as a designspace snippet."""
 
     if args is None:
-        import sys
-
         args = sys.argv[1:]
 
-    from fontTools import configLogger
     from fontTools.ttLib import TTFont
-    from fontTools.designspaceLib import DesignSpaceDocument
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools varLib.avar",
-        description="Add `avar` table from designspace file to variable font.",
+        "fonttools varLib.avar.unbuild",
+        description="Print `avar` table as a designspace snippet.",
     )
     parser.add_argument("font", metavar="varfont.ttf", help="Variable-font file.")
-    parser.add_argument(
-        "designspace",
-        metavar="family.designspace",
-        help="Designspace file.",
-        nargs="?",
-        default=None,
-    )
-    parser.add_argument(
-        "-o",
-        "--output-file",
-        type=str,
-        help="Output font file name.",
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Run more verbosely."
-    )
-
     options = parser.parse_args(args)
 
-    configLogger(level=("INFO" if options.verbose else "WARNING"))
-
     font = TTFont(options.font)
-    if not "fvar" in font:
-        log.error("Not a variable font.")
+    if "fvar" not in font:
+        print("Not a variable font.", file=sys.stderr)
         return 1
 
-    if options.designspace is None:
-        from pprint import pprint
-
-        segments, mappings = mappings_from_avar(font)
-        pprint(segments)
-        pprint(mappings)
-        print(len(mappings), "mappings")
-        return
-
-    axisTags = [a.axisTag for a in font["fvar"].axes]
-
-    ds = load_designspace(options.designspace, require_sources=False)
-
-    if "avar" in font:
-        log.warning("avar table already present, overwriting.")
-        del font["avar"]
-
-    _add_avar(font, ds.axes, ds.axisMappings, axisTags)
-
-    if options.output_file is None:
-        outfile = makeOutputFileName(options.font, overWrite=True, suffix=".avar")
-    else:
-        outfile = options.output_file
-    if outfile:
-        log.info("Saving %s", outfile)
-        font.save(outfile)
+    unbuild(font)
 
 
 if __name__ == "__main__":

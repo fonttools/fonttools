@@ -21,6 +21,8 @@ def makeVariableFont(glyphOrder, axes):
         axis.minimum, axis.default, axis.maximum = minimum, default, maximum
         ds_axes[axisTag] = axis
     varLib._add_fvar(font, ds_axes, instances=())
+    os2 = font["OS/2"] = newTable("OS/2")
+    os2.usMaxContext = 0
     return font
 
 
@@ -35,7 +37,9 @@ def varfont():
 def test_addFeatureVariations(varfont):
     assert "GSUB" not in varfont
 
+    assert varfont["OS/2"].usMaxContext == 0
     addFeatureVariations(varfont, [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})])
+    assert varfont["OS/2"].usMaxContext == 1
 
     assert "GSUB" in varfont
     gsub = varfont["GSUB"].table

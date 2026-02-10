@@ -313,19 +313,27 @@ class Parser(object):
         self.expect_keyword_("END_SUBSTITUTION")
         max_src = max([len(cov) for cov in src])
         max_dest = max([len(cov) for cov in dest])
+
         # many to many or mixed is invalid
-        if (max_src > 1 and max_dest > 1) or (
-            reversal and (max_src > 1 or max_dest > 1)
-        ):
+        if max_src > 1 and max_dest > 1:
             raise VoltLibError("Invalid substitution type", location)
+
         mapping = dict(zip(tuple(src), tuple(dest)))
         if max_src == 1 and max_dest == 1:
-            if reversal:
-                sub = ast.SubstitutionReverseChainingSingleDefinition(
-                    mapping, location=location
-                )
+            # Alternate substitutions are represented by adding multiple
+            # substitutions for the same glyph, so we detect that here
+            glyphs = [x.glyphSet() for cov in src for x in cov]  # flatten src
+            if len(set(glyphs)) != len(glyphs):  # src has duplicates
+                sub = ast.SubstitutionAlternateDefinition(mapping, location=location)
             else:
-                sub = ast.SubstitutionSingleDefinition(mapping, location=location)
+                if reversal:
+                    # Reversal is valid only for single glyph substitutions
+                    # and VOLT ignores it otherwise.
+                    sub = ast.SubstitutionReverseChainingSingleDefinition(
+                        mapping, location=location
+                    )
+                else:
+                    sub = ast.SubstitutionSingleDefinition(mapping, location=location)
         elif max_src == 1 and max_dest > 1:
             sub = ast.SubstitutionMultipleDefinition(mapping, location=location)
         elif max_src > 1 and max_dest == 1:

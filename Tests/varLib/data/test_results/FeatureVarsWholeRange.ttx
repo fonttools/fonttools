@@ -54,9 +54,6 @@
       <Version value="0x00010000"/>
       <!-- FeatureVariationCount=1 -->
       <FeatureVariationRecord index="0">
-        <ConditionSet>
-          <!-- ConditionCount=0 -->
-        </ConditionSet>
         <FeatureTableSubstitution>
           <Version value="0x00010000"/>
           <!-- SubstitutionCount=1 -->

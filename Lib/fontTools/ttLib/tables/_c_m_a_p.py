@@ -398,7 +398,7 @@ class cmap_format_0(CmapSubtable):
         assert 262 == self.length, "Format 0 cmap subtable not 262 bytes"
         gids = array.array("B")
         gids.frombytes(self.data)
-        charCodes = list(range(len(gids)))
+        charCodes = range(len(gids))
         self.cmap = _make_map(self.ttFont, charCodes, gids)
 
     def compile(self, ttFont):

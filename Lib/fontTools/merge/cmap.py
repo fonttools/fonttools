@@ -54,6 +54,28 @@ def _glyphsAreSame(
     return True
 
 
+def computeMegaUvs(merger, uvsTables):
+    """Returns merged UVS subtable (cmap format=14)."""
+    uvsDict = {}
+    cmap = merger.cmap
+    for table in uvsTables:
+        for variationSelector, uvsMapping in table.uvsDict.items():
+            if variationSelector not in uvsDict:
+                uvsDict[variationSelector] = {}
+            for unicodeValue, glyphName in uvsMapping:
+                if cmap.get(unicodeValue) == glyphName:
+                    # this is a default variation
+                    glyphName = None
+                    # prefer previous glyph id if both fonts defined UVS
+                if unicodeValue not in uvsDict[variationSelector]:
+                    uvsDict[variationSelector][unicodeValue] = glyphName
+
+    for variationSelector in uvsDict:
+        uvsDict[variationSelector] = [*uvsDict[variationSelector].items()]
+
+    return uvsDict
+
+
 # Valid (format, platformID, platEncID) triplets for cmap subtables containing
 # Unicode BMP-only and Unicode Full Repertoire semantics.
 # Cf. OpenType spec for "Platform specific encodings":
@@ -61,24 +83,29 @@ def _glyphsAreSame(
 class _CmapUnicodePlatEncodings:
     BMP = {(4, 3, 1), (4, 0, 3), (4, 0, 4), (4, 0, 6)}
     FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
+    UVS = {(14, 0, 5)}
 
 
 def computeMegaCmap(merger, cmapTables):
-    """Sets merger.cmap and merger.glyphOrder."""
+    """Sets merger.cmap and merger.uvsDict."""
 
     # TODO Handle format=14.
     # Only merge format 4 and 12 Unicode subtables, ignores all other subtables
     # If there is a format 12 table for a font, ignore the format 4 table of it
     chosenCmapTables = []
+    chosenUvsTables = []
     for fontIdx, table in enumerate(cmapTables):
         format4 = None
         format12 = None
+        format14 = None
         for subtable in table.tables:
             properties = (subtable.format, subtable.platformID, subtable.platEncID)
             if properties in _CmapUnicodePlatEncodings.BMP:
                 format4 = subtable
             elif properties in _CmapUnicodePlatEncodings.FullRepertoire:
                 format12 = subtable
+            elif properties in _CmapUnicodePlatEncodings.UVS:
+                format14 = subtable
             else:
                 log.warning(
                     "Dropped cmap subtable from font '%s':\t"
@@ -92,6 +119,9 @@ def computeMegaCmap(merger, cmapTables):
             chosenCmapTables.append((format12, fontIdx))
         elif format4 is not None:
             chosenCmapTables.append((format4, fontIdx))
+
+        if format14 is not None:
+            chosenUvsTables.append(format14)
 
     # Build the unicode mapping
     merger.cmap = cmap = {}
@@ -126,6 +156,8 @@ def computeMegaCmap(merger, cmapTables):
                     log.warning(
                         "Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid
                     )
+
+    merger.uvsDict = computeMegaUvs(merger, chosenUvsTables)
 
 
 def renameCFFCharStrings(merger, glyphOrder, cffTable):

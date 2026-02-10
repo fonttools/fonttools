@@ -1,22 +1,34 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fontTools.misc.textTools import Tag
 from fontTools.ttLib import getClassTag
 
+if TYPE_CHECKING:
+    from typing import Any
 
-class DefaultTable(object):
-    dependencies = []
+    from fontTools.misc.xmlWriter import XMLWriter
+    from fontTools.ttLib import TTFont
 
-    def __init__(self, tag=None):
+
+class DefaultTable:
+    dependencies: list[str] = []
+
+    def __init__(self, tag: str | bytes | None = None) -> None:
         if tag is None:
             tag = getClassTag(self.__class__)
         self.tableTag = Tag(tag)
 
-    def decompile(self, data, ttFont):
+    def decompile(self, data: bytes, ttFont: TTFont) -> None:
         self.data = data
 
-    def compile(self, ttFont):
+    def compile(self, ttFont: TTFont) -> bytes:
         return self.data
 
-    def toXML(self, writer, ttFont, **kwargs):
+    def toXML(
+        self, writer: XMLWriter, ttFont: TTFont, **kwargs: dict[str, Any]
+    ) -> None:
         if hasattr(self, "ERROR"):
             writer.comment("An error occurred during the decompilation of this table")
             writer.newline()
@@ -28,22 +40,24 @@ class DefaultTable(object):
         writer.endtag("hexdata")
         writer.newline()
 
-    def fromXML(self, name, attrs, content, ttFont):
-        from fontTools.misc.textTools import readHex
+    def fromXML(
+        self, name: str, attrs: dict[str, str], content: str, ttFont: TTFont
+    ) -> None:
         from fontTools import ttLib
+        from fontTools.misc.textTools import readHex
 
         if name != "hexdata":
             raise ttLib.TTLibError("can't handle '%s' element" % name)
         self.decompile(readHex(content), ttFont)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<'%s' table at %x>" % (self.tableTag, id(self))
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if type(self) != type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def __ne__(self, other):
+    def __ne__(self, other: Any) -> bool:
         result = self.__eq__(other)
         return result if result is NotImplemented else not result

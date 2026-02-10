@@ -282,6 +282,19 @@ class TestSegmentToPointPen(unittest.TestCase):
             repr(tpen),
         )
 
+    def test_quad3(self):
+        # https://github.com/fonttools/fonttools/issues/4014
+        tpen = _TestPointPen()
+        pen = SegmentToPointPen(tpen)
+        pen.qCurveTo((10, 20), (20, 20), (20, 10), (10, 10), (10, 20), None)
+        pen.closePath()
+        self.assertEqual(
+            "beginPath() addPoint((10, 20)) addPoint((20, 20)) "
+            "addPoint((20, 10)) addPoint((10, 10)) addPoint((10, 20)) "
+            "endPath()",
+            repr(tpen),
+        )
+
     def test_roundTrip1(self):
         spen = _TestSegmentPen()
         pen = SegmentToPointPen(PointToSegmentPen(spen))
@@ -371,7 +384,7 @@ class TestReverseContourPointPen(unittest.TestCase):
         pen.addPoint((0, 0), segmentType="move")
         pen.endPath()
         self.assertEqual(
-            "beginPath() " "addPoint((0, 0), segmentType='move') " "endPath()",
+            "beginPath() addPoint((0, 0), segmentType='move') endPath()",
             repr(tpen),
         )
 

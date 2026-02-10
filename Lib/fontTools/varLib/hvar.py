@@ -18,7 +18,7 @@ def _get_advance_metrics(font, axisTags, tableFields):
     #    advance width at that peak.  Then pass these all to a VariationModel
     #    builder to compute back the deltas.
     # 2. For each master peak, pull out the deltas of the advance width directly,
-    #    and feed these to the VarStoreBuilder, forgoing the remoding step.
+    #    and feed these to the VarStoreBuilder, forgoing the remodeling step.
     # We'll go with the second option, as it's simpler, faster, and more direct.
     gvar = font["gvar"]
     vhAdvanceDeltasAndSupports = {}
@@ -56,7 +56,7 @@ def add_HVAR(font):
 def add_VVAR(font):
     if "VVAR" in font:
         del font["VVAR"]
-    getAdvanceMetrics = partial(_get_advance_metrics, font, axisTags, HVAR_FIELDS)
+    getAdvanceMetrics = partial(_get_advance_metrics, font, axisTags, VVAR_FIELDS)
     axisTags = [axis.axisTag for axis in font["fvar"].axes]
     _add_VHVAR(font, axisTags, VVAR_FIELDS, getAdvanceMetrics)
 

@@ -1,4 +1,5 @@
 import io
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
 import fontTools.ttLib.tables.otBase
 from fontTools.misc.testTools import getXML, stripVariableItemsFromTTX
 from fontTools.misc.textTools import tobytes, tostr
@@ -232,6 +233,13 @@ class SubsetTest:
         )
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_bsln_3.ttx"), ["bsln"])
+
+    def test_subset_BASE(self):
+        fontpath = self.compile_font(self.getpath("TestBASE.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--gids=2,3", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_BASE.ttx"), ["BASE"])
 
     def test_subset_clr(self):
         fontpath = self.compile_font(self.getpath("TestCLR-Regular.ttx"), ".ttf")
@@ -486,7 +494,7 @@ class SubsetTest:
             self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf"
         )
         subsetpath = self.temp_path(".ttf")
-        text = tostr("A\U0001F6D2", encoding="utf-8")
+        text = tostr("A\U0001f6d2", encoding="utf-8")
 
         subset.main([fontpath, "--text=%s" % text, "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
@@ -499,7 +507,7 @@ class SubsetTest:
             self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf"
         )
         subsetpath = self.temp_path(".ttf")
-        text = tobytes("A\U0001F6D2", encoding="utf-8")
+        text = tobytes("A\U0001f6d2", encoding="utf-8")
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.write(text)
 
@@ -1029,20 +1037,13 @@ class SubsetTest:
             if not have_uharfbuzz:
                 pytest.skip("uharfbuzz is not installed")
             if not ok:
-                # pretend hb.repack/repack_with_tag return an error
+                # pretend hb.serialize_with_tag return an error
                 import uharfbuzz as hb
 
-                def mock_repack(data, obj_list):
+                def mock_serialize_with_tag(tag, data, obj_list):
                     raise hb.RepackerError("mocking")
 
-                monkeypatch.setattr(hb, "repack", mock_repack)
-
-                if hasattr(hb, "repack_with_tag"):  # uharfbuzz >= 0.30.0
-
-                    def mock_repack_with_tag(tag, data, obj_list):
-                        raise hb.RepackerError("mocking")
-
-                    monkeypatch.setattr(hb, "repack_with_tag", mock_repack_with_tag)
+                monkeypatch.setattr(hb, "serialize_with_tag", mock_serialize_with_tag)
         else:
             if have_uharfbuzz:
                 # pretend uharfbuzz is not installed
@@ -2043,7 +2044,7 @@ def test_subset_prune_gdef_markglyphsetsdef():
     lookups = font["GSUB"].table.LookupList.Lookup
     assert lookups[0].LookupFlag == 16
     assert lookups[0].MarkFilteringSet == 0
-    assert lookups[1].LookupFlag == 0
+    assert lookups[1].LookupFlag == 8
     assert lookups[1].MarkFilteringSet == None
     marksets = font["GDEF"].table.MarkGlyphSetsDef.Coverage
     assert marksets[0].glyphs == ["acutecomb"]
@@ -2120,6 +2121,28 @@ def test_cvXX_feature_params_nameIDs_are_retained():
     # used by the FeatureParamsCharacterVariants
     nameIDs = {n.nameID for n in font["name"].names}
     assert nameIDs == keepNameIDs
+
+
+def test_preserve_name_ids_when_used_elsewhere():
+    font = TTFont()
+    ttx = pathlib.Path(__file__).parent / "data" / "PreserveSillyNamesTest.ttx"
+    font.importXML(ttx)
+
+    visitor = NameRecordVisitor()
+    visitor.visit(font)
+    assert visitor.seen.intersection(subset.NAME_IDS_TO_OBFUSCATE)
+
+    options = subset.Options(obfuscate_names=True)
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(glyphs=font.getGlyphOrder())
+    subsetter.subset(font)
+
+    # After obfuscation, all names should use an id >= 256, except for id 5,
+    # which is not obfuscated.
+    visitor = NameRecordVisitor()
+    visitor.TABLES = ("STAT", "fvar")
+    visitor.visit(font)
+    assert all(id >= 256 or id == 5 for id in visitor.seen)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,9 @@ classes, since whenever the number of tables changes or whenever
 a table's length changes you need to rewrite the whole file anyway.
 """
 
+from __future__ import annotations
+
+from collections.abc import KeysView
 from io import BytesIO
 from types import SimpleNamespace
 from fontTools.misc.textTools import Tag
@@ -84,7 +87,7 @@ class SFNTReader(object):
 
         if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
             raise TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
-        tables = {}
+        tables: dict[Tag, DirectoryEntry] = {}
         for i in range(self.numTables):
             entry = self.DirectoryEntry()
             entry.fromFile(self.file)
@@ -96,15 +99,15 @@ class SFNTReader(object):
         if self.flavor == "woff":
             self.flavorData = WOFFFlavorData(self)
 
-    def has_key(self, tag):
+    def has_key(self, tag: str | bytes) -> bool:
         return tag in self.tables
 
     __contains__ = has_key
 
-    def keys(self):
+    def keys(self) -> KeysView[Tag]:
         return self.tables.keys()
 
-    def __getitem__(self, tag):
+    def __getitem__(self, tag: str | bytes) -> bytes:
         """Fetch the raw table data."""
         entry = self.tables[Tag(tag)]
         data = entry.loadData(self.file)
@@ -122,10 +125,10 @@ class SFNTReader(object):
                 log.warning("bad checksum for '%s' table", tag)
         return data
 
-    def __delitem__(self, tag):
+    def __delitem__(self, tag: str | bytes) -> None:
         del self.tables[Tag(tag)]
 
-    def close(self):
+    def close(self) -> None:
         self.file.close()
 
     # We define custom __getstate__ and __setstate__ to make SFNTReader pickle-able
@@ -375,10 +378,9 @@ class SFNTWriter(object):
 
     def _calcMasterChecksum(self, directory):
         # calculate checkSumAdjustment
-        tags = list(self.tables.keys())
         checksums = []
-        for i in range(len(tags)):
-            checksums.append(self.tables[tags[i]].checkSum)
+        for tag in self.tables.keys():
+            checksums.append(self.tables[tag].checkSum)
 
         if self.DirectoryEntry != SFNTDirectoryEntry:
             # Create a SFNT directory for checksum calculation purposes

@@ -2,6 +2,8 @@
 #
 # Google Author(s): Behdad Esfahbod
 
+from __future__ import annotations
+
 from fontTools import config
 from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
@@ -15,7 +17,7 @@ from fontTools.subset.util import _add_method, _uniq_sort
 from fontTools.subset.cff import *
 from fontTools.subset.svg import *
 from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
-from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor
+from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor, makeName
 from fontTools.unicodedata import mirrored
 import sys
 import struct
@@ -25,16 +27,16 @@ from collections import Counter, defaultdict
 from functools import reduce
 from types import MethodType
 
-__usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
+__usage__ = "fonttools subset font-file [glyph...] [--option=value]..."
 
 __doc__ = (
     """\
-pyftsubset -- OpenType font subsetter and optimizer
+fonttools subset -- OpenType font subsetter and optimizer
 
-pyftsubset is an OpenType font subsetter and optimizer, based on fontTools.
-It accepts any TT- or CFF-flavored OpenType (.otf or .ttf) or WOFF (.woff)
-font file. The subsetted glyph set is based on the specified glyphs
-or characters, and specified OpenType layout features.
+fonttools subset is an OpenType font subsetter and optimizer, based on
+fontTools. It accepts any TT- or CFF-flavored OpenType (.otf or .ttf)
+or WOFF (.woff) font file. The subsetted glyph set is based on the
+specified glyphs or characters, and specified OpenType layout features.
 
 The tool also performs some size-reducing optimizations, aimed for using
 subset fonts as webfonts.  Individual optimizations can be enabled or
@@ -128,11 +130,11 @@ you might need to escape the question mark, like this: '--glyph-names\\?'.
 
 Examples::
 
-    $ pyftsubset --glyph-names?
+    $ fonttools subset --glyph-names?
     Current setting for 'glyph-names' is: False
-    $ pyftsubset --name-IDs=?
+    $ fonttools subset --name-IDs=?
     Current setting for 'name-IDs' is: [0, 1, 2, 3, 4, 5, 6]
-    $ pyftsubset --hinting? --no-hinting --hinting?
+    $ fonttools subset --hinting? --no-hinting --hinting?
     Current setting for 'hinting' is: True
     Current setting for 'hinting' is: False
 
@@ -270,7 +272,7 @@ Font table options
   Specify (=), add to (+=) or exclude from (-=) the comma-separated
   set of tables that will be be dropped.
   By default, the following tables are dropped:
-  'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
+  'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'PCLT', 'LTSH'
   and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'.
   The tool will attempt to subset the remaining tables.
 
@@ -443,7 +445,7 @@ Example
 Produce a subset containing the characters ' !"#$%' without performing
 size-reducing optimizations::
 
-  $ pyftsubset font.ttf --unicodes="U+0020-0025" \\
+  $ fonttools subset font.ttf --unicodes="U+0020-0025" \\
     --layout-features=* --glyph-names --symbol-cmap --legacy-cmap \\
     --notdef-glyph --notdef-outline --recommended-glyphs \\
     --name-IDs=* --name-legacy --name-languages=*
@@ -825,13 +827,26 @@ def subset_glyphs(self, s):
             self.MarkArray.MarkRecord, mark_indices
         )
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
-        base_indices = self.BaseCoverage.subset(s.glyphs)
+        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
+
+        intersect_base_indices = self.BaseCoverage.intersect(s.glyphs)
+        base_records = self.BaseArray.BaseRecord
+        num_base_records = len(base_records)
+        base_indices = [
+            i
+            for i in intersect_base_indices
+            if i < num_base_records
+            and any(base_records[i].BaseAnchor[j] is not None for j in class_indices)
+        ]
+        if not base_indices:
+            return False
+
+        self.BaseCoverage.remap(base_indices)
         self.BaseArray.BaseRecord = _list_subset(
             self.BaseArray.BaseRecord, base_indices
         )
         self.BaseArray.BaseCount = len(self.BaseArray.BaseRecord)
         # Prune empty classes
-        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
         self.ClassCount = len(class_indices)
         for m in self.MarkArray.MarkRecord:
             m.Class = class_indices.index(m.Class)
@@ -865,13 +880,31 @@ def subset_glyphs(self, s):
             self.MarkArray.MarkRecord, mark_indices
         )
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
-        ligature_indices = self.LigatureCoverage.subset(s.glyphs)
+        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
+
+        intersect_ligature_indices = self.LigatureCoverage.intersect(s.glyphs)
+        ligature_array = self.LigatureArray.LigatureAttach
+        num_ligatures = self.LigatureArray.LigatureCount
+
+        ligature_indices = [
+            i
+            for i in intersect_ligature_indices
+            if i < num_ligatures
+            and any(
+                any(component.LigatureAnchor[j] is not None for j in class_indices)
+                for component in ligature_array[i].ComponentRecord
+            )
+        ]
+
+        if not ligature_indices:
+            return False
+
+        self.LigatureCoverage.remap(ligature_indices)
         self.LigatureArray.LigatureAttach = _list_subset(
             self.LigatureArray.LigatureAttach, ligature_indices
         )
         self.LigatureArray.LigatureCount = len(self.LigatureArray.LigatureAttach)
         # Prune empty classes
-        class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
         self.ClassCount = len(class_indices)
         for m in self.MarkArray.MarkRecord:
             m.Class = class_indices.index(m.Class)
@@ -913,13 +946,26 @@ def subset_glyphs(self, s):
             self.Mark1Array.MarkRecord, mark1_indices
         )
         self.Mark1Array.MarkCount = len(self.Mark1Array.MarkRecord)
-        mark2_indices = self.Mark2Coverage.subset(s.glyphs)
+        class_indices = _uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
+
+        intersect_mark2_indices = self.Mark2Coverage.intersect(s.glyphs)
+        mark2_records = self.Mark2Array.Mark2Record
+        num_mark2_records = len(mark2_records)
+        mark2_indices = [
+            i
+            for i in intersect_mark2_indices
+            if i < num_mark2_records
+            and any(mark2_records[i].Mark2Anchor[j] is not None for j in class_indices)
+        ]
+        if not mark2_indices:
+            return False
+
+        self.Mark2Coverage.remap(mark2_indices)
         self.Mark2Array.Mark2Record = _list_subset(
             self.Mark2Array.Mark2Record, mark2_indices
         )
         self.Mark2Array.MarkCount = len(self.Mark2Array.Mark2Record)
         # Prune empty classes
-        class_indices = _uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
         self.ClassCount = len(class_indices)
         for m in self.Mark1Array.MarkRecord:
             m.Class = class_indices.index(m.Class)
@@ -1528,6 +1574,7 @@ def subset_glyphs(self, s):
         if self.MarkFilteringSet not in s.used_mark_sets:
             self.MarkFilteringSet = None
             self.LookupFlag &= ~0x10
+            self.LookupFlag |= 0x8
         else:
             self.MarkFilteringSet = s.used_mark_sets.index(self.MarkFilteringSet)
     return bool(self.SubTableCount)
@@ -1714,11 +1761,42 @@ def subset_features(self, feature_indices):
     return bool(self.SubstitutionCount)
 
 
+@_add_method(otTables.FeatureTableSubstitution)
+def prune_features(self, feature_index_map):
+    self.ensureDecompiled()
+    self.SubstitutionRecord = [
+        r for r in self.SubstitutionRecord if r.FeatureIndex in feature_index_map.keys()
+    ]
+    # remap feature indices
+    for r in self.SubstitutionRecord:
+        r.FeatureIndex = feature_index_map[r.FeatureIndex]
+    self.SubstitutionCount = len(self.SubstitutionRecord)
+    return bool(self.SubstitutionCount)
+
+
 @_add_method(otTables.FeatureVariations)
 def subset_features(self, feature_indices):
     self.ensureDecompiled()
     for r in self.FeatureVariationRecord:
         r.FeatureTableSubstitution.subset_features(feature_indices)
+    # Prune empty records at the end only
+    # https://github.com/fonttools/fonttools/issues/1881
+    while (
+        self.FeatureVariationRecord
+        and not self.FeatureVariationRecord[
+            -1
+        ].FeatureTableSubstitution.SubstitutionCount
+    ):
+        self.FeatureVariationRecord.pop()
+    self.FeatureVariationCount = len(self.FeatureVariationRecord)
+    return bool(self.FeatureVariationCount)
+
+
+@_add_method(otTables.FeatureVariations)
+def prune_features(self, feature_index_map):
+    self.ensureDecompiled()
+    for r in self.FeatureVariationRecord:
+        r.FeatureTableSubstitution.prune_features(feature_index_map)
     # Prune empty records at the end only
     # https://github.com/fonttools/fonttools/issues/1881
     while (
@@ -1748,6 +1826,16 @@ def subset_features(self, feature_indices):
 
 
 @_add_method(otTables.DefaultLangSys, otTables.LangSys)
+def prune_features(self, feature_index_map):
+    self.ReqFeatureIndex = feature_index_map.get(self.ReqFeatureIndex, 65535)
+    self.FeatureIndex = [
+        feature_index_map[f] for f in self.FeatureIndex if f in feature_index_map.keys()
+    ]
+    self.FeatureCount = len(self.FeatureIndex)
+    return bool(self.FeatureCount or self.ReqFeatureIndex != 65535)
+
+
+@_add_method(otTables.DefaultLangSys, otTables.LangSys)
 def collect_features(self):
     feature_indices = self.FeatureIndex[:]
     if self.ReqFeatureIndex != 65535:
@@ -1771,6 +1859,21 @@ def subset_features(self, feature_indices, keepEmptyDefaultLangSys=False):
 
 
 @_add_method(otTables.Script)
+def prune_features(self, feature_index_map, keepEmptyDefaultLangSys=False):
+    if (
+        self.DefaultLangSys
+        and not self.DefaultLangSys.prune_features(feature_index_map)
+        and not keepEmptyDefaultLangSys
+    ):
+        self.DefaultLangSys = None
+    self.LangSysRecord = [
+        l for l in self.LangSysRecord if l.LangSys.prune_features(feature_index_map)
+    ]
+    self.LangSysCount = len(self.LangSysRecord)
+    return bool(self.LangSysCount or self.DefaultLangSys)
+
+
+@_add_method(otTables.Script)
 def collect_features(self):
     feature_indices = [l.LangSys.collect_features() for l in self.LangSysRecord]
     if self.DefaultLangSys:
@@ -1785,6 +1888,19 @@ def subset_features(self, feature_indices, retain_empty):
         s
         for s in self.ScriptRecord
         if s.Script.subset_features(feature_indices, s.ScriptTag == "DFLT")
+        or retain_empty
+    ]
+    self.ScriptCount = len(self.ScriptRecord)
+    return bool(self.ScriptCount)
+
+
+@_add_method(otTables.ScriptList)
+def prune_features(self, feature_index_map, retain_empty):
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1331737#c32
+    self.ScriptRecord = [
+        s
+        for s in self.ScriptRecord
+        if s.Script.prune_features(feature_index_map, s.ScriptTag == "DFLT")
         or retain_empty
     ]
     self.ScriptCount = len(self.ScriptRecord)
@@ -1978,19 +2094,72 @@ def subset_script_tags(self, tags):
 
 @_add_method(ttLib.getTableClass("GSUB"), ttLib.getTableClass("GPOS"))
 def prune_features(self):
-    """Remove unreferenced features"""
+    """Remove unreferenced and duplicate features in FeatureList
+    Remove unreferenced features and remap duplicate feature indices in ScriptList and FeatureVariations
+    """
     if self.table.ScriptList:
         feature_indices = self.table.ScriptList.collect_features()
     else:
         feature_indices = []
+    (feature_indices, feature_index_map) = self.remap_duplicate_features(
+        feature_indices
+    )
+
     if self.table.FeatureList:
         self.table.FeatureList.subset_features(feature_indices)
     if getattr(self.table, "FeatureVariations", None):
-        self.table.FeatureVariations.subset_features(feature_indices)
+        self.table.FeatureVariations.prune_features(feature_index_map)
     if self.table.ScriptList:
-        self.table.ScriptList.subset_features(
-            feature_indices, self.retain_empty_scripts()
+        self.table.ScriptList.prune_features(
+            feature_index_map, self.retain_empty_scripts()
         )
+
+
+@_add_method(ttLib.getTableClass("GSUB"), ttLib.getTableClass("GPOS"))
+def remap_duplicate_features(self, feature_indices):
+    """Return retained feature indices(without duplicates) and remapped feature indices"""
+    features = self.table.FeatureList.FeatureRecord
+
+    unique_features = {}
+    duplicate_features = {}
+    for i in feature_indices:
+        f = features[i]
+        tag = f.FeatureTag
+
+        same_tag_features = unique_features.get(tag)
+        if same_tag_features is None:
+            unique_features[tag] = set([i])
+            duplicate_features[i] = i
+            continue
+
+        found = False
+        for other_i in same_tag_features:
+            if features[other_i] == f:
+                found = True
+                duplicate_features[i] = other_i
+                break
+
+        if not found:
+            same_tag_features.add(i)
+            duplicate_features[i] = i
+
+    ## remap retained feature indices
+    feature_map = {}
+    new_idx = 0
+
+    for i in feature_indices:
+        unique_i = duplicate_features.get(i, i)
+        v = feature_map.get(unique_i)
+        if v is None:
+            feature_map[i] = new_idx
+            new_idx += 1
+        else:
+            feature_map[i] = v
+
+    retained_feature_indices = _uniq_sort(
+        sum((list(s) for s in unique_features.values()), [])
+    )
+    return (retained_feature_indices, feature_map)
 
 
 @_add_method(ttLib.getTableClass("GSUB"), ttLib.getTableClass("GPOS"))
@@ -3004,6 +3173,9 @@ def prune_pre_subset(self, font, options):
     return True
 
 
+NAME_IDS_TO_OBFUSCATE = {1, 2, 3, 4, 6, 16, 17, 18}
+
+
 @_add_method(ttLib.getTableClass("name"))
 def prune_post_subset(self, font, options):
     visitor = NameRecordVisitor()
@@ -3022,6 +3194,11 @@ def prune_post_subset(self, font, options):
         self.names = [n for n in self.names if n.langID in options.name_languages]
     if options.obfuscate_names:
         namerecs = []
+        # Preserve names to be scrambled or dropped elsewhere so that other
+        # parts of the font don't break.
+        needRemapping = visitor.seen.intersection(NAME_IDS_TO_OBFUSCATE)
+        if needRemapping:
+            _remap_select_name_ids(font, needRemapping)
         for n in self.names:
             if n.nameID in [1, 4]:
                 n.string = ".\x7f".encode("utf_16_be") if n.isUnicode() else ".\x7f"
@@ -3034,6 +3211,76 @@ def prune_post_subset(self, font, options):
             namerecs.append(n)
         self.names = namerecs
     return True  # Required table
+
+
+def _remap_select_name_ids(font: ttLib.TTFont, needRemapping: set[int]) -> None:
+    """Remap a set of IDs so that the originals can be safely scrambled or
+    dropped.
+
+    For each name record whose name id is in the `needRemapping` set, make a copy
+    and allocate a new unused name id in the font-specific range (> 255).
+
+    Finally update references to these in the `fvar` and `STAT` tables.
+    """
+
+    if "fvar" not in font and "STAT" not in font:
+        return
+
+    name = font["name"]
+
+    # 1. Assign new IDs for names to be preserved.
+    existingIds = {record.nameID for record in name.names}
+    remapping = {}
+    nextId = name._findUnusedNameID() - 1  # Should skip gaps in name IDs.
+    for nameId in needRemapping:
+        nextId += 1  # We should have complete freedom until 32767.
+        assert nextId not in existingIds, "_findUnusedNameID did not skip gaps"
+        if nextId > 32767:
+            raise ValueError("Ran out of name IDs while trying to remap existing ones.")
+        remapping[nameId] = nextId
+
+    # 2. Copy records to use the new ID. We can't rewrite them in place, because
+    #    that could make IDs 1 to 6 "disappear" from code that follows. Some
+    #    tools that produce EOT fonts expect them to exist, even when they're
+    #    scrambled. See https://github.com/fonttools/fonttools/issues/165.
+    copiedRecords = []
+    for record in name.names:
+        if record.nameID not in needRemapping:
+            continue
+        recordCopy = makeName(
+            record.string,
+            remapping[record.nameID],
+            record.platformID,
+            record.platEncID,
+            record.langID,
+        )
+        copiedRecords.append(recordCopy)
+    name.names.extend(copiedRecords)
+
+    # 3. Rewrite the corresponding IDs in other tables. For now, care only about
+    #    STAT and fvar. If more tables need to be changed, consider adapting
+    #    NameRecordVisitor to rewrite IDs wherever it finds them.
+    fvar = font.get("fvar")
+    if fvar is not None:
+        for axis in fvar.axes:
+            axis.axisNameID = remapping.get(axis.axisNameID, axis.axisNameID)
+        for instance in fvar.instances:
+            nameID = instance.subfamilyNameID
+            instance.subfamilyNameID = remapping.get(nameID, nameID)
+            nameID = instance.postscriptNameID
+            instance.postscriptNameID = remapping.get(nameID, nameID)
+
+    stat = font.get("STAT")
+    if stat is None:
+        return
+    elidedNameID = stat.table.ElidedFallbackNameID
+    stat.table.ElidedFallbackNameID = remapping.get(elidedNameID, elidedNameID)
+    if stat.table.DesignAxisRecord:
+        for axis in stat.table.DesignAxisRecord.Axis:
+            axis.AxisNameID = remapping.get(axis.AxisNameID, axis.AxisNameID)
+    if stat.table.AxisValueArray:
+        for value in stat.table.AxisValueArray.AxisValue:
+            value.ValueNameID = remapping.get(value.ValueNameID, value.ValueNameID)
 
 
 @_add_method(ttLib.getTableClass("head"))
@@ -3064,7 +3311,6 @@ class Options(object):
 
     # spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
     _drop_tables_default = [
-        "BASE",
         "JSTF",
         "DSIG",
         "EBDT",
@@ -3076,6 +3322,7 @@ class Options(object):
     _drop_tables_default += ["Feat", "Glat", "Gloc", "Silf", "Sill"]  # Graphite
     _no_subset_tables_default = [
         "avar",
+        "BASE",
         "fvar",
         "gasp",
         "head",
@@ -3688,7 +3935,7 @@ def parse_glyphs(s):
 
 def usage():
     print("usage:", __usage__, file=sys.stderr)
-    print("Try pyftsubset --help for more information.\n", file=sys.stderr)
+    print("Try fonttools subset --help for more information.\n", file=sys.stderr)
 
 
 @timer("make one with everything (TOTAL TIME)")
@@ -3757,7 +4004,7 @@ def main(args=None):
             text += g[7:]
             continue
         if g.startswith("--text-file="):
-            with open(g[12:], encoding="utf-8") as f:
+            with open(g[12:], encoding="utf-8-sig") as f:
                 text += f.read().replace("\n", "")
             continue
         if g.startswith("--unicodes="):

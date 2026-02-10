@@ -1,25 +1,28 @@
 import logging
 import os
-import tempfile
 import shutil
+import tempfile
 import unittest
-from pathlib import Path
 from io import open
-from .testSupport import getDemoFontGlyphSetPath
+from pathlib import Path
+
+import pytest
+
+from fontTools.misc.etree import XML_DECLARATION
+from fontTools.pens.recordingPen import RecordingPointPen
+from fontTools.ufoLib.errors import (
+    GlifLibError,
+    UnsupportedGLIFFormat,
+    UnsupportedUFOFormat,
+)
 from fontTools.ufoLib.glifLib import (
     GlyphSet,
     glyphNameToFileName,
     readGlyphFromString,
     writeGlyphToString,
 )
-from fontTools.ufoLib.errors import (
-    GlifLibError,
-    UnsupportedGLIFFormat,
-    UnsupportedUFOFormat,
-)
-from fontTools.misc.etree import XML_DECLARATION
-from fontTools.pens.recordingPen import RecordingPointPen
-import pytest
+
+from .testSupport import getDemoFontGlyphSetPath
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
 
@@ -365,3 +368,49 @@ def test_GlyphSet_writeGlyph_formatVersion(tmp_path):
         match="Unsupported GLIF format version .*for UFO format version",
     ):
         dst.writeGlyph("A", glyph, formatVersion=(2, 0))
+
+
+def test_getGLIFModificationTime():
+    gs = GlyphSet(GLYPHSETDIR)
+    modified = gs.getGLIFModificationTime("a")
+    assert isinstance(modified, float)
+
+
+def test_readGlyph_with_pointPen_and_no_glyphObject():
+    """pointPen should receive outline even when glyphObject is None.
+
+    Regression test for https://github.com/fonttools/fonttools/issues/4030
+    """
+    gs = GlyphSet(GLYPHSETDIR)
+    pen = RecordingPointPen()
+    gs.readGlyph("A", glyphObject=None, pointPen=pen)
+
+    assert len(pen.value) > 0
+    operations = [op[0] for op in pen.value]
+    assert "beginPath" in operations
+    assert "endPath" in operations
+
+
+def test_readGlyphFromString_with_pointPen_and_no_glyphObject():
+    """pointPen should receive outline even when glyphObject is None.
+
+    Regression test for https://github.com/fonttools/fonttools/issues/4030
+    """
+    glif_data = b"""<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="test" format="2">
+    <outline>
+        <contour>
+            <point x="0" y="0" type="line"/>
+            <point x="100" y="0" type="line"/>
+        </contour>
+    </outline>
+</glyph>
+"""
+    pen = RecordingPointPen()
+    readGlyphFromString(glif_data, glyphObject=None, pointPen=pen)
+
+    assert len(pen.value) > 0
+    operations = [op[0] for op in pen.value]
+    assert "beginPath" in operations
+    assert "addPoint" in operations
+    assert "endPath" in operations

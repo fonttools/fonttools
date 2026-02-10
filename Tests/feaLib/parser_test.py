@@ -198,13 +198,13 @@ class ParserTest(unittest.TestCase):
     def test_anchor_variable_scalar(self):
         doc = self.parse(
             "feature test {"
-            "    pos cursive A <anchor (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) -20> <anchor NULL>;"
+            "    pos cursive A <anchor (wght=200:-100 wght=900:-150 wdth=150.5,wght=900:-120) -20> <anchor NULL>;"
             "} test;"
         )
         anchor = doc.statements[0].statements[0].entryAnchor
         self.assertEqual(
             anchor.asFea(),
-            "<anchor (wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) -20>",
+            "<anchor (wght=200:-100 wght=900:-150 wdth=150.5,wght=900:-120) -20>",
         )
 
     def test_anchordef(self):
@@ -1438,6 +1438,14 @@ class ParserTest(unittest.TestCase):
             r'\(after "by"\) must be a single glyph or glyph class',
             self.parse,
             "feature test {rsub f_i by f i;} test;",
+        )
+
+    def test_rsub_deletion(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Reverse chaining substitutions do not support glyph deletion",
+            self.parse,
+            "lookup test { rsub a b c' e by NULL; } test;",
         )
 
     def test_script(self):

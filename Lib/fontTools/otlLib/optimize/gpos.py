@@ -1,7 +1,8 @@
 import logging
 import os
 from collections import defaultdict, namedtuple
-from functools import reduce
+from dataclasses import dataclass
+from functools import cached_property, reduce
 from itertools import chain
 from math import log2
 from typing import DefaultDict, Dict, Iterable, List, Sequence, Tuple
@@ -192,79 +193,58 @@ ClusteringContext = namedtuple(
 )
 
 
+@dataclass
 class Cluster:
-    # TODO(Python 3.7): Turn this into a dataclass
-    # ctx: ClusteringContext
-    # indices: int
-    # Caches
-    # TODO(Python 3.8): use functools.cached_property instead of the
-    # manually cached properties, and remove the cache fields listed below.
-    # _indices: Optional[List[int]] = None
-    # _column_indices: Optional[List[int]] = None
-    # _cost: Optional[int] = None
+    ctx: ClusteringContext
+    indices_bitmask: int
 
-    __slots__ = "ctx", "indices_bitmask", "_indices", "_column_indices", "_cost"
-
-    def __init__(self, ctx: ClusteringContext, indices_bitmask: int):
-        self.ctx = ctx
-        self.indices_bitmask = indices_bitmask
-        self._indices = None
-        self._column_indices = None
-        self._cost = None
-
-    @property
+    @cached_property
     def indices(self):
-        if self._indices is None:
-            self._indices = bit_indices(self.indices_bitmask)
-        return self._indices
+        return bit_indices(self.indices_bitmask)
 
-    @property
+    @cached_property
     def column_indices(self):
-        if self._column_indices is None:
-            # Indices of columns that have a 1 in at least 1 line
-            #   => binary OR all the lines
-            bitmask = reduce(int.__or__, (self.ctx.lines[i] for i in self.indices))
-            self._column_indices = bit_indices(bitmask)
-        return self._column_indices
+        # Indices of columns that have a 1 in at least 1 line
+        #   => binary OR all the lines
+        bitmask = reduce(int.__or__, (self.ctx.lines[i] for i in self.indices))
+        return bit_indices(bitmask)
 
     @property
     def width(self):
         # Add 1 because Class2=0 cannot be used but needs to be encoded.
         return len(self.column_indices) + 1
 
-    @property
+    @cached_property
     def cost(self):
-        if self._cost is None:
-            self._cost = (
-                # 2 bytes to store the offset to this subtable in the Lookup table above
-                2
-                # Contents of the subtable
-                # From: https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
-                # uint16	posFormat	Format identifier: format = 2
-                + 2
-                # Offset16	coverageOffset	Offset to Coverage table, from beginning of PairPos subtable.
-                + 2
-                + self.coverage_bytes
-                # uint16	valueFormat1	ValueRecord definition — for the first glyph of the pair (may be zero).
-                + 2
-                # uint16	valueFormat2	ValueRecord definition — for the second glyph of the pair (may be zero).
-                + 2
-                # Offset16	classDef1Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the first glyph of the pair.
-                + 2
-                + self.classDef1_bytes
-                # Offset16	classDef2Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the second glyph of the pair.
-                + 2
-                + self.classDef2_bytes
-                # uint16	class1Count	Number of classes in classDef1 table — includes Class 0.
-                + 2
-                # uint16	class2Count	Number of classes in classDef2 table — includes Class 0.
-                + 2
-                # Class1Record	class1Records[class1Count]	Array of Class1 records, ordered by classes in classDef1.
-                + (self.ctx.valueFormat1_bytes + self.ctx.valueFormat2_bytes)
-                * len(self.indices)
-                * self.width
-            )
-        return self._cost
+        return (
+            # 2 bytes to store the offset to this subtable in the Lookup table above
+            2
+            # Contents of the subtable
+            # From: https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
+            # uint16	posFormat	Format identifier: format = 2
+            + 2
+            # Offset16	coverageOffset	Offset to Coverage table, from beginning of PairPos subtable.
+            + 2
+            + self.coverage_bytes
+            # uint16	valueFormat1	ValueRecord definition — for the first glyph of the pair (may be zero).
+            + 2
+            # uint16	valueFormat2	ValueRecord definition — for the second glyph of the pair (may be zero).
+            + 2
+            # Offset16	classDef1Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the first glyph of the pair.
+            + 2
+            + self.classDef1_bytes
+            # Offset16	classDef2Offset	Offset to ClassDef table, from beginning of PairPos subtable — for the second glyph of the pair.
+            + 2
+            + self.classDef2_bytes
+            # uint16	class1Count	Number of classes in classDef1 table — includes Class 0.
+            + 2
+            # uint16	class2Count	Number of classes in classDef2 table — includes Class 0.
+            + 2
+            # Class1Record	class1Records[class1Count]	Array of Class1 records, ordered by classes in classDef1.
+            + (self.ctx.valueFormat1_bytes + self.ctx.valueFormat2_bytes)
+            * len(self.indices)
+            * self.width
+        )
 
     @property
     def coverage_bytes(self):

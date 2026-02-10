@@ -165,8 +165,18 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats, all_quadrati
     """Do the actual conversion of a set of compatible glyphs, after arguments
     have been set up.
 
+    Empty glyphs (without contours) are ignored and passed through unchanged.
+
     Return True if the glyphs were modified, else return False.
     """
+
+    # Skip empty glyphs (with zero contours)
+    non_empty_indices = [i for i, g in enumerate(glyphs) if len(g) > 0]
+    if not non_empty_indices:
+        return False
+
+    glyphs = [glyphs[i] for i in non_empty_indices]
+    max_err = [max_err[i] for i in non_empty_indices]
 
     try:
         segments_by_location = zip(*[_get_segments(g) for g in glyphs])
@@ -212,6 +222,8 @@ def glyphs_to_quadratic(
     compatibility. If this is not required, calling glyphs_to_quadratic with one
     glyph at a time may yield slightly more optimized results.
 
+    Empty glyphs (without contours) are ignored and passed through unchanged.
+
     Return True if glyphs were modified, else return False.
 
     Raises IncompatibleGlyphsError if glyphs have non-interpolatable outlines.
@@ -249,6 +261,8 @@ def fonts_to_quadratic(
     All curves will be converted to quadratic at once, ensuring interpolation
     compatibility. If this is not required, calling fonts_to_quadratic with one
     font at a time may yield slightly more optimized results.
+
+    Empty glyphs (without contours) are ignored and passed through unchanged.
 
     Return the set of modified glyph names if any, else return an empty set.
 

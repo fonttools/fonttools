@@ -2,13 +2,17 @@
 
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.cliTools import makeOutputFileName
+from fontTools.misc.psCharStrings import T2StackUseExtractor
 from fontTools.cffLib import (
     TopDictIndex,
     buildOrder,
     buildDefaults,
     topDictOperators,
     privateDictOperators,
+    FDSelect,
 )
+from .transforms import desubroutinizeCharString
+from .specializer import specializeProgram
 from .width import optimizeWidths
 from collections import defaultdict
 import logging
@@ -27,7 +31,7 @@ def _convertCFF2ToCFF(cff, otFont):
     The CFF2 font cannot be variable. (TODO Accept those and convert to the
     default instance?)
 
-    This assumes a decompiled CFF table. (i.e. that the object has been
+    This assumes a decompiled CFF2 table. (i.e. that the object has been
     filled via :meth:`decompile` and e.g. not loaded from XML.)"""
 
     cff.major = 1
@@ -51,8 +55,13 @@ def _convertCFF2ToCFF(cff, otFont):
             if hasattr(topDict, key):
                 delattr(topDict, key)
 
-    fdArray = topDict.FDArray
     charStrings = topDict.CharStrings
+
+    fdArray = topDict.FDArray
+    if not hasattr(topDict, "FDSelect"):
+        # FDSelect is optional in CFF2, but required in CFF.
+        fdSelect = topDict.FDSelect = FDSelect()
+        fdSelect.gidArray = [0] * len(charStrings.charStrings)
 
     defaults = buildDefaults(privateDictOperators)
     order = buildOrder(privateDictOperators)
@@ -69,6 +78,7 @@ def _convertCFF2ToCFF(cff, otFont):
                 if hasattr(privateDict, key):
                     delattr(privateDict, key)
 
+    # Add ending operators
     for cs in charStrings.values():
         cs.decompile()
         cs.program.append("endchar")
@@ -100,23 +110,43 @@ def _convertCFF2ToCFF(cff, otFont):
         if width != private.defaultWidthX:
             cs.program.insert(0, width - private.nominalWidthX)
 
+    # Handle stack use since stack-depth is lower in CFF than in CFF2.
+    for glyphName in charStrings.keys():
+        cs, fdIndex = charStrings.getItemAndSelector(glyphName)
+        if fdIndex is None:
+            fdIndex = 0
+        private = fdArray[fdIndex].Private
+        extractor = T2StackUseExtractor(
+            getattr(private, "Subrs", []), cff.GlobalSubrs, private=private
+        )
+        stackUse = extractor.execute(cs)
+        if stackUse > 48:  # CFF stack depth is 48
+            desubroutinizeCharString(cs)
+            cs.program = specializeProgram(cs.program)
+
+    # Unused subroutines are still in CFF2 (ie. lacking 'return' operator)
+    # because they were not decompiled when we added the 'return'.
+    # Moreover, some used subroutines may have become unused after the
+    # stack-use fixup. So we remove all unused subroutines now.
+    cff.remove_unused_subroutines()
+
     mapping = {
-        name: ("cid" + str(n) if n else ".notdef")
+        name: ("cid" + str(n).zfill(5) if n else ".notdef")
         for n, name in enumerate(topDict.charset)
     }
     topDict.charset = [
-        "cid" + str(n) if n else ".notdef" for n in range(len(topDict.charset))
+        "cid" + str(n).zfill(5) if n else ".notdef" for n in range(len(topDict.charset))
     ]
     charStrings.charStrings = {
         mapping[name]: v for name, v in charStrings.charStrings.items()
     }
 
-    # I'm not sure why the following is *not* necessary. And it breaks
-    # the output if I add it.
-    # topDict.ROS = ("Adobe", "Identity", 0)
+    topDict.ROS = ("Adobe", "Identity", 0)
 
 
 def convertCFF2ToCFF(font, *, updatePostTable=True):
+    if "CFF2" not in font:
+        raise ValueError("Input font does not contain a CFF2 table.")
     cff = font["CFF2"].cff
     _convertCFF2ToCFF(cff, font)
     del font["CFF2"]
@@ -131,7 +161,7 @@ def convertCFF2ToCFF(font, *, updatePostTable=True):
 
 
 def main(args=None):
-    """Convert CFF OTF font to CFF2 OTF font"""
+    """Convert CFF2 OTF font to CFF OTF font"""
     if args is None:
         import sys
 
@@ -140,8 +170,8 @@ def main(args=None):
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools cffLib.CFFToCFF2",
-        description="Upgrade a CFF font to CFF2.",
+        "fonttools cffLib.CFF2ToCFF",
+        description="Convert a non-variable CFF2 font to CFF.",
     )
     parser.add_argument(
         "input", metavar="INPUT.ttf", help="Input OTF file with CFF table."
@@ -158,6 +188,16 @@ def main(args=None):
         dest="recalc_timestamp",
         action="store_false",
         help="Don't set the output font's timestamp to the current time.",
+    )
+    parser.add_argument(
+        "--remove-overlaps",
+        action="store_true",
+        help="Merge overlapping contours and components. Requires skia-pathops",
+    )
+    parser.add_argument(
+        "--ignore-overlap-errors",
+        action="store_true",
+        help="Don't crash if the remove-overlaps operation fails for some glyphs.",
     )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
@@ -189,6 +229,21 @@ def main(args=None):
     font = TTFont(infile, recalcTimestamp=options.recalc_timestamp, recalcBBoxes=False)
 
     convertCFF2ToCFF(font)
+
+    if options.remove_overlaps:
+        from fontTools.ttLib.removeOverlaps import removeOverlaps
+        from io import BytesIO
+
+        log.debug("Removing overlaps")
+
+        stream = BytesIO()
+        font.save(stream)
+        stream.seek(0)
+        font = TTFont(stream, recalcTimestamp=False, recalcBBoxes=False)
+        removeOverlaps(
+            font,
+            ignoreErrors=options.ignore_overlap_errors,
+        )
 
     log.info(
         "Saving %s",

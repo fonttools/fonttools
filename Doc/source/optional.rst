@@ -29,18 +29,6 @@ The module exports a ElementTree-like API for reading/writing XML files, and all
 *Extra:* ``lxml``
 
 
-:py:mod:`fontTools.ufoLib`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Package for reading and writing UFO source files; it requires:
-
-* `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem abstraction layer.
-
-* `enum34 <https://pypi.org/pypi/enum34>`__: backport for the built-in ``enum`` module (only required on Python < 3.4).
-
-*Extra:* ``ufo``
-
-
 :py:mod:`fontTools.ttLib.woff2`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -113,6 +101,19 @@ module is no longer included in Mac Python:
   (macOS platform only).
 
 *Extra:* ``type1``
+
+
+:py:mod:`fontTools.ufoLib`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Package for reading and writing UFO source files; if available, it will use:
+
+* `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem abstraction layer
+
+for reading and writing UFOs to the local filesystem or zip files (.ufoz), instead of
+the built-in ``fontTools.misc.filesystem`` package.
+The reader and writer classes can in theory also accept any object compatible the
+``fs.base.FS`` interface, although not all of them have been tested.
 
 
 :py:mod:`fontTools.pens.cocoaPen`

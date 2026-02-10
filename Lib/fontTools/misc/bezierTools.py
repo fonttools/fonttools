@@ -1409,7 +1409,10 @@ def curveCurveIntersections(curve1, curve2):
             line2 = curve2[0], curve2[-1]
             return lineLineIntersections(*line1, *line2)
         else:
-            return curveLineIntersections(curve2, line1)
+            hits = curveLineIntersections(curve2, line1)
+            # curve is passed first to this fn but is the second segment, so
+            # we need to swap t1/t2 in the result
+            return [Intersection(pt=x.pt, t1=x.t2, t2=x.t1) for x in hits]
     elif _is_linelike(curve2):
         line2 = curve2[0], curve2[-1]
         return curveLineIntersections(curve1, line2)

@@ -197,6 +197,10 @@ RTL_SCRIPTS = {
     "Yezi",  # Yezidi
     # Unicode-14.0 additions
     "Ougr",  # Old Uyghur
+    # Unicode-16.0 additions
+    "Gara",  # Garay
+    # Unicode-17.0 additions
+    "Sidt",  # Sidetic
 }
 
 

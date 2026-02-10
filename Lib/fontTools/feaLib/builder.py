@@ -29,8 +29,10 @@ from fontTools.otlLib.builder import (
     PairPosBuilder,
     SinglePosBuilder,
     ChainContextualRule,
+    AnySubstBuilder,
 )
 from fontTools.otlLib.error import OpenTypeLibError
+from fontTools.varLib.errors import VarLibError
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from fontTools.varLib.builder import buildVarDevTable
 from fontTools.varLib.featureVars import addFeatureVariationsRaw
@@ -258,12 +260,13 @@ class Builder(object):
             key = (script, lang, feature_name)
             self.features_.setdefault(key, []).append(lookup)
 
-    def get_lookup_(self, location, builder_class):
+    def get_lookup_(self, location, builder_class, mapping=None):
         if (
             self.cur_lookup_
             and type(self.cur_lookup_) == builder_class
             and self.cur_lookup_.lookupflag == self.lookupflag_
             and self.cur_lookup_.markFilterSet == self.lookupflag_markFilterSet_
+            and self.cur_lookup_.can_add_mapping(mapping)
         ):
             return self.cur_lookup_
         if self.cur_lookup_name_ and self.cur_lookup_:
@@ -389,6 +392,10 @@ class Builder(object):
                 return user_name_id
 
     def buildFeatureParams(self, tag):
+        # by convention, a missing name ID is represented by 0xffff.
+        # the spec says that these fields can be 'NULL', but 'NULL' is not
+        # well defined for the purpose of nameIDs?
+        NO_NAME_ID = 0xFFFF
         params = None
         if tag == "size":
             params = otTables.FeatureParamsSize()
@@ -415,17 +422,17 @@ class Builder(object):
             params = otTables.FeatureParamsCharacterVariants()
             params.Format = 0
             params.FeatUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, "FeatUILabelNameID"), 0
+                (tag, "FeatUILabelNameID"), NO_NAME_ID
             )
             params.FeatUITooltipTextNameID = self.cv_parameters_ids_.get(
-                (tag, "FeatUITooltipTextNameID"), 0
+                (tag, "FeatUITooltipTextNameID"), NO_NAME_ID
             )
             params.SampleTextNameID = self.cv_parameters_ids_.get(
-                (tag, "SampleTextNameID"), 0
+                (tag, "SampleTextNameID"), NO_NAME_ID
             )
             params.NumNamedParameters = self.cv_num_named_params_.get(tag, 0)
             params.FirstParamUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, "ParamUILabelNameID_0"), 0
+                (tag, "ParamUILabelNameID_0"), NO_NAME_ID
             )
             params.CharCount = len(self.cv_characters_[tag])
             params.Character = self.cv_characters_[tag]
@@ -764,7 +771,7 @@ class Builder(object):
 
             for c in script[2]:
                 record.BaseScript.BaseValues.BaseCoord.append(self.buildBASECoord(c))
-            for language, min_coord, max_coord in minmax_for_script:
+            for language, min_coord, max_coord in sorted(minmax_for_script):
                 minmax_record = otTables.MinMax()
                 minmax_record.MinCoord = self.buildBASECoord(min_coord)
                 minmax_record.MaxCoord = self.buildBASECoord(max_coord)
@@ -866,13 +873,22 @@ class Builder(object):
         for lookup in self.lookups_:
             if lookup.table != tag:
                 continue
-            lookup.lookup_index = len(lookups)
-            self.lookup_locations[tag][str(lookup.lookup_index)] = LookupDebugInfo(
-                location=str(lookup.location),
-                name=self.get_lookup_name_(lookup),
-                feature=None,
-            )
-            lookups.append(lookup)
+            name = self.get_lookup_name_(lookup)
+            resolved = lookup.promote_lookup_type(is_named_lookup=name is not None)
+            if resolved is None:
+                raise FeatureLibError(
+                    "Within a named lookup block, all rules must be of "
+                    "the same lookup type and flag",
+                    lookup.location,
+                )
+            for l in resolved:
+                lookup.lookup_index = len(lookups)
+                self.lookup_locations[tag][str(lookup.lookup_index)] = LookupDebugInfo(
+                    location=str(lookup.location),
+                    name=name,
+                    feature=None,
+                )
+                lookups.append(l)
         otLookups = []
         for l in lookups:
             try:
@@ -915,6 +931,11 @@ class Builder(object):
                     l.lookup_index for l in lookups if l.lookup_index is not None
                 )
             )
+            # order doesn't matter, but lookup_indices preserves it.
+            # We want to combine identical sets of lookups (order doesn't matter)
+            # but also respect the order provided by the user (although there's
+            # a reasonable argument to just sort and dedupe, which fontc does)
+            lookup_key = frozenset(lookup_indices)
 
             size_feature = tag == "GPOS" and feature_tag == "size"
             force_feature = self.any_feature_variations(feature_tag, tag)
@@ -932,7 +953,7 @@ class Builder(object):
                         "stash debug information. See fonttools#2065."
                     )
 
-            feature_key = (feature_tag, lookup_indices)
+            feature_key = (feature_tag, lookup_key)
             feature_index = feature_indices.get(feature_key)
             if feature_index is None:
                 feature_index = len(table.FeatureList.FeatureRecord)
@@ -1196,10 +1217,10 @@ class Builder(object):
 
     def set_lookup_flag(self, location, value, markAttach, markFilter):
         value = value & 0xFF
-        if markAttach:
+        if markAttach is not None:
             markAttachClass = self.getMarkAttachClass_(location, markAttach)
             value = value | (markAttachClass << 8)
-        if markFilter:
+        if markFilter is not None:
             markFilterSet = self.getMarkFilterSet_(location, markFilter)
             value = value | 0x10
             self.lookupflag_markFilterSet_ = markFilterSet
@@ -1294,6 +1315,24 @@ class Builder(object):
 
     # GSUB rules
 
+    def add_any_subst_(self, location, mapping):
+        lookup = self.get_lookup_(location, AnySubstBuilder, mapping=mapping)
+        for key, value in mapping.items():
+            if key in lookup.mapping:
+                if value == lookup.mapping[key]:
+                    log.info(
+                        'Removing duplicate substitution from "%s" to "%s" at %s',
+                        ", ".join(key),
+                        ", ".join(value),
+                        location,
+                    )
+                else:
+                    raise FeatureLibError(
+                        'Already defined substitution for "%s"' % ", ".join(key),
+                        location,
+                    )
+            lookup.mapping[key] = value
+
     # GSUB 1
     def add_single_subst(self, location, prefix, suffix, mapping, forceChain):
         if self.cur_feature_name_ == "aalt":
@@ -1305,24 +1344,11 @@ class Builder(object):
         if prefix or suffix or forceChain:
             self.add_single_subst_chained_(location, prefix, suffix, mapping)
             return
-        lookup = self.get_lookup_(location, SingleSubstBuilder)
-        for from_glyph, to_glyph in mapping.items():
-            if from_glyph in lookup.mapping:
-                if to_glyph == lookup.mapping[from_glyph]:
-                    log.info(
-                        "Removing duplicate single substitution from glyph"
-                        ' "%s" to "%s" at %s',
-                        from_glyph,
-                        to_glyph,
-                        location,
-                    )
-                else:
-                    raise FeatureLibError(
-                        'Already defined rule for replacing glyph "%s" by "%s"'
-                        % (from_glyph, lookup.mapping[from_glyph]),
-                        location,
-                    )
-            lookup.mapping[from_glyph] = to_glyph
+
+        self.add_any_subst_(
+            location,
+            {(key,): (value,) for key, value in mapping.items()},
+        )
 
     # GSUB 2
     def add_multiple_subst(
@@ -1331,21 +1357,10 @@ class Builder(object):
         if prefix or suffix or forceChain:
             self.add_multi_subst_chained_(location, prefix, glyph, suffix, replacements)
             return
-        lookup = self.get_lookup_(location, MultipleSubstBuilder)
-        if glyph in lookup.mapping:
-            if replacements == lookup.mapping[glyph]:
-                log.info(
-                    "Removing duplicate multiple substitution from glyph"
-                    ' "%s" to %s%s',
-                    glyph,
-                    replacements,
-                    f" at {location}" if location else "",
-                )
-            else:
-                raise FeatureLibError(
-                    'Already defined substitution for glyph "%s"' % glyph, location
-                )
-        lookup.mapping[glyph] = replacements
+        self.add_any_subst_(
+            location,
+            {(glyph,): tuple(replacements)},
+        )
 
     # GSUB 3
     def add_alternate_subst(self, location, prefix, glyph, suffix, replacement):
@@ -1375,9 +1390,6 @@ class Builder(object):
                 location, prefix, glyphs, suffix, replacement
             )
             return
-        else:
-            lookup = self.get_lookup_(location, LigatureSubstBuilder)
-
         if not all(glyphs):
             raise FeatureLibError("Empty glyph class in substitution", location)
 
@@ -1386,8 +1398,10 @@ class Builder(object):
         # substitutions to be specified on target sequences that contain
         # glyph classes, the implementation software will enumerate
         # all specific glyph sequences if glyph classes are detected"
-        for g in itertools.product(*glyphs):
-            lookup.ligatures[g] = replacement
+        self.add_any_subst_(
+            location,
+            {g: (replacement,) for g in itertools.product(*glyphs)},
+        )
 
     # GSUB 5/6
     def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
@@ -1445,6 +1459,13 @@ class Builder(object):
             sub = self.get_chained_lookup_(location, LigatureSubstBuilder)
 
         for g in itertools.product(*glyphs):
+            existing = sub.ligatures.get(g, replacement)
+            if existing != replacement:
+                raise FeatureLibError(
+                    f"Conflicting ligature sub rules: '{g}' maps to '{existing}' and '{replacement}'",
+                    location,
+                )
+
             sub.ligatures[g] = replacement
 
         chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, [sub]))
@@ -1673,6 +1694,12 @@ class Builder(object):
                 location,
             )
 
+        if key in self.conditionsets_:
+            raise FeatureLibError(
+                f"Condition set '{key}' has the same name as a previous condition set",
+                location,
+            )
+
         # Normalize
         axisMap = {
             axis.axisTag: (axis.minValue, axis.defaultValue, axis.maxValue)
@@ -1712,9 +1739,14 @@ class Builder(object):
         if not varscalar.does_vary:
             return varscalar.default, None
 
-        default, index = varscalar.add_to_variation_store(
-            self.varstorebuilder, self.model_cache, self.font.get("avar")
-        )
+        try:
+            default, index = varscalar.add_to_variation_store(
+                self.varstorebuilder, self.model_cache, self.font.get("avar")
+            )
+        except VarLibError as e:
+            raise FeatureLibError(
+                "Failed to compute deltas for variable scalar", location
+            ) from e
 
         device = None
         if index is not None and index != 0xFFFFFFFF:

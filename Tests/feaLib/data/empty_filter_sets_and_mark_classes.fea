@@ -1,0 +1,9 @@
+feature what {
+    lookupflag UseMarkFilteringSet [];
+    sub a by b;
+} what;
+
+feature whyy {
+    lookupflag MarkAttachmentType [];
+    sub x by z;
+} whyy;
