@@ -314,9 +314,7 @@ class BasePen(DecomposingPen):
         default implementation delegates the work to the cubic curve
         function. Optionally override with a native implementation.
         """
-        if self.__currentPoint is None:
-            raise AssertionError("_qCurveToOne called without current point")
-
+        assert self.__currentPoint is not None
         pt0x, pt0y = self.__currentPoint
         pt1x, pt1y = pt1
         pt2x, pt2y = pt2

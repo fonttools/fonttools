@@ -86,8 +86,7 @@ class PointInsidePen(BasePen):
 
     def _lineTo(self, point: Point) -> None:
         currentPoint = self._getCurrentPoint()
-        if currentPoint is None:
-            return
+        assert currentPoint is not None
         x, y = self.testPoint
         x1, y1 = currentPoint
         x2, y2 = point
@@ -109,8 +108,7 @@ class PointInsidePen(BasePen):
 
     def _curveToOne(self, bcp1: Point, bcp2: Point, point: Point) -> None:
         currentPoint = self._getCurrentPoint()
-        if currentPoint is None:
-            return
+        assert currentPoint is not None
         x, y = self.testPoint
         x1, y1 = currentPoint
         x2, y2 = bcp1
@@ -178,8 +176,7 @@ class PointInsidePen(BasePen):
         # (BasePen implements _qCurveTo in terms of a cubic) will
         # have to do.
         currentPoint = self._getCurrentPoint()
-        if currentPoint is None:
-            return
+        assert currentPoint is not None
         x, y = self.testPoint
         x1, y1 = currentPoint
         x2, y2 = bcp
@@ -196,10 +193,8 @@ class PointInsidePen(BasePen):
         # XXX
 
     def _closePath(self) -> None:
-        currentPoint = self._getCurrentPoint()
-        if currentPoint is None or self.firstPoint is None:
-            return
-        if currentPoint != self.firstPoint:
+        if self._getCurrentPoint() != self.firstPoint:
+            assert self.firstPoint is not None
             self.lineTo(self.firstPoint)
         self.firstPoint = None
 

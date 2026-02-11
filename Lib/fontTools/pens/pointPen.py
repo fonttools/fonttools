@@ -448,8 +448,7 @@ class GuessSmoothPointPen(AbstractPointPen):
             pt = points[i][0]
             prevPt = points[prev][0]
             nextPt = points[next][0]
-            if pt is None or prevPt is None or nextPt is None:
-                continue
+            assert pt is not None and prevPt is not None and nextPt is not None
             if pt != prevPt and pt != nextPt:
                 dx1, dy1 = pt[0] - prevPt[0], pt[1] - prevPt[1]
                 dx2, dy2 = nextPt[0] - pt[0], nextPt[1] - pt[1]
@@ -574,8 +573,7 @@ class ReverseContourPointPen(AbstractPointPen):
                 contour.pop(0)
         pen.beginPath(identifier=self.currentContourIdentifier)
         for pt, nextSegmentType, smooth, name, kwargs in contour:
-            if pt is None:
-                continue
+            assert pt is not None
             if nextSegmentType is not None:
                 segmentType = lastSegmentType
                 lastSegmentType = nextSegmentType

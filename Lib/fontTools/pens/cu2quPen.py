@@ -331,8 +331,7 @@ class Cu2QuMultiPen:
 
     def _curves_to_quadratic(self, pointsList: MultiPenArgs) -> None:
         curves = []
-        if self.current_pts is None:
-            return
+        assert self.current_pts is not None
         for current_pt, points in zip(self.current_pts, pointsList):
             curves.append(current_pt + points)
         quadratics = curves_to_quadratic(curves, [self.max_err] * len(curves))

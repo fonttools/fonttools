@@ -376,8 +376,7 @@ class ContourFilterPointPen(  # type:ignore[misc]
 
     def _flushContour(self) -> None:
         """Flush the current contour to the output pen."""
-        if self.currentContour is None:
-            return
+        assert self.currentContour is not None
         result = self.filterContour(self.currentContour)
         if result is not None:
             self.currentContour = result
@@ -451,7 +450,8 @@ class OnCurveFirstPointPen(ContourFilterPointPen):
         # Check if it's a closed contour (no "move" segmentType)
         is_closed = contour[0][1] != "move"
 
-        if is_closed and contour and contour[0][1] is None:
+        assert contour is not None
+        if is_closed and contour[0][1] is None:
             # Closed contour starting with off-curve - need to rotate
             # Find the first on-curve point
             for i, (pt, segmentType, smooth, name, kwargs) in enumerate(contour):
