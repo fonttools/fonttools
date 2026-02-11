@@ -231,6 +231,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                     last_offcurves = offcurves
                 else:
                     for pt, smooth, name, kwargs in offcurves:
+                        assert pt is not None
                         pen.addPoint(pt, None, smooth, name, **kwargs)
                 pt, smooth, name, kwargs = points[-1]
                 if pt is None:
@@ -244,6 +245,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             else:
                 raise AssertionError("unexpected segment type: %r" % segment_type)
         for pt, smooth, name, kwargs in last_offcurves:
+            assert pt is not None
             pen.addPoint(pt, None, smooth, name, **kwargs)
         pen.endPath()
 
