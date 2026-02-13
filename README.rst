@@ -171,7 +171,7 @@ are required to unlock the extra features named "ufo", etc.
 
   Simplify TrueType glyphs by merging overlapping contours and components.
 
-  * `skia-pathops <https://pypi.python.org/pypy/skia-pathops>`__: Python
+  * `skia-pathops <https://pypi.python.org/pypi/skia-pathops>`__: Python
     bindings for the Skia library's PathOps module, performing boolean
     operations on paths (union, intersection, etc.).
 
