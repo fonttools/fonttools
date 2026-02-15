@@ -1781,6 +1781,7 @@ class TrickyRadialGradientTest:
     def test_nudge_start_circle_position(self, c0, r0, c1, r1, inside, expected):
         assert self.round_start_circle(c0, r0, c1, r1, inside) == expected
 
+
 def test_buildCOLR_missing_base_glyph_in_glyphMap_raises_clear_error():
     glyphMap = {"A": 0}  # pretend the font only contains glyph A
 
