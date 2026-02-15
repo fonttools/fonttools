@@ -621,10 +621,10 @@ def buildBaseGlyphPaintRecord(
     self.Paint = layerBuilder.buildPaint(paint)
     return self
 
-def _check_base_glyphs_exist(colorGlyphs, glyphMap, where):
-    
-    "Checks that every base glyph name in colorGlyphs exists in glyphMap."
 
+def _check_base_glyphs_exist(colorGlyphs, glyphMap, where):
+    """Checks that every base glyph name in colorGlyphs exists in glyphMap."""
+    
     missing = []
     for baseGlyph in colorGlyphs.keys():
         if baseGlyph not in glyphMap:
