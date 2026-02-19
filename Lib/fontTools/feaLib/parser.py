@@ -2188,7 +2188,11 @@ class Parser(object):
         while True:
             if self.cur_token_type_ == Lexer.SYMBOL and self.cur_token_ == ")":
                 break
-            location, value = self.expect_master_()
+            if self.cur_token_type_ == Lexer.NUMBER:
+                location, value = {}, self.cur_token_
+                self.advance_lexer_()
+            else:
+                location, value = self.expect_master_()
             scalar.add_value(location, value)
         return scalar
 
