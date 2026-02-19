@@ -1439,6 +1439,10 @@ class Builder(object):
             )
         # https://github.com/fonttools/fonttools/issues/3551
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
+        # first try to add this to an existing rule
+        if chain.add_multi_sub_to_existing_rule(prefix, glyph, suffix, replacements):
+            return
+        # otherwise make a new rule
         sub = chain.find_chainable_subst({glyph: replacements}, MultipleSubstBuilder)
         if sub is None:
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
