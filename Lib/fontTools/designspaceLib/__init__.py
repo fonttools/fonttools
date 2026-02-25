@@ -2734,6 +2734,9 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
         Use reverse-DNS notation to identify your own data.
         Respect the data stored by others.
+
+        For common keys and their inheritance behavior, see:
+        `Common Lib Key Registry <https://fonttools.readthedocs.io/en/latest/designspaceLib/index.html#common-lib-key-registry>`_
         """
 
         self.default: Optional[str] = None
