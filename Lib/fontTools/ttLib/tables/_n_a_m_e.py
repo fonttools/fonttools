@@ -505,6 +505,11 @@ class NameRecord(object):
         'ascii' is returned.  That can be overriden by passing a value to the default
         argument.
         """
+
+        # Same logic has DWrite - https://github.com/MicrosoftDocs/typography-issues/issues/956#issuecomment-1205678068
+        if self.platformID == 3 and self.platEncID not in [3, 4, 5]:
+            return 'utf_16_be'
+
         return getEncoding(self.platformID, self.platEncID, self.langID, default)
 
     def encodingIsUnicodeCompatible(self):
