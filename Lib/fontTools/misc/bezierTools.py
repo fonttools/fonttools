@@ -1,11 +1,31 @@
 # -*- coding: utf-8 -*-
-"""fontTools.misc.bezierTools.py -- tools for working with Bezier path segments.
-"""
+"""fontTools.misc.bezierTools.py -- tools for working with Bezier path segments."""
 
-from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
-from fontTools.misc.transform import Identity
+from __future__ import annotations
+
 import math
 from collections import namedtuple
+from collections.abc import Generator, Sequence
+from typing import Any, cast, TYPE_CHECKING
+
+from fontTools.annotations import (
+    CubicComplex,
+    CubicPoints,
+    CurvePoints,
+    LinePoints,
+    NestedFloat,
+    Pair,
+    Point,
+    QuadraticPoints,
+    RectFloat,
+    SqrtFunc,
+    Vector,
+)
+from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
+from fontTools.misc.transform import Identity
+
+if TYPE_CHECKING:
+    from fontTools.misc.transform import Transform
 
 try:
     import cython
@@ -16,7 +36,6 @@ COMPILED = cython.compiled
 
 
 EPSILON = 1e-9
-
 
 Intersection = namedtuple("Intersection", ["pt", "t1", "t2"])
 
@@ -53,7 +72,13 @@ __all__ = [
 ]
 
 
-def calcCubicArcLength(pt1, pt2, pt3, pt4, tolerance=0.005):
+def calcCubicArcLength(
+    pt1: Point,
+    pt2: Point,
+    pt3: Point,
+    pt4: Point,
+    tolerance: float = 0.005,
+) -> float:
     """Calculates the arc length for a cubic Bezier segment.
 
     Whereas :func:`approximateCubicArcLength` approximates the length, this
@@ -72,7 +97,9 @@ def calcCubicArcLength(pt1, pt2, pt3, pt4, tolerance=0.005):
     )
 
 
-def _split_cubic_into_two(p0, p1, p2, p3):
+def _split_cubic_into_two(
+    p0: complex, p1: complex, p2: complex, p3: complex
+) -> tuple[CubicComplex, CubicComplex]:
     mid = (p0 + 3 * (p1 + p2) + p3) * 0.125
     deriv3 = (p3 + p2 - p1 - p0) * 0.125
     return (
@@ -89,7 +116,13 @@ def _split_cubic_into_two(p0, p1, p2, p3):
     p3=cython.complex,
 )
 @cython.locals(mult=cython.double, arch=cython.double, box=cython.double)
-def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
+def _calcCubicArcLengthCRecurse(
+    mult: float,
+    p0: complex,
+    p1: complex,
+    p2: complex,
+    p3: complex,
+) -> float:
     arch = abs(p0 - p3)
     box = abs(p0 - p1) + abs(p1 - p2) + abs(p2 - p3)
     if arch * mult + EPSILON >= box:
@@ -112,7 +145,13 @@ def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
     tolerance=cython.double,
     mult=cython.double,
 )
-def calcCubicArcLengthC(pt1, pt2, pt3, pt4, tolerance=0.005):
+def calcCubicArcLengthC(
+    pt1: complex,
+    pt2: complex,
+    pt3: complex,
+    pt4: complex,
+    tolerance: float = 0.005,
+) -> float:
     """Calculates the arc length for a cubic Bezier segment.
 
     Args:
@@ -134,7 +173,7 @@ epsilon = 1e-10
 @cython.inline
 @cython.returns(cython.double)
 @cython.locals(v1=cython.complex, v2=cython.complex)
-def _dot(v1, v2):
+def _dot(v1: complex, v2: complex) -> float:
     return (v1 * v2.conjugate()).real
 
 
@@ -142,13 +181,13 @@ def _dot(v1, v2):
 @cython.inline
 @cython.returns(cython.double)
 @cython.locals(x=cython.double)
-def _intSecAtan(x):
+def _intSecAtan(x: float) -> float:
     # In : sympy.integrate(sp.sec(sp.atan(x)))
     # Out: x*sqrt(x**2 + 1)/2 + asinh(x)/2
     return x * math.sqrt(x**2 + 1) / 2 + math.asinh(x) / 2
 
 
-def calcQuadraticArcLength(pt1, pt2, pt3):
+def calcQuadraticArcLength(pt1: Point, pt2: Point, pt3: Point) -> float:
     """Calculates the arc length for a quadratic Bezier segment.
 
     Args:
@@ -202,7 +241,7 @@ def calcQuadraticArcLength(pt1, pt2, pt3):
     x1=cython.double,
     Len=cython.double,
 )
-def calcQuadraticArcLengthC(pt1, pt2, pt3):
+def calcQuadraticArcLengthC(pt1: complex, pt2: complex, pt3: complex) -> float:
     """Calculates the arc length for a quadratic Bezier segment.
 
     Args:
@@ -234,7 +273,7 @@ def calcQuadraticArcLengthC(pt1, pt2, pt3):
     return Len
 
 
-def approximateQuadraticArcLength(pt1, pt2, pt3):
+def approximateQuadraticArcLength(pt1: Point, pt2: Point, pt3: Point) -> complex:
     """Calculates the arc length for a quadratic Bezier segment.
 
     Uses Gauss-Legendre quadrature for a branch-free approximation.
@@ -262,7 +301,7 @@ def approximateQuadraticArcLength(pt1, pt2, pt3):
     v1=cython.double,
     v2=cython.double,
 )
-def approximateQuadraticArcLengthC(pt1, pt2, pt3):
+def approximateQuadraticArcLengthC(pt1: complex, pt2: complex, pt3: complex) -> complex:
     """Calculates the arc length for a quadratic Bezier segment.
 
     Uses Gauss-Legendre quadrature for a branch-free approximation.
@@ -295,7 +334,7 @@ def approximateQuadraticArcLengthC(pt1, pt2, pt3):
     return v0 + v1 + v2
 
 
-def calcQuadraticBounds(pt1, pt2, pt3):
+def calcQuadraticBounds(pt1: Point, pt2: Point, pt3: Point) -> RectFloat:
     """Calculates the bounding rectangle for a quadratic Bezier segment.
 
     Args:
@@ -329,7 +368,7 @@ def calcQuadraticBounds(pt1, pt2, pt3):
     return calcBounds(points)
 
 
-def approximateCubicArcLength(pt1, pt2, pt3, pt4):
+def approximateCubicArcLength(pt1: Point, pt2: Point, pt3: Point, pt4: Point) -> float:
     """Approximates the arc length for a cubic Bezier segment.
 
     Uses Gauss-Lobatto quadrature with n=5 points to approximate arc length.
@@ -373,7 +412,9 @@ def approximateCubicArcLength(pt1, pt2, pt3, pt4):
     v3=cython.double,
     v4=cython.double,
 )
-def approximateCubicArcLengthC(pt1, pt2, pt3, pt4):
+def approximateCubicArcLengthC(
+    pt1: complex, pt2: complex, pt3: complex, pt4: complex
+) -> float:
     """Approximates the arc length for a cubic Bezier segment.
 
     Args:
@@ -409,7 +450,7 @@ def approximateCubicArcLengthC(pt1, pt2, pt3, pt4):
     return v0 + v1 + v2 + v3 + v4
 
 
-def calcCubicBounds(pt1, pt2, pt3, pt4):
+def calcCubicBounds(pt1: Point, pt2: Point, pt3: Point, pt4: Point) -> RectFloat:
     """Calculates the bounding rectangle for a quadratic Bezier segment.
 
     Args:
@@ -447,7 +488,9 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
     return calcBounds(points)
 
 
-def splitLine(pt1, pt2, where, isHorizontal):
+def splitLine(
+    pt1: Point, pt2: Point, where: float, isHorizontal: bool
+) -> list[Pair[Point]]:
     """Split a line at a given coordinate.
 
     Args:
@@ -504,7 +547,9 @@ def splitLine(pt1, pt2, where, isHorizontal):
         return [(pt1, pt2)]
 
 
-def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
+def splitQuadratic(
+    pt1: Point, pt2: Point, pt3: Point, where: float, isHorizontal: bool
+) -> list[QuadraticPoints]:
     """Split a quadratic Bezier curve at a given coordinate.
 
     Args:
@@ -549,7 +594,9 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
     return _splitQuadraticAtT(a, b, c, *solutions)
 
 
-def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
+def splitCubic(
+    pt1: Point, pt2: Point, pt3: Point, pt4: Point, where: float, isHorizontal: bool
+) -> list[CubicPoints]:
     """Split a cubic Bezier curve at a given coordinate.
 
     Args:
@@ -586,7 +633,9 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
     return _splitCubicAtT(a, b, c, d, *solutions)
 
 
-def splitQuadraticAtT(pt1, pt2, pt3, *ts):
+def splitQuadraticAtT(
+    pt1: Point, pt2: Point, pt3: Point, *ts: float
+) -> list[QuadraticPoints]:
     """Split a quadratic Bezier curve at one or more values of t.
 
     Args:
@@ -610,7 +659,9 @@ def splitQuadraticAtT(pt1, pt2, pt3, *ts):
     return _splitQuadraticAtT(a, b, c, *ts)
 
 
-def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
+def splitCubicAtT(
+    pt1: Point, pt2: Point, pt3: Point, pt4: Point, *ts: float
+) -> list[CubicPoints]:
     """Split a cubic Bezier curve at one or more values of t.
 
     Args:
@@ -651,7 +702,9 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
     c=cython.complex,
     d=cython.complex,
 )
-def splitCubicAtTC(pt1, pt2, pt3, pt4, *ts):
+def splitCubicAtTC(
+    pt1: complex, pt2: complex, pt3: complex, pt4: complex, *ts: float
+) -> Generator[CubicComplex]:
     """Split a cubic Bezier curve at one or more values of t.
 
     Args:
@@ -679,7 +732,9 @@ def splitCubicAtTC(pt1, pt2, pt3, pt4, *ts):
 @cython.locals(
     t2=cython.double, _1_t=cython.double, _1_t_2=cython.double, _2_t_1_t=cython.double
 )
-def splitCubicIntoTwoAtTC(pt1, pt2, pt3, pt4, t):
+def splitCubicIntoTwoAtTC(
+    pt1: complex, pt2: complex, pt3: complex, pt4: complex, t: float
+) -> tuple[CubicComplex, CubicComplex]:
     """Split a cubic Bezier curve at t.
 
     Args:
@@ -705,17 +760,19 @@ def splitCubicIntoTwoAtTC(pt1, pt2, pt3, pt4, t):
     return ((pt1, pt2, off1, pointAtT), (pointAtT, off2, pt3, pt4))
 
 
-def _splitQuadraticAtT(a, b, c, *ts):
-    ts = list(ts)
+def _splitQuadraticAtT(
+    a: Point, b: Point, c: Point, *ts: float
+) -> list[QuadraticPoints]:
+    tsList: list[float] = list(ts)
     segments = []
-    ts.insert(0, 0.0)
-    ts.append(1.0)
+    tsList.insert(0, 0.0)
+    tsList.append(1.0)
     ax, ay = a
     bx, by = b
     cx, cy = c
-    for i in range(len(ts) - 1):
-        t1 = ts[i]
-        t2 = ts[i + 1]
+    for i in range(len(tsList) - 1):
+        t1 = tsList[i]
+        t2 = tsList[i + 1]
         delta = t2 - t1
         # calc new a, b and c
         delta_2 = delta * delta
@@ -732,18 +789,20 @@ def _splitQuadraticAtT(a, b, c, *ts):
     return segments
 
 
-def _splitCubicAtT(a, b, c, d, *ts):
-    ts = list(ts)
-    ts.insert(0, 0.0)
-    ts.append(1.0)
+def _splitCubicAtT(
+    a: Point, b: Point, c: Point, d: Point, *ts: float
+) -> list[CubicPoints]:
+    tsList: list[float] = list(ts)
+    tsList.insert(0, 0.0)
+    tsList.append(1.0)
     segments = []
     ax, ay = a
     bx, by = b
     cx, cy = c
     dx, dy = d
-    for i in range(len(ts) - 1):
-        t1 = ts[i]
-        t2 = ts[i + 1]
+    for i in range(len(tsList) - 1):
+        t1 = tsList[i]
+        t2 = tsList[i + 1]
         delta = t2 - t1
 
         delta_2 = delta * delta
@@ -782,13 +841,15 @@ def _splitCubicAtT(a, b, c, d, *ts):
     c1=cython.complex,
     d1=cython.complex,
 )
-def _splitCubicAtTC(a, b, c, d, *ts):
-    ts = list(ts)
-    ts.insert(0, 0.0)
-    ts.append(1.0)
-    for i in range(len(ts) - 1):
-        t1 = ts[i]
-        t2 = ts[i + 1]
+def _splitCubicAtTC(
+    a: complex, b: complex, c: complex, d: complex, *ts: float
+) -> Generator[CubicComplex]:
+    tsList: list[float] = list(ts)
+    tsList.insert(0, 0.0)
+    tsList.append(1.0)
+    for i in range(len(tsList) - 1):
+        t1 = tsList[i]
+        t2 = tsList[i + 1]
         delta = t2 - t1
 
         delta_2 = delta * delta
@@ -812,7 +873,7 @@ def _splitCubicAtTC(a, b, c, d, *ts):
 from math import sqrt, acos, cos, pi
 
 
-def solveQuadratic(a, b, c, sqrt=sqrt):
+def solveQuadratic(a: float, b: float, c: float, sqrt: SqrtFunc = sqrt) -> list[float]:
     """Solve a quadratic equation.
 
     Solves *a*x*x + b*x + c = 0* where a, b and c are real.
@@ -845,7 +906,7 @@ def solveQuadratic(a, b, c, sqrt=sqrt):
     return roots
 
 
-def solveCubic(a, b, c, d):
+def solveCubic(a: float, b: float, c: float, d: float) -> list[float]:
     """Solve a cubic equation.
 
     Solves *a*x*x*x + b*x*x + c*x + d = 0* where a, b, c and d are real.
@@ -881,7 +942,7 @@ def solveCubic(a, b, c, d):
     # adapted from:
     #   CUBIC.C - Solve a cubic polynomial
     #   public domain by Ross Cottrell
-    # found at: http://www.strangecreations.com/library/snippets/Cubic.C
+    # found at: http://www.strangecreations.com/library/snippets/CubicComplex.C
     #
     if abs(a) < epsilon:
         # don't just test for zero; for very small values of 'a' solveCubic()
@@ -942,7 +1003,7 @@ def solveCubic(a, b, c, d):
 #
 
 
-def calcQuadraticParameters(pt1, pt2, pt3):
+def calcQuadraticParameters(pt1: Point, pt2: Point, pt3: Point) -> QuadraticPoints:
     x2, y2 = pt2
     x3, y3 = pt3
     cx, cy = pt1
@@ -953,7 +1014,7 @@ def calcQuadraticParameters(pt1, pt2, pt3):
     return (ax, ay), (bx, by), (cx, cy)
 
 
-def calcCubicParameters(pt1, pt2, pt3, pt4):
+def calcCubicParameters(pt1: Point, pt2: Point, pt3: Point, pt4: Point) -> CubicPoints:
     x2, y2 = pt2
     x3, y3 = pt3
     x4, y4 = pt4
@@ -978,14 +1039,16 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
     b=cython.complex,
     c=cython.complex,
 )
-def calcCubicParametersC(pt1, pt2, pt3, pt4):
+def calcCubicParametersC(
+    pt1: complex, pt2: complex, pt3: complex, pt4: complex
+) -> CubicComplex:
     c = (pt2 - pt1) * 3.0
     b = (pt3 - pt2) * 3.0 - c
     a = pt4 - pt1 - c - b
     return (a, b, c, pt1)
 
 
-def calcQuadraticPoints(a, b, c):
+def calcQuadraticPoints(a: Point, b: Point, c: Point) -> QuadraticPoints:
     ax, ay = a
     bx, by = b
     cx, cy = c
@@ -998,7 +1061,7 @@ def calcQuadraticPoints(a, b, c):
     return (x1, y1), (x2, y2), (x3, y3)
 
 
-def calcCubicPoints(a, b, c, d):
+def calcCubicPoints(a: Point, b: Point, c: Point, d: Point) -> CubicPoints:
     ax, ay = a
     bx, by = b
     cx, cy = c
@@ -1025,7 +1088,7 @@ def calcCubicPoints(a, b, c, d):
     p3=cython.complex,
     p4=cython.complex,
 )
-def calcCubicPointsC(a, b, c, d):
+def calcCubicPointsC(a: complex, b: complex, c: complex, d: complex) -> CubicComplex:
     p2 = c * (1 / 3) + d
     p3 = (b + c) * (1 / 3) + p2
     p4 = a + b + c + d
@@ -1037,7 +1100,7 @@ def calcCubicPointsC(a, b, c, d):
 #
 
 
-def linePointAtT(pt1, pt2, t):
+def linePointAtT(pt1: Point, pt2: Point, t: float) -> Point:
     """Finds the point at time `t` on a line.
 
     Args:
@@ -1050,7 +1113,7 @@ def linePointAtT(pt1, pt2, t):
     return ((pt1[0] * (1 - t) + pt2[0] * t), (pt1[1] * (1 - t) + pt2[1] * t))
 
 
-def quadraticPointAtT(pt1, pt2, pt3, t):
+def quadraticPointAtT(pt1: Point, pt2: Point, pt3: Point, t: float) -> Point:
     """Finds the point at time `t` on a quadratic curve.
 
     Args:
@@ -1065,7 +1128,7 @@ def quadraticPointAtT(pt1, pt2, pt3, t):
     return (x, y)
 
 
-def cubicPointAtT(pt1, pt2, pt3, pt4, t):
+def cubicPointAtT(pt1: Point, pt2: Point, pt3: Point, pt4: Point, t: float) -> Point:
     """Finds the point at time `t` on a cubic curve.
 
     Args:
@@ -1100,7 +1163,9 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
     pt4=cython.complex,
 )
 @cython.locals(t2=cython.double, _1_t=cython.double, _1_t_2=cython.double)
-def cubicPointAtTC(pt1, pt2, pt3, pt4, t):
+def cubicPointAtTC(
+    pt1: complex, pt2: complex, pt3: complex, pt4: complex, t: float
+) -> complex:
     """Finds the point at time `t` on a cubic curve.
 
     Args:
@@ -1116,13 +1181,16 @@ def cubicPointAtTC(pt1, pt2, pt3, pt4, t):
     return _1_t_2 * _1_t * pt1 + 3 * (_1_t_2 * t * pt2 + _1_t * t2 * pt3) + t2 * t * pt4
 
 
-def segmentPointAtT(seg, t):
+def segmentPointAtT(seg: LinePoints | CurvePoints, t: float) -> Point:
     if len(seg) == 2:
-        return linePointAtT(*seg, t)
+        p0, p1 = seg
+        return linePointAtT(p0, p1, t)
     elif len(seg) == 3:
-        return quadraticPointAtT(*seg, t)
+        p0, p1, p2 = seg
+        return quadraticPointAtT(p0, p1, p2, t)
     elif len(seg) == 4:
-        return cubicPointAtT(*seg, t)
+        p0, p1, p2, p4 = seg
+        return cubicPointAtT(p0, p1, p2, p4, t)
     raise ValueError("Unknown curve degree")
 
 
@@ -1131,7 +1199,7 @@ def segmentPointAtT(seg, t):
 #
 
 
-def _line_t_of_pt(s, e, pt):
+def _line_t_of_pt(s: Point, e: Point, pt: Point) -> float:
     sx, sy = s
     ex, ey = e
     px, py = pt
@@ -1145,13 +1213,15 @@ def _line_t_of_pt(s, e, pt):
         return (py - sy) / (ey - sy)
 
 
-def _both_points_are_on_same_side_of_origin(a, b, origin):
+def _both_points_are_on_same_side_of_origin(a: Point, b: Point, origin: Point) -> bool:
     xDiff = (a[0] - origin[0]) * (b[0] - origin[0])
     yDiff = (a[1] - origin[1]) * (b[1] - origin[1])
     return not (xDiff <= 0.0 and yDiff <= 0.0)
 
 
-def lineLineIntersections(s1, e1, s2, e2):
+def lineLineIntersections(
+    s1: Point, e1: Point, s2: Point, e2: Point
+) -> list[Intersection]:
     """Finds intersections between two line segments.
 
     Args:
@@ -1229,7 +1299,7 @@ def lineLineIntersections(s1, e1, s2, e2):
     return []
 
 
-def _alignment_transformation(segment):
+def _alignment_transformation(segment: Sequence[Point]) -> Transform:
     # Returns a transformation which aligns a segment horizontally at the
     # origin. Apply this transformation to curves and root-find to find
     # intersections with the segment.
@@ -1239,7 +1309,7 @@ def _alignment_transformation(segment):
     return Identity.rotate(-angle).translate(-start[0], -start[1])
 
 
-def _curve_line_intersections_t(curve, line):
+def _curve_line_intersections_t(curve: CurvePoints, line: LinePoints) -> list[float]:
     aligned_curve = _alignment_transformation(line).transformPoints(curve)
     if len(curve) == 3:
         a, b, c = calcQuadraticParameters(*aligned_curve)
@@ -1252,7 +1322,7 @@ def _curve_line_intersections_t(curve, line):
     return sorted(i for i in intersections if 0.0 <= i <= 1)
 
 
-def curveLineIntersections(curve, line):
+def curveLineIntersections(curve: CurvePoints, line: LinePoints) -> list[Intersection]:
     """Finds intersections between a curve and a line.
 
     Args:
@@ -1274,7 +1344,7 @@ def curveLineIntersections(curve, line):
         (84.9000930760723, 189.87306176459828)
     """
     if len(curve) == 3:
-        pointFinder = quadraticPointAtT
+        pointFinder: Any = quadraticPointAtT
     elif len(curve) == 4:
         pointFinder = cubicPointAtT
     else:
@@ -1284,13 +1354,14 @@ def curveLineIntersections(curve, line):
         pt = pointFinder(*curve, t)
         # Back-project the point onto the line, to avoid problems with
         # numerical accuracy in the case of vertical and horizontal lines
-        line_t = _line_t_of_pt(*line, pt)
-        pt = linePointAtT(*line, line_t)
+        l0, l1 = line
+        line_t = _line_t_of_pt(l0, l1, pt)
+        pt = linePointAtT(l0, l1, line_t)
         intersections.append(Intersection(pt=pt, t1=t, t2=line_t))
     return intersections
 
 
-def _curve_bounds(c):
+def _curve_bounds(c: CurvePoints) -> RectFloat:
     if len(c) == 3:
         return calcQuadraticBounds(*c)
     elif len(c) == 4:
@@ -1298,7 +1369,9 @@ def _curve_bounds(c):
     raise ValueError("Unknown curve degree")
 
 
-def _split_segment_at_t(c, t):
+def _split_segment_at_t(
+    c: LinePoints | CurvePoints, t: float
+) -> list[LinePoints] | list[QuadraticPoints] | list[CubicPoints]:
     if len(c) == 2:
         s, e = c
         midpoint = linePointAtT(s, e, t)
@@ -1311,8 +1384,12 @@ def _split_segment_at_t(c, t):
 
 
 def _curve_curve_intersections_t(
-    curve1, curve2, precision=1e-3, range1=None, range2=None
-):
+    curve1: CurvePoints,
+    curve2: CurvePoints,
+    precision: float = 1e-3,
+    range1: Vector | None = None,
+    range2: Vector | None = None,
+) -> list[Point]:
     bounds1 = _curve_bounds(curve1)
     bounds2 = _curve_bounds(curve2)
 
@@ -1326,18 +1403,23 @@ def _curve_curve_intersections_t(
     if not intersects:
         return []
 
-    def midpoint(r):
+    def midpoint(r: Point) -> float:
         return 0.5 * (r[0] + r[1])
 
     # If they do overlap but they're tiny, approximate
     if rectArea(bounds1) < precision and rectArea(bounds2) < precision:
         return [(midpoint(range1), midpoint(range2))]
 
-    c11, c12 = _split_segment_at_t(curve1, 0.5)
+    c11: CurvePoints
+    c12: CurvePoints
+    c21: CurvePoints
+    c22: CurvePoints
+
+    c11, c12 = cast(tuple[CurvePoints, CurvePoints], _split_segment_at_t(curve1, 0.5))
     c11_range = (range1[0], midpoint(range1))
     c12_range = (midpoint(range1), range1[1])
 
-    c21, c22 = _split_segment_at_t(curve2, 0.5)
+    c21, c22 = cast(tuple[CurvePoints, CurvePoints], _split_segment_at_t(curve2, 0.5))
     c21_range = (range2[0], midpoint(range2))
     c22_range = (midpoint(range2), range2[1])
 
@@ -1363,7 +1445,9 @@ def _curve_curve_intersections_t(
         )
     )
 
-    unique_key = lambda ts: (int(ts[0] / precision), int(ts[1] / precision))
+    def unique_key(ts: Point) -> Point:
+        return (int(ts[0] / precision), int(ts[1] / precision))
+
     seen = set()
     unique_values = []
 
@@ -1377,12 +1461,14 @@ def _curve_curve_intersections_t(
     return unique_values
 
 
-def _is_linelike(segment):
+def _is_linelike(segment: Sequence[Point]) -> bool:
     maybeline = _alignment_transformation(segment).transformPoints(segment)
     return all(math.isclose(p[1], 0.0) for p in maybeline)
 
 
-def curveCurveIntersections(curve1, curve2):
+def curveCurveIntersections(
+    curve1: CurvePoints, curve2: CurvePoints
+) -> list[Intersection]:
     """Finds intersections between a curve and a curve.
 
     Args:
@@ -1424,7 +1510,9 @@ def curveCurveIntersections(curve1, curve2):
     ]
 
 
-def segmentSegmentIntersections(seg1, seg2):
+def segmentSegmentIntersections(
+    seg1: CurvePoints, seg2: CurvePoints
+) -> list[Intersection]:
     """Finds intersections between two segments.
 
     Args:
@@ -1472,20 +1560,20 @@ def segmentSegmentIntersections(seg1, seg2):
     return [Intersection(pt=i.pt, t1=i.t2, t2=i.t1) for i in intersections]
 
 
-def _segmentrepr(obj):
+def _segmentrepr(obj: "NestedFloat") -> str:
     """
     >>> _segmentrepr([1, [2, 3], [], [[2, [3, 4], [0.1, 2.2]]]])
     '(1, (2, 3), (), ((2, (3, 4), (0.1, 2.2))))'
     """
     try:
-        it = iter(obj)
+        it = iter(obj)  # type:ignore[arg-type]
     except TypeError:
-        return "%g" % obj
+        return "%g" % cast(float, obj)
     else:
         return "(%s)" % ", ".join(_segmentrepr(x) for x in it)
 
 
-def printSegments(segments):
+def printSegments(segments: Sequence[Point]) -> None:
     """Helper for the doctests, displaying each segment in a list of
     segments on a single line as a tuple.
     """

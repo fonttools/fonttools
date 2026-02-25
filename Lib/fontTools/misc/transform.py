@@ -11,53 +11,56 @@ used as dictionary keys.
 This module exports the following symbols:
 
 Transform
-	this is the main class
+        this is the main class
 Identity
-	Transform instance set to the identity transformation
+        Transform instance set to the identity transformation
 Offset
-	Convenience function that returns a translating transformation
+        Convenience function that returns a translating transformation
 Scale
-	Convenience function that returns a scaling transformation
+        Convenience function that returns a scaling transformation
 
 The DecomposedTransform class implements a transformation with separate
 translate, rotation, scale, skew, and transformation-center components.
 
 :Example:
 
-	>>> t = Transform(2, 0, 0, 3, 0, 0)
-	>>> t.transformPoint((100, 100))
-	(200, 300)
-	>>> t = Scale(2, 3)
-	>>> t.transformPoint((100, 100))
-	(200, 300)
-	>>> t.transformPoint((0, 0))
-	(0, 0)
-	>>> t = Offset(2, 3)
-	>>> t.transformPoint((100, 100))
-	(102, 103)
-	>>> t.transformPoint((0, 0))
-	(2, 3)
-	>>> t2 = t.scale(0.5)
-	>>> t2.transformPoint((100, 100))
-	(52.0, 53.0)
-	>>> import math
-	>>> t3 = t2.rotate(math.pi / 2)
-	>>> t3.transformPoint((0, 0))
-	(2.0, 3.0)
-	>>> t3.transformPoint((100, 100))
-	(-48.0, 53.0)
-	>>> t = Identity.scale(0.5).translate(100, 200).skew(0.1, 0.2)
-	>>> t.transformPoints([(0, 0), (1, 1), (100, 100)])
-	[(50.0, 100.0), (50.550167336042726, 100.60135501775433), (105.01673360427253, 160.13550177543362)]
-	>>>
+        >>> t = Transform(2, 0, 0, 3, 0, 0)
+        >>> t.transformPoint((100, 100))
+        (200, 300)
+        >>> t = Scale(2, 3)
+        >>> t.transformPoint((100, 100))
+        (200, 300)
+        >>> t.transformPoint((0, 0))
+        (0, 0)
+        >>> t = Offset(2, 3)
+        >>> t.transformPoint((100, 100))
+        (102, 103)
+        >>> t.transformPoint((0, 0))
+        (2, 3)
+        >>> t2 = t.scale(0.5)
+        >>> t2.transformPoint((100, 100))
+        (52.0, 53.0)
+        >>> import math
+        >>> t3 = t2.rotate(math.pi / 2)
+        >>> t3.transformPoint((0, 0))
+        (2.0, 3.0)
+        >>> t3.transformPoint((100, 100))
+        (-48.0, 53.0)
+        >>> t = Identity.scale(0.5).translate(100, 200).skew(0.1, 0.2)
+        >>> t.transformPoints([(0, 0), (1, 1), (100, 100)])
+        [(50.0, 100.0), (50.550167336042726, 100.60135501775433), (105.01673360427253, 160.13550177543362)]
+        >>>
 """
 
 from __future__ import annotations
 
 import math
-from typing import NamedTuple
+from typing import NamedTuple, TYPE_CHECKING
+from collections.abc import Sequence
 from dataclasses import dataclass
 
+if TYPE_CHECKING:
+    from fontTools.annotations import Point, Vector, TransformFloat
 
 __all__ = ["Transform", "Identity", "Offset", "Scale", "DecomposedTransform"]
 
@@ -163,7 +166,7 @@ class Transform(NamedTuple):
     dx: float = 0
     dy: float = 0
 
-    def transformPoint(self, p):
+    def transformPoint(self, p: Point) -> Point:
         """Transform a point.
 
         :Example:
@@ -177,7 +180,7 @@ class Transform(NamedTuple):
         xx, xy, yx, yy, dx, dy = self
         return (xx * x + yx * y + dx, xy * x + yy * y + dy)
 
-    def transformPoints(self, points):
+    def transformPoints(self, points: Sequence[Point]) -> list[Point]:
         """Transform a list of points.
 
         :Example:
@@ -190,7 +193,7 @@ class Transform(NamedTuple):
         xx, xy, yx, yy, dx, dy = self
         return [(xx * x + yx * y + dx, xy * x + yy * y + dy) for x, y in points]
 
-    def transformVector(self, v):
+    def transformVector(self, v: Vector) -> Vector:
         """Transform an (dx, dy) vector, treating translation as zero.
 
         :Example:
@@ -201,10 +204,10 @@ class Transform(NamedTuple):
                 >>>
         """
         (dx, dy) = v
-        xx, xy, yx, yy = self[:4]
+        xx, xy, yx, yy = self.xx, self.xy, self.yx, self.yy
         return (xx * dx + yx * dy, xy * dx + yy * dy)
 
-    def transformVectors(self, vectors):
+    def transformVectors(self, vectors: Sequence[Vector]) -> list[Vector]:
         """Transform a list of (dx, dy) vector, treating translation as zero.
 
         :Example:
@@ -213,10 +216,10 @@ class Transform(NamedTuple):
                 [(6, -8), (10, -12)]
                 >>>
         """
-        xx, xy, yx, yy = self[:4]
+        xx, xy, yx, yy = self.xx, self.xy, self.yx, self.yy
         return [(xx * dx + yx * dy, xy * dx + yy * dy) for dx, dy in vectors]
 
-    def translate(self, x: float = 0, y: float = 0):
+    def translate(self, x: float = 0, y: float = 0) -> Transform:
         """Return a new transformation, translated (offset) by x, y.
 
         :Example:
@@ -227,7 +230,7 @@ class Transform(NamedTuple):
         """
         return self.transform((1, 0, 0, 1, x, y))
 
-    def scale(self, x: float = 1, y: float | None = None):
+    def scale(self, x: float = 1, y: float | None = None) -> Transform:
         """Return a new transformation, scaled by x, y. The 'y' argument
         may be None, which implies to use the x value for y as well.
 
@@ -243,7 +246,7 @@ class Transform(NamedTuple):
             y = x
         return self.transform((x, 0, 0, y, 0, 0))
 
-    def rotate(self, angle: float):
+    def rotate(self, angle: float) -> Transform:
         """Return a new transformation, rotated by 'angle' (radians).
 
         :Example:
@@ -257,7 +260,7 @@ class Transform(NamedTuple):
         s = _normSinCos(math.sin(angle))
         return self.transform((c, s, -s, c, 0, 0))
 
-    def skew(self, x: float = 0, y: float = 0):
+    def skew(self, x: float = 0, y: float = 0) -> Transform:
         """Return a new transformation, skewed by x and y.
 
         :Example:
@@ -269,7 +272,7 @@ class Transform(NamedTuple):
         """
         return self.transform((1, math.tan(y), math.tan(x), 1, 0, 0))
 
-    def transform(self, other):
+    def transform(self, other: TransformFloat) -> Transform:
         """Return a new transformation, transformed by another
         transformation.
 
@@ -290,7 +293,7 @@ class Transform(NamedTuple):
             xy2 * dx1 + yy2 * dy1 + dy2,
         )
 
-    def reverseTransform(self, other):
+    def reverseTransform(self, other: TransformFloat) -> Transform:
         """Return a new transformation, which is the other transformation
         transformed by self. self.reverseTransform(other) is equivalent to
         other.transform(self).
@@ -314,7 +317,7 @@ class Transform(NamedTuple):
             xy2 * dx1 + yy2 * dy1 + dy2,
         )
 
-    def inverse(self):
+    def inverse(self) -> Transform:
         """Return the inverse transformation.
 
         :Example:
@@ -420,7 +423,7 @@ class DecomposedTransform:
     tCenterX: float = 0
     tCenterY: float = 0
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return (
             self.translateX != 0
             or self.translateY != 0
@@ -434,7 +437,7 @@ class DecomposedTransform:
         )
 
     @classmethod
-    def fromTransform(self, transform):
+    def fromTransform(self, transform: Transform) -> DecomposedTransform:
         """Return a DecomposedTransform() equivalent of this transformation.
         The returned solution always has skewY = 0, and angle in the (-180, 180].
 
@@ -458,9 +461,10 @@ class DecomposedTransform:
 
         delta = a * d - b * c
 
-        rotation = 0
-        scaleX = scaleY = 0
-        skewX = 0
+        rotation: float = 0
+        scaleX: float = 0
+        scaleY: float = 0
+        skewX: float = 0
 
         # Apply the QR-like decomposition.
         if a != 0 or b != 0:

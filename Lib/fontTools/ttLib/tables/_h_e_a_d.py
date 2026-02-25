@@ -44,6 +44,9 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/head
     """
 
+    # NOTE: mypy needs this stub to find the attribute in pens.statisticsPen
+    unitsPerEm: int
+
     dependencies = ["maxp", "loca", "CFF ", "CFF2"]
 
     def decompile(self, data, ttFont):

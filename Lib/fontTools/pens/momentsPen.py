@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fontTools.pens.basePen import BasePen, OpenContourError
 
 try:
@@ -7,31 +9,33 @@ except (AttributeError, ImportError):
     from fontTools.misc import cython
 COMPILED = cython.compiled
 
+from fontTools.annotations import GlyphSetMapping, Point
+
 
 __all__ = ["MomentsPen"]
 
 
 class MomentsPen(BasePen):
 
-    def __init__(self, glyphset=None):
+    def __init__(self, glyphset: GlyphSetMapping | None = None) -> None:
         BasePen.__init__(self, glyphset)
 
-        self.area = 0
-        self.momentX = 0
-        self.momentY = 0
-        self.momentXX = 0
-        self.momentXY = 0
-        self.momentYY = 0
+        self.area: float = 0
+        self.momentX: float = 0
+        self.momentY: float = 0
+        self.momentXX: float = 0
+        self.momentXY: float = 0
+        self.momentYY: float = 0
 
-    def _moveTo(self, p0):
+    def _moveTo(self, p0: Point) -> None:
         self._startPoint = p0
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         p0 = self._getCurrentPoint()
         if p0 != self._startPoint:
             self._lineTo(self._startPoint)
 
-    def _endPath(self):
+    def _endPath(self) -> None:
         p0 = self._getCurrentPoint()
         if p0 != self._startPoint:
             raise OpenContourError("Glyph statistics is not defined on open contours.")
@@ -51,8 +55,10 @@ class MomentsPen(BasePen):
     @cython.locals(r12=cython.double)
     @cython.locals(x0=cython.double, y0=cython.double)
     @cython.locals(x1=cython.double, y1=cython.double)
-    def _lineTo(self, p1):
-        x0, y0 = self._getCurrentPoint()
+    def _lineTo(self, p1: Point) -> None:
+        currentPoint = self._getCurrentPoint()
+        assert currentPoint is not None
+        x0, y0 = currentPoint
         x1, y1 = p1
 
         r0 = x1 * y0
@@ -153,8 +159,10 @@ class MomentsPen(BasePen):
     @cython.locals(x0=cython.double, y0=cython.double)
     @cython.locals(x1=cython.double, y1=cython.double)
     @cython.locals(x2=cython.double, y2=cython.double)
-    def _qCurveToOne(self, p1, p2):
-        x0, y0 = self._getCurrentPoint()
+    def _qCurveToOne(self, p1: Point, p2: Point) -> None:
+        currentPoint = self._getCurrentPoint()
+        assert currentPoint is not None
+        x0, y0 = currentPoint
         x1, y1 = p1
         x2, y2 = p2
 
@@ -444,8 +452,10 @@ class MomentsPen(BasePen):
     @cython.locals(x1=cython.double, y1=cython.double)
     @cython.locals(x2=cython.double, y2=cython.double)
     @cython.locals(x3=cython.double, y3=cython.double)
-    def _curveToOne(self, p1, p2, p3):
-        x0, y0 = self._getCurrentPoint()
+    def _curveToOne(self, p1: Point, p2: Point, p3: Point) -> None:
+        currentPoint = self._getCurrentPoint()
+        assert currentPoint is not None
+        x0, y0 = currentPoint
         x1, y1 = p1
         x2, y2 = p2
         x3, y3 = p3
