@@ -51,7 +51,7 @@
         <dimension name="Weight" xvalue="57"/>
       </location>
     </instance>
-    <instance name="Aktiv Grotesk " familyname="Aktiv Grotesk" stylename="" filename="../instances/AktivGrotesk_Rg.ufo" postscriptfontname="AktivGrotesk-" stylemapfamilyname="Aktiv Grotesk" stylemapstylename="regular">
+    <instance name="Aktiv Grotesk Regular" familyname="Aktiv Grotesk" stylename="Regular" filename="../instances/AktivGrotesk_Rg.ufo" postscriptfontname="AktivGrotesk-Regular" stylemapfamilyname="Aktiv Grotesk" stylemapstylename="regular">
       <location>
         <dimension name="Weight" xvalue="84"/>
       </location>

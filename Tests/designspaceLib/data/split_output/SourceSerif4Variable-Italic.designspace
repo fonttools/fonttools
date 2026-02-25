@@ -152,7 +152,7 @@
         <dimension name="optical" xvalue="20"/>
       </location>
     </instance>
-    <instance name="Source Serif 4 Italic" familyname="Source Serif 4" stylename="Italic" filename="Source Serif 4-Italic.ttf" postscriptfontname="SourceSerif4Italic-Regular" stylemapfamilyname="Source Serif 4 Italic" stylemapstylename="regular">
+    <instance name="Source Serif 4 Italic" familyname="Source Serif 4" stylename="Italic" filename="Source Serif 4-Italic.ttf" postscriptfontname="SourceSerif4Italic-Regular" stylemapfamilyname="Source Serif 4" stylemapstylename="regular">
       <location>
         <dimension name="weight" xvalue="394"/>
         <dimension name="optical" xvalue="20"/>
@@ -164,7 +164,7 @@
         <dimension name="optical" xvalue="20"/>
       </location>
     </instance>
-    <instance name="Source Serif 4 Bold Italic" familyname="Source Serif 4" stylename="Bold Italic" filename="Source Serif 4-Bold Italic.ttf" postscriptfontname="SourceSerif4Italic-Bold" stylemapfamilyname="Source Serif 4 Bold Italic" stylemapstylename="regular">
+    <instance name="Source Serif 4 Bold Italic" familyname="Source Serif 4" stylename="Bold Italic" filename="Source Serif 4-Bold Italic.ttf" postscriptfontname="SourceSerif4Italic-Bold" stylemapfamilyname="Source Serif 4" stylemapstylename="regular">
       <location>
         <dimension name="weight" xvalue="823"/>
         <dimension name="optical" xvalue="20"/>
