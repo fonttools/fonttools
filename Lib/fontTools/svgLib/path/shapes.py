@@ -173,6 +173,8 @@ class PathBuilder(object):
         self.A(rx, ry, cx - rx, cy, large_arc=1)
 
     def add_path_from_element(self, el):
+        if not isinstance(el.tag, str):
+            return False
         tag = _strip_xml_ns(el.tag)
         parse_fn = getattr(self, "_parse_%s" % tag.lower(), None)
         if not callable(parse_fn):
