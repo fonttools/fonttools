@@ -2126,6 +2126,16 @@ class ParserTest(unittest.TestCase):
             'Ambiguous "ignore sub", there should be least one marked glyph'
         )
 
+    def test_variable_scalar_default(self):
+        doc = self.parse(
+            "feature test {valueRecordDef <0 (100 wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0> foo;} test;"
+        )
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(
+            value.asFea(),
+            "<0 (100 wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0>",
+        )
+
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)
         p = Parser(featurefile, glyphNames, followIncludes=followIncludes)

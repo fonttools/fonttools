@@ -17,13 +17,16 @@ class VariableScalar:
     def __repr__(self):
         items = []
         for location, value in self.values.items():
-            loc = ",".join(
-                [
-                    f"{ax}={int(coord) if float(coord).is_integer() else coord}"
-                    for ax, coord in location
-                ]
-            )
-            items.append("%s:%i" % (loc, value))
+            if location:
+                loc = ",".join(
+                    [
+                        f"{ax}={int(coord) if float(coord).is_integer() else coord}"
+                        for ax, coord in location
+                    ]
+                )
+                items.append("%s:%i" % (loc, value))
+            else:
+                items.append("%i" % value)
         return "(" + (" ".join(items)) + ")"
 
     @property
