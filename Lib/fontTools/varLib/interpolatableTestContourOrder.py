@@ -8,7 +8,7 @@ def test_contour_order(glyph0, glyph1):
     # We try matching both the StatisticsControlPen vector
     # and the StatisticsPen vector.
     #
-    # If either method found a identity matching, accept it.
+    # If either method found an identity matching, accept it.
     # This is crucial for fonts like Kablammo[MORF].ttf and
     # Nabla[EDPT,EHLT].ttf, since they really confuse the
     # StatisticsPen vector because of their area=0 contours.
