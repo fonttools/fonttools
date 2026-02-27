@@ -867,7 +867,7 @@ class InterpolatablePlot:
             if scale is None:
                 scale = self.panel_width / glyph_width
             else:
-                scale = min(scale, self.panel_height / glyph_height)
+                scale = min(scale, self.panel_width / glyph_width)
         if glyph_height:
             if scale is None:
                 scale = self.panel_height / glyph_height
