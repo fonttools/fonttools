@@ -45,8 +45,8 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
             # This is a 2x2 matrix.
             transforms = []
             for vector in (m0Vectors[ix], m1Vectors[ix]):
-                #meanX = vector[1]
-                #meanY = vector[2]
+                # meanX = vector[1]
+                # meanY = vector[2]
                 stddevX = vector[3] * 0.5
                 stddevY = vector[4] * 0.5
                 correlation = vector[5]
