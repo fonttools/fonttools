@@ -742,23 +742,10 @@ may create new segment maps as needed.
    final coord doesn't vary with other axes) can be removed. Non-self-contained
    pinned axes are kept as hidden axes.
 
-3. **getExtremes bias double-counting.** Empty-region bias entries (from offset
-   compensation) are skipped in getExtremes' outer loop but included in every
-   VarStoreInstancer evaluation, causing the bias to be counted once per
-   recursion level. This makes bounds wider than ideal (conservative/safe).
-
 
 ## 11. Future Work
 
-### 11.1 Fix getExtremes Bias Double-Counting
-
-Empty-region (offset compensation bias) entries are included in every
-VarStoreInstancer evaluation but skipped in getExtremes' region iteration.
-This double-counts the bias at each recursion level, producing wider-than-
-necessary bounds. Fix by subtracting the bias from VarStoreInstancer
-evaluations or by treating empty regions as a constant base term.
-
-### 11.2 Full Pinned Axis Removal
+### 11.1 Full Pinned Axis Removal
 
 For non-self-contained pinned axes, investigate encoding the residual
 variation as additional entries in other axes' delta sets.
@@ -811,16 +798,20 @@ Modifications to `Lib/fontTools/varLib/instancer/__init__.py`:
 
 ### Phase 3: Optimization — IMPLEMENTED
 
-9. **gvar/cvar culling — IMPLEMENTED.** `_cullVariationsForAvar2()` removes
-   dead TupleVariations whose axis regions fall outside the reachable
-   old-space final-coord range:
+9. **Variation culling — IMPLEMENTED.** `_cullVariationsForAvar2()` removes
+   dead variations whose axis regions fall outside the reachable old-space
+   final-coord range. Applies to all variation tables:
+   - **gvar/cvar**: removes dead TupleVariations.
+   - **HVAR/VVAR/MVAR/GDEF**: converts IVS to TupleVariations, culls dead
+     ones, converts back.
    - NO_VARIATION_INDEX axes: exact bounds [a_i, b_i] from `oldIntermediates`.
    - IVS axes: bounds from `getExtremes` on the instanced avar v2
      VarStore (including offset compensation). Private axes (originally hidden,
      not user-restricted) are pinned at (0,0,0) in axis limits because their
      intermediate coordinate is always 0, so regions referencing them get
      scalar = 0. This dramatically tightens bounds for parametric fonts.
-   - `getExtremes` fixes: handles empty regions (from offset bias) by skipping
-     them, and uses axis limits for NO_VARIATION_INDEX identity range.
+   - `getExtremes` fixes: bias subtracted from VarStoreInstancer evaluations
+     to avoid double-counting across recursion levels. Identity range always
+     evaluated even when no region involves the identity axis.
 
 10. Optimize IVS (merge regions, remove zero deltas) — not yet implemented.
