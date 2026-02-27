@@ -1556,6 +1556,7 @@ def main(args=None):
         finder,
         exclude=options.exclude,
         optimize=options.optimize,
+        skip_vf=lambda name: not fullmatch(options.variable_fonts, name),
         colr_layer_reuse=options.colr_layer_reuse,
         drop_implied_oncurves=options.drop_implied_oncurves,
     )
