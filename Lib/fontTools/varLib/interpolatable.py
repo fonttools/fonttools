@@ -1048,7 +1048,7 @@ def main(args=None):
                         )
                     elif p["type"] == InterpolatableProblem.NODE_INCOMPATIBILITY:
                         print(
-                            "    Node %o incompatible in path %i: %s in %s, %s in %s"
+                            "    Node %d incompatible in path %i: %s in %s, %s in %s"
                             % (
                                 p["node"],
                                 p["path"],
