@@ -357,8 +357,8 @@ class InterpolatablePlot:
         y += self.title_font_size
 
         glyphs_per_problem = defaultdict(set)
-        for glyphname, problems in sorted(problems.items()):
-            for problem in problems:
+        for glyphname, glyph_problems in sorted(problems.items()):
+            for problem in glyph_problems:
                 glyphs_per_problem[problem["type"]].add(glyphname)
 
         if "nothing" in glyphs_per_problem:
