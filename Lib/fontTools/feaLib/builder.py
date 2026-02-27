@@ -392,6 +392,10 @@ class Builder(object):
                 return user_name_id
 
     def buildFeatureParams(self, tag):
+        # by convention, a missing name ID is represented by 0xffff.
+        # the spec says that these fields can be 'NULL', but 'NULL' is not
+        # well defined for the purpose of nameIDs?
+        NO_NAME_ID = 0xFFFF
         params = None
         if tag == "size":
             params = otTables.FeatureParamsSize()
@@ -418,17 +422,17 @@ class Builder(object):
             params = otTables.FeatureParamsCharacterVariants()
             params.Format = 0
             params.FeatUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, "FeatUILabelNameID"), 0
+                (tag, "FeatUILabelNameID"), NO_NAME_ID
             )
             params.FeatUITooltipTextNameID = self.cv_parameters_ids_.get(
-                (tag, "FeatUITooltipTextNameID"), 0
+                (tag, "FeatUITooltipTextNameID"), NO_NAME_ID
             )
             params.SampleTextNameID = self.cv_parameters_ids_.get(
-                (tag, "SampleTextNameID"), 0
+                (tag, "SampleTextNameID"), NO_NAME_ID
             )
             params.NumNamedParameters = self.cv_num_named_params_.get(tag, 0)
             params.FirstParamUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, "ParamUILabelNameID_0"), 0
+                (tag, "ParamUILabelNameID_0"), NO_NAME_ID
             )
             params.CharCount = len(self.cv_characters_[tag])
             params.Character = self.cv_characters_[tag]
@@ -767,7 +771,7 @@ class Builder(object):
 
             for c in script[2]:
                 record.BaseScript.BaseValues.BaseCoord.append(self.buildBASECoord(c))
-            for language, min_coord, max_coord in minmax_for_script:
+            for language, min_coord, max_coord in sorted(minmax_for_script):
                 minmax_record = otTables.MinMax()
                 minmax_record.MinCoord = self.buildBASECoord(min_coord)
                 minmax_record.MaxCoord = self.buildBASECoord(max_coord)
@@ -1687,6 +1691,12 @@ class Builder(object):
         if "fvar" not in self.font:
             raise FeatureLibError(
                 "Cannot add feature variations to a font without an 'fvar' table",
+                location,
+            )
+
+        if key in self.conditionsets_:
+            raise FeatureLibError(
+                f"Condition set '{key}' has the same name as a previous condition set",
                 location,
             )
 

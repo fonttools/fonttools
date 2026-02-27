@@ -430,6 +430,8 @@ class NameID(UShort):
                 xmlWriter.write("  ")
                 if name:
                     xmlWriter.comment(name)
+                elif value == 0xFFFF:
+                    xmlWriter.comment("None")
                 else:
                     xmlWriter.comment("missing from name table")
                     log.warning("name id %d missing from name table" % value)

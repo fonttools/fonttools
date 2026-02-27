@@ -4,9 +4,9 @@
 # Source: https://unicode.org/Public/UNIDATA/ScriptExtensions.txt
 # License: http://unicode.org/copyright.html#License
 #
-# ScriptExtensions-16.0.0.txt
-# Date: 2024-07-30, 19:38:00 GMT
-# © 2024 Unicode®, Inc.
+# ScriptExtensions-17.0.0.txt
+# Date: 2025-08-01, 21:42:00 GMT
+# © 2025 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use and license, see https://www.unicode.org/terms_of_use.html
 #
@@ -54,9 +54,9 @@ RANGES = [
     0x0303,  # .. 0x0303 ; {'Glag', 'Latn', 'Sunu', 'Syrc', 'Thai'}
     0x0304,  # .. 0x0304 ; {'Aghb', 'Cher', 'Copt', 'Cyrl', 'Goth', 'Grek', 'Latn', 'Osge', 'Syrc', 'Tfng', 'Todr'}
     0x0305,  # .. 0x0305 ; {'Copt', 'Elba', 'Glag', 'Goth', 'Kana', 'Latn'}
-    0x0306,  # .. 0x0306 ; {'Cyrl', 'Grek', 'Latn', 'Perm'}
+    0x0306,  # .. 0x0306 ; {'Cyrl', 'Grek', 'Latn', 'Perm', 'Tfng'}
     0x0307,  # .. 0x0307 ; {'Copt', 'Dupl', 'Hebr', 'Latn', 'Perm', 'Syrc', 'Tale', 'Tfng', 'Todr'}
-    0x0308,  # .. 0x0308 ; {'Armn', 'Cyrl', 'Dupl', 'Goth', 'Grek', 'Hebr', 'Latn', 'Perm', 'Syrc', 'Tale'}
+    0x0308,  # .. 0x0308 ; {'Armn', 'Cyrl', 'Dupl', 'Goth', 'Grek', 'Hebr', 'Latn', 'Perm', 'Syrc', 'Tale', 'Tfng'}
     0x0309,  # .. 0x0309 ; {'Latn', 'Tfng'}
     0x030A,  # .. 0x030A ; {'Dupl', 'Latn', 'Syrc'}
     0x030B,  # .. 0x030B ; {'Cher', 'Cyrl', 'Latn', 'Osge'}
@@ -68,10 +68,8 @@ RANGES = [
     0x0311,  # .. 0x0311 ; {'Cyrl', 'Latn', 'Todr'}
     0x0312,  # .. 0x0312 ; None
     0x0313,  # .. 0x0313 ; {'Grek', 'Latn', 'Perm', 'Todr'}
-    0x0314,  # .. 0x031F ; None
-    0x0320,  # .. 0x0320 ; {'Latn', 'Syrc'}
-    0x0321,  # .. 0x0322 ; None
-    0x0323,  # .. 0x0323 ; {'Cher', 'Dupl', 'Kana', 'Latn', 'Syrc'}
+    0x0314,  # .. 0x0322 ; None
+    0x0323,  # .. 0x0323 ; {'Cher', 'Dupl', 'Kana', 'Latn', 'Syrc', 'Tfng'}
     0x0324,  # .. 0x0324 ; {'Cher', 'Dupl', 'Latn', 'Syrc'}
     0x0325,  # .. 0x0325 ; {'Latn', 'Syrc'}
     0x0326,  # .. 0x032C ; None
@@ -79,7 +77,7 @@ RANGES = [
     0x032E,  # .. 0x032E ; {'Latn', 'Syrc'}
     0x032F,  # .. 0x032F ; None
     0x0330,  # .. 0x0330 ; {'Cher', 'Latn', 'Syrc'}
-    0x0331,  # .. 0x0331 ; {'Aghb', 'Cher', 'Goth', 'Latn', 'Sunu', 'Thai'}
+    0x0331,  # .. 0x0331 ; {'Aghb', 'Cher', 'Goth', 'Latn', 'Sunu', 'Syrc', 'Thai'}
     0x0332,  # .. 0x0341 ; None
     0x0342,  # .. 0x0342 ; {'Grek'}
     0x0343,  # .. 0x0344 ; None
@@ -117,8 +115,8 @@ RANGES = [
     0x0671,  # .. 0x06D3 ; None
     0x06D4,  # .. 0x06D4 ; {'Arab', 'Rohg'}
     0x06D5,  # .. 0x0950 ; None
-    0x0951,  # .. 0x0951 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'}
-    0x0952,  # .. 0x0952 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'}
+    0x0951,  # .. 0x0951 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Nand', 'Newa', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'}
+    0x0952,  # .. 0x0952 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Newa', 'Orya', 'Taml', 'Telu', 'Tirh'}
     0x0953,  # .. 0x0963 ; None
     0x0964,  # .. 0x0964 ; {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Nand', 'Onao', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
     0x0965,  # .. 0x0965 ; {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Gukh', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Nand', 'Onao', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
@@ -151,9 +149,10 @@ RANGES = [
     0x1CD2,  # .. 0x1CD2 ; {'Beng', 'Deva', 'Gran', 'Knda'}
     0x1CD3,  # .. 0x1CD3 ; {'Deva', 'Gran', 'Knda'}
     0x1CD4,  # .. 0x1CD4 ; {'Deva'}
-    0x1CD5,  # .. 0x1CD6 ; {'Beng', 'Deva'}
-    0x1CD7,  # .. 0x1CD7 ; {'Deva', 'Shrd'}
-    0x1CD8,  # .. 0x1CD8 ; {'Beng', 'Deva'}
+    0x1CD5,  # .. 0x1CD5 ; {'Beng', 'Deva', 'Newa', 'Telu', 'Tirh'}
+    0x1CD6,  # .. 0x1CD6 ; {'Beng', 'Deva', 'Telu'}
+    0x1CD7,  # .. 0x1CD7 ; {'Deva', 'Newa', 'Shrd'}
+    0x1CD8,  # .. 0x1CD8 ; {'Beng', 'Deva', 'Newa', 'Telu'}
     0x1CD9,  # .. 0x1CD9 ; {'Deva', 'Shrd'}
     0x1CDA,  # .. 0x1CDA ; {'Deva', 'Knda', 'Mlym', 'Orya', 'Taml', 'Telu'}
     0x1CDB,  # .. 0x1CDB ; {'Deva'}
@@ -161,11 +160,13 @@ RANGES = [
     0x1CDE,  # .. 0x1CDF ; {'Deva'}
     0x1CE0,  # .. 0x1CE0 ; {'Deva', 'Shrd'}
     0x1CE1,  # .. 0x1CE1 ; {'Beng', 'Deva'}
-    0x1CE2,  # .. 0x1CE8 ; {'Deva'}
-    0x1CE9,  # .. 0x1CE9 ; {'Deva', 'Nand'}
-    0x1CEA,  # .. 0x1CEA ; {'Beng', 'Deva'}
-    0x1CEB,  # .. 0x1CEC ; {'Deva'}
-    0x1CED,  # .. 0x1CED ; {'Beng', 'Deva'}
+    0x1CE2,  # .. 0x1CE2 ; {'Deva', 'Newa', 'Tirh'}
+    0x1CE3,  # .. 0x1CE8 ; {'Deva'}
+    0x1CE9,  # .. 0x1CE9 ; {'Deva', 'Nand', 'Newa'}
+    0x1CEA,  # .. 0x1CEA ; {'Beng', 'Deva', 'Shrd'}
+    0x1CEB,  # .. 0x1CEB ; {'Deva', 'Newa'}
+    0x1CEC,  # .. 0x1CEC ; {'Deva'}
+    0x1CED,  # .. 0x1CED ; {'Beng', 'Deva', 'Newa', 'Shrd'}
     0x1CEE,  # .. 0x1CF1 ; {'Deva'}
     0x1CF2,  # .. 0x1CF2 ; {'Beng', 'Deva', 'Gran', 'Knda', 'Mlym', 'Nand', 'Orya', 'Sinh', 'Telu', 'Tirh', 'Tutg'}
     0x1CF3,  # .. 0x1CF3 ; {'Deva', 'Gran'}
@@ -367,7 +368,7 @@ VALUES = [
         "Todr",
     },  # 0304..0304
     {"Copt", "Elba", "Glag", "Goth", "Kana", "Latn"},  # 0305..0305
-    {"Cyrl", "Grek", "Latn", "Perm"},  # 0306..0306
+    {"Cyrl", "Grek", "Latn", "Perm", "Tfng"},  # 0306..0306
     {
         "Copt",
         "Dupl",
@@ -390,6 +391,7 @@ VALUES = [
         "Perm",
         "Syrc",
         "Tale",
+        "Tfng",
     },  # 0308..0308
     {"Latn", "Tfng"},  # 0309..0309
     {"Dupl", "Latn", "Syrc"},  # 030A..030A
@@ -402,10 +404,8 @@ VALUES = [
     {"Cyrl", "Latn", "Todr"},  # 0311..0311
     None,  # 0312..0312
     {"Grek", "Latn", "Perm", "Todr"},  # 0313..0313
-    None,  # 0314..031F
-    {"Latn", "Syrc"},  # 0320..0320
-    None,  # 0321..0322
-    {"Cher", "Dupl", "Kana", "Latn", "Syrc"},  # 0323..0323
+    None,  # 0314..0322
+    {"Cher", "Dupl", "Kana", "Latn", "Syrc", "Tfng"},  # 0323..0323
     {"Cher", "Dupl", "Latn", "Syrc"},  # 0324..0324
     {"Latn", "Syrc"},  # 0325..0325
     None,  # 0326..032C
@@ -413,7 +413,7 @@ VALUES = [
     {"Latn", "Syrc"},  # 032E..032E
     None,  # 032F..032F
     {"Cher", "Latn", "Syrc"},  # 0330..0330
-    {"Aghb", "Cher", "Goth", "Latn", "Sunu", "Thai"},  # 0331..0331
+    {"Aghb", "Cher", "Goth", "Latn", "Sunu", "Syrc", "Thai"},  # 0331..0331
     None,  # 0332..0341
     {"Grek"},  # 0342..0342
     None,  # 0343..0344
@@ -470,6 +470,8 @@ VALUES = [
         "Knda",
         "Latn",
         "Mlym",
+        "Nand",
+        "Newa",
         "Orya",
         "Shrd",
         "Taml",
@@ -485,6 +487,7 @@ VALUES = [
         "Knda",
         "Latn",
         "Mlym",
+        "Newa",
         "Orya",
         "Taml",
         "Telu",
@@ -568,9 +571,10 @@ VALUES = [
     {"Beng", "Deva", "Gran", "Knda"},  # 1CD2..1CD2
     {"Deva", "Gran", "Knda"},  # 1CD3..1CD3
     {"Deva"},  # 1CD4..1CD4
-    {"Beng", "Deva"},  # 1CD5..1CD6
-    {"Deva", "Shrd"},  # 1CD7..1CD7
-    {"Beng", "Deva"},  # 1CD8..1CD8
+    {"Beng", "Deva", "Newa", "Telu", "Tirh"},  # 1CD5..1CD5
+    {"Beng", "Deva", "Telu"},  # 1CD6..1CD6
+    {"Deva", "Newa", "Shrd"},  # 1CD7..1CD7
+    {"Beng", "Deva", "Newa", "Telu"},  # 1CD8..1CD8
     {"Deva", "Shrd"},  # 1CD9..1CD9
     {"Deva", "Knda", "Mlym", "Orya", "Taml", "Telu"},  # 1CDA..1CDA
     {"Deva"},  # 1CDB..1CDB
@@ -578,11 +582,13 @@ VALUES = [
     {"Deva"},  # 1CDE..1CDF
     {"Deva", "Shrd"},  # 1CE0..1CE0
     {"Beng", "Deva"},  # 1CE1..1CE1
-    {"Deva"},  # 1CE2..1CE8
-    {"Deva", "Nand"},  # 1CE9..1CE9
-    {"Beng", "Deva"},  # 1CEA..1CEA
-    {"Deva"},  # 1CEB..1CEC
-    {"Beng", "Deva"},  # 1CED..1CED
+    {"Deva", "Newa", "Tirh"},  # 1CE2..1CE2
+    {"Deva"},  # 1CE3..1CE8
+    {"Deva", "Nand", "Newa"},  # 1CE9..1CE9
+    {"Beng", "Deva", "Shrd"},  # 1CEA..1CEA
+    {"Deva", "Newa"},  # 1CEB..1CEB
+    {"Deva"},  # 1CEC..1CEC
+    {"Beng", "Deva", "Newa", "Shrd"},  # 1CED..1CED
     {"Deva"},  # 1CEE..1CF1
     {
         "Beng",

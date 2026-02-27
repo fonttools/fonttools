@@ -69,17 +69,40 @@ if with_cython and not has_cython:
 
 ext_modules = []
 if with_cython is True or (with_cython is None and has_cython):
+    # On POSIX systems (Linux, macOS, etc.), math functions like sqrt, pow, fabs
+    # may require explicit linkage to libm. This is particularly needed on some
+    # Linux distributions (e.g., Amazon Linux with Clang) where libm is not
+    # automatically linked. On Windows, math functions are in msvcrt.
+    # See https://github.com/fonttools/fonttools/issues/4028
+    libraries = ["m"] if os.name == "posix" else []
+
     ext_modules.append(
-        Extension("fontTools.cu2qu.cu2qu", ["Lib/fontTools/cu2qu/cu2qu.py"]),
+        Extension(
+            "fontTools.cu2qu.cu2qu",
+            ["Lib/fontTools/cu2qu/cu2qu.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
-        Extension("fontTools.qu2cu.qu2cu", ["Lib/fontTools/qu2cu/qu2cu.py"]),
+        Extension(
+            "fontTools.qu2cu.qu2cu",
+            ["Lib/fontTools/qu2cu/qu2cu.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
-        Extension("fontTools.misc.bezierTools", ["Lib/fontTools/misc/bezierTools.py"]),
+        Extension(
+            "fontTools.misc.bezierTools",
+            ["Lib/fontTools/misc/bezierTools.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
-        Extension("fontTools.pens.momentsPen", ["Lib/fontTools/pens/momentsPen.py"]),
+        Extension(
+            "fontTools.pens.momentsPen",
+            ["Lib/fontTools/pens/momentsPen.py"],
+            libraries=libraries,
+        ),
     )
     ext_modules.append(
         Extension("fontTools.varLib.iup", ["Lib/fontTools/varLib/iup.py"]),
@@ -112,7 +135,7 @@ extras_require = {
     # of the Unicode Character Database instead of the built-in unicodedata
     # which varies between python versions and may be outdated.
     "unicode": [
-        ("unicodedata2 >= 15.1.0; python_version <= '3.12'"),
+        "unicodedata2 >= 17.0.0; python_version <= '3.14'",
     ],
     # for graphite type tables in ttLib/tables (Silf, Glat, Gloc)
     "graphite": ["lz4 >= 1.7.4.2"],
@@ -146,7 +169,7 @@ extras_require = {
     ],
     # for packing GSUB/GPOS tables with Harfbuzz repacker
     "repacker": [
-        "uharfbuzz >= 0.23.0",
+        "uharfbuzz >= 0.45.0",
     ],
 }
 # use a special 'all' key as shorthand to includes all the extra dependencies
@@ -164,11 +187,11 @@ classifiers = {
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Programming Language :: Python :: 3",
         "Topic :: Text Processing :: Fonts",
         "Topic :: Multimedia :: Graphics",
@@ -496,7 +519,7 @@ if ext_modules:
 
 setup_params = dict(
     name="fonttools",
-    version="4.59.3.dev0",
+    version="4.61.2.dev0",
     description="Tools to manipulate font files",
     author="Just van Rossum",
     author_email="just@letterror.com",
@@ -506,7 +529,7 @@ setup_params = dict(
     license="MIT",
     license_files=["LICENSE", "LICENSE.external"],
     platforms=["Any"],
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     package_dir={"": "Lib"},

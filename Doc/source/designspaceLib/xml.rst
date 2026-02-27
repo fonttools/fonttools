@@ -752,6 +752,11 @@ The ``<variable-fonts>`` element contains one or more ``<variable-font>`` elemen
   `.ttf`) and the build tools can replace that extension with another (e.g.
   `.otf` or `.woff2`) as needed.
 
+  .. note::
+     This is intended to be a simple filename (basename or stem) only, not
+     an absolute or relative path. Build tools will only use the basename
+     component and ignore any directory separators for security reasons.
+
 .. rubric:: Example
 
 .. code:: xml

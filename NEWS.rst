@@ -1,7 +1,70 @@
-4.59.3.dev0
------------
+4.61.1 (released 2025-12-12)
+----------------------------
 
-[typing] Annotate ufoLib (#3875).
+- [otlLib] buildCoverage: return empty Coverage instead of None (#4003, #4004).
+- [instancer] bug fix in ``avar2`` full instancing (#4002).
+- [designspaceLib] Preserve empty conditionsets when serializing to XML (#4001).
+- [fontBu ilder] Fix FontBuilder ``setupOS2()`` default params globally polluted (#3996, #3997).
+- [ttFont] Add more typing annotations to ttFont, xmlWriter, sfnt, varLib.models and others (#3952, #3826).
+- Explicitly test and declare support for Python 3.14, even though we were already shipping pre-built wheels for it (#3990).
+
+4.60.2 (released 2025-12-09)
+----------------------------
+
+- **Backport release** Same as 4.61.0 but without "Drop support for EOL Python 3.9" change to allow
+  downstream projects still on Python 3.9 to avail of the security fix for CVE-2025-66034 (#3994, #3999).
+
+4.61.0 (released 2025-11-28)
+----------------------------
+
+- [varLib.main]: **SECURITY** Only use basename(vf.filename) to prevent path traversal attacks when
+  running ``fonttools varLib`` command, or code which invokes ``fonttools.varLib.main()``.
+  Fixes CVE-2025-66034, see:
+  https://github.com/fonttools/fonttools/security/advisories/GHSA-768j-98cg-p3fv.
+- [feaLib] Sort BaseLangSysRecords by tag (#3986).
+- Drop support for EOL Python 3.9 (#3982).
+- [instancer] Support --remove-overlaps for fonts with CFF2 table (#3975).
+- [CFF2ToCFF] Add --remove-overlaps option (#3976).
+- [feaLib] Raise an error for rsub with NULL target (#3979).
+- [bezierTools] Fix logic bug in curveCurveIntersections (#3963).
+- [feaLib] Error when condition sets have the same name (#3958).
+- [cu2qu.ufo] skip processing empty glyphs to support sparse kerning masters (#3956).
+- [unicodedata] Update to Unicode 17. Require ``unicodedata2 >= 17.0.0`` when installed with 'unicode' extra.
+
+4.60.1 (released 2025-09-29)
+----------------------------
+
+- [ufoLib] Reverted accidental method name change in ``UFOReader.getKerningGroupConversionRenameMaps``
+  that broke compatibility with downstream projects like defcon (#3948, #3947, robotools/defcon#478).
+- [ufoLib] Added test coverage for ``getKerningGroupConversionRenameMaps`` method (#3950).
+- [subset] Don't try to subset BASE table; pass it through by default instead (#3949).
+- [subset] Remove empty BaseRecord entries in MarkBasePos lookups (#3897, #3892).
+- [subset] Add pruning for MarkLigPos and MarkMarkPos lookups (#3946).
+- [subset] Remove duplicate features when subsetting (#3945).
+- [Docs] Added documentation for the visitor module (#3944).
+
+4.60.0 (released 2025-09-17)
+----------------------------
+
+- [pointPen] Allow ``reverseFlipped`` parameter of ``DecomposingPointPen`` to take a ``ReverseFlipped``
+  enum value to control whether/how to reverse contour direction of flipped components, in addition to
+  the existing True/False. This allows to set ``ReverseFlipped.ON_CURVE_FIRST`` to ensure that
+  the decomposed outline starts with an on-curve point before being reversed, for better consistency
+  with other segment-oriented contour transformations. The change is backward compatible, and the
+  default behavior hasn't changed (#3934).
+- [filterPen] Added ``ContourFilterPointPen``, base pen for buffered contour operations, and
+  ``OnCurveStartPointPen`` filter to ensure contours start with an on-curve point (#3934).
+- [cu2qu] Fixed difference in cython vs pure-python complex division by real number (#3930).
+- [varLib.avar] Refactored and added some new sub-modules and scripts (#3926).
+  * ``varLib.avar.build`` module to build avar (and a missing fvar) binaries into a possibly empty TTFont,
+  * ``varLib.avar.unbuild`` module to print a .designspace snippet that would generate the same avar binary,
+  * ``varLib.avar.map`` module to take TTFont and do the mapping, in user/normalized space,
+  * ``varLib.avar.plan`` module moved from ``varLib.avarPlanner``.
+  The bare ``fonttools varLib.avar`` script is deprecated, in favour of ``fonttools varLib.avar.build`` (or ``unbuild``).
+- [interpolatable] Clarify ``linear_sum_assignment`` backend options and minimal dependency
+  usage (#3927).
+- [post] Speed up ``build_psNameMapping`` (#3923).
+- [ufoLib] Added typing annotations to fontTools.ufoLib (#3875).
 
 4.59.2 (released 2025-08-27)
 ----------------------------

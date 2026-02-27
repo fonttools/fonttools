@@ -1230,9 +1230,6 @@ def _readGlyphFromTreeFormat1(
     unicodes = []
     haveSeenAdvance = haveSeenOutline = haveSeenLib = haveSeenNote = False
     for element in tree:
-        if glyphObject is None:
-            continue
-
         if element.tag == "outline":
             if validate:
                 if haveSeenOutline:
@@ -1245,6 +1242,10 @@ def _readGlyphFromTreeFormat1(
                     raise GlifLibError("Invalid outline structure.")
             haveSeenOutline = True
             buildOutlineFormat1(glyphObject, pointPen, element, validate)
+        elif glyphObject is None:
+            # Skip remaining elements if no glyphObject, but outline is still
+            # processed above to allow drawing via pointPen without a glyphObject.
+            continue
         elif element.tag == "advance":
             if validate and haveSeenAdvance:
                 raise GlifLibError("The advance element occurs more than once.")
@@ -1299,8 +1300,6 @@ def _readGlyphFromTreeFormat2(
     )
     identifiers: set[str] = set()
     for element in tree:
-        if glyphObject is None:
-            continue
         if element.tag == "outline":
             if validate:
                 if haveSeenOutline:
@@ -1316,6 +1315,10 @@ def _readGlyphFromTreeFormat2(
                 buildOutlineFormat2(
                     glyphObject, pointPen, element, identifiers, validate
                 )
+        elif glyphObject is None:
+            # Skip remaining elements if no glyphObject, but outline is still
+            # processed above to allow drawing via pointPen without a glyphObject.
+            continue
         elif element.tag == "advance":
             if validate and haveSeenAdvance:
                 raise GlifLibError("The advance element occurs more than once.")

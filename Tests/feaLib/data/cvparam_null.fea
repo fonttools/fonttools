@@ -1,0 +1,10 @@
+feature cv02 {
+    # the missing fields are allowed, and the compiler should generate a FeatureParameters
+    # table where the missing name ids are `0xFFFF`
+    cvParameters {
+        FeatUILabelNameID {
+            name "Tall W";
+        };
+    };
+    sub a by b;
+} cv02;

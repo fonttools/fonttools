@@ -292,3 +292,27 @@ class GlyphsToQuadraticTest(object):
             ],
             [(1, 651), (4, 651), (3, 101), (2, 101)],
         ]
+
+    def test_ignore_empty_glyphs(self):
+        non_empty = ufoLib2.objects.Glyph(name="sparse")
+        pen = non_empty.getPointPen()
+        pen.beginPath()
+        pen.addPoint((0, 0), segmentType="line")
+        pen.addPoint((0, 2))
+        pen.addPoint((1, 3))
+        pen.addPoint((3, 3), segmentType="curve")
+        pen.endPath()
+
+        empty = ufoLib2.objects.Glyph(name="sparse")
+
+        assert glyphs_to_quadratic([non_empty, empty])
+
+        # Verify non-empty glyph was converted to quadratic
+        assert [((p.x, p.y), p.segmentType) for p in non_empty[0]] == [
+            ((0, 0), "line"),
+            ((0.0, 3.0), None),
+            ((3.0, 3.0), "qcurve"),
+        ]
+
+        # Verify empty glyph remains empty
+        assert len(empty) == 0
