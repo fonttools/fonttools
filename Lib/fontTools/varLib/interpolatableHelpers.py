@@ -41,7 +41,7 @@ class InterpolatableProblem:
 
 
 def sort_problems(problems):
-    """Sort problems by severity, then by glyph name, then by problem message."""
+    """Sort problem groups by their most severe problem type."""
     return dict(
         sorted(
             problems.items(),
