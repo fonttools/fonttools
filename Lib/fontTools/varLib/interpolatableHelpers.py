@@ -65,7 +65,6 @@ def rot_list(l, k):
 class PerContourPen(BasePen):
     def __init__(self, Pen, glyphset=None):
         BasePen.__init__(self, glyphset)
-        self._glyphset = glyphset
         self._Pen = Pen
         self._pen = None
         self.value = []
