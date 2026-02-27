@@ -116,12 +116,12 @@ class Glyph:
             # Add mirrored rotations
             add_isomorphisms(points.value, isomorphisms, True)
 
-    def draw(self, pen, countor_idx=None):
-        if countor_idx is None:
+    def draw(self, pen, contour_idx=None):
+        if contour_idx is None:
             for contour in self.recordings:
                 contour.draw(pen)
         else:
-            self.recordings[countor_idx].draw(pen)
+            self.recordings[contour_idx].draw(pen)
 
 
 def test_gen(
