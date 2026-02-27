@@ -5,7 +5,6 @@ from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
 from math import sqrt, copysign, atan2, pi
-from enum import Enum
 import itertools
 
 import logging
@@ -42,7 +41,7 @@ class InterpolatableProblem:
 
 
 def sort_problems(problems):
-    """Sort problems by severity, then by glyph name, then by problem message."""
+    """Sort problem groups by their most severe problem type."""
     return dict(
         sorted(
             problems.items(),
@@ -66,7 +65,6 @@ def rot_list(l, k):
 class PerContourPen(BasePen):
     def __init__(self, Pen, glyphset=None):
         BasePen.__init__(self, glyphset)
-        self._glyphset = glyphset
         self._Pen = Pen
         self._pen = None
         self.value = []
@@ -212,8 +210,6 @@ def contour_vector_from_stats(stats):
 def matching_for_vectors(m0, m1):
     n = len(m0)
 
-    identity_matching = list(range(n))
-
     costs = [[vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
     (
         matching,
@@ -307,9 +303,9 @@ def find_parents_and_order(glyphsets, locations, *, discrete_axes=set()):
             if all(v == 0 for k, v in l.items() if k not in discrete_axes)
         ]
         if bases:
-            logging.info("Found %s base masters: %s", len(bases), bases)
+            log.info("Found %s base masters: %s", len(bases), bases)
         else:
-            logging.warning("No base master location found")
+            log.warning("No base master location found")
 
         # Form a minimum spanning tree of the locations
         try:
@@ -362,38 +358,3 @@ def find_parents_and_order(glyphsets, locations, *, discrete_axes=set()):
         log.info("Parents: %s", parents)
         log.info("Order: %s", order)
     return parents, order
-
-
-def transform_from_stats(stats, inverse=False):
-    # https://cookierobotics.com/007/
-    a = stats.varianceX
-    b = stats.covariance
-    c = stats.varianceY
-
-    delta = (((a - c) * 0.5) ** 2 + b * b) ** 0.5
-    lambda1 = (a + c) * 0.5 + delta  # Major eigenvalue
-    lambda2 = (a + c) * 0.5 - delta  # Minor eigenvalue
-    theta = atan2(lambda1 - a, b) if b != 0 else (pi * 0.5 if a < c else 0)
-    trans = Transform()
-
-    if lambda2 < 0:
-        # XXX This is a hack.
-        # The problem is that the covariance matrix is singular.
-        # This happens when the contour is a line, or a circle.
-        # In that case, the covariance matrix is not a good
-        # representation of the contour.
-        # We should probably detect this earlier and avoid
-        # computing the covariance matrix in the first place.
-        # But for now, we just avoid the division by zero.
-        lambda2 = 0
-
-    if inverse:
-        trans = trans.translate(-stats.meanX, -stats.meanY)
-        trans = trans.rotate(-theta)
-        trans = trans.scale(1 / sqrt(lambda1), 1 / sqrt(lambda2))
-    else:
-        trans = trans.scale(sqrt(lambda1), sqrt(lambda2))
-        trans = trans.rotate(theta)
-        trans = trans.translate(stats.meanX, stats.meanY)
-
-    return trans
