@@ -43,8 +43,7 @@ def test_contour_order(glyph0, glyph1):
         # test will fix them.
         #
         # Reverse the sign of the area (0); the rest stay the same.
-        if not done:
-            m1ControlReversed = [(-m[0],) + m[1:] for m in m1Control]
+        m1ControlReversed = [(-m[0],) + m[1:] for m in m1Control]
             (
                 matching_control_reversed,
                 matching_cost_control_reversed,
