@@ -211,8 +211,6 @@ def contour_vector_from_stats(stats):
 def matching_for_vectors(m0, m1):
     n = len(m0)
 
-    identity_matching = list(range(n))
-
     costs = [[vdiff_hypot2(v0, v1) for v1 in m1] for v0 in m0]
     (
         matching,
