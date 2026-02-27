@@ -219,8 +219,8 @@ def test_gen(
             # Basic compatibility checks
             #
 
-            m1 = glyph0.nodeTypes
-            m0 = glyph1.nodeTypes
+            m0 = glyph0.nodeTypes
+            m1 = glyph1.nodeTypes
             if len(m0) != len(m1):
                 yield (
                     glyph_name,
