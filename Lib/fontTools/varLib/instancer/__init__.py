@@ -681,6 +681,7 @@ def instantiateCFF2(
     specialize=True,
     generalize=False,
     downgrade=False,
+    reachableRanges=None,
 ):
     # The algorithm here is rather simple:
     #
@@ -833,6 +834,10 @@ def instantiateCFF2(
     defaultDeltas = instantiateItemVariationStore(
         varStore, fvarAxes, axisLimits, hierarchical=True
     )
+
+    # Optionally cull dead regions (for avar2 partial instancing)
+    if reachableRanges:
+        _cullItemVariationStore(varStore, fvarAxes, reachableRanges)
 
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
@@ -1952,6 +1957,18 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
                 "avar2 %s culling: removed %d dead region references",
                 tag,
                 removed,
+            )
+
+    # CFF2: cull via populate/cull/depopulate cycle (blend operators encode
+    # region counts, so the VarStore can't be culled without updating them).
+    if "CFF2" in varfont:
+        cff = varfont["CFF2"].cff
+        topDict = cff.topDictIndex[0]
+        if getattr(topDict, "VarStore", None) and topDict.VarStore.otVarStore:
+            instantiateCFF2(
+                varfont,
+                NormalizedAxisLimits({}),
+                reachableRanges=reachableRanges,
             )
 
 
