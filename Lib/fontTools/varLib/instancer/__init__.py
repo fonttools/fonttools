@@ -1471,7 +1471,7 @@ def downgradeCFF2ToCFF(varfont):
     return varfont
 
 
-def instantiateAvar(varfont, axisLimits, normalizedLimits):
+def instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates=None):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
     avar = varfont["avar"]
@@ -1490,10 +1490,8 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits):
         version >= 2 and getattr(avar.table, "VarStore", None) is not None
     )
 
-    # For avar2: compute old intermediate values BEFORE modifying avar v1.
-    # These are the old-space intermediate coordinates at the new axis limits.
-    oldIntermediates = None
-    if hasAvar2VarStore:
+    # For avar2: need old intermediate values BEFORE modifying avar v1.
+    if hasAvar2VarStore and oldIntermediates is None:
         oldIntermediates = _computeOldIntermediates(varfont, axisLimits)
 
     log.info("Instantiating avar table")
@@ -1822,6 +1820,18 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
         varIdxMap.mapping = [
             varIdxMapping.get(varIdx, varIdx) for varIdx in varIdxMap.mapping
         ]
+    elif varIdxMapping:
+        # optimize() remapped indices but we had no VarIdxMap (implicit
+        # identity). Create one if the mapping is no longer identity.
+        numAxes = len(fvarAxes)
+        newMapping = [varIdxMapping.get(i, i) for i in range(numAxes)]
+        if newMapping != list(range(numAxes)):
+            from fontTools.ttLib.tables import otTables as _otTables
+
+            varIdxMap = _otTables.DeltaSetIndexMap()
+            varIdxMap.Format = 0
+            varIdxMap.mapping = newMapping
+            avar.table.VarIdxMap = varIdxMap
     avar.table.VarStore = newVarStore
 
     return selfContainedAxes
@@ -2371,16 +2381,19 @@ def instantiateVariableFont(
 
         instantiateFeatureVariations(varfont, normalizedLimits)
 
-    # For avar2 partial instancing, compute reachable old-space final-coord
-    # ranges for restricted axes BEFORE avar instancing modifies the segments.
-    # For NO_VARIATION_INDEX axes (no IVS delta), the final coord equals the
-    # intermediate coord, so the reachable range is [a_i, b_i].
+    # For avar2 partial instancing, compute old intermediate values BEFORE
+    # avar instancing modifies the segments. Used for both NO_VARIATION_INDEX
+    # reachable ranges and offset compensation in _instantiateAvarV2.
     reachableRanges = {}
+    oldIntermediates = None
     if _isAvar2PartialInstancing:
+        oldIntermediates = _computeOldIntermediates(varfont, axisLimits)
+
+        # For NO_VARIATION_INDEX axes (no IVS delta), the final coord equals
+        # the intermediate coord, so the reachable range is [a_i, b_i].
         avar = varfont["avar"]
         varIdxMap = getattr(avar.table, "VarIdxMap", None)
         fvarAxes = varfont["fvar"].axes
-        oldIntermediates = _computeOldIntermediates(varfont, axisLimits)
         NO_VARIATION_INDEX = 0xFFFFFFFF
 
         for axisIdx, axis in enumerate(fvarAxes):
@@ -2404,7 +2417,12 @@ def instantiateVariableFont(
 
     selfContainedAxes = {}
     if "avar" in varfont:
-        selfContainedAxes = instantiateAvar(varfont, axisLimits, normalizedLimits) or {}
+        selfContainedAxes = (
+            instantiateAvar(
+                varfont, axisLimits, normalizedLimits, oldIntermediates
+            )
+            or {}
+        )
 
     # For avar2 partial instancing, run variation instancing for
     # self-contained pinned axes (those that can be removed from fvar).
