@@ -1821,6 +1821,13 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
     # Step 4: Rebuild regions and convert back to IVS
     tupleVarStore.rebuildRegions()
     newVarStore = tupleVarStore.asItemVarStore()
+
+    # Step 5: Optimize the VarStore (merge regions, remove zero deltas)
+    varIdxMapping = newVarStore.optimize(use_NO_VARIATION_INDEX=False)
+    if varIdxMap is not None:
+        varIdxMap.mapping = [
+            varIdxMapping.get(varIdx, varIdx) for varIdx in varIdxMap.mapping
+        ]
     avar.table.VarStore = newVarStore
 
     return selfContainedAxes
