@@ -13,10 +13,6 @@ from fontTools.pens.pointPen import (
     PointToSegmentPen,
     ReverseContourPointPen,
 )
-from fontTools.varLib.interpolatableHelpers import (
-    PerContourOrComponentPen,
-    SimpleRecordingPointPen,
-)
 from itertools import cycle
 from io import BytesIO
 import cairo
