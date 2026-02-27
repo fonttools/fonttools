@@ -1642,7 +1642,6 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
     varIdxMap = getattr(avar.table, "VarIdxMap", None)
 
     NO_VARIATION_INDEX = 0xFFFFFFFF
-    axisOrder = [axis.axisTag for axis in fvarAxes]
 
     # Step 1: Convert IVS to TupleVariation representation and rebase
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(varStore, fvarAxes)
