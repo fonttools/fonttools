@@ -846,7 +846,6 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         GDEF = font["GDEF"].table
         assert GDEF.Version <= 0x00010002
     except KeyError:
-        font["GDEF"] = newTable("GDEF")
         GDEFTable = font["GDEF"] = newTable("GDEF")
         GDEF = GDEFTable.table = ot.GDEF()
         GDEF.GlyphClassDef = None
