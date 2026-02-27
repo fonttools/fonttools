@@ -1838,20 +1838,48 @@ def _isTupleVariationDead(tv, reachableRanges):
     return False
 
 
+def _cullItemVariationStore(varStore, fvarAxes, reachableRanges):
+    """Remove dead regions from an ItemVariationStore via TupleVariation culling.
+
+    Converts to TupleVariations, removes dead ones, converts back.
+    Returns the number of removed regions.
+    """
+    tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(varStore, fvarAxes)
+    totalCulled = 0
+    for tvList in tupleVarStore.tupleVarData:
+        before = len(tvList)
+        tvList[:] = [
+            tv for tv in tvList
+            if not _isTupleVariationDead(tv, reachableRanges)
+        ]
+        totalCulled += before - len(tvList)
+    if totalCulled:
+        tupleVarStore.rebuildRegions()
+        newVarStore = tupleVarStore.asItemVarStore()
+        varStore.VarRegionList = newVarStore.VarRegionList
+        varStore.VarData = newVarStore.VarData
+    return totalCulled
+
+
 def _cullVariationsForAvar2(varfont, reachableRanges):
-    """Cull dead TupleVariations outside reachable old-space final-coord ranges.
+    """Cull dead variations outside reachable old-space final-coord ranges.
 
     After avar2 partial instancing with offset compensation, variation tables
-    (gvar, cvar) remain in old-space final coordinates. Some regions may be
-    unreachable because the restricted axis range maps to a narrower final-coord
-    range. This function removes TupleVariations whose axis regions lie entirely
-    outside the reachable range for any restricted axis.
+    remain in old-space final coordinates. Some regions may be unreachable
+    because the restricted axis range maps to a narrower final-coord range.
+
+    For gvar/cvar: removes TupleVariations whose axis regions lie entirely
+    outside the reachable range.
+    For IVS-based tables (HVAR, VVAR, MVAR, GDEF): removes dead region
+    columns from the ItemVariationStore.
 
     Args:
         varfont: The font being instanced.
         reachableRanges: dict mapping axis tags to (lo, hi) tuples representing
             the reachable range of old-space final coordinates for that axis.
     """
+    fvarAxes = varfont["fvar"].axes
+
     if "gvar" in varfont:
         gvar = varfont["gvar"]
         totalCulled = 0
@@ -1890,6 +1918,29 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
                 culled,
                 before,
                 100 * culled / before if before else 0,
+            )
+
+    # Cull IVS-based tables (skip the avar2 VarStore itself)
+    ivsTablePaths = []
+    for tag in ("HVAR", "VVAR", "MVAR"):
+        if tag in varfont:
+            table = varfont[tag].table
+            vs = getattr(table, "VarStore", None)
+            if vs:
+                ivsTablePaths.append((tag, vs))
+    if "GDEF" in varfont:
+        gdef = varfont["GDEF"].table
+        vs = getattr(gdef, "VarStore", None)
+        if vs:
+            ivsTablePaths.append(("GDEF", vs))
+
+    for tag, varStore in ivsTablePaths:
+        removed = _cullItemVariationStore(varStore, fvarAxes, reachableRanges)
+        if removed:
+            log.info(
+                "avar2 %s culling: removed %d dead region references",
+                tag,
+                removed,
             )
 
 
