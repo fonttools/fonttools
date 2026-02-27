@@ -61,10 +61,10 @@ def test_contour_order(glyph0, glyph1):
             done = matching_cost_green_reversed == identity_cost_green_reversed
 
         if not done:
-            # Otherwise, use the worst of the two matchings.
+            # Otherwise, use the best of the two matchings.
             if (
-                matching_cost_control / identity_cost_control
-                < matching_cost_green / identity_cost_green
+                matching_cost_control * identity_cost_green
+                < matching_cost_green * identity_cost_control
             ):
                 matching = matching_control
                 matching_cost = matching_cost_control
