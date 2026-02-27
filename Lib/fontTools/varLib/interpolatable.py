@@ -467,7 +467,7 @@ def test_gen(
                     if pt0_prev[1] and pt1_prev[1]:
                         # At least one off-curve is required
                         continue
-                    if pt0_prev[1] and pt1_prev[1]:
+                    if pt0_next[1] and pt1_next[1]:
                         # At least one off-curve is required
                         continue
 
