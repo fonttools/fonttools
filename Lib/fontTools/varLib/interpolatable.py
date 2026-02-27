@@ -826,7 +826,7 @@ def main(args=None):
                     # The spec says vsindex can only appear once and must be the first
                     # operator in the charstring, but we support multiple.
                     # https://github.com/harfbuzz/boring-expansion-spec/issues/158
-                    for op in enumerate(cs.program):
+                    for op in cs.program:
                         if op == "blend":
                             vsindices.add(vsindex)
                         elif op == "vsindex":
