@@ -274,6 +274,8 @@ class VariationModel(object):
     def __init__(
         self, locations, axisOrder=None, extrapolate=False, *, axisRanges=None
     ):
+        locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
+
         if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
             raise VariationModelError("Locations must be unique.")
 
@@ -287,8 +289,6 @@ class VariationModel(object):
                 allAxes = {axis for loc in locations for axis in loc.keys()}
                 axisRanges = {axis: (-1, 1) for axis in allAxes}
         self.axisRanges = axisRanges
-
-        locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
         keyFunc = self.getMasterLocationsSortKeyFunc(
             locations, axisOrder=self.axisOrder
         )
