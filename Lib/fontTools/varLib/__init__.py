@@ -750,7 +750,7 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
     # and unilaterally/arbitrarily define a sentinel value to distinguish the case
     # when a post table is present in a given master simply because that's where
     # the glyph names in TrueType must be stored, but the underline values are not
-    # meant to be used for building MVAR's deltas. The value of -0x8000 (-36768)
+    # meant to be used for building MVAR's deltas. The value of -0x8000 (-32768)
     # the minimum FWord (int16) value, was chosen for its unlikelyhood to appear
     # in real-world underline position/thickness values.
     specialTags = {"unds": -0x8000, "undo": -0x8000}
