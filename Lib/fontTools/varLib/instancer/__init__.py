@@ -451,9 +451,7 @@ class AxisLimits(_BaseAxisLimits):
                         for tag, value in location.items()
                     }
                     return NormalizedAxisLimits(
-                        **avar.renormalizeLocation(
-                            location, varfont, dropZeroes=False
-                        )
+                        **avar.renormalizeLocation(location, varfont, dropZeroes=False)
                     )
                 # else: partial instancing of avar2 font. Fall through to
                 # standard normalization, using versionOneOnly=True below
@@ -1488,7 +1486,9 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits):
         return
 
     version = getattr(avar, "majorVersion", 1)
-    hasAvar2VarStore = version >= 2 and getattr(avar.table, "VarStore", None) is not None
+    hasAvar2VarStore = (
+        version >= 2 and getattr(avar.table, "VarStore", None) is not None
+    )
 
     # For avar2: compute old intermediate values BEFORE modifying avar v1.
     # These are the old-space intermediate coordinates at the new axis limits.
@@ -1690,8 +1690,7 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
 
         # Check if any remaining TupleVariation has a non-zero delta
         hasDelta = any(
-            tv.coordinates[inner] != 0
-            for tv in tupleVarStore.tupleVarData[outer]
+            tv.coordinates[inner] != 0 for tv in tupleVarStore.tupleVarData[outer]
         )
 
         if not hasDelta:
@@ -1768,9 +1767,7 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
             if bias != 0:
                 coords = [0] * itemCount
                 coords[inner] = bias
-                tupleVarStore.tupleVarData[outer].append(
-                    TupleVariation({}, coords)
-                )
+                tupleVarStore.tupleVarData[outer].append(TupleVariation({}, coords))
 
             if not isPinned:
                 # Tent (-1, -1, 0): delta = a_i + 1 - d_i
@@ -1806,9 +1803,7 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
                 itemCount = tupleVarStore.itemCounts[outer]
                 coords = [0] * itemCount
                 coords[inner] = otRound(defaultDelta)
-                tupleVarStore.tupleVarData[outer].append(
-                    TupleVariation({}, coords)
-                )
+                tupleVarStore.tupleVarData[outer].append(TupleVariation({}, coords))
 
     # Step 3: Remove self-contained axes from axis order.
     # The VarRegionList must match the post-removal fvar axis count.
@@ -1856,8 +1851,7 @@ def _cullItemVariationStore(varStore, fvarAxes, reachableRanges):
     for tvList in tupleVarStore.tupleVarData:
         before = len(tvList)
         tvList[:] = [
-            tv for tv in tvList
-            if not _isTupleVariationDead(tv, reachableRanges)
+            tv for tv in tvList if not _isTupleVariationDead(tv, reachableRanges)
         ]
         totalCulled += before - len(tvList)
     if totalCulled:
@@ -1915,7 +1909,8 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
         cvar = varfont["cvar"]
         before = len(cvar.variations)
         cvar.variations = [
-            tv for tv in cvar.variations
+            tv
+            for tv in cvar.variations
             if not _isTupleVariationDead(tv, reachableRanges)
         ]
         culled = before - len(cvar.variations)
@@ -2128,9 +2123,7 @@ def _instantiateFvarForAvar2(varfont, axisLimits, selfContainedAxes=None):
                 # Implicit identity mapping: axis i → varIdx i.
                 # After removing axes, need explicit mapping if non-identity.
                 newMapping = [
-                    i
-                    for i in range(originalAxisCount)
-                    if i not in removedAxisIndices
+                    i for i in range(originalAxisCount) if i not in removedAxisIndices
                 ]
                 if newMapping != list(range(len(newMapping))):
                     from fontTools.ttLib.tables import otTables as _otTables
@@ -2412,9 +2405,7 @@ def instantiateVariableFont(
 
     selfContainedAxes = {}
     if "avar" in varfont:
-        selfContainedAxes = (
-            instantiateAvar(varfont, axisLimits, normalizedLimits) or {}
-        )
+        selfContainedAxes = instantiateAvar(varfont, axisLimits, normalizedLimits) or {}
 
     # For avar2 partial instancing, run variation instancing for
     # self-contained pinned axes (those that can be removed from fvar).

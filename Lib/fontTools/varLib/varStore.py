@@ -695,7 +695,6 @@ def VarStore_getExtremes(
     cache=None,
     _bias=None,
 ):
-
     if varIdx == NO_VARIATION_INDEX:
         if identityAxisIndex is None:
             return 0, 0
@@ -787,7 +786,11 @@ def VarStore_getExtremes(
                     pass
 
             varStoreInstancer = VarStoreInstancer(self, fvarAxes, location)
-            v = varStoreInstancer[varIdx] - _bias + (0 if loc is None else round(loc * 16384))
+            v = (
+                varStoreInstancer[varIdx]
+                - _bias
+                + (0 if loc is None else round(loc * 16384))
+            )
 
             minOther, maxOther = self.getExtremes(
                 varIdx,
