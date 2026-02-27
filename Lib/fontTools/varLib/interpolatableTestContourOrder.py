@@ -44,12 +44,12 @@ def test_contour_order(glyph0, glyph1):
         #
         # Reverse the sign of the area (0); the rest stay the same.
         m1ControlReversed = [(-m[0],) + m[1:] for m in m1Control]
-            (
-                matching_control_reversed,
-                matching_cost_control_reversed,
-                identity_cost_control_reversed,
-            ) = matching_for_vectors(m0Control, m1ControlReversed)
-            done = matching_cost_control_reversed == identity_cost_control_reversed
+        (
+            matching_control_reversed,
+            matching_cost_control_reversed,
+            identity_cost_control_reversed,
+        ) = matching_for_vectors(m0Control, m1ControlReversed)
+        done = matching_cost_control_reversed == identity_cost_control_reversed
         if not done:
             m1GreenReversed = [(-m[0],) + m[1:] for m in m1Green]
             (
