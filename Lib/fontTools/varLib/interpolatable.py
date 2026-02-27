@@ -168,7 +168,7 @@ def test_gen(
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
         allGlyphs = [Glyph(glyph_name, glyphset) for glyphset in glyphsets]
-        if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
+        if len([1 for glyph in allGlyphs if not glyph.doesnt_exist]) <= 1:
             continue
         for master_idx, (glyph, glyphset, name) in enumerate(
             zip(allGlyphs, glyphsets, names)
