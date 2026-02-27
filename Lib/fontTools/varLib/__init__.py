@@ -750,7 +750,7 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
     # and unilaterally/arbitrarily define a sentinel value to distinguish the case
     # when a post table is present in a given master simply because that's where
     # the glyph names in TrueType must be stored, but the underline values are not
-    # meant to be used for building MVAR's deltas. The value of -0x8000 (-36768)
+    # meant to be used for building MVAR's deltas. The value of -0x8000 (-32768)
     # the minimum FWord (int16) value, was chosen for its unlikelyhood to appear
     # in real-world underline position/thickness values.
     specialTags = {"unds": -0x8000, "undo": -0x8000}
@@ -846,7 +846,6 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         GDEF = font["GDEF"].table
         assert GDEF.Version <= 0x00010002
     except KeyError:
-        font["GDEF"] = newTable("GDEF")
         GDEFTable = font["GDEF"] = newTable("GDEF")
         GDEF = GDEFTable.table = ot.GDEF()
         GDEF.GlyphClassDef = None
@@ -1136,7 +1135,6 @@ def drop_implied_oncurve_points(*masters: TTFont) -> int:
     https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
     """
 
-    count = 0
     glyph_masters = defaultdict(list)
     # multiple DS source may point to the same TTFont object and we want to
     # avoid processing the same glyph twice as they are modified in-place
@@ -1558,6 +1556,7 @@ def main(args=None):
         finder,
         exclude=options.exclude,
         optimize=options.optimize,
+        skip_vf=lambda name: not fullmatch(options.variable_fonts, name),
         colr_layer_reuse=options.colr_layer_reuse,
         drop_implied_oncurves=options.drop_implied_oncurves,
     )
