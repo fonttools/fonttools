@@ -313,7 +313,12 @@ class VariationModel(object):
         key = tuple(v is not None for v in items)
         subModel = self._subModels.get(key)
         if subModel is None:
-            subModel = VariationModel(subList(key, self.origLocations), self.axisOrder)
+            subModel = VariationModel(
+                subList(key, self.origLocations),
+                self.axisOrder,
+                extrapolate=self.extrapolate,
+                axisRanges=self.axisRanges,
+            )
             self._subModels[key] = subModel
         return subModel, subList(key, items)
 
