@@ -361,8 +361,8 @@ class InterpolatablePlot:
             for problem in glyph_problems:
                 glyphs_per_problem[problem["type"]].add(glyphname)
 
-        if "nothing" in glyphs_per_problem:
-            del glyphs_per_problem["nothing"]
+        if InterpolatableProblem.NOTHING in glyphs_per_problem:
+            del glyphs_per_problem[InterpolatableProblem.NOTHING]
 
         for problem_type in sorted(
             glyphs_per_problem, key=lambda x: InterpolatableProblem.severity[x]
