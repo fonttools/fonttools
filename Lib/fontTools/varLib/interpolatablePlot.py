@@ -140,7 +140,6 @@ class InterpolatablePlot:
     ):
         pad = self.pad
         width = self.width - 3 * self.pad
-        height = self.height - 2 * self.pad
         x = y = pad
 
         self.draw_label(
