@@ -1936,22 +1936,15 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
                 100 * culled / before if before else 0,
             )
 
-    # Cull IVS-based tables (skip the avar2 VarStore itself)
-    ivsTablePaths = []
-    for tag in ("HVAR", "VVAR", "MVAR"):
-        if tag in varfont:
-            table = varfont[tag].table
-            vs = getattr(table, "VarStore", None)
-            if vs:
-                ivsTablePaths.append((tag, vs))
-    if "GDEF" in varfont:
-        gdef = varfont["GDEF"].table
-        vs = getattr(gdef, "VarStore", None)
-        if vs:
-            ivsTablePaths.append(("GDEF", vs))
-
-    for tag, varStore in ivsTablePaths:
-        removed = _cullItemVariationStore(varStore, fvarAxes, reachableRanges)
+    # Cull all IVS-based tables (skip the avar2 VarStore itself)
+    avarVarStore = varfont["avar"].table.VarStore if "avar" in varfont else None
+    for tag in varfont.keys():
+        table = varfont[tag]
+        table = getattr(table, "table", table)
+        vs = getattr(table, "VarStore", None)
+        if vs is None or vs is avarVarStore:
+            continue
+        removed = _cullItemVariationStore(vs, fvarAxes, reachableRanges)
         if removed:
             log.info(
                 "avar2 %s culling: removed %d dead region references",
