@@ -161,7 +161,8 @@ class InterpolatablePlot:
             y += self.font_size + self.pad
 
             try:
-                h = hashlib.sha1(open(file, "rb").read()).hexdigest()
+                with open(file, "rb") as f:
+                    h = hashlib.sha1(f.read()).hexdigest()
                 self.draw_label("sha1: %s" % h, x=x + pad, y=y, width=width)
                 y += self.font_size
             except IsADirectoryError:
