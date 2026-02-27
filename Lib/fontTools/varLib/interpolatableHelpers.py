@@ -5,7 +5,6 @@ from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
 from collections import defaultdict, deque
 from math import sqrt, copysign, atan2, pi
-from enum import Enum
 import itertools
 
 import logging
