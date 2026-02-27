@@ -2099,9 +2099,7 @@ def _instantiateFvarForAvar2(varfont, axisLimits, selfContainedAxes=None):
                 # Implicit identity mapping: axis i → varIdx i.
                 # After removing axes, need explicit mapping if non-identity.
                 newMapping = [
-                    i
-                    for i in range(originalAxisCount)
-                    if i not in removedAxisIndices
+                    i for i in range(originalAxisCount) if i not in removedAxisIndices
                 ]
                 if newMapping != list(range(len(newMapping))):
                     from fontTools.ttLib.tables import otTables as _otTables
@@ -2437,9 +2435,7 @@ def instantiateVariableFont(
     selfContainedAxes = {}
     if "avar" in varfont:
         selfContainedAxes = (
-            instantiateAvar(
-                varfont, axisLimits, normalizedLimits, oldIntermediates
-            )
+            instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates)
             or {}
         )
 
