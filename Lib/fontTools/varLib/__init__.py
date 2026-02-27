@@ -1135,7 +1135,6 @@ def drop_implied_oncurve_points(*masters: TTFont) -> int:
     https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
     """
 
-    count = 0
     glyph_masters = defaultdict(list)
     # multiple DS source may point to the same TTFont object and we want to
     # avoid processing the same glyph twice as they are modified in-place
