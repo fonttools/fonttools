@@ -306,9 +306,9 @@ def find_parents_and_order(glyphsets, locations, *, discrete_axes=set()):
             if all(v == 0 for k, v in l.items() if k not in discrete_axes)
         ]
         if bases:
-            logging.info("Found %s base masters: %s", len(bases), bases)
+            log.info("Found %s base masters: %s", len(bases), bases)
         else:
-            logging.warning("No base master location found")
+            log.warning("No base master location found")
 
         # Form a minimum spanning tree of the locations
         try:
