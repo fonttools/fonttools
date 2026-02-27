@@ -68,6 +68,8 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
                 # we are doing anyway...
                 # trans = trans.translate(meanX, meanY)
                 trans = trans.rotate(theta)
+                if lambda2 < 0:
+                    lambda2 = 0
                 trans = trans.scale(sqrt(lambda1), sqrt(lambda2))
                 transforms.append(trans)
 
