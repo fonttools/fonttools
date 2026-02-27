@@ -693,6 +693,7 @@ def VarStore_getExtremes(
     identityAxisIndex=None,
     nullAxes=set(),
     cache=None,
+    _bias=None,
 ):
 
     if varIdx == NO_VARIATION_INDEX:
@@ -708,8 +709,20 @@ def VarStore_getExtremes(
                 return round(lo * 16384), round(hi * 16384)
             return -16384, 16384
 
+    isTopLevel = cache is None
     if cache is None:
         cache = {}
+
+    # Compute the bias once at the top level. The bias is the constant
+    # contribution from empty regions (scalar always 1). VarStoreInstancer
+    # at {} gives exactly the bias since non-empty regions get scalar=0.
+    # We subtract it from every VarStoreInstancer evaluation so that the
+    # recursive decomposition tracks only the varying part, then add it
+    # back once at the end. This avoids double-counting the bias across
+    # recursion levels.
+    if _bias is None:
+        zeroInstancer = VarStoreInstancer(self, fvarAxes, {})
+        _bias = round(zeroInstancer[varIdx])
 
     key = frozenset(nullAxes)
     if key in cache:
@@ -742,8 +755,7 @@ def VarStore_getExtremes(
             continue
         if not thisAxes:
             # Empty region (all peaks zero): constant contribution (scalar = 1).
-            # Its delta is already included in VarStoreInstancer evaluations
-            # for non-empty regions, so skip it here.
+            # Handled via _bias; skip here.
             continue
 
         locs = [None]
@@ -775,7 +787,7 @@ def VarStore_getExtremes(
                     pass
 
             varStoreInstancer = VarStoreInstancer(self, fvarAxes, location)
-            v = varStoreInstancer[varIdx] + (0 if loc is None else round(loc * 16384))
+            v = varStoreInstancer[varIdx] - _bias + (0 if loc is None else round(loc * 16384))
 
             minOther, maxOther = self.getExtremes(
                 varIdx,
@@ -784,10 +796,31 @@ def VarStore_getExtremes(
                 identityAxisIndex,
                 nullAxes | thisAxes,
                 cache,
+                _bias,
             )
 
             minV = min(minV, (v + minOther) * scalar)
             maxV = max(maxV, (v + maxOther) * scalar)
+
+    # Always account for identity range even if no region involves the
+    # identity axis. When no region peaks on the identity axis, the
+    # varying delta doesn't depend on it, so the identity term alone
+    # (without any varying contribution) bounds the range.
+    if identityAxisIndex is not None and identityAxisIndex not in nullAxes:
+        tag = fvarAxes[identityAxisIndex].axisTag
+        if tag in axisLimits:
+            lo = round(axisLimits[tag][0] * 16384)
+            hi = round(axisLimits[tag][2] * 16384)
+        else:
+            lo = -16384
+            hi = 16384
+        minV = min(minV, lo)
+        maxV = max(maxV, hi)
+
+    # Add bias once at the top level.
+    if isTopLevel:
+        minV += _bias
+        maxV += _bias
 
     cache[key] = (minV, maxV)
 
