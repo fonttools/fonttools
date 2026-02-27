@@ -1826,6 +1826,73 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
     return selfContainedAxes
 
 
+def _isTupleVariationDead(tv, reachableRanges):
+    """Check if a TupleVariation is dead (unreachable) given reachable axis ranges."""
+    for tag, (lo, hi) in reachableRanges.items():
+        if tag not in tv.axes:
+            continue
+        start, peak, end = tv.axes[tag]
+        # Region is dead if entirely outside reachable range
+        if hi <= start or lo >= end:
+            return True
+    return False
+
+
+def _cullVariationsForAvar2(varfont, reachableRanges):
+    """Cull dead TupleVariations outside reachable old-space final-coord ranges.
+
+    After avar2 partial instancing with offset compensation, variation tables
+    (gvar, cvar) remain in old-space final coordinates. Some regions may be
+    unreachable because the restricted axis range maps to a narrower final-coord
+    range. This function removes TupleVariations whose axis regions lie entirely
+    outside the reachable range for any restricted axis.
+
+    Args:
+        varfont: The font being instanced.
+        reachableRanges: dict mapping axis tags to (lo, hi) tuples representing
+            the reachable range of old-space final coordinates for that axis.
+    """
+    if "gvar" in varfont:
+        gvar = varfont["gvar"]
+        totalCulled = 0
+        totalTotal = 0
+
+        for glyphName in gvar.variations:
+            variations = gvar.variations[glyphName]
+            newVariations = []
+            for tv in variations:
+                totalTotal += 1
+                if _isTupleVariationDead(tv, reachableRanges):
+                    totalCulled += 1
+                else:
+                    newVariations.append(tv)
+            gvar.variations[glyphName] = newVariations
+
+        if totalCulled:
+            log.info(
+                "avar2 gvar culling: removed %d / %d TupleVariations (%.1f%%)",
+                totalCulled,
+                totalTotal,
+                100 * totalCulled / totalTotal if totalTotal else 0,
+            )
+
+    if "cvar" in varfont:
+        cvar = varfont["cvar"]
+        before = len(cvar.variations)
+        cvar.variations = [
+            tv for tv in cvar.variations
+            if not _isTupleVariationDead(tv, reachableRanges)
+        ]
+        culled = before - len(cvar.variations)
+        if culled:
+            log.info(
+                "avar2 cvar culling: removed %d / %d TupleVariations (%.1f%%)",
+                culled,
+                before,
+                100 * culled / before if before else 0,
+            )
+
+
 def isInstanceWithinAxisRanges(location, axisRanges):
     for axisTag, coord in location.items():
         if axisTag in axisRanges:
@@ -2185,6 +2252,37 @@ def instantiateVariableFont(
 
         instantiateFeatureVariations(varfont, normalizedLimits)
 
+    # For avar2 partial instancing, compute reachable old-space final-coord
+    # ranges for restricted axes BEFORE avar instancing modifies the segments.
+    # For NO_VARIATION_INDEX axes (no IVS delta), the final coord equals the
+    # intermediate coord, so the reachable range is [a_i, b_i].
+    reachableRanges = {}
+    if _isAvar2PartialInstancing:
+        avar = varfont["avar"]
+        varIdxMap = getattr(avar.table, "VarIdxMap", None)
+        fvarAxes = varfont["fvar"].axes
+        oldIntermediates = _computeOldIntermediates(varfont, axisLimits)
+        NO_VARIATION_INDEX = 0xFFFFFFFF
+
+        for axisIdx, axis in enumerate(fvarAxes):
+            tag = axis.axisTag
+            if tag not in axisLimits:
+                continue
+            triple = axisLimits[tag]
+            if triple.minimum == triple.maximum:
+                continue  # Pinned axis, not restricted
+            if tag not in oldIntermediates:
+                continue
+
+            if varIdxMap is not None:
+                varIdx = varIdxMap[axisIdx]
+            else:
+                varIdx = axisIdx
+
+            if varIdx == NO_VARIATION_INDEX:
+                a_i, d_i, b_i = oldIntermediates[tag]
+                reachableRanges[tag] = (min(a_i, b_i), max(a_i, b_i))
+
     selfContainedAxes = {}
     if "avar" in varfont:
         selfContainedAxes = (
@@ -2231,6 +2329,13 @@ def instantiateVariableFont(
         instantiateOTL(varfont, scLimits)
 
         instantiateFeatureVariations(varfont, scLimits)
+
+    # Cull dead gvar regions outside reachable old-space final-coord ranges.
+    # This removes TupleVariations that can never be reached because their
+    # axis regions lie outside the range of final coordinates producible by
+    # the instanced avar2 pipeline.
+    if _isAvar2PartialInstancing and reachableRanges:
+        _cullVariationsForAvar2(varfont, reachableRanges)
 
     with names.pruningUnusedNames(varfont):
         if "STAT" in varfont:

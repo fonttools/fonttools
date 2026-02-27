@@ -717,19 +717,20 @@ may create new segment maps as needed.
 
 ## 10. Known Limitations
 
-1. **No gvar culling.** Dead gvar regions (outside the reachable final-coord
-   range) are kept. The font is larger than optimal. Culling requires
-   renormalizing gvar to the closure-derived ranges, which requires avar v2 to
-   output new-space final coordinates — reintroducing the delta scaling
-   problem. Deferred to future work.
+1. **Base values not updated.** The stored glyph outlines and metrics
+   represent the original default, not the new default. This is inherent to
+   the offset compensation approach — updating base values would require
+   shifting gvar deltas, reintroducing the delta scaling problem. The font
+   renders correctly but may confuse tools that inspect base values directly.
 
-2. **Base values not updated.** The stored glyph outlines and metrics
-   represent the original default, not the new default. The font renders
-   correctly but may confuse tools that inspect base values directly.
-
-3. **Pinned axis removal is limited.** Only self-contained pinned axes (whose
+2. **Pinned axis removal is limited.** Only self-contained pinned axes (whose
    final coord doesn't vary with other axes) can be removed. Non-self-contained
    pinned axes are kept as hidden axes.
+
+3. **gvar culling limited to NO_VARIATION_INDEX axes.** For restricted axes
+   with IVS entries (non-trivial avar2 mapping), the reachable final-coord
+   range depends on cross-axis IVS deltas. The current implementation
+   conservatively skips culling for these axes.
 
 4. **Three-entry offset approximation.** For axes with complex avar v1 segment
    maps, the three-entry offset decomposition (bias + two tents) may not
@@ -739,25 +740,15 @@ may create new segment maps as needed.
 
 ## 11. Future Work
 
-### 11.1 gvar Culling
+### 11.1 Extended gvar Culling
 
-Use the closure computation to determine reachable final-coord ranges for each
-axis. Pass these ranges to a separate culling pass that trims gvar regions
-without renormalizing. This requires modifying `instantiateTupleVariationStore`
-to support culling-only mode (drop unreachable regions, keep coordinate space
-unchanged).
+The current gvar culling handles NO_VARIATION_INDEX axes (where final =
+intermediate, giving exact reachable ranges). For axes with IVS entries,
+computing exact reachable ranges requires evaluating the instanced IVS
+extremes. A tighter closure could be computed via `getExtremes` on the
+instanced avar2 VarStore.
 
-### 11.2 Base Value Updates
-
-Investigate whether base values can be updated by:
-1. Evaluating all variation at the new default's final coordinates
-2. Adding to base values
-3. Adjusting gvar to compensate (without full renormalization)
-
-This may require extending the TupleVariation representation to support
-"shifted" tent functions.
-
-### 11.3 Full Pinned Axis Removal
+### 11.2 Full Pinned Axis Removal
 
 For non-self-contained pinned axes, investigate encoding the residual
 variation as additional entries in other axes' delta sets.
@@ -808,7 +799,13 @@ Modifications to `Lib/fontTools/varLib/instancer/__init__.py`:
    `tupleVarStore.axisOrder` before building VarStore, so VarRegionList
    matches post-removal fvar axis count.
 
-### Phase 3: Optimization
+### Phase 3: Optimization — PARTIALLY IMPLEMENTED
 
-9. Implement closure-based culling for gvar (separate pass).
-10. Optimize IVS (merge regions, remove zero deltas).
+9. **gvar culling — IMPLEMENTED.** `_cullGvarForAvar2()` removes dead gvar
+   TupleVariations whose axis regions fall outside the reachable old-space
+   final-coord range. For restricted NO_VARIATION_INDEX axes, the reachable
+   range = [a_i, b_i] from `oldIntermediates`. Computed before avar instancing
+   and applied after self-contained axis instancing. Axes with IVS entries
+   are conservatively skipped (no culling).
+
+10. Optimize IVS (merge regions, remove zero deltas) — not yet implemented.
