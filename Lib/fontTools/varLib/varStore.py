@@ -699,6 +699,13 @@ def VarStore_getExtremes(
         if identityAxisIndex is None:
             return 0, 0
         else:
+            # Use axis limits to bound the identity range if available
+            axis = fvarAxes[identityAxisIndex]
+            tag = axis.axisTag
+            if tag in axisLimits:
+                lo = axisLimits[tag][0]
+                hi = axisLimits[tag][2]
+                return round(lo * 16384), round(hi * 16384)
             return -16384, 16384
 
     if cache is None:
@@ -733,7 +740,11 @@ def VarStore_getExtremes(
             location[fvarAxes[i].axisTag] = peak
         if skip:
             continue
-        assert thisAxes, "Empty region in VarStore!"
+        if not thisAxes:
+            # Empty region (all peaks zero): constant contribution (scalar = 1).
+            # Its delta is already included in VarStoreInstancer evaluations
+            # for non-empty regions, so skip it here.
+            continue
 
         locs = [None]
         if identityAxisIndex in thisAxes:

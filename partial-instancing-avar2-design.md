@@ -676,17 +676,32 @@ coordinate. The proof in §4.2 applies regardless of self-referencing.
 ### 9.2 Axis With Non-Trivial avar v1 Segment Map
 
 The old intermediate values (`a_i`, `d_i`, `b_i`) are computed via the old
-avar v1 segment map. If the segment map is non-trivial (non-identity), the
-offset function may have additional breakpoints. But since we decompose it
-into just three entries (bias + two tents), we approximate the offset as
-piecewise-linear with a single kink at `x_new = 0`.
+avar v1 segment map. The offset function is:
 
-This is **exact** when the renormalization `inv_renorm` is piecewise-linear
-with at most one kink (at the default), which is always the case for the
-standard two-piece normalization. If the avar v1 segment map has intermediate
-breakpoints within the restricted range, additional tent regions may be needed
-for exactness. For a first implementation, the three-entry decomposition is
-sufficient for most fonts.
+```
+offset(z) = renormalize_to_inverse(z) - z
+```
+
+where `z` is the new-space intermediate coordinate (post-avar-v1-renorm).
+
+**The three-entry decomposition is always exact**, regardless of avar v1
+complexity. Here's why: `renormalize_to_inverse(z)` maps new-space
+intermediate back to old-space intermediate. After standard avar v1
+renormalization:
+
+- At `z = -1`: old intermediate = `a_i`
+- At `z = 0`: old intermediate = `d_i`
+- At `z = +1`: old intermediate = `b_i`
+
+`renormalize_to_inverse` is ALWAYS two-piece linear (one linear piece for
+`z ∈ [-1, 0]`, another for `z ∈ [0, +1]`), because the standard
+renormalization maps two linear segments (negative and positive sides) to
+`[-1, 0]` and `[0, +1]` respectively. The inverse of a linear function is
+linear, regardless of how complex the original avar v1 segment map is.
+
+Therefore `offset(z) = renormalize_to_inverse(z) - z` is always two-piece
+linear with at most one kink at `z = 0`. This is exactly representable by
+three IVS entries (empty-region bias + two tents).
 
 ### 9.3 Multiple Restricted Axes
 
@@ -727,26 +742,21 @@ may create new segment maps as needed.
    final coord doesn't vary with other axes) can be removed. Non-self-contained
    pinned axes are kept as hidden axes.
 
-3. **gvar culling limited to NO_VARIATION_INDEX axes.** For restricted axes
-   with IVS entries (non-trivial avar2 mapping), the reachable final-coord
-   range depends on cross-axis IVS deltas. The current implementation
-   conservatively skips culling for these axes.
-
-4. **Three-entry offset approximation.** For axes with complex avar v1 segment
-   maps, the three-entry offset decomposition (bias + two tents) may not
-   exactly represent the offset function. Additional tent regions may be
-   needed for exactness.
+3. **getExtremes bias double-counting.** Empty-region bias entries (from offset
+   compensation) are skipped in getExtremes' outer loop but included in every
+   VarStoreInstancer evaluation, causing the bias to be counted once per
+   recursion level. This makes bounds wider than ideal (conservative/safe).
 
 
 ## 11. Future Work
 
-### 11.1 Extended gvar Culling
+### 11.1 Fix getExtremes Bias Double-Counting
 
-The current gvar culling handles NO_VARIATION_INDEX axes (where final =
-intermediate, giving exact reachable ranges). For axes with IVS entries,
-computing exact reachable ranges requires evaluating the instanced IVS
-extremes. A tighter closure could be computed via `getExtremes` on the
-instanced avar2 VarStore.
+Empty-region (offset compensation bias) entries are included in every
+VarStoreInstancer evaluation but skipped in getExtremes' region iteration.
+This double-counts the bias at each recursion level, producing wider-than-
+necessary bounds. Fix by subtracting the bias from VarStoreInstancer
+evaluations or by treating empty regions as a constant base term.
 
 ### 11.2 Full Pinned Axis Removal
 
@@ -799,13 +809,18 @@ Modifications to `Lib/fontTools/varLib/instancer/__init__.py`:
    `tupleVarStore.axisOrder` before building VarStore, so VarRegionList
    matches post-removal fvar axis count.
 
-### Phase 3: Optimization — PARTIALLY IMPLEMENTED
+### Phase 3: Optimization — IMPLEMENTED
 
-9. **gvar culling — IMPLEMENTED.** `_cullGvarForAvar2()` removes dead gvar
-   TupleVariations whose axis regions fall outside the reachable old-space
-   final-coord range. For restricted NO_VARIATION_INDEX axes, the reachable
-   range = [a_i, b_i] from `oldIntermediates`. Computed before avar instancing
-   and applied after self-contained axis instancing. Axes with IVS entries
-   are conservatively skipped (no culling).
+9. **gvar/cvar culling — IMPLEMENTED.** `_cullVariationsForAvar2()` removes
+   dead TupleVariations whose axis regions fall outside the reachable
+   old-space final-coord range:
+   - NO_VARIATION_INDEX axes: exact bounds [a_i, b_i] from `oldIntermediates`.
+   - IVS axes: bounds from `getExtremes` on the instanced avar v2
+     VarStore (including offset compensation). Private axes (originally hidden,
+     not user-restricted) are pinned at (0,0,0) in axis limits because their
+     intermediate coordinate is always 0, so regions referencing them get
+     scalar = 0. This dramatically tightens bounds for parametric fonts.
+   - `getExtremes` fixes: handles empty regions (from offset bias) by skipping
+     them, and uses axis limits for NO_VARIATION_INDEX identity range.
 
 10. Optimize IVS (merge regions, remove zero deltas) — not yet implemented.

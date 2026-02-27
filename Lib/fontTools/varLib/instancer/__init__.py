@@ -1893,6 +1893,75 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
             )
 
 
+def _computeReachableRangesForAvar2(varfont, axisLimits, reachableRanges):
+    """Compute reachable old-space final-coord ranges using getExtremes.
+
+    For axes not already in reachableRanges (i.e., axes with IVS entries
+    rather than NO_VARIATION_INDEX), compute conservative bounds on the
+    reachable old-space final coordinate using getExtremes on the instanced
+    avar v2 VarStore.
+
+    This is critical for parametric fonts where gvar references private axes
+    driven by public axes through avar2. Restricting wght narrows the
+    reachable range of XOPQ, YOPQ, etc.
+
+    Must be called AFTER _instantiateFvarForAvar2 has updated fvar and
+    VarIdxMap so that axes and VarStore match.
+    """
+    avar = varfont["avar"]
+    fvarAxes = varfont["fvar"].axes
+    varStore = getattr(avar.table, "VarStore", None)
+    if varStore is None:
+        return
+    varIdxMap = getattr(avar.table, "VarIdxMap", None)
+
+    NO_VARIATION_INDEX = 0xFFFFFFFF
+
+    # Private axes (originally hidden, not user-restricted) always have
+    # intermediate coordinate = 0. Any VarStore region referencing them
+    # as input gets scalar = 0 at intermediate = 0. Tell getExtremes
+    # by pinning them at (0, 0, 0) so it correctly zeros out those regions.
+    privateAxisLimits = {}
+    for axis in fvarAxes:
+        if axis.flags & 0x1 and axis.axisTag not in axisLimits:
+            privateAxisLimits[axis.axisTag] = (0, 0, 0)
+
+    for axisIdx, axis in enumerate(fvarAxes):
+        tag = axis.axisTag
+        if tag in reachableRanges:
+            continue  # Already computed (NO_VARIATION_INDEX, exact)
+
+        if varIdxMap is not None:
+            varIdx = varIdxMap[axisIdx]
+        else:
+            varIdx = axisIdx
+
+        if varIdx == NO_VARIATION_INDEX:
+            continue
+
+        # Private axes have no identity term (intermediate always 0,
+        # final = delta only). Public axes have identity + delta.
+        private = axis.flags & 0x1
+        identityAxisIndex = None if private else axisIdx
+
+        # Pass privateAxisLimits so getExtremes correctly zeros out
+        # regions referencing private axes (whose intermediate is always 0).
+        minV, maxV = varStore.getExtremes(
+            varIdx, fvarAxes, privateAxisLimits, identityAxisIndex
+        )
+
+        lo = max(-1, minV / 16384)
+        hi = min(+1, maxV / 16384)
+        reachableRanges[tag] = (lo, hi)
+
+        log.info(
+            "avar2 getExtremes range for %s: [%.4f, %.4f]",
+            tag,
+            lo,
+            hi,
+        )
+
+
 def isInstanceWithinAxisRanges(location, axisRanges):
     for axisTag, coord in location.items():
         if axisTag in axisRanges:
@@ -2330,13 +2399,6 @@ def instantiateVariableFont(
 
         instantiateFeatureVariations(varfont, scLimits)
 
-    # Cull dead gvar regions outside reachable old-space final-coord ranges.
-    # This removes TupleVariations that can never be reached because their
-    # axis regions lie outside the range of final coordinates producible by
-    # the instanced avar2 pipeline.
-    if _isAvar2PartialInstancing and reachableRanges:
-        _cullVariationsForAvar2(varfont, reachableRanges)
-
     with names.pruningUnusedNames(varfont):
         if "STAT" in varfont:
             instantiateSTAT(varfont, axisLimits)
@@ -2345,6 +2407,17 @@ def instantiateVariableFont(
             _instantiateFvarForAvar2(varfont, axisLimits, selfContainedAxes)
         else:
             instantiateFvar(varfont, axisLimits)
+
+    # Cull dead gvar/cvar regions outside reachable old-space final-coord
+    # ranges. Must be after _instantiateFvarForAvar2 so fvar and VarStore
+    # axis orders match for getExtremes.
+    if _isAvar2PartialInstancing:
+        # Extend reachable ranges for axes with IVS entries (conservative
+        # bounds via getExtremes on the instanced avar v2 VarStore).
+        _computeReachableRangesForAvar2(varfont, axisLimits, reachableRanges)
+
+        if reachableRanges:
+            _cullVariationsForAvar2(varfont, reachableRanges)
 
     if "OS/2" in varfont:
         varfont["OS/2"].recalcAvgCharWidth(varfont)
