@@ -1711,6 +1711,7 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
         )
 
     # Step 2: Add offset compensation TupleVariations
+    processedVarIdxes = set()
     for axisIdx, axis in enumerate(fvarAxes):
         tag = axis.axisTag
 
@@ -1794,8 +1795,13 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
             # If it has a non-zero default delta (from rebasing restricted axes'
             # contributions), add it back as a bias. The standard instancing
             # subtracts default deltas, but for avar2 we must preserve them.
+            # Skip if this varIdx was already processed (multiple axes can
+            # share the same varIdx entry).
             if varIdx == NO_VARIATION_INDEX:
                 continue
+            if varIdx in processedVarIdxes:
+                continue
+            processedVarIdxes.add(varIdx)
             outer = varIdx >> 16
             inner = varIdx & 0xFFFF
             if outer >= len(defaultDeltaArray):
