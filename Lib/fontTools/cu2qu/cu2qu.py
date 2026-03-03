@@ -480,13 +480,15 @@ def curve_to_quadratic(curve, max_err, all_quadratic=True):
             curve or a single cubic curve.
 
     Returns:
-        If all_quadratic is True: A list of 2D tuples, representing
-        control points of the quadratic spline if it fits within the
-        given tolerance, or ``None`` if no suitable spline could be
-        calculated.
+        If all_quadratic is True: A list of 2D tuples representing
+        control points of the quadratic spline.
 
         If all_quadratic is False: Either a quadratic curve (if length
         of output is 3), or a cubic curve (if length of output is 4).
+
+    Raises:
+        fontTools.cu2qu.errors.ApproxNotFoundError: if no suitable
+        approximation can be found with the given parameters.
     """
 
     curve = [complex(*p) for p in curve]
@@ -529,18 +531,22 @@ def curves_to_quadratic(curves, max_errors, all_quadratic=True):
 
     Returns:
         If all_quadratic is True, a list of splines, each spline being a list
-        of 2D tuples.
+        of 2D tuples. If ``curves`` is empty, returns an empty list.
 
         If all_quadratic is False, a list of curves, each curve being a quadratic
         (length 3), or cubic (length 4).
 
     Raises:
-        fontTools.cu2qu.Errors.ApproxNotFoundError: if no suitable approximation
+        ValueError: if ``max_errors`` does not match the number of curves.
+        fontTools.cu2qu.errors.ApproxNotFoundError: if no suitable approximation
         can be found for all curves with the given parameters.
     """
 
     curves = [[complex(*p) for p in curve] for curve in curves]
-    assert len(max_errors) == len(curves)
+    if len(max_errors) != len(curves):
+        raise ValueError("max_errors must match the number of curves")
+    if not curves:
+        return []
 
     l = len(curves)
     splines = [None] * l

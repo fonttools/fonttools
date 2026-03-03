@@ -25,6 +25,9 @@ from fontTools.cu2qu import curve_to_quadratic
 
 
 class Qu2CuTest:
+    def test_empty_input(self):
+        assert quadratic_to_curves([]) == []
+
     @pytest.mark.parametrize(
         "quadratics, expected, tolerance, cubic_only",
         [
@@ -97,6 +100,24 @@ class Qu2CuTest:
             assert len(reconst) == 1
             curve = tuple((pytest.approx(p[0]), pytest.approx(p[1])) for p in curve)
             assert curve == reconst[0]
+
+    def test_reject_disconnected_splines(self):
+        with pytest.raises(ValueError, match="must connect end-to-start"):
+            quadratic_to_curves(
+                [
+                    [(0, 0), (0, 1), (1, 1)],
+                    [(2, 2), (3, 3), (4, 4)],
+                ]
+            )
+
+    def test_reject_short_spline(self):
+        with pytest.raises(ValueError, match="at least 3 points"):
+            quadratic_to_curves([[(0, 0), (1, 1)]])
+
+    @pytest.mark.parametrize("tolerance", [0, -1])
+    def test_reject_non_positive_tolerance(self, tolerance):
+        with pytest.raises(ValueError, match="max_err must be greater than zero"):
+            quadratic_to_curves([[(0, 0), (0, 1), (1, 1)]], tolerance)
 
     def test_main(self):
         # Just for coverage

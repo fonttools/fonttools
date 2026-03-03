@@ -22,7 +22,8 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         "all_cubic": kwargs["all_cubic"],
     }
 
-    assert "gvar" not in font, "Cannot convert variable font"
+    if "gvar" in font:
+        raise ValueError("Cannot convert variable font")
     glyphSet = font.getGlyphSet()
     glyphOrder = font.getGlyphOrder()
     glyf = font["glyf"]
@@ -86,6 +87,9 @@ def _main(args=None):
     )
 
     options = parser.parse_args(args)
+
+    if options.conversion_error <= 0:
+        parser.error("--conversion-error must be greater than zero")
 
     if not options.verbose:
         level = "WARNING"
