@@ -175,6 +175,12 @@ def add_implicit_on_curves(p):
 Point = Union[Tuple[float, float], complex]
 
 
+def _raise_incompatible_point(point, previous_point):
+    raise ValueError(
+        f"Quadratic splines must connect end-to-start; got {previous_point!r} then {point!r}"
+    )
+
+
 @cython.locals(
     cost=cython.int,
     is_complex=cython.int,
@@ -210,6 +216,9 @@ def quadratic_to_curves(
 
         all_cubic: if True, only cubic curves are generated; defaults to False
     """
+    if not quads:
+        return []
+
     is_complex = type(quads[0][0]) is complex
     if not is_complex:
         quads = [[complex(x, y) for (x, y) in p] for p in quads]
@@ -218,7 +227,8 @@ def quadratic_to_curves(
     costs = [1]
     cost = 1
     for p in quads:
-        assert q[-1] == p[0]
+        if q[-1] != p[0]:
+            _raise_incompatible_point(p[0], q[-1])
         for i in range(len(p) - 2):
             cost += 1
             costs.append(cost)
