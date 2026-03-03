@@ -62,6 +62,16 @@ def zip(*args):
     return list(_zip(*args))
 
 
+def _validate_positive_tolerance(value, name):
+    if value <= 0:
+        raise ValueError(f"{name} must be greater than zero")
+
+
+def _validate_positive_tolerances(values, name):
+    for value in values:
+        _validate_positive_tolerance(value, name)
+
+
 class GetSegmentsPen(AbstractPen):
     """Pen to collect segments into lists of points for conversion.
 
@@ -231,7 +241,7 @@ def glyphs_to_quadratic(
     if stats is None:
         stats = {}
 
-    if not max_err:
+    if max_err is None:
         # assume 1000 is the default UPEM
         max_err = DEFAULT_MAX_ERR * 1000
 
@@ -240,6 +250,7 @@ def glyphs_to_quadratic(
     else:
         max_errors = [max_err] * len(glyphs)
     assert len(max_errors) == len(glyphs)
+    _validate_positive_tolerances(max_errors, "max_err")
 
     return _glyphs_to_quadratic(
         glyphs, max_errors, reverse_direction, stats, all_quadratic
@@ -293,21 +304,25 @@ def fonts_to_quadratic(
     if stats is None:
         stats = {}
 
-    if max_err_em and max_err:
+    if max_err_em is not None and max_err is not None:
         raise TypeError("Only one of max_err and max_err_em can be specified.")
-    if not (max_err_em or max_err):
+    if max_err_em is None and max_err is None:
         max_err_em = DEFAULT_MAX_ERR
 
     if isinstance(max_err, (list, tuple)):
         assert len(max_err) == len(fonts)
         max_errors = max_err
-    elif max_err:
+        _validate_positive_tolerances(max_errors, "max_err")
+    elif max_err is not None:
+        _validate_positive_tolerance(max_err, "max_err")
         max_errors = [max_err] * len(fonts)
 
     if isinstance(max_err_em, (list, tuple)):
         assert len(fonts) == len(max_err_em)
+        _validate_positive_tolerances(max_err_em, "max_err_em")
         max_errors = [f.info.unitsPerEm * e for f, e in zip(fonts, max_err_em)]
-    elif max_err_em:
+    elif max_err_em is not None:
+        _validate_positive_tolerance(max_err_em, "max_err_em")
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
     modified = set()

@@ -99,6 +99,11 @@ class FontsToQuadraticTest(object):
         fonts_to_quadratic(fonts, max_err=[4.096, 4.096], stats=stats)
         assert stats == {"1": 5, "2": 193, "3": 14}
 
+    @pytest.mark.parametrize("kwargs", [{"max_err": 0}, {"max_err_em": 0}])
+    def test_reject_zero_tolerance(self, fonts, kwargs):
+        with pytest.raises(ValueError, match="must be greater than zero"):
+            fonts_to_quadratic(fonts, **kwargs)
+
     def test_both_max_err_and_max_err_em(self, fonts):
         with pytest.raises(TypeError, match="Only one .* can be specified"):
             fonts_to_quadratic(fonts, max_err=1.000, max_err_em=0.001)
@@ -136,6 +141,11 @@ class GlyphsToQuadraticTest(object):
         stats = {}
         glyphs_to_quadratic(glyphs, max_err=[4.096, 4.096], stats=stats)
         assert stats == {"2": 11, "3": 1}
+
+    def test_reject_zero_tolerance(self, fonts):
+        glyphs = [f["a"] for f in fonts]
+        with pytest.raises(ValueError, match="must be greater than zero"):
+            glyphs_to_quadratic(glyphs, max_err=0)
 
     def test_reverse_direction(self, fonts):
         glyphs = [f["A"] for f in fonts]
