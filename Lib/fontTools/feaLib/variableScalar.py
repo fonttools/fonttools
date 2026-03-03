@@ -1,4 +1,9 @@
-from fontTools.varLib.models import VariationModel, normalizeValue, piecewiseLinearMap
+from fontTools.varLib.models import (
+    VariationModel,
+    noRound,
+    normalizeValue,
+    piecewiseLinearMap,
+)
 
 
 def Location(loc):
@@ -102,17 +107,18 @@ class VariableScalar:
                 }
                 for location in locations
             ]
-        m = VariationModel(locations)
+        axisOrder = [ax.axisTag for ax in self.axes]
+        m = VariationModel(locations, axisOrder=axisOrder)
         if model_cache is not None:
             model_cache[key] = m
         return m
 
     def get_deltas_and_supports(self, model_cache=None, avar=None):
         values = list(self.values.values())
-        return self.model(model_cache, avar).getDeltasAndSupports(values)
+        return self.model(model_cache, avar).getDeltasAndSupports(values, round=round)
 
     def add_to_variation_store(self, store_builder, model_cache=None, avar=None):
         deltas, supports = self.get_deltas_and_supports(model_cache, avar)
         store_builder.setSupports(supports)
-        index = store_builder.storeDeltas(deltas)
+        index = store_builder.storeDeltas(deltas, round=noRound)
         return int(self.default), index
