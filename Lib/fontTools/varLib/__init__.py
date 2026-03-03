@@ -1549,6 +1549,7 @@ def main(args=None):
                 filename = vf.name + ".{ext}"
             vf_name_to_output_path[vf.name] = os.path.join(output_dir, filename)
 
+    vf_names_to_build = {vf.name for vf in vfs_to_build}
     finder = MasterFinder(options.master_finder)
 
     vfs = build_many(
@@ -1556,7 +1557,7 @@ def main(args=None):
         finder,
         exclude=options.exclude,
         optimize=options.optimize,
-        skip_vf=lambda name: not fullmatch(options.variable_fonts, name),
+        skip_vf=lambda name: name not in vf_names_to_build,
         colr_layer_reuse=options.colr_layer_reuse,
         drop_implied_oncurves=options.drop_implied_oncurves,
     )
