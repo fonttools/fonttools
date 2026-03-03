@@ -1,6 +1,7 @@
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib.avar.build import build
+from fontTools.varLib.avar.map import map as map_avar, main as map_main
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.avar.unbuild import _pruneLocations, mappings_from_avar, unbuild
 from io import StringIO
@@ -125,6 +126,39 @@ def test_unbuild_falls_back_to_axis_tag_when_name_missing():
     unbuild(font, output)
 
     assert 'name="wght"' in output.getvalue()
+
+
+def test_map_rejects_unknown_axis():
+    font = TTFont()
+    font["fvar"] = newTable("fvar")
+    axis = Axis()
+    axis.axisTag = "wght"
+    axis.axisNameID = 256
+    axis.minValue = 100
+    axis.defaultValue = 400
+    axis.maxValue = 900
+    font["fvar"].axes = [axis]
+
+    with pytest.raises(ValueError, match="Unknown axis tag"):
+        map_avar(font, {"wdth": 100})
+
+
+def test_map_main_rejects_malformed_coordinate(tmp_path):
+    designspace = Path(tmp_path) / "Test.designspace"
+    designspace.write_text(
+        """\
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="100" maximum="900" default="400"/>
+  </axes>
+</designspace>
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="2"):
+        map_main([str(designspace), "wght"])
 
 
 def test_build_preserves_existing_name_table(tmp_path):
