@@ -104,6 +104,14 @@ class FontsToQuadraticTest(object):
         with pytest.raises(ValueError, match="must be greater than zero"):
             fonts_to_quadratic(fonts, **kwargs)
 
+    @pytest.mark.parametrize(
+        "kwargs",
+        [{"max_err": [1]}, {"max_err_em": [0.001]}],
+    )
+    def test_reject_mismatched_tolerance_list_lengths(self, fonts, kwargs):
+        with pytest.raises(ValueError, match="must match the number of inputs"):
+            fonts_to_quadratic(fonts, **kwargs)
+
     def test_both_max_err_and_max_err_em(self, fonts):
         with pytest.raises(TypeError, match="Only one .* can be specified"):
             fonts_to_quadratic(fonts, max_err=1.000, max_err_em=0.001)
@@ -146,6 +154,11 @@ class GlyphsToQuadraticTest(object):
         glyphs = [f["a"] for f in fonts]
         with pytest.raises(ValueError, match="must be greater than zero"):
             glyphs_to_quadratic(glyphs, max_err=0)
+
+    def test_reject_mismatched_tolerance_list_lengths(self, fonts):
+        glyphs = [f["a"] for f in fonts]
+        with pytest.raises(ValueError, match="must match the number of inputs"):
+            glyphs_to_quadratic(glyphs, max_err=[4.096])
 
     def test_reverse_direction(self, fonts):
         glyphs = [f["A"] for f in fonts]

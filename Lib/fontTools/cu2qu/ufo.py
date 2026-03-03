@@ -72,6 +72,11 @@ def _validate_positive_tolerances(values, name):
         _validate_positive_tolerance(value, name)
 
 
+def _validate_length(values, expected, name):
+    if len(values) != expected:
+        raise ValueError(f"{name} must match the number of inputs")
+
+
 class GetSegmentsPen(AbstractPen):
     """Pen to collect segments into lists of points for conversion.
 
@@ -249,7 +254,7 @@ def glyphs_to_quadratic(
         max_errors = max_err
     else:
         max_errors = [max_err] * len(glyphs)
-    assert len(max_errors) == len(glyphs)
+    _validate_length(max_errors, len(glyphs), "max_err")
     _validate_positive_tolerances(max_errors, "max_err")
 
     return _glyphs_to_quadratic(
@@ -310,7 +315,7 @@ def fonts_to_quadratic(
         max_err_em = DEFAULT_MAX_ERR
 
     if isinstance(max_err, (list, tuple)):
-        assert len(max_err) == len(fonts)
+        _validate_length(max_err, len(fonts), "max_err")
         max_errors = max_err
         _validate_positive_tolerances(max_errors, "max_err")
     elif max_err is not None:
@@ -318,7 +323,7 @@ def fonts_to_quadratic(
         max_errors = [max_err] * len(fonts)
 
     if isinstance(max_err_em, (list, tuple)):
-        assert len(fonts) == len(max_err_em)
+        _validate_length(max_err_em, len(fonts), "max_err_em")
         _validate_positive_tolerances(max_err_em, "max_err_em")
         max_errors = [f.info.unitsPerEm * e for f, e in zip(fonts, max_err_em)]
     elif max_err_em is not None:
