@@ -407,6 +407,25 @@ class VariationModelTest(object):
                 ]
             )
 
+    def test_init_duplicate_locations_after_stripping_zero_axes(self):
+        with pytest.raises(VariationModelError, match="Locations must be unique."):
+            VariationModel([{}, {"foo": 0.0}])
+
+    def test_getSubModel_preserves_extrapolate_and_axisRanges(self):
+        axisRanges = {"foo": (-2.0, 2.0)}
+        model = VariationModel(
+            [{}, {"foo": 1.0}, {"foo": 2.0}],
+            extrapolate=True,
+            axisRanges=axisRanges,
+        )
+
+        subModel, items = model.getSubModel([1, None, 3])
+
+        assert items == [1, 3]
+        assert subModel.extrapolate is True
+        assert subModel.axisRanges == axisRanges
+        assert subModel.interpolateFromMasters({"foo": 3.0}, [100, 200]) == 250
+
     @pytest.mark.parametrize(
         "locations, axisOrder, masterValues, instanceLocation, expectedValue, masterScalars",
         [
