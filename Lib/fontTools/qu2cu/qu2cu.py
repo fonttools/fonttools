@@ -181,6 +181,11 @@ def _raise_incompatible_point(point, previous_point):
     )
 
 
+def _validate_spline_length(spline):
+    if len(spline) < 3:
+        raise ValueError("Quadratic splines must contain at least 3 points")
+
+
 @cython.locals(
     cost=cython.int,
     is_complex=cython.int,
@@ -218,6 +223,8 @@ def quadratic_to_curves(
     """
     if not quads:
         return []
+    for spline in quads:
+        _validate_spline_length(spline)
 
     is_complex = type(quads[0][0]) is complex
     if not is_complex:

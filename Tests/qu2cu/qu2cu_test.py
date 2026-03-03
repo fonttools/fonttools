@@ -110,6 +110,10 @@ class Qu2CuTest:
                 ]
             )
 
+    def test_reject_short_spline(self):
+        with pytest.raises(ValueError, match="at least 3 points"):
+            quadratic_to_curves([[(0, 0), (1, 1)]])
+
     def test_main(self):
         # Just for coverage
         qu2cu_main()
