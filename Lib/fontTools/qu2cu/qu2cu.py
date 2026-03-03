@@ -209,6 +209,7 @@ def quadratic_to_curves(
     Returns:
         The output is a list of tuples of points. Points are represented
         in the same format as the input, either as 2-tuples or complex numbers.
+        If ``quads`` is empty, returns an empty list.
 
         Each tuple is either of length three, for a quadratic curve, or four,
         for a cubic curve.  Each curve's last point is the same as the next
@@ -220,6 +221,10 @@ def quadratic_to_curves(
         max_err: absolute error tolerance; defaults to 0.5
 
         all_cubic: if True, only cubic curves are generated; defaults to False
+
+    Raises:
+        ValueError: if an input spline has fewer than 3 points, or if adjacent
+        splines do not connect end-to-start.
     """
     if not quads:
         return []
