@@ -185,7 +185,10 @@ def unbuild(font, f=sys.stdout):
 
     if "name" in font:
         name = font["name"]
-        axisNames = {axis.axisTag: name.getDebugName(axis.axisNameID) for axis in axes}
+        axisNames = {
+            axis.axisTag: name.getDebugName(axis.axisNameID) or axis.axisTag
+            for axis in axes
+        }
     else:
         axisNames = {a.axisTag: a.axisTag for a in axes}
 

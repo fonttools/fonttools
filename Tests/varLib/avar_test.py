@@ -1,7 +1,9 @@
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib.avar.build import build
 from fontTools.varLib.models import VariationModel
-from fontTools.varLib.avar.unbuild import _pruneLocations, mappings_from_avar
+from fontTools.varLib.avar.unbuild import _pruneLocations, mappings_from_avar, unbuild
+from io import StringIO
 from pathlib import Path
 import os
 import unittest
@@ -105,6 +107,24 @@ def test_mappings_from_avar_without_avar_table():
 
     assert axis_maps == {}
     assert mappings == []
+
+
+def test_unbuild_falls_back_to_axis_tag_when_name_missing():
+    font = TTFont()
+    font["fvar"] = newTable("fvar")
+    axis = Axis()
+    axis.axisTag = "wght"
+    axis.axisNameID = 999
+    axis.minValue = 100
+    axis.defaultValue = 400
+    axis.maxValue = 900
+    font["fvar"].axes = [axis]
+    font["name"] = newTable("name")
+
+    output = StringIO()
+    unbuild(font, output)
+
+    assert 'name="wght"' in output.getvalue()
 
 
 def test_build_preserves_existing_name_table(tmp_path):
