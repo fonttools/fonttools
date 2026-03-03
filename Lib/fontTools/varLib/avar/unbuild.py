@@ -81,7 +81,7 @@ def mappings_from_avar(font, denormalize=True):
     axisTags = [a.axisTag for a in fvarAxes]
     axisIndexes = {a.axisTag: i for i, a in enumerate(fvarAxes)}
     if "avar" not in font:
-        return {}, {}
+        return {}, []
     avar = font["avar"]
     axisMaps = {
         tag: seg
@@ -185,7 +185,10 @@ def unbuild(font, f=sys.stdout):
 
     if "name" in font:
         name = font["name"]
-        axisNames = {axis.axisTag: name.getDebugName(axis.axisNameID) for axis in axes}
+        axisNames = {
+            axis.axisTag: name.getDebugName(axis.axisNameID) or axis.axisTag
+            for axis in axes
+        }
     else:
         axisNames = {a.axisTag: a.axisTag for a in axes}
 
