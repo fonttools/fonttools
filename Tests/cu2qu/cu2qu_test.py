@@ -254,5 +254,15 @@ def test_cu2qu_complex_division_floating_point_precision():
     assert result[1][5][1] == 326.49999999999994
 
 
+def test_curves_to_quadratic_rejects_mismatched_max_errors():
+    curves = [[(0, 0), (0, 1), (2, 1), (2, 0)]]
+    with pytest.raises(ValueError, match="max_errors must match"):
+        curves_to_quadratic(curves, [])
+
+
+def test_curves_to_quadratic_empty_input():
+    assert curves_to_quadratic([], []) == []
+
+
 if __name__ == "__main__":
     unittest.main()

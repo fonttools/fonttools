@@ -540,7 +540,10 @@ def curves_to_quadratic(curves, max_errors, all_quadratic=True):
     """
 
     curves = [[complex(*p) for p in curve] for curve in curves]
-    assert len(max_errors) == len(curves)
+    if len(max_errors) != len(curves):
+        raise ValueError("max_errors must match the number of curves")
+    if not curves:
+        return []
 
     l = len(curves)
     splines = [None] * l
