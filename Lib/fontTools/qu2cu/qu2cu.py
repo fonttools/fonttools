@@ -186,6 +186,11 @@ def _validate_spline_length(spline):
         raise ValueError("Quadratic splines must contain at least 3 points")
 
 
+def _validate_positive_tolerance(max_err):
+    if max_err <= 0:
+        raise ValueError("max_err must be greater than zero")
+
+
 @cython.locals(
     cost=cython.int,
     is_complex=cython.int,
@@ -228,6 +233,7 @@ def quadratic_to_curves(
     """
     if not quads:
         return []
+    _validate_positive_tolerance(max_err)
     for spline in quads:
         _validate_spline_length(spline)
 

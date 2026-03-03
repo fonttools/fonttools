@@ -72,3 +72,7 @@ class MainTest(object):
 
         with pytest.raises(ValueError, match="Cannot convert variable font"):
             qu2cu_cli._font_to_cubic("dummy.ttf", "dummy.cubic.ttf", dump_stats=False, max_err_em=0.001, all_cubic=False)
+
+    def test_rejects_non_positive_conversion_error(self):
+        with pytest.raises(SystemExit, match="2"):
+            self.run_main("--conversion-error", "0", TEST_TTFS[0])

@@ -88,6 +88,9 @@ def _main(args=None):
 
     options = parser.parse_args(args)
 
+    if options.conversion_error <= 0:
+        parser.error("--conversion-error must be greater than zero")
+
     if not options.verbose:
         level = "WARNING"
     elif options.verbose == 1:

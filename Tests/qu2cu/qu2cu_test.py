@@ -114,6 +114,11 @@ class Qu2CuTest:
         with pytest.raises(ValueError, match="at least 3 points"):
             quadratic_to_curves([[(0, 0), (1, 1)]])
 
+    @pytest.mark.parametrize("tolerance", [0, -1])
+    def test_reject_non_positive_tolerance(self, tolerance):
+        with pytest.raises(ValueError, match="max_err must be greater than zero"):
+            quadratic_to_curves([[(0, 0), (0, 1), (1, 1)]], tolerance)
+
     def test_main(self):
         # Just for coverage
         qu2cu_main()
