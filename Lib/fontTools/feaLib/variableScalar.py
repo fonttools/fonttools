@@ -102,7 +102,8 @@ class VariableScalar:
                 }
                 for location in locations
             ]
-        m = VariationModel(locations)
+        axisOrder = [ax.axisTag for ax in self.axes]
+        m = VariationModel(locations, axisOrder=axisOrder)
         if model_cache is not None:
             model_cache[key] = m
         return m
