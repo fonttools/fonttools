@@ -96,6 +96,17 @@ def test_mappings_from_avar():
     assert len(mappings) == 2, mappings
 
 
+def test_mappings_from_avar_without_avar_table():
+    font = TTFont()
+    font["fvar"] = newTable("fvar")
+    font["fvar"].axes = []
+
+    axis_maps, mappings = mappings_from_avar(font)
+
+    assert axis_maps == {}
+    assert mappings == []
+
+
 def test_build_preserves_existing_name_table(tmp_path):
     designspace = Path(tmp_path) / "Test.designspace"
     designspace.write_text(

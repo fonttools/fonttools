@@ -81,7 +81,7 @@ def mappings_from_avar(font, denormalize=True):
     axisTags = [a.axisTag for a in fvarAxes]
     axisIndexes = {a.axisTag: i for i, a in enumerate(fvarAxes)}
     if "avar" not in font:
-        return {}, {}
+        return {}, []
     avar = font["avar"]
     axisMaps = {
         tag: seg
