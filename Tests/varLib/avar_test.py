@@ -1,6 +1,8 @@
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
+from fontTools.varLib.avar.build import build
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.avar.unbuild import _pruneLocations, mappings_from_avar
+from pathlib import Path
 import os
 import unittest
 import pytest
@@ -92,3 +94,26 @@ def test_mappings_from_avar():
     mappings = mappings_from_avar(font)
 
     assert len(mappings) == 2, mappings
+
+
+def test_build_preserves_existing_name_table(tmp_path):
+    designspace = Path(tmp_path) / "Test.designspace"
+    designspace.write_text(
+        """\
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="5.0">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="100" maximum="900" default="400"/>
+  </axes>
+</designspace>
+""",
+        encoding="utf-8",
+    )
+
+    font = TTFont()
+    font["name"] = newTable("name")
+    font["name"].setName("Existing Name", 320, 3, 1, 0x409)
+
+    build(font, designspace)
+
+    assert font["name"].getDebugName(320) == "Existing Name"

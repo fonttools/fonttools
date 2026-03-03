@@ -9,8 +9,8 @@ def build(font, designspace_file):
     ds = load_designspace(designspace_file, require_sources=False)
 
     if not "fvar" in font:
-        # if "name" not in font:
-        font["name"] = newTable("name")
+        if "name" not in font:
+            font["name"] = newTable("name")
         _add_fvar(font, ds.axes, ds.instances)
 
     axisTags = [a.axisTag for a in font["fvar"].axes]
