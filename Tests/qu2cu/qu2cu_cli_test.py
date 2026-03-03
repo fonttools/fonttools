@@ -66,12 +66,20 @@ class MainTest(object):
     def test_rejects_variable_fonts(self, monkeypatch):
         class FakeTTFont(dict):
             def __init__(self, path):
-                super().__init__({"gvar": object(), "head": SimpleNamespace(unitsPerEm=1000)})
+                super().__init__(
+                    {"gvar": object(), "head": SimpleNamespace(unitsPerEm=1000)}
+                )
 
         monkeypatch.setattr(qu2cu_cli, "TTFont", FakeTTFont)
 
         with pytest.raises(ValueError, match="Cannot convert variable font"):
-            qu2cu_cli._font_to_cubic("dummy.ttf", "dummy.cubic.ttf", dump_stats=False, max_err_em=0.001, all_cubic=False)
+            qu2cu_cli._font_to_cubic(
+                "dummy.ttf",
+                "dummy.cubic.ttf",
+                dump_stats=False,
+                max_err_em=0.001,
+                all_cubic=False,
+            )
 
     def test_rejects_non_positive_conversion_error(self):
         with pytest.raises(SystemExit, match="2"):
