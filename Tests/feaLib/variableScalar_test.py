@@ -36,7 +36,7 @@ def test_model_uses_axes_order():
     locations = [dict(scalar._normalized_location(k)) for k in scalar.values.keys()]
     ref_model = VariationModel(locations, axisOrder=["wght", "wdth"])
     ref_deltas, ref_supports = ref_model.getDeltasAndSupports(
-        list(scalar.values.values())
+        list(scalar.values.values()), round=round
     )
 
     # VariableScalar.model() should produce the same deltas
