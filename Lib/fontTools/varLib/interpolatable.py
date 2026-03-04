@@ -116,12 +116,12 @@ class Glyph:
             # Add mirrored rotations
             add_isomorphisms(points.value, isomorphisms, True)
 
-    def draw(self, pen, countor_idx=None):
-        if countor_idx is None:
+    def draw(self, pen, contour_idx=None):
+        if contour_idx is None:
             for contour in self.recordings:
                 contour.draw(pen)
         else:
-            self.recordings[countor_idx].draw(pen)
+            self.recordings[contour_idx].draw(pen)
 
 
 def test_gen(
@@ -168,7 +168,7 @@ def test_gen(
     for glyph_name in glyphs:
         log.info("Testing glyph %s", glyph_name)
         allGlyphs = [Glyph(glyph_name, glyphset) for glyphset in glyphsets]
-        if len([1 for glyph in allGlyphs if glyph is not None]) <= 1:
+        if len([1 for glyph in allGlyphs if not glyph.doesnt_exist]) <= 1:
             continue
         for master_idx, (glyph, glyphset, name) in enumerate(
             zip(allGlyphs, glyphsets, names)
@@ -219,8 +219,8 @@ def test_gen(
             # Basic compatibility checks
             #
 
-            m1 = glyph0.nodeTypes
-            m0 = glyph1.nodeTypes
+            m0 = glyph0.nodeTypes
+            m1 = glyph1.nodeTypes
             if len(m0) != len(m1):
                 yield (
                     glyph_name,
@@ -387,7 +387,7 @@ def test_gen(
                     ):
                         if overweight:
                             expectedSize = max(size0, size1)
-                            continue
+                            continue  # disabled
                         else:
                             expectedSize = sqrt(size0 * size1)
 
@@ -467,7 +467,7 @@ def test_gen(
                     if pt0_prev[1] and pt1_prev[1]:
                         # At least one off-curve is required
                         continue
-                    if pt0_prev[1] and pt1_prev[1]:
+                    if pt0_next[1] and pt1_next[1]:
                         # At least one off-curve is required
                         continue
 
@@ -826,7 +826,7 @@ def main(args=None):
                     # The spec says vsindex can only appear once and must be the first
                     # operator in the charstring, but we support multiple.
                     # https://github.com/harfbuzz/boring-expansion-spec/issues/158
-                    for op in enumerate(cs.program):
+                    for op in cs.program:
                         if op == "blend":
                             vsindices.add(vsindex)
                         elif op == "vsindex":
@@ -1048,7 +1048,7 @@ def main(args=None):
                         )
                     elif p["type"] == InterpolatableProblem.NODE_INCOMPATIBILITY:
                         print(
-                            "    Node %o incompatible in path %i: %s in %s, %s in %s"
+                            "    Node %d incompatible in path %i: %s in %s, %s in %s"
                             % (
                                 p["node"],
                                 p["path"],

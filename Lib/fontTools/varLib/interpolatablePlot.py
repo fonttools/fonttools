@@ -13,12 +13,7 @@ from fontTools.pens.pointPen import (
     PointToSegmentPen,
     ReverseContourPointPen,
 )
-from fontTools.varLib.interpolatableHelpers import (
-    PerContourOrComponentPen,
-    SimpleRecordingPointPen,
-)
 from itertools import cycle
-from functools import wraps
 from io import BytesIO
 import cairo
 import math
@@ -141,7 +136,6 @@ class InterpolatablePlot:
     ):
         pad = self.pad
         width = self.width - 3 * self.pad
-        height = self.height - 2 * self.pad
         x = y = pad
 
         self.draw_label(
@@ -163,7 +157,8 @@ class InterpolatablePlot:
             y += self.font_size + self.pad
 
             try:
-                h = hashlib.sha1(open(file, "rb").read()).hexdigest()
+                with open(file, "rb") as f:
+                    h = hashlib.sha1(f.read()).hexdigest()
                 self.draw_label("sha1: %s" % h, x=x + pad, y=y, width=width)
                 y += self.font_size
             except IsADirectoryError:
@@ -359,12 +354,12 @@ class InterpolatablePlot:
         y += self.title_font_size
 
         glyphs_per_problem = defaultdict(set)
-        for glyphname, problems in sorted(problems.items()):
-            for problem in problems:
+        for glyphname, glyph_problems in sorted(problems.items()):
+            for problem in glyph_problems:
                 glyphs_per_problem[problem["type"]].add(glyphname)
 
-        if "nothing" in glyphs_per_problem:
-            del glyphs_per_problem["nothing"]
+        if InterpolatableProblem.NOTHING in glyphs_per_problem:
+            del glyphs_per_problem[InterpolatableProblem.NOTHING]
 
         for problem_type in sorted(
             glyphs_per_problem, key=lambda x: InterpolatableProblem.severity[x]
@@ -867,7 +862,7 @@ class InterpolatablePlot:
             if scale is None:
                 scale = self.panel_width / glyph_width
             else:
-                scale = min(scale, self.panel_height / glyph_height)
+                scale = min(scale, self.panel_width / glyph_width)
         if glyph_height:
             if scale is None:
                 scale = self.panel_height / glyph_height
