@@ -1,6 +1,8 @@
 import warnings
 from types import SimpleNamespace
 
+import pytest
+
 from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
 from fontTools.feaLib.variableScalar import VariableScalar, VariableScalarBuilder
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
@@ -16,47 +18,49 @@ def test_variable_scalar_repr():
     assert str(scalar) == "(wght=400:1 wght=500.5:4 wght=700:10)"
 
 
-def test_variable_scalar_interpolation():
-    """Test interpolation of a single value, and construction of a builder from
-    a designspace."""
+def test_variable_scalar_interpolation_with_avar():
+    """Test that avar mapping is applied when interpolating a variable scalar
+    from a designspace.
 
-    # Add some values at locations in design coordinates.
+    The map entry (300, 90) shifts user 300 toward the design default, so the
+    interpolated value is closer to 40 than a naive interpolation without avar
+    would give.
+    """
     scalar = VariableScalar()
-    scalar.add_value({"wght": 100}, 1)
-    scalar.add_value({"wght": 400}, 4)
-    scalar.add_value({"wght": 900}, 9)
+    scalar.add_value({"wght": 200}, 10)
+    scalar.add_value({"wght": 400}, 40)
+    scalar.add_value({"wght": 800}, 80)
 
-    # Describe two axes, with only one used explicitly.
     doc = DesignSpaceDocument()
     doc.addAxis(
         AxisDescriptor(
             tag="wght",
-            minimum=100,
+            minimum=200,
             default=400,
-            maximum=900,
+            maximum=800,
             map=[
-                (1, 100),
-                (400, 400),
-                (900, 1000),
+                (200, 50),
+                (300, 90),  # user 300 close to design default (100)
+                (400, 100),
+                (800, 150),
             ],
         )
     )
-    doc.addAxis(
-        AxisDescriptor(
-            tag="opsz",
-            minimum=1,
-            default=12,
-            maximum=72,
-        )
-    )
 
-    # Construct a builder from the designspace.
     builder = VariableScalarBuilder.from_designspace(doc)
-    value = builder.value_at_location(scalar, (("wght", 200),))
 
-    # The interpolation should have survived the translation from
-    # user-coordinates to design-coordinates and back again.
-    assert value == 2.0
+    # With avar, user 300 maps near the design default -> value 34.
+    value = builder.value_at_location(scalar, (("wght", 300),))
+    assert value == pytest.approx(34.0)
+
+    # Without avar, user 300 is halfway between min and default -> value 25.
+    builder_no_avar = VariableScalarBuilder(
+        axis_triples=builder.axis_triples,
+        axis_mappings={},
+        model_cache={},
+    )
+    value_no_avar = builder_no_avar.value_at_location(scalar, (("wght", 300),))
+    assert value_no_avar == pytest.approx(25.0)
 
 
 def test_model_uses_axes_order():
