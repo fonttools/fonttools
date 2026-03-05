@@ -82,11 +82,7 @@ class VariableScalar:
                 ax.axisTag: (ax.minValue, ax.defaultValue, ax.maxValue)
                 for ax in self.axes
             },
-            axis_mappings=(
-                {}
-                if avar is None
-                else dict(avar.segments)
-            ),
+            axis_mappings=({} if avar is None else dict(avar.segments)),
             model_cache=model_cache if model_cache is not None else {},
         )
         return builder.add_to_variation_store(self, store_builder)

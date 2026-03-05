@@ -62,7 +62,10 @@ def test_variable_scalar_interpolation():
 def test_model_uses_axes_order():
     """VariableScalarBuilder.model() should use the axis order from
     axis_triples, not the default alphabetical order, to ensure consistent
-    deltas regardless of axis tag sorting."""
+    deltas regardless of axis tag sorting.
+
+    https://github.com/fonttools/fonttools/pull/4053
+    """
 
     builder = VariableScalarBuilder(
         axis_triples={
@@ -131,7 +134,9 @@ def test_deprecated_add_to_variation_store():
 
     # Compare with the new API
     builder = VariableScalarBuilder(
-        axis_triples={ax.axisTag: (ax.minValue, ax.defaultValue, ax.maxValue) for ax in axes},
+        axis_triples={
+            ax.axisTag: (ax.minValue, ax.defaultValue, ax.maxValue) for ax in axes
+        },
         axis_mappings={},
         model_cache={},
     )
