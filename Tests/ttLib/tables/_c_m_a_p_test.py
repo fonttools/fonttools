@@ -195,6 +195,19 @@ class CmapSubtableTest(unittest.TestCase):
         # Both have the same key, so stable sort preserves original order
         self.assertEqual(len(tables), 2)
 
+    def test_compile_raises_on_duplicate_subtable_keys(self):
+        # https://github.com/fonttools/fonttools/issues/4035
+        # The OpenType spec requires each (platformID, platEncID, language)
+        # combination to be unique; compile should raise a clear error.
+        cmap = table__c_m_a_p()
+        cmap.tableVersion = 0
+        subtable4 = self.makeSubtable(4, 3, 1, 0)
+        subtable4.cmap = {0x41: "A"}
+        subtable12 = self.makeSubtable(12, 3, 1, 0)
+        subtable12.cmap = {0x41: "A"}
+        cmap.tables = [subtable4, subtable12]
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            cmap.compile(ttFont=None)
 
 
 if __name__ == "__main__":
