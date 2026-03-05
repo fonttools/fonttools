@@ -382,25 +382,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
                 continue
             var = TupleVariation(support, delta)
             if optimize:
-                delta_opt = iup_delta_optimize(
-                    delta, origCoords, endPts, tolerance=tolerance
-                )
-
-                if None in delta_opt:
-                    # Use "optimized" version only if smaller...
-                    var_opt = TupleVariation(support, delta_opt)
-
-                    axis_tags = sorted(
-                        support.keys()
-                    )  # Shouldn't matter that this is different from fvar...?
-                    tupleData, auxData = var.compile(axis_tags)
-                    unoptimized_len = len(tupleData) + len(auxData)
-                    tupleData, auxData = var_opt.compile(axis_tags)
-                    optimized_len = len(tupleData) + len(auxData)
-
-                    if optimized_len < unoptimized_len:
-                        var = var_opt
-
+                var.optimize(origCoords, endPts, tolerance=tolerance)
             gvar.variations[glyph].append(var)
 
 
@@ -768,7 +750,7 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
     # and unilaterally/arbitrarily define a sentinel value to distinguish the case
     # when a post table is present in a given master simply because that's where
     # the glyph names in TrueType must be stored, but the underline values are not
-    # meant to be used for building MVAR's deltas. The value of -0x8000 (-36768)
+    # meant to be used for building MVAR's deltas. The value of -0x8000 (-32768)
     # the minimum FWord (int16) value, was chosen for its unlikelyhood to appear
     # in real-world underline position/thickness values.
     specialTags = {"unds": -0x8000, "undo": -0x8000}
@@ -864,7 +846,6 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         GDEF = font["GDEF"].table
         assert GDEF.Version <= 0x00010002
     except KeyError:
-        font["GDEF"] = newTable("GDEF")
         GDEFTable = font["GDEF"] = newTable("GDEF")
         GDEF = GDEFTable.table = ot.GDEF()
         GDEF.GlyphClassDef = None
@@ -1154,7 +1135,6 @@ def drop_implied_oncurve_points(*masters: TTFont) -> int:
     https://developer.apple.com/fonts/TrueType-Reference-Manual/RM01/Chap1.html
     """
 
-    count = 0
     glyph_masters = defaultdict(list)
     # multiple DS source may point to the same TTFont object and we want to
     # avoid processing the same glyph twice as they are modified in-place
@@ -1562,9 +1542,14 @@ def main(args=None):
         vf_name_to_output_path[vfs_to_build[0].name] = options.outfile
     else:
         for vf in vfs_to_build:
-            filename = vf.filename if vf.filename is not None else vf.name + ".{ext}"
+            if vf.filename is not None:
+                # Only use basename to prevent path traversal attacks
+                filename = os.path.basename(vf.filename)
+            else:
+                filename = vf.name + ".{ext}"
             vf_name_to_output_path[vf.name] = os.path.join(output_dir, filename)
 
+    vf_names_to_build = {vf.name for vf in vfs_to_build}
     finder = MasterFinder(options.master_finder)
 
     vfs = build_many(
@@ -1572,6 +1557,7 @@ def main(args=None):
         finder,
         exclude=options.exclude,
         optimize=options.optimize,
+        skip_vf=lambda name: name not in vf_names_to_build,
         colr_layer_reuse=options.colr_layer_reuse,
         drop_implied_oncurves=options.drop_implied_oncurves,
     )

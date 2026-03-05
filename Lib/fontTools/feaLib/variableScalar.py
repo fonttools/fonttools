@@ -5,7 +5,12 @@ from dataclasses import dataclass
 
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.ttLib.ttFont import TTFont
-from fontTools.varLib.models import VariationModel, normalizeValue, piecewiseLinearMap
+from fontTools.varLib.models import (
+    VariationModel,
+    noRound,
+    normalizeValue,
+    piecewiseLinearMap,
+)
 
 import typing
 
@@ -207,14 +212,17 @@ class VariableScalarBuilder:
             }
             for location in full_values.keys()
         ]
-        model = self.model_cache[cache_key] = VariationModel(design_locations)
+        axisOrder = list(self.axis_triples.keys())
+        model = self.model_cache[cache_key] = VariationModel(
+            design_locations, axisOrder=axisOrder
+        )
 
         return model
 
     def get_deltas_and_supports(self, scalar: VariableScalar):
         """Calculate deltas and supports from this scalar's variation model."""
         values = list(scalar.values.values())
-        return self.model(scalar).getDeltasAndSupports(values)
+        return self.model(scalar).getDeltasAndSupports(values, round=round)
 
     def add_to_variation_store(
         self, scalar: VariableScalar, store_builder
@@ -224,7 +232,7 @@ class VariableScalarBuilder:
 
         deltas, supports = self.get_deltas_and_supports(scalar)
         store_builder.setSupports(supports)
-        index = store_builder.storeDeltas(deltas)
+        index = store_builder.storeDeltas(deltas, round=noRound)
 
         # NOTE: Default value should be an exact integer by construction of
         #       VariableScalar.

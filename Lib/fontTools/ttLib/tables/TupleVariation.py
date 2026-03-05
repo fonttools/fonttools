@@ -8,10 +8,10 @@ from fontTools.misc.fixedTools import (
 from fontTools.misc.textTools import safeEval
 import array
 from collections import Counter, defaultdict
-import io
 import logging
 import struct
 import sys
+import warnings
 
 
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
@@ -620,6 +620,12 @@ class TupleVariation(object):
     def optimize(self, origCoords, endPts, tolerance=0.5, isComposite=False):
         from fontTools.varLib.iup import iup_delta_optimize
 
+        if isComposite:
+            warnings.warn(
+                "The isComposite argument is deprecated and may be removed in a future version",
+                DeprecationWarning,
+            )
+
         if None in self.coordinates:
             return  # already optimized
 
@@ -627,10 +633,6 @@ class TupleVariation(object):
             self.coordinates, origCoords, endPts, tolerance=tolerance
         )
         if None in deltaOpt:
-            if isComposite and all(d is None for d in deltaOpt):
-                # Fix for macOS composites
-                # https://github.com/fonttools/fonttools/issues/1381
-                deltaOpt = [(0, 0)] + [None] * (len(deltaOpt) - 1)
             # Use "optimized" version only if smaller...
             varOpt = TupleVariation(self.axes, deltaOpt)
 

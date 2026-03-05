@@ -234,6 +234,13 @@ class SubsetTest:
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_bsln_3.ttx"), ["bsln"])
 
+    def test_subset_BASE(self):
+        fontpath = self.compile_font(self.getpath("TestBASE.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--gids=2,3", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_BASE.ttx"), ["BASE"])
+
     def test_subset_clr(self):
         fontpath = self.compile_font(self.getpath("TestCLR-Regular.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")
@@ -1030,20 +1037,13 @@ class SubsetTest:
             if not have_uharfbuzz:
                 pytest.skip("uharfbuzz is not installed")
             if not ok:
-                # pretend hb.repack/repack_with_tag return an error
+                # pretend hb.serialize_with_tag return an error
                 import uharfbuzz as hb
 
-                def mock_repack(data, obj_list):
+                def mock_serialize_with_tag(tag, data, obj_list):
                     raise hb.RepackerError("mocking")
 
-                monkeypatch.setattr(hb, "repack", mock_repack)
-
-                if hasattr(hb, "repack_with_tag"):  # uharfbuzz >= 0.30.0
-
-                    def mock_repack_with_tag(tag, data, obj_list):
-                        raise hb.RepackerError("mocking")
-
-                    monkeypatch.setattr(hb, "repack_with_tag", mock_repack_with_tag)
+                monkeypatch.setattr(hb, "serialize_with_tag", mock_serialize_with_tag)
         else:
             if have_uharfbuzz:
                 # pretend uharfbuzz is not installed

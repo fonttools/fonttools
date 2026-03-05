@@ -1264,7 +1264,7 @@ def parseBlendList(s):
             continue
         name, attrs, content = element
         blendList = attrs["value"].split()
-        blendList = [eval(val) for val in blendList]
+        blendList = [safeEval(val) for val in blendList]
         valueList.append(blendList)
     if len(valueList) == 1:
         valueList = valueList[0]

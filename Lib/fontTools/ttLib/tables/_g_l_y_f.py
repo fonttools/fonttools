@@ -84,8 +84,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
     """
 
-    dependencies = ["fvar"]
-
     # this attribute controls the amount of padding applied to glyph data upon compile.
     # Glyph lenghts are aligned to multiples of the specified value.
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
@@ -93,9 +91,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     padding = 1
 
     def decompile(self, data, ttFont):
-        self.axisTags = (
-            [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
-        )
         loca = ttFont["loca"]
         pos = int(loca[0])
         nextPos = 0
@@ -135,10 +130,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
     def compile(self, ttFont):
         optimizeSpeed = ttFont.cfg[ttLib.OPTIMIZE_FONT_SPEED]
-
-        self.axisTags = (
-            [axis.axisTag for axis in ttFont["fvar"].axes] if "fvar" in ttFont else []
-        )
         if not hasattr(self, "glyphOrder"):
             self.glyphOrder = ttFont.getGlyphOrder()
         padding = self.padding

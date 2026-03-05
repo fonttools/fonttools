@@ -54,6 +54,7 @@ modules directly:
    
    ttCollection
    ttGlyphSet
+   ttVisitor
    macUtils
    reorderGlyphs
    sfnt

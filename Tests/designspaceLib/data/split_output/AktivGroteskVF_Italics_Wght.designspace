@@ -15,6 +15,7 @@
   </axes>
   <rules processing="last">
     <rule name="BRACKET.CYR">
+      <conditionset/>
       <sub name="ghe.loclSRB" with="ghe.ital.loclSRB"/>
       <sub name="ghe.loclMKD" with="ghe.ital.loclMKD"/>
       <sub name="de.loclMKDSRB" with="de.ital.loclMKDSRB"/>

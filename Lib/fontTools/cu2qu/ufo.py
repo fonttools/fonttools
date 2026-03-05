@@ -62,6 +62,21 @@ def zip(*args):
     return list(_zip(*args))
 
 
+def _validate_positive_tolerance(value, name):
+    if value <= 0:
+        raise ValueError(f"{name} must be greater than zero")
+
+
+def _validate_positive_tolerances(values, name):
+    for value in values:
+        _validate_positive_tolerance(value, name)
+
+
+def _validate_length(values, expected, name):
+    if len(values) != expected:
+        raise ValueError(f"{name} must match the number of inputs")
+
+
 class GetSegmentsPen(AbstractPen):
     """Pen to collect segments into lists of points for conversion.
 
@@ -165,8 +180,18 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats, all_quadrati
     """Do the actual conversion of a set of compatible glyphs, after arguments
     have been set up.
 
+    Empty glyphs (without contours) are ignored and passed through unchanged.
+
     Return True if the glyphs were modified, else return False.
     """
+
+    # Skip empty glyphs (with zero contours)
+    non_empty_indices = [i for i, g in enumerate(glyphs) if len(g) > 0]
+    if not non_empty_indices:
+        return False
+
+    glyphs = [glyphs[i] for i in non_empty_indices]
+    max_err = [max_err[i] for i in non_empty_indices]
 
     try:
         segments_by_location = zip(*[_get_segments(g) for g in glyphs])
@@ -212,6 +237,8 @@ def glyphs_to_quadratic(
     compatibility. If this is not required, calling glyphs_to_quadratic with one
     glyph at a time may yield slightly more optimized results.
 
+    Empty glyphs (without contours) are ignored and passed through unchanged.
+
     Return True if glyphs were modified, else return False.
 
     Raises IncompatibleGlyphsError if glyphs have non-interpolatable outlines.
@@ -219,7 +246,7 @@ def glyphs_to_quadratic(
     if stats is None:
         stats = {}
 
-    if not max_err:
+    if max_err is None:
         # assume 1000 is the default UPEM
         max_err = DEFAULT_MAX_ERR * 1000
 
@@ -227,7 +254,8 @@ def glyphs_to_quadratic(
         max_errors = max_err
     else:
         max_errors = [max_err] * len(glyphs)
-    assert len(max_errors) == len(glyphs)
+    _validate_length(max_errors, len(glyphs), "max_err")
+    _validate_positive_tolerances(max_errors, "max_err")
 
     return _glyphs_to_quadratic(
         glyphs, max_errors, reverse_direction, stats, all_quadratic
@@ -249,6 +277,8 @@ def fonts_to_quadratic(
     All curves will be converted to quadratic at once, ensuring interpolation
     compatibility. If this is not required, calling fonts_to_quadratic with one
     font at a time may yield slightly more optimized results.
+
+    Empty glyphs (without contours) are ignored and passed through unchanged.
 
     Return the set of modified glyph names if any, else return an empty set.
 
@@ -279,21 +309,25 @@ def fonts_to_quadratic(
     if stats is None:
         stats = {}
 
-    if max_err_em and max_err:
+    if max_err_em is not None and max_err is not None:
         raise TypeError("Only one of max_err and max_err_em can be specified.")
-    if not (max_err_em or max_err):
+    if max_err_em is None and max_err is None:
         max_err_em = DEFAULT_MAX_ERR
 
     if isinstance(max_err, (list, tuple)):
-        assert len(max_err) == len(fonts)
+        _validate_length(max_err, len(fonts), "max_err")
         max_errors = max_err
-    elif max_err:
+        _validate_positive_tolerances(max_errors, "max_err")
+    elif max_err is not None:
+        _validate_positive_tolerance(max_err, "max_err")
         max_errors = [max_err] * len(fonts)
 
     if isinstance(max_err_em, (list, tuple)):
-        assert len(fonts) == len(max_err_em)
+        _validate_length(max_err_em, len(fonts), "max_err_em")
+        _validate_positive_tolerances(max_err_em, "max_err_em")
         max_errors = [f.info.unitsPerEm * e for f, e in zip(fonts, max_err_em)]
-    elif max_err_em:
+    elif max_err_em is not None:
+        _validate_positive_tolerance(max_err_em, "max_err_em")
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
     modified = set()

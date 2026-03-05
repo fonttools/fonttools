@@ -1,5 +1,8 @@
 """xmlWriter.py -- Simple XML authoring class"""
 
+from __future__ import annotations
+
+from typing import BinaryIO, Callable, TextIO
 from fontTools.misc.textTools import byteord, strjoin, tobytes, tostr
 import sys
 import os
@@ -25,17 +28,22 @@ ILLEGAL_XML_CHARS = dict.fromkeys(
 class XMLWriter(object):
     def __init__(
         self,
-        fileOrPath,
-        indentwhite=INDENT,
-        idlefunc=None,
-        encoding="utf_8",
-        newlinestr="\n",
-    ):
+        fileOrPath: str | os.PathLike[str] | BinaryIO | TextIO,
+        indentwhite: str = INDENT,
+        idlefunc: Callable[[], None] | None = None,
+        encoding: str = "utf_8",
+        newlinestr: str | bytes = "\n",
+    ) -> None:
         if encoding.lower().replace("-", "").replace("_", "") != "utf8":
             raise Exception("Only UTF-8 encoding is supported.")
         if fileOrPath == "-":
             fileOrPath = sys.stdout
+        self.filename: str | os.PathLike[str] | None
         if not hasattr(fileOrPath, "write"):
+            if not isinstance(fileOrPath, (str, os.PathLike)):
+                raise TypeError(
+                    "fileOrPath must be a file path (str or PathLike) if it isn't an object with a `write` method."
+                )
             self.filename = fileOrPath
             self.file = open(fileOrPath, "wb")
             self._closeStream = True
@@ -74,8 +82,9 @@ class XMLWriter(object):
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         if self._closeStream:
+            assert not isinstance(self.file, (str, os.PathLike))
             self.file.close()
 
     def write(self, string, indent=True):
@@ -196,7 +205,7 @@ def escape(data):
         if len(data) > maxLen:
             preview = repr(data[:maxLen])[1:-1] + "..."
         TTX_LOG.warning(
-            "Illegal XML character(s) found; replacing offending " "string %r with %r",
+            "Illegal XML character(s) found; replacing offending string %r with %r",
             preview,
             REPLACEMENT,
         )

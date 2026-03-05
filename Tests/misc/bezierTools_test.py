@@ -1,5 +1,7 @@
+import math
 import fontTools.misc.bezierTools as bezierTools
 from fontTools.misc.bezierTools import (
+    _is_linelike,
     calcQuadraticBounds,
     calcQuadraticArcLength,
     calcCubicBounds,
@@ -233,3 +235,22 @@ def test_intersections_linelike():
     seg2 = [(0.0, 0.5), (0.25, 0.5), (0.75, 0.5), (1.0, 0.5)]
     pt = curveCurveIntersections(seg1, seg2)[0][0]
     assert pt == (0.0, 0.5)
+
+
+# see https://github.com/fonttools/fonttools/issues/3962
+def test_linelike_curve_curve_regression():
+    seg1 = [(330, -1), (337, -1), (344, -1), (351, -1)]
+    seg2 = [(342, -13), (341, 57), (381, 146), (472, 151)]
+    assert _is_linelike(seg1)
+    assert not _is_linelike(seg2)
+
+    hits = curveCurveIntersections(seg1, seg2)
+    assert len(hits) == 1
+    hit = hits[0]
+    pt1 = segmentPointAtT(seg1, hit.t1)
+    pt2 = segmentPointAtT(seg2, hit.t2)
+
+    dist = math.dist(pt1, pt2)
+    # sanity check that the two points are approximately equal
+    # (before the fix, the dist was ~100)
+    assert abs(dist) < 0.001

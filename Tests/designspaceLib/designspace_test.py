@@ -1189,3 +1189,20 @@ def test_get_axes(datadir: Path) -> None:
 
     assert ds.getAxis("Width") is ds.getAxisByTag("wdth")
     assert ds.getAxis("Italic") is ds.getAxisByTag("ital")
+
+
+# https://github.com/fonttools/fonttools/issues/4000
+def test_preserveEmptyConditionSet():
+    ds = DesignSpaceDocument()
+    ds.rules = [
+        RuleDescriptor(
+            conditionSets=[{}]  # Empty conditionset (implicit always enabled)
+        ),
+    ]
+
+    ds_str = ds.tostring()
+    assert b"<conditionset/>" in ds_str
+
+    roundtripped_ds = DesignSpaceDocument.fromstring(ds_str)
+    assert len(roundtripped_ds.rules) == 1
+    assert len(roundtripped_ds.rules[0].conditionSets) == 1

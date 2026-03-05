@@ -158,8 +158,6 @@ Tables currently supported
    tables/G__l_a_t
    tables/G__l_o_c
    tables/_g_l_y_f
-   tables/G_M_A_P_
-   tables/G_P_K_G_
    tables/G_P_O_S_
    tables/G_S_U_B_
    tables/_g_v_a_r
@@ -176,7 +174,6 @@ Tables currently supported
    tables/L_T_S_H_
    tables/M_A_T_H_
    tables/_m_a_x_p
-   tables/M_E_T_A_
    tables/_m_e_t_a
    tables/_m_o_r_t
    tables/_m_o_r_x
@@ -190,7 +187,6 @@ Tables currently supported
    tables/_s_b_i_x
    tables/S__i_l_f
    tables/S__i_l_l
-   tables/S_I_N_G_
    tables/S_T_A_T_
    tables/S_V_G_
    tables/_t_r_a_k

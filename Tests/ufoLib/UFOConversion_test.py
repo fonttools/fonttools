@@ -120,6 +120,52 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 # ---------------------
 
 
+def _makeKerningConversionUFO(ufo_path, formatVersion):
+    """Create a minimal UFO for kerning conversion tests."""
+    if os.path.exists(ufo_path):
+        shutil.rmtree(ufo_path)
+    os.mkdir(ufo_path)
+
+    glyphsPath = os.path.join(ufo_path, "glyphs")
+    os.mkdir(glyphsPath)
+    glyphFile = "X_.glif"
+    glyphsContents = dict(X=glyphFile)
+    path = os.path.join(glyphsPath, "contents.plist")
+    with open(path, "wb") as f:
+        plistlib.dump(glyphsContents, f)
+    path = os.path.join(glyphsPath, glyphFile)
+    with open(path, "w") as f:
+        f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
+    metaInfo = dict(creator="test", formatVersion=formatVersion)
+    path = os.path.join(ufo_path, "metainfo.plist")
+    with open(path, "wb") as f:
+        plistlib.dump(metaInfo, f)
+    kerning = {
+        "A": {"A": 1, "B": 2, "CGroup": 3, "DGroup": 4},
+        "BGroup": {"A": 5, "B": 6, "CGroup": 7, "DGroup": 8},
+        "CGroup": {"A": 9, "B": 10, "CGroup": 11, "DGroup": 12},
+        "X": {"A": 13, "CGroup": 14},
+    }
+    path = os.path.join(ufo_path, "kerning.plist")
+    with open(path, "wb") as f:
+        plistlib.dump(kerning, f)
+    groups = {
+        "BGroup": ["B"],
+        "CGroup": ["C", "Ccedilla"],
+        "DGroup": ["D"],
+        "Not A Kerning Group": ["A"],
+        "X": ["X", "X.sc"],
+    }
+    path = os.path.join(ufo_path, "groups.plist")
+    with open(path, "wb") as f:
+        plistlib.dump(groups, f)
+    fontInfo = {"familyName": "Test"}
+    path = os.path.join(ufo_path, "fontinfo.plist")
+    with open(path, "wb") as f:
+        plistlib.dump(fontInfo, f)
+
+
 class TestInfoObject:
     pass
 
@@ -163,54 +209,7 @@ class KerningUpConversionTestCase(unittest.TestCase):
         shutil.rmtree(self.tempDir)
 
     def makeUFO(self, formatVersion):
-        self.clearUFO()
-        if not os.path.exists(self.ufoPath):
-            os.mkdir(self.ufoPath)
-
-        # glyphs
-        glyphsPath = os.path.join(self.ufoPath, "glyphs")
-        if not os.path.exists(glyphsPath):
-            os.mkdir(glyphsPath)
-        glyphFile = "X_.glif"
-        glyphsContents = dict(X=glyphFile)
-        path = os.path.join(glyphsPath, "contents.plist")
-        with open(path, "wb") as f:
-            plistlib.dump(glyphsContents, f)
-        path = os.path.join(glyphsPath, glyphFile)
-        with open(path, "w") as f:
-            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-
-        # metainfo.plist
-        metaInfo = dict(creator="test", formatVersion=formatVersion)
-        path = os.path.join(self.ufoPath, "metainfo.plist")
-        with open(path, "wb") as f:
-            plistlib.dump(metaInfo, f)
-        # kerning
-        kerning = {
-            "A": {"A": 1, "B": 2, "CGroup": 3, "DGroup": 4},
-            "BGroup": {"A": 5, "B": 6, "CGroup": 7, "DGroup": 8},
-            "CGroup": {"A": 9, "B": 10, "CGroup": 11, "DGroup": 12},
-            "X": {"A": 13, "CGroup": 14},
-        }
-        path = os.path.join(self.ufoPath, "kerning.plist")
-        with open(path, "wb") as f:
-            plistlib.dump(kerning, f)
-        # groups
-        groups = {
-            "BGroup": ["B"],
-            "CGroup": ["C", "Ccedilla"],
-            "DGroup": ["D"],
-            "Not A Kerning Group": ["A"],
-            "X": ["X", "X.sc"],  # a group with a name that is also a glyph name
-        }
-        path = os.path.join(self.ufoPath, "groups.plist")
-        with open(path, "wb") as f:
-            plistlib.dump(groups, f)
-        # font info
-        fontInfo = {"familyName": "Test"}
-        path = os.path.join(self.ufoPath, "fontinfo.plist")
-        with open(path, "wb") as f:
-            plistlib.dump(fontInfo, f)
+        _makeKerningConversionUFO(self.ufoPath, formatVersion)
 
     def clearUFO(self):
         if os.path.exists(self.ufoPath):
@@ -303,8 +302,12 @@ class KerningDownConversionTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempDir)
 
+    def makeUFO(self, formatVersion):
+        _makeKerningConversionUFO(self.dstDir, formatVersion=formatVersion)
+
     def tearDownUFO(self):
-        shutil.rmtree(self.dstDir)
+        if os.path.exists(self.dstDir):
+            shutil.rmtree(self.dstDir)
 
     def testWrite(self):
         writer = UFOWriter(self.dstDir, formatVersion=2)
@@ -322,3 +325,53 @@ class KerningDownConversionTestCase(unittest.TestCase):
             writtenKerning = plistlib.load(f)
         self.assertEqual(writtenKerning, self.expectedWrittenKerning)
         self.tearDownUFO()
+
+    def testGetKerningGroupConversionRenameMaps(self):
+        self.makeUFO(formatVersion=2)
+        try:
+            with UFOReader(self.dstDir, validate=True) as reader:
+                renameMaps = reader.getKerningGroupConversionRenameMaps()
+        finally:
+            self.tearDownUFO()
+        self.assertEqual(renameMaps, self.downConversionMapping)
+
+    def testKerningGroupConversionRoundTrip(self):
+        self.makeUFO(formatVersion=2)
+        try:
+            # Read legacy UFO2 data and capture the conversion maps.
+            with UFOReader(self.dstDir, validate=True) as reader:
+                groups = reader.readGroups()
+                kerning = reader.readKerning()
+                renameMaps = reader.getKerningGroupConversionRenameMaps()
+            self.tearDownUFO()
+            # Write the data back out using the captured rename maps.
+            writer = UFOWriter(self.dstDir, formatVersion=2)
+            try:
+                writer.setKerningGroupConversionRenameMaps(renameMaps)
+                writer.writeKerning(kerning)
+                writer.writeGroups(groups)
+            finally:
+                writer.close()
+            # Verify the down-converted groups keep their original UFO2 names.
+            with open(os.path.join(self.dstDir, "groups.plist"), "rb") as f:
+                writtenGroups = plistlib.load(f)
+            expectedGroups = self.expectedWrittenGroups
+            for key, value in expectedGroups.items():
+                self.assertIn(key, writtenGroups)
+                self.assertEqual(writtenGroups[key], value)
+            for key in writtenGroups:
+                self.assertFalse(key.startswith("public.kern"))
+            # Confirm the kerning pairs were restored to their UFO2 form.
+            with open(os.path.join(self.dstDir, "kerning.plist"), "rb") as f:
+                writtenKerning = plistlib.load(f)
+            expectedKerning = self.expectedWrittenKerning
+            for key, value in expectedKerning.items():
+                self.assertIn(key, writtenKerning)
+                self.assertEqual(writtenKerning[key], value)
+            for key, subKerning in writtenKerning.items():
+                self.assertFalse(key.startswith("public.kern"))
+                self.assertTrue(
+                    all(not subKey.startswith("public.kern") for subKey in subKerning)
+                )
+        finally:
+            self.tearDownUFO()

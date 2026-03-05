@@ -15,6 +15,7 @@
       <sub name="I" with="I.narrow"/>
     </rule>
     <rule name="fold_S_terminals">
+      <conditionset/>
       <sub name="S" with="S.closed"/>
     </rule>
   </rules>

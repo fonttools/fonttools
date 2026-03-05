@@ -51,8 +51,6 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
     See also https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6fvar.html
     """
 
-    dependencies = ["name"]
-
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.axes = []
