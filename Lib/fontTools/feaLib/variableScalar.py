@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.ttLib.ttFont import TTFont
-from fontTools.varLib.errors import VariationModelError
 from fontTools.varLib.models import (
     VariationModel,
     noRound,
@@ -146,81 +145,80 @@ class VariableScalarBuilder:
             model_cache={},
         )
 
-    def normalise_location(self, location: LocationTuple) -> LocationTuple:
-        """Fully-specify, validate, and normalize a user-location."""
+    def _fully_specify_location(self, location: LocationTuple) -> LocationTuple:
+        """Validate and fully-specify a user-space location by filling in
+        missing axes with their user-space defaults."""
 
         full = {}
-
-        # Normalize explicit axes, and error for unrecognised ones.
         for axtag, value in location:
-            axis = self.axis_triples.get(axtag)
-            if axis is None:
+            if axtag not in self.axis_triples:
                 raise ValueError("Unknown axis %s in %s" % (axtag, location))
+            full[axtag] = value
 
-            axis_min, axis_default, axis_max = axis
-            full[axtag] = normalizeValue(value, (axis_min, axis_default, axis_max))
-
-        # Populate implicit axes.
-        for axtag in self.axis_triples:
-            if axtag in full:
-                continue
-            full[axtag] = 0.0
+        for axtag, (_, axis_default, _) in self.axis_triples.items():
+            if axtag not in full:
+                full[axtag] = axis_default
 
         return Location(full)
 
-    def normalised_values(self, scalar: VariableScalar) -> dict[LocationTuple, int]:
-        """Get the values of a variable scalar with fully-specified, normalized
-        and validated locations.
+    def _normalize_location(self, location: LocationTuple) -> dict[str, float]:
+        """Normalize a user-space location, applying avar mappings if present.
 
-        Raises VariationModelError if multiple user-locations (e.g. one with
-        implicit defaults, one explicit) normalise to the same location."""
+        TODO: This only handles avar1 (per-axis piecewise linear mappings),
+        not avar2 (multi-dimensional mappings).
+        """
 
-        result: dict[LocationTuple, int] = {}
-        for location, value in scalar.values.items():
-            norm_loc = self.normalise_location(location)
-            if norm_loc in result:
-                raise VariationModelError(
-                    f"Duplicate location: {dict(location)} and a previous location "
-                    f"both normalise to {dict(norm_loc)}"
-                )
-            result[norm_loc] = value
+        result = {}
+        for axtag, value in location:
+            axis_min, axis_default, axis_max = self.axis_triples[axtag]
+            normalized = normalizeValue(value, (axis_min, axis_default, axis_max))
+            mapping = self.axis_mappings.get(axtag)
+            if mapping is not None:
+                normalized = piecewiseLinearMap(normalized, mapping)
+            result[axtag] = normalized
+
         return result
+
+    def _full_locations_and_values(
+        self, scalar: VariableScalar
+    ) -> list[tuple[LocationTuple, int]]:
+        """Return a list of (fully-specified user-space location, value) pairs,
+        preserving order and length of scalar.values."""
+
+        return [
+            (self._fully_specify_location(loc), val)
+            for loc, val in scalar.values.items()
+        ]
 
     def default_value(self, scalar: VariableScalar) -> int:
         """Get the default value of a variable scalar."""
 
-        full_values = self.normalised_values(scalar)
-        default_loc = Location({tag: 0.0 for tag in self.axis_triples})
+        default_loc = Location(
+            {tag: default for tag, (_, default, _) in self.axis_triples.items()}
+        )
+        for location, value in self._full_locations_and_values(scalar):
+            if location == default_loc:
+                return value
 
-        default_value = full_values.get(default_loc)
-        if default_value is None:
-            raise ValueError("Default value could not be found")
-
-        return default_value
+        raise ValueError("Default value could not be found")
 
     def value_at_location(
         self, scalar: VariableScalar, location: LocationTuple
     ) -> float:
         """Interpolate the value of a scalar from a user-location."""
 
-        location = self.normalise_location(location)
-        full_values = self.normalised_values(scalar)
+        location = self._fully_specify_location(location)
+        pairs = self._full_locations_and_values(scalar)
 
-        exact = full_values.get(location)
-        if exact is not None:
-            return exact
+        # If user location matches exactly, no axis mapping or variation model needed.
+        for loc, val in pairs:
+            if loc == location:
+                return val
 
-        values = list(full_values.values())
-        design_location = {
-            axis_tag: (
-                value
-                if (mapping := self.axis_mappings.get(axis_tag)) is None
-                else piecewiseLinearMap(value, mapping)
-            )
-            for axis_tag, value in location
-        }
+        values = [val for _, val in pairs]
+        normalized_location = self._normalize_location(location)
 
-        value = self.model(scalar).interpolateFromMasters(design_location, values)
+        value = self.model(scalar).interpolateFromMasters(normalized_location, values)
         if value is None:
             raise ValueError("Insufficient number of values to interpolate")
 
@@ -229,30 +227,20 @@ class VariableScalarBuilder:
     def model(self, scalar: VariableScalar) -> VariationModel:
         """Return a variation model based on a scalar's values.
 
-        Variable scalars with the same fully-specified user-location will use
+        Variable scalars with the same fully-specified user-locations will use
         the same cached variation model."""
 
-        full_values = self.normalised_values(scalar)
-        cache_key = tuple(full_values.keys())
+        pairs = self._full_locations_and_values(scalar)
+        cache_key = tuple(loc for loc, _ in pairs)
 
         cached_model = self.model_cache.get(cache_key)
         if cached_model is not None:
             return cached_model
 
-        design_locations = [
-            {
-                axis_tag: (
-                    value
-                    if (mapping := self.axis_mappings.get(axis_tag)) is None
-                    else piecewiseLinearMap(value, mapping)
-                )
-                for axis_tag, value in location
-            }
-            for location in full_values.keys()
-        ]
+        normalized_locations = [self._normalize_location(loc) for loc, _ in pairs]
         axisOrder = list(self.axis_triples.keys())
         model = self.model_cache[cache_key] = VariationModel(
-            design_locations, axisOrder=axisOrder
+            normalized_locations, axisOrder=axisOrder
         )
 
         return model
@@ -265,7 +253,7 @@ class VariableScalarBuilder:
     def add_to_variation_store(
         self, scalar: VariableScalar, store_builder
     ) -> tuple[int, int]:
-        """Serialise this scalar's variation model to a store, returning the
+        """Serialize this scalar's variation model to a store, returning the
         default value and variation index."""
 
         deltas, supports = self.get_deltas_and_supports(scalar)

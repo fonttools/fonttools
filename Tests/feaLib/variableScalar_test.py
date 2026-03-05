@@ -5,8 +5,11 @@ import pytest
 
 from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
 from fontTools.feaLib.variableScalar import VariableScalar, VariableScalarBuilder
+from fontTools.fontBuilder import addFvar
+from fontTools.ttLib import newTable
+from fontTools.ttLib.ttFont import TTFont
 from fontTools.varLib.varStore import OnlineVarStoreBuilder
-from fontTools.varLib.models import VariationModel
+from fontTools.varLib.models import VariationModel, normalizeValue
 
 
 def test_variable_scalar_repr():
@@ -63,6 +66,31 @@ def test_variable_scalar_interpolation_with_avar():
     assert value_no_avar == pytest.approx(25.0)
 
 
+def test_from_ttf_with_avar():
+    """Test that from_ttf reads fvar axes and avar segments correctly,
+    and produces the same interpolation results as from_designspace."""
+    font = TTFont()
+    font.setGlyphOrder([".notdef"])
+    font["name"] = newTable("name")
+    addFvar(font, [("wght", 200, 400, 800, "Weight")], [])
+    del font["name"]
+    font["avar"] = newTable("avar")
+    # Equivalent normalized avar segments for the designspace map
+    # [(200, 50), (300, 90), (400, 100), (800, 150)]
+    font["avar"].segments = {"wght": {-1.0: -1.0, -0.5: -0.2, 0.0: 0.0, 1.0: 1.0}}
+
+    builder = VariableScalarBuilder.from_ttf(font)
+
+    scalar = VariableScalar()
+    scalar.add_value({"wght": 200}, 10)
+    scalar.add_value({"wght": 400}, 40)
+    scalar.add_value({"wght": 800}, 80)
+
+    # Same result as the from_designspace test above.
+    value = builder.value_at_location(scalar, (("wght", 300),))
+    assert value == pytest.approx(34.0)
+
+
 def test_model_uses_axes_order():
     """VariableScalarBuilder.model() should use the axis order from
     axis_triples, not the default alphabetical order, to ensure consistent
@@ -89,9 +117,12 @@ def test_model_uses_axes_order():
     scalar.add_value({"wght": 900, "wdth": 62.5}, 161)
     scalar.add_value({"wght": 705, "wdth": 62.5}, 136)
 
-    # Build a reference model with explicit axisOrder matching builder axis order
-    full_values = builder.normalised_values(scalar)
-    locations = [dict(loc) for loc in full_values.keys()]
+    # Build a reference model with explicit axisOrder matching builder axis order.
+    triples = builder.axis_triples
+    locations = [
+        {tag: normalizeValue(val, triples[tag]) for tag, val in location}
+        for location in scalar.values.keys()
+    ]
     ref_model = VariationModel(locations, axisOrder=["wght", "wdth"])
     ref_deltas, ref_supports = ref_model.getDeltasAndSupports(
         list(scalar.values.values()), round=round
