@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.ttLib.ttFont import TTFont
+from fontTools.varLib.errors import VariationModelError
 from fontTools.varLib.models import (
     VariationModel,
     noRound,
@@ -141,12 +142,21 @@ class VariableScalarBuilder:
 
     def normalised_values(self, scalar: VariableScalar) -> dict[LocationTuple, int]:
         """Get the values of a variable scalar with fully-specified, normalized
-        and validated user-locations."""
+        and validated locations.
 
-        return {
-            self.normalise_location(location): value
-            for location, value in scalar.values.items()
-        }
+        Raises VariationModelError if multiple user-locations (e.g. one with
+        implicit defaults, one explicit) normalise to the same location."""
+
+        result: dict[LocationTuple, int] = {}
+        for location, value in scalar.values.items():
+            norm_loc = self.normalise_location(location)
+            if norm_loc in result:
+                raise VariationModelError(
+                    f"Duplicate location: {dict(location)} and a previous location "
+                    f"both normalise to {dict(norm_loc)}"
+                )
+            result[norm_loc] = value
+        return result
 
     def default_value(self, scalar: VariableScalar) -> int:
         """Get the default value of a variable scalar."""
