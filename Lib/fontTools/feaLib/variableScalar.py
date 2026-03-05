@@ -34,9 +34,10 @@ class VariableScalar:
     """The values across various user-locations. Must always include the default
     location by time of building."""
 
-    def __init__(self, location_value={}):
+    def __init__(self, location_value=None):
         self.values = {
-            Location(location): value for location, value in location_value.items()
+            Location(location): value
+            for location, value in (location_value or {}).items()
         }
 
     def __repr__(self):
