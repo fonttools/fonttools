@@ -14,6 +14,7 @@ from fontTools.varLib.models import (
 )
 
 import typing
+import warnings
 
 if typing.TYPE_CHECKING:
     from typing import Self
@@ -39,6 +40,9 @@ class VariableScalar:
             Location(location): value
             for location, value in (location_value or {}).items()
         }
+        # Deprecated: only used by the add_to_variation_store() backwards-compat
+        # shim. New code should use VariableScalarBuilder instead.
+        self.axes = []
 
     def __repr__(self):
         items = []
@@ -59,6 +63,33 @@ class VariableScalar:
 
     def add_value(self, location: Mapping[str, float], value: int):
         self.values[Location(location)] = value
+
+    def add_to_variation_store(self, store_builder, model_cache=None, avar=None):
+        """Deprecated: use VariableScalarBuilder.add_to_variation_store() instead."""
+        warnings.warn(
+            "VariableScalar.add_to_variation_store() is deprecated. "
+            "Use VariableScalarBuilder.add_to_variation_store() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if not self.axes:
+            raise ValueError(
+                ".axes must be defined on variable scalar before calling "
+                "add_to_variation_store()"
+            )
+        builder = VariableScalarBuilder(
+            axis_triples={
+                ax.axisTag: (ax.minValue, ax.defaultValue, ax.maxValue)
+                for ax in self.axes
+            },
+            axis_mappings=(
+                {}
+                if avar is None
+                else dict(avar.segments)
+            ),
+            model_cache=model_cache if model_cache is not None else {},
+        )
+        return builder.add_to_variation_store(self, store_builder)
 
 
 @dataclass
