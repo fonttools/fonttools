@@ -181,6 +181,34 @@ class CmapSubtableTest(unittest.TestCase):
             font.importXML(f)
         self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
 
+    def test_sort_subtables_with_duplicate_keys(self):
+        # https://github.com/fonttools/fonttools/issues/4035
+        # Sorting subtables that share (platformID, platEncID, language) but
+        # differ in format should not raise TypeError from comparing dicts.
+        subtable4 = self.makeSubtable(4, 3, 1, 0)
+        subtable4.cmap = {0x41: "A"}
+        subtable12 = self.makeSubtable(12, 3, 1, 0)
+        subtable12.cmap = {0x41: "A"}
+        # This used to raise: TypeError: '<' not supported between
+        # instances of 'dict' and 'dict'
+        tables = sorted([subtable12, subtable4])
+        # Both have the same key, so stable sort preserves original order
+        self.assertEqual(len(tables), 2)
+
+    def test_compile_raises_on_duplicate_subtable_keys(self):
+        # https://github.com/fonttools/fonttools/issues/4035
+        # The OpenType spec requires each (platformID, platEncID, language)
+        # combination to be unique; compile should raise a clear error.
+        cmap = table__c_m_a_p()
+        cmap.tableVersion = 0
+        subtable4 = self.makeSubtable(4, 3, 1, 0)
+        subtable4.cmap = {0x41: "A"}
+        subtable12 = self.makeSubtable(12, 3, 1, 0)
+        subtable12.cmap = {0x41: "A"}
+        cmap.tables = [subtable4, subtable12]
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            cmap.compile(ttFont=None)
+
 
 if __name__ == "__main__":
     import sys

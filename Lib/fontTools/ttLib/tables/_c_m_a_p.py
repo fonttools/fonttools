@@ -204,6 +204,14 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 
     def compile(self, ttFont):
         self.tables.sort()  # sort according to the spec; see CmapSubtable.__lt__()
+        keys = [(t.platformID, t.platEncID, t.language) for t in self.tables]
+        seen = set()
+        duplicates = {k for k in keys if k in seen or seen.add(k)}
+        if duplicates:
+            raise ValueError(
+                "cmap subtables have duplicate (platformID, platEncID, language) "
+                f"entries, which the OpenType spec does not allow: {duplicates}"
+            )
         numSubTables = len(self.tables)
         totalOffset = 4 + 8 * numSubTables
         data = struct.pack(">HH", self.tableVersion, numSubTables)
@@ -371,13 +379,11 @@ class CmapSubtable(object):
             getattr(self, "platformID", None),
             getattr(self, "platEncID", None),
             getattr(self, "language", None),
-            self.__dict__,
         )
         otherTuple = (
             getattr(other, "platformID", None),
             getattr(other, "platEncID", None),
             getattr(other, "language", None),
-            other.__dict__,
         )
         return selfTuple < otherTuple
 
