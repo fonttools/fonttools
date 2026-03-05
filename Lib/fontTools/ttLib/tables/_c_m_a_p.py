@@ -371,13 +371,11 @@ class CmapSubtable(object):
             getattr(self, "platformID", None),
             getattr(self, "platEncID", None),
             getattr(self, "language", None),
-            self.__dict__,
         )
         otherTuple = (
             getattr(other, "platformID", None),
             getattr(other, "platEncID", None),
             getattr(other, "language", None),
-            other.__dict__,
         )
         return selfTuple < otherTuple
 
