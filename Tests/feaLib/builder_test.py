@@ -86,6 +86,7 @@ class BuilderTest(unittest.TestCase):
         variable_mark_anchor duplicate_lookup_reference
         contextual_inline_multi_sub_format_2
         contextual_inline_format_4
+        chain_context_multi_subst_class
         duplicate_language_stmt
         CursivePosSubtable
         MarkBasePosSubtable

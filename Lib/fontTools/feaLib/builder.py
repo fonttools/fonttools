@@ -1441,6 +1441,19 @@ class Builder(object):
         if sub is None:
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
         sub.mapping[glyph] = replacements
+        # https://github.com/fonttools/fonttools/issues/4016
+        # If the last rule has the same context and lookup, merge the glyph
+        # into it instead of creating a new rule (avoids unnecessary subtables).
+        if chain.rules and not chain.rules[-1].is_subtable_break:
+            last = chain.rules[-1]
+            if (
+                last.prefix == prefix
+                and last.suffix == suffix
+                and last.lookups == [sub]
+            ):
+                assert len(last.glyphs) == 1
+                last.glyphs[0].add(glyph)
+                return
         chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
 
     def add_ligature_subst_chained_(
