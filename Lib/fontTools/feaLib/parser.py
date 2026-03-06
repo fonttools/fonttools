@@ -1953,6 +1953,7 @@ class Parser(object):
         return self.ast.FontRevisionStatement(version, location=location)
 
     def parse_conditionset_(self):
+        location = self.cur_token_location_
         name = self.expect_name_()
 
         conditions = {}
@@ -1987,7 +1988,7 @@ class Parser(object):
         finalname = self.expect_name_()
         if finalname != name:
             raise FeatureLibError('Expected "%s"' % name, self.cur_token_location_)
-        return self.ast.ConditionsetStatement(name, conditions)
+        return self.ast.ConditionsetStatement(name, conditions, location=location)
 
     def parse_block_(
         self, block, vertical, stylisticset=None, size_feature=False, cv_feature=None
