@@ -438,9 +438,9 @@ class TTFont(object):
         """Export the font as TTX (an XML-based text file), or as a series of text
         files when splitTables is true. In the latter case, the 'fileOrPath'
         argument should be a path to a directory.
-        The 'tables' argument must either be false (dump all tables) or a
-        list of tables to dump. The 'skipTables' argument may be a list of tables
-        to skip, but only when the 'tables' argument is false.
+        The 'tables' argument must either be falsy (None or empty list, meaning
+        dump all tables) or a non-empty list of tables to dump. The 'skipTables'
+        argument may be a list of tables to skip, but only when 'tables' is falsy.
         """
 
         writer = xmlWriter.XMLWriter(fileOrPath, newlinestr=newlinestr)
