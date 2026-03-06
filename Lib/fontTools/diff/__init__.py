@@ -70,9 +70,9 @@ def _iter_filtered_table_tags(
     exclude_tables: Optional[List[str]] = None,
 ) -> Iterator[str]:
     for tag in tags:
-        if exclude_tables is not None and tag in exclude_tables:
+        if exclude_tables and tag in exclude_tables:
             continue
-        if include_tables is not None and tag not in include_tables:
+        if include_tables and tag not in include_tables:
             continue
         yield tag
 
@@ -227,7 +227,7 @@ def run(argv: List[Text]):
         "-t",
         "--include",
         type=str,
-        nargs="*",
+        nargs="+",
         default=None,
         help="Font tables to include. Multiple options are allowed.",
     )
@@ -235,7 +235,7 @@ def run(argv: List[Text]):
         "-x",
         "--exclude",
         type=str,
-        nargs="*",
+        nargs="+",
         default=None,
         help="Font tables to exclude. Multiple options are allowed.",
     )
