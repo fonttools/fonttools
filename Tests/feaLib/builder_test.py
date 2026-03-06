@@ -1335,6 +1335,22 @@ class BuilderTest(unittest.TestCase):
         assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
         assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
 
+    def test_variable_scalar_duplicate_location(self):
+        features = """
+            languagesystem DFLT dflt;
+
+            feature kern {
+                pos two <0 (wght=200:10 wght=200,wdth=100:20) 0 0>;
+            } kern;
+        """
+
+        font = self.make_mock_vf()
+
+        with self.assertRaisesRegex(
+            FeatureLibError, "Failed to compute deltas for variable scalar"
+        ):
+            addOpenTypeFeaturesFromString(font, features)
+
     def test_ligatureCaretByPos_variable_scalar(self):
         """Test that the `avar` table is consulted when normalizing user-space
         values."""

@@ -10,6 +10,7 @@ __all__ = [
     "VariationModel",
 ]
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
@@ -577,7 +578,7 @@ class VariationModel(object):
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
-def piecewiseLinearMap(v, mapping):
+def piecewiseLinearMap(v: float, mapping: Mapping[float, float]) -> float:
     keys = mapping.keys()
     if not keys:
         return v
