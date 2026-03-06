@@ -123,6 +123,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
+from fontTools.varLib.varStore import OnlineVarStoreBuilder
 from .featureVars import instantiateFeatureVariations
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
@@ -359,6 +360,9 @@ class _BaseAxisLimits(Mapping[str, AxisTriple]):
     def __getitem__(self, key: str) -> AxisTriple:
         return self._data[key]
 
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
     def __iter__(self) -> Iterable[str]:
         return iter(self._data)
 
@@ -438,33 +442,26 @@ class AxisLimits(_BaseAxisLimits):
 
             if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
                 pinnedAxes = set(self.pinnedLocation())
-                if not pinnedAxes.issuperset(avarSegments):
-                    raise NotImplementedError(
-                        "Partial-instancing avar2 table is not supported"
+                if pinnedAxes.issuperset(avarSegments):
+                    # Full instancing of avar2 font (all axes pinned).
+                    # Use avar table to normalize location and return.
+                    location = self.pinnedLocation()
+                    location = {
+                        tag: normalize(value, axes[tag], None)
+                        for tag, value in location.items()
+                    }
+                    return NormalizedAxisLimits(
+                        **avar.renormalizeLocation(location, varfont, dropZeroes=False)
                     )
-
-                # TODO: Merge this with the main codepath.
-
-                # Full instancing of avar2 font. Use avar table to normalize location and return.
-                location = self.pinnedLocation()
-                location = {
-                    tag: normalize(value, axes[tag], None)
-                    for tag, value in location.items()
-                }
-                return NormalizedAxisLimits(
-                    **avar.renormalizeLocation(location, varfont, dropZeroes=False)
-                )
+                # else: partial instancing of avar2 font. Fall through to
+                # standard normalization, using versionOneOnly=True below
+                # to get intermediate-space limits (post-avar v1, pre-avar v2).
 
         normalizedLimits = {}
 
         for axis_tag, triple in axes.items():
-            distanceNegative = triple[1] - triple[0]
-            distancePositive = triple[2] - triple[1]
-
-            if self[axis_tag] is None:
-                normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
-                    0, 0, 0, distanceNegative, distancePositive
-                )
+            if self[axis_tag] is None:  # Drop
+                normalizedLimits[axis_tag] = (0, 0, 0)
                 continue
 
             minV, defaultV, maxV = self[axis_tag]
@@ -472,11 +469,41 @@ class AxisLimits(_BaseAxisLimits):
             if defaultV is None:
                 defaultV = triple[1]
 
-            avarMapping = avarSegments.get(axis_tag, None)
-            normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
-                *(normalize(v, triple, avarMapping) for v in (minV, defaultV, maxV)),
-                distanceNegative,
-                distancePositive,
+            normalizedLimits[axis_tag] = tuple(
+                normalize(v, triple) for v in (minV, defaultV, maxV)
+            )
+
+        fvarAxes = fvar.getAxes()
+        for tag, triple in normalizedLimits.items():
+            minV, defaultV, maxV = fvarAxes[tag]
+            if defaultV is None:
+                defaultV = triple[1]
+            distanceNegative = defaultV - minV
+            distancePositive = maxV - defaultV
+
+            if triple is None:  # Drop
+                normalizedLimits[tag] = NormalizedAxisTripleAndDistances(
+                    0, 0, 0, distanceNegative, distancePositive
+                )
+                continue
+
+            normalizedLimits[tag] = NormalizedAxisTripleAndDistances(
+                *triple, distanceNegative, distancePositive
+            )
+
+        normalizedLimits = NormalizedAxisLimits(normalizedLimits)
+
+        if usingAvar and "avar" in varfont:
+            avar = varfont["avar"]
+            # For avar2 partial instancing, use versionOneOnly to get
+            # intermediate-space limits (post-avar v1, pre-avar v2).
+            # The avar v2 offset compensation will handle the rest.
+            versionOneOnly = (
+                getattr(avar, "majorVersion", 1) >= 2
+                and getattr(avar.table, "VarStore", None) is not None
+            )
+            normalizedLimits = avar.renormalizeAxisLimits(
+                normalizedLimits, varfont, versionOneOnly=versionOneOnly
             )
 
         return NormalizedAxisLimits(normalizedLimits)
@@ -654,6 +681,7 @@ def instantiateCFF2(
     specialize=True,
     generalize=False,
     downgrade=False,
+    reachableRanges=None,
 ):
     # The algorithm here is rather simple:
     #
@@ -806,6 +834,10 @@ def instantiateCFF2(
     defaultDeltas = instantiateItemVariationStore(
         varStore, fvarAxes, axisLimits, hierarchical=True
     )
+
+    # Optionally cull dead regions (for avar2 partial instancing)
+    if reachableRanges:
+        _cullItemVariationStore(varStore, fvarAxes, reachableRanges)
 
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
@@ -1444,7 +1476,7 @@ def downgradeCFF2ToCFF(varfont):
     return varfont
 
 
-def instantiateAvar(varfont, axisLimits):
+def instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates=None):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
 
     avar = varfont["avar"]
@@ -1458,22 +1490,30 @@ def instantiateAvar(varfont, axisLimits):
         del varfont["avar"]
         return
 
-    if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
-        raise NotImplementedError("avar table with VarStore is not supported")
+    version = getattr(avar, "majorVersion", 1)
+    hasAvar2VarStore = (
+        version >= 2 and getattr(avar.table, "VarStore", None) is not None
+    )
+
+    # For avar2: need old intermediate values BEFORE modifying avar v1.
+    if hasAvar2VarStore and oldIntermediates is None:
+        oldIntermediates = _computeOldIntermediates(varfont, axisLimits)
 
     log.info("Instantiating avar table")
-    for axis in pinnedAxes:
-        if axis in segments:
-            del segments[axis]
+    if hasAvar2VarStore:
+        # For avar2 partial instancing, keep identity segments for pinned axes
+        # that will be hidden in fvar. compile() needs segment entries for all
+        # fvar axes. Self-contained axes' segments will be removed later when
+        # they're removed from fvar.
+        for axis in pinnedAxes:
+            if axis in segments:
+                segments[axis] = {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}
+    else:
+        for axis in pinnedAxes:
+            if axis in segments:
+                del segments[axis]
 
-    # First compute the default normalization for axisLimits coordinates: i.e.
-    # min = -1.0, default = 0, max = +1.0, and in between values interpolated linearly,
-    # without using the avar table's mappings.
-    # Then, for each SegmentMap, if we are restricting its axis, compute the new
-    # mappings by dividing the key/value pairs by the desired new min/max values,
-    # dropping any mappings that fall outside the restricted range.
-    # The keys ('fromCoord') are specified in default normalized coordinate space,
-    # whereas the values ('toCoord') are "mapped forward" using the SegmentMap.
+    # Standard avar v1 instancing (unchanged).
     normalizedRanges = axisLimits.normalize(varfont, usingAvar=False)
     newSegments = {}
     for axisTag, mapping in segments.items():
@@ -1514,6 +1554,576 @@ def instantiateAvar(varfont, axisLimits):
         else:
             newSegments[axisTag] = mapping
     avar.segments = newSegments
+
+    if version == 1:
+        return {}
+
+    assert version == 2
+
+    if hasAvar2VarStore:
+        return _instantiateAvarV2(
+            varfont, axisLimits, normalizedLimits, oldIntermediates
+        )
+
+    return {}
+
+
+def _computeOldIntermediates(varfont, axisLimits):
+    """Compute old intermediate axis values before avar v1 modification.
+
+    For each axis in axisLimits, computes the old intermediate coordinate
+    values (post-fvar normalization + avar v1 mapping) at the new min,
+    default, and max user-space values.
+
+    Returns:
+        dict mapping axis tags to (a_i, d_i, b_i) tuples where:
+        - a_i = old intermediate value at the new minimum
+        - d_i = old intermediate value at the new default
+        - b_i = old intermediate value at the new maximum
+        All values are in normalized coordinate space [-1, +1].
+    """
+    fvar = varfont["fvar"]
+    avar = varfont["avar"]
+    avarSegments = avar.segments
+
+    result = {}
+    for axis in fvar.axes:
+        tag = axis.axisTag
+        if tag not in axisLimits:
+            continue
+
+        triple = axisLimits[tag]
+        minV = triple.minimum
+        defV = triple.default if triple.default is not None else axis.defaultValue
+        maxV = triple.maximum
+
+        # Normalize using old fvar (user space → normalized [-1, +1])
+        oldFvarTriple = (axis.minValue, axis.defaultValue, axis.maxValue)
+        normMin = normalizeValue(minV, oldFvarTriple)
+        normDef = normalizeValue(defV, oldFvarTriple)
+        normMax = normalizeValue(maxV, oldFvarTriple)
+
+        # Map through old avar v1 segment map (normalized → intermediate)
+        avarMapping = avarSegments.get(tag, None)
+        if avarMapping is not None:
+            a_i = piecewiseLinearMap(normMin, avarMapping)
+            d_i = piecewiseLinearMap(normDef, avarMapping)
+            b_i = piecewiseLinearMap(normMax, avarMapping)
+        else:
+            a_i = normMin
+            d_i = normDef
+            b_i = normMax
+
+        # Quantize to F2Dot14
+        a_i = floatToFixedToFloat(a_i, 14)
+        d_i = floatToFixedToFloat(d_i, 14)
+        b_i = floatToFixedToFloat(b_i, 14)
+
+        result[tag] = (a_i, d_i, b_i)
+
+    return result
+
+
+def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
+    """Instance avar v2 IVS: rebase regions + add offset compensation.
+
+    This implements the offset compensation approach from the design doc:
+    1. Rebase IVS regions to new intermediate coordinate space (via rebaseTent)
+    2. Detect self-contained pinned axes (whose final coord is constant)
+    3. Add offset compensation entries (empty-region bias + tent deltas)
+       for non-self-contained axes so final coordinates remain in old space
+    4. Self-contained axes are skipped — their contributions will be folded
+       into gvar/HVAR/etc. by the caller
+
+    Returns:
+        dict: {axisTag: finalCoord} for self-contained pinned axes that can be
+        removed from fvar. finalCoord is in old-space normalized coordinates.
+    """
+    avar = varfont["avar"]
+    fvarAxes = varfont["fvar"].axes
+    varStore = avar.table.VarStore
+    varIdxMap = getattr(avar.table, "VarIdxMap", None)
+
+    NO_VARIATION_INDEX = 0xFFFFFFFF
+
+    # Step 1: Convert IVS to TupleVariation representation and rebase
+    tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(varStore, fvarAxes)
+
+    # Save original axis order (instantiate() will remove pinned axes)
+    originalAxisOrder = list(tupleVarStore.axisOrder)
+
+    # Rebase regions for restricted/pinned axes
+    defaultDeltaArray = tupleVarStore.instantiate(normalizedLimits)
+
+    # Restore full axis order — for avar2 we keep all fvar axes
+    tupleVarStore.axisOrder = originalAxisOrder
+
+    # Step 1.5: Detect self-contained pinned axes.
+    # A pinned axis is self-contained if its final coordinate doesn't vary
+    # with any remaining axes. After IVS rebasing, check if any remaining
+    # TupleVariation has a non-zero delta at the axis's inner position.
+    selfContainedAxes = {}
+    pinnedLocation = axisLimits.pinnedLocation()
+
+    for axisIdx, axis in enumerate(fvarAxes):
+        tag = axis.axisTag
+        if tag not in pinnedLocation:
+            continue
+
+        # Get this axis's varIdx
+        if varIdxMap is not None:
+            varIdx = varIdxMap[axisIdx]
+        else:
+            varIdx = axisIdx
+
+        if varIdx == NO_VARIATION_INDEX:
+            # No IVS entry → final coord = intermediate coord (self-contained)
+            a_i, d_i, b_i = oldIntermediates[tag]
+            finalInt = otRound(d_i * 16384)
+            finalInt = min(max(finalInt, -(1 << 14)), 1 << 14)
+            selfContainedAxes[tag] = finalInt / 16384.0
+            continue
+
+        outer = varIdx >> 16
+        inner = varIdx & 0xFFFF
+
+        if outer >= len(tupleVarStore.tupleVarData):
+            continue
+
+        # Check if any remaining TupleVariation has a non-zero delta
+        hasDelta = any(
+            tv.coordinates[inner] != 0 for tv in tupleVarStore.tupleVarData[outer]
+        )
+
+        if not hasDelta:
+            # Self-contained: final coord = intermediate + defaultDelta
+            a_i, d_i, b_i = oldIntermediates[tag]
+            d_int = otRound(d_i * 16384)
+            defaultDelta = defaultDeltaArray[outer][inner]
+            finalInt = d_int + otRound(defaultDelta)
+            finalInt = min(max(finalInt, -(1 << 14)), 1 << 14)
+            selfContainedAxes[tag] = finalInt / 16384.0
+
+    if selfContainedAxes:
+        log.info(
+            "Self-contained pinned axes (removable): %s",
+            {tag: round(v, 6) for tag, v in selfContainedAxes.items()},
+        )
+
+    # Step 2: Add offset compensation TupleVariations
+    processedVarIdxes = set()
+    for axisIdx, axis in enumerate(fvarAxes):
+        tag = axis.axisTag
+
+        # Determine this axis's varIdx
+        if varIdxMap is not None:
+            varIdx = varIdxMap[axisIdx]
+        else:
+            varIdx = axisIdx
+
+        if tag in axisLimits:
+            if tag in selfContainedAxes:
+                # Self-contained pinned axis: skip offset compensation.
+                # Its contribution will be folded into gvar/HVAR/etc. instead.
+                continue
+
+            # This axis is being restricted or pinned (non-self-contained)
+            a_i, d_i, b_i = oldIntermediates[tag]
+            isPinned = axisLimits[tag].minimum == axisLimits[tag].maximum
+
+            if varIdx == NO_VARIATION_INDEX:
+                # This axis has no existing avar2 mapping. Create a new
+                # VarData with one item to hold the offset compensation.
+                outer = len(tupleVarStore.tupleVarData)
+                inner = 0
+                tupleVarStore.tupleVarData.append([])
+                tupleVarStore.itemCounts.append(1)
+                defaultDeltaArray.append([0])
+
+                varIdx = (outer << 16) | inner
+
+                # Update VarIdxMap
+                if varIdxMap is None:
+                    from fontTools.ttLib.tables import otTables as _otTables
+
+                    varIdxMap = _otTables.DeltaSetIndexMap()
+                    varIdxMap.Format = 0
+                    # Identity mapping for all axes, except this one
+                    varIdxMap.mapping = list(range(len(fvarAxes)))
+                    avar.table.VarIdxMap = varIdxMap
+                varIdxMap.mapping[axisIdx] = varIdx
+
+            outer = varIdx >> 16
+            inner = varIdx & 0xFFFF
+            itemCount = tupleVarStore.itemCounts[outer]
+            defaultDelta = defaultDeltaArray[outer][inner]
+
+            # Compute offset deltas in 2.14 integer units
+            d_int = otRound(d_i * 16384)
+            a_int = otRound(a_i * 16384)
+            b_int = otRound(b_i * 16384)
+
+            # Empty-region bias: d_i + default_delta_i
+            # (default_delta_i is already in IVS integer units)
+            bias = d_int + otRound(defaultDelta)
+
+            if bias != 0:
+                coords = [0] * itemCount
+                coords[inner] = bias
+                tupleVarStore.tupleVarData[outer].append(TupleVariation({}, coords))
+
+            if not isPinned:
+                # Tent (-1, -1, 0): delta = a_i + 1 - d_i
+                negDelta = a_int + (1 << 14) - d_int
+                if negDelta != 0:
+                    coords = [0] * itemCount
+                    coords[inner] = negDelta
+                    tupleVarStore.tupleVarData[outer].append(
+                        TupleVariation({tag: (-1, -1, 0)}, coords)
+                    )
+
+                # Tent (0, +1, +1): delta = b_i - 1 - d_i
+                posDelta = b_int - (1 << 14) - d_int
+                if posDelta != 0:
+                    coords = [0] * itemCount
+                    coords[inner] = posDelta
+                    tupleVarStore.tupleVarData[outer].append(
+                        TupleVariation({tag: (0, 1, 1)}, coords)
+                    )
+        else:
+            # Free or private axis — not being restricted.
+            # If it has a non-zero default delta (from rebasing restricted axes'
+            # contributions), add it back as a bias. The standard instancing
+            # subtracts default deltas, but for avar2 we must preserve them.
+            # Skip if this varIdx was already processed (multiple axes can
+            # share the same varIdx entry).
+            if varIdx == NO_VARIATION_INDEX:
+                continue
+            if varIdx in processedVarIdxes:
+                continue
+            processedVarIdxes.add(varIdx)
+            outer = varIdx >> 16
+            inner = varIdx & 0xFFFF
+            if outer >= len(defaultDeltaArray):
+                continue
+            defaultDelta = defaultDeltaArray[outer][inner]
+            if otRound(defaultDelta) != 0:
+                itemCount = tupleVarStore.itemCounts[outer]
+                coords = [0] * itemCount
+                coords[inner] = otRound(defaultDelta)
+                tupleVarStore.tupleVarData[outer].append(TupleVariation({}, coords))
+
+    # Step 3: Remove self-contained axes from axis order.
+    # The VarRegionList must match the post-removal fvar axis count.
+    # After instancing, no TupleVariation references self-contained axes.
+    if selfContainedAxes:
+        tupleVarStore.axisOrder = [
+            tag for tag in tupleVarStore.axisOrder if tag not in selfContainedAxes
+        ]
+
+    # Step 4: Rebuild regions and convert back to IVS
+    tupleVarStore.rebuildRegions()
+    newVarStore = tupleVarStore.asItemVarStore()
+
+    # Step 5: Optimize the VarStore (merge regions, remove zero deltas)
+    varIdxMapping = newVarStore.optimize(use_NO_VARIATION_INDEX=False)
+    if varIdxMap is not None:
+        varIdxMap.mapping = [
+            varIdxMapping.get(varIdx, varIdx) for varIdx in varIdxMap.mapping
+        ]
+    elif varIdxMapping:
+        # optimize() remapped indices but we had no VarIdxMap (implicit
+        # identity). Create one if the mapping is no longer identity.
+        numAxes = len(fvarAxes)
+        newMapping = [varIdxMapping.get(i, i) for i in range(numAxes)]
+        if newMapping != list(range(numAxes)):
+            from fontTools.ttLib.tables import otTables as _otTables
+
+            varIdxMap = _otTables.DeltaSetIndexMap()
+            varIdxMap.Format = 0
+            varIdxMap.mapping = newMapping
+            avar.table.VarIdxMap = varIdxMap
+    avar.table.VarStore = newVarStore
+
+    return selfContainedAxes
+
+
+def _isTupleVariationDead(tv, reachableRanges):
+    """Check if a TupleVariation is dead (unreachable) given reachable axis ranges."""
+    for tag, (lo, hi) in reachableRanges.items():
+        if tag not in tv.axes:
+            continue
+        start, peak, end = tv.axes[tag]
+        # Region is dead if entirely outside reachable range
+        if hi <= start or lo >= end:
+            return True
+    return False
+
+
+def _cullItemVariationStore(varStore, fvarAxes, reachableRanges):
+    """Remove dead regions from an ItemVariationStore via TupleVariation culling.
+
+    Converts to TupleVariations, removes dead ones, converts back.
+    Returns the number of removed regions.
+    """
+    tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(varStore, fvarAxes)
+    totalCulled = 0
+    for tvList in tupleVarStore.tupleVarData:
+        before = len(tvList)
+        tvList[:] = [
+            tv for tv in tvList if not _isTupleVariationDead(tv, reachableRanges)
+        ]
+        totalCulled += before - len(tvList)
+    if totalCulled:
+        tupleVarStore.rebuildRegions()
+        newVarStore = tupleVarStore.asItemVarStore()
+        varStore.VarRegionList = newVarStore.VarRegionList
+        varStore.VarData = newVarStore.VarData
+    return totalCulled
+
+
+def _cullVariationsForAvar2(varfont, reachableRanges):
+    """Cull dead variations outside reachable old-space final-coord ranges.
+
+    After avar2 partial instancing with offset compensation, variation tables
+    remain in old-space final coordinates. Some regions may be unreachable
+    because the restricted axis range maps to a narrower final-coord range.
+
+    For gvar/cvar: removes TupleVariations whose axis regions lie entirely
+    outside the reachable range.
+    For IVS-based tables (HVAR, VVAR, MVAR, GDEF): removes dead region
+    columns from the ItemVariationStore.
+
+    Args:
+        varfont: The font being instanced.
+        reachableRanges: dict mapping axis tags to (lo, hi) tuples representing
+            the reachable range of old-space final coordinates for that axis.
+    """
+    fvarAxes = varfont["fvar"].axes
+
+    if "gvar" in varfont:
+        gvar = varfont["gvar"]
+        totalCulled = 0
+        totalTotal = 0
+
+        for glyphName in gvar.variations:
+            variations = gvar.variations[glyphName]
+            newVariations = []
+            for tv in variations:
+                totalTotal += 1
+                if _isTupleVariationDead(tv, reachableRanges):
+                    totalCulled += 1
+                else:
+                    newVariations.append(tv)
+            gvar.variations[glyphName] = newVariations
+
+        if totalCulled:
+            log.info(
+                "avar2 gvar culling: removed %d / %d TupleVariations (%.1f%%)",
+                totalCulled,
+                totalTotal,
+                100 * totalCulled / totalTotal if totalTotal else 0,
+            )
+
+    if "cvar" in varfont:
+        cvar = varfont["cvar"]
+        before = len(cvar.variations)
+        cvar.variations = [
+            tv
+            for tv in cvar.variations
+            if not _isTupleVariationDead(tv, reachableRanges)
+        ]
+        culled = before - len(cvar.variations)
+        if culled:
+            log.info(
+                "avar2 cvar culling: removed %d / %d TupleVariations (%.1f%%)",
+                culled,
+                before,
+                100 * culled / before if before else 0,
+            )
+
+    # Cull all IVS-based tables (skip the avar2 VarStore itself)
+    avarVarStore = varfont["avar"].table.VarStore if "avar" in varfont else None
+    for tag in varfont.keys():
+        table = varfont[tag]
+        table = getattr(table, "table", table)
+        vs = getattr(table, "VarStore", None)
+        if vs is None or vs is avarVarStore:
+            continue
+        removed = _cullItemVariationStore(vs, fvarAxes, reachableRanges)
+        if removed:
+            log.info(
+                "avar2 %s culling: removed %d dead region references",
+                tag,
+                removed,
+            )
+
+    # CFF2: cull via populate/cull/depopulate cycle (blend operators encode
+    # region counts, so the VarStore can't be culled without updating them).
+    if "CFF2" in varfont:
+        cff = varfont["CFF2"].cff
+        topDict = cff.topDictIndex[0]
+        if getattr(topDict, "VarStore", None) and topDict.VarStore.otVarStore:
+            instantiateCFF2(
+                varfont,
+                NormalizedAxisLimits({}),
+                reachableRanges=reachableRanges,
+            )
+
+
+def _computeReachableRangesForAvar2(varfont, axisLimits, reachableRanges):
+    """Compute reachable old-space final-coord ranges using getExtremes.
+
+    For axes not already in reachableRanges (i.e., axes with IVS entries
+    rather than NO_VARIATION_INDEX), compute conservative bounds on the
+    reachable old-space final coordinate using getExtremes on the instanced
+    avar v2 VarStore.
+
+    This is critical for parametric fonts where gvar references private axes
+    driven by public axes through avar2. Restricting wght narrows the
+    reachable range of XOPQ, YOPQ, etc.
+
+    Must be called AFTER _instantiateFvarForAvar2 has updated fvar and
+    VarIdxMap so that axes and VarStore match.
+    """
+    avar = varfont["avar"]
+    fvarAxes = varfont["fvar"].axes
+    varStore = getattr(avar.table, "VarStore", None)
+    if varStore is None:
+        return
+    varIdxMap = getattr(avar.table, "VarIdxMap", None)
+
+    NO_VARIATION_INDEX = 0xFFFFFFFF
+
+    # Private axes (originally hidden, not user-restricted) always have
+    # intermediate coordinate = 0. Any VarStore region referencing them
+    # as input gets scalar = 0 at intermediate = 0. Tell getExtremes
+    # by pinning them at (0, 0, 0) so it correctly zeros out those regions.
+    privateAxisLimits = {}
+    for axis in fvarAxes:
+        if axis.flags & 0x1 and axis.axisTag not in axisLimits:
+            privateAxisLimits[axis.axisTag] = (0, 0, 0)
+
+    for axisIdx, axis in enumerate(fvarAxes):
+        tag = axis.axisTag
+        if tag in reachableRanges:
+            continue  # Already computed (NO_VARIATION_INDEX, exact)
+
+        if varIdxMap is not None:
+            varIdx = varIdxMap[axisIdx]
+        else:
+            varIdx = axisIdx
+
+        if varIdx == NO_VARIATION_INDEX:
+            continue
+
+        # Private axes have no identity term (intermediate always 0,
+        # final = delta only). Public axes have identity + delta.
+        private = axis.flags & 0x1
+        identityAxisIndex = None if private else axisIdx
+
+        # Pass privateAxisLimits so getExtremes correctly zeros out
+        # regions referencing private axes (whose intermediate is always 0).
+        minV, maxV = varStore.getExtremes(
+            varIdx, fvarAxes, privateAxisLimits, identityAxisIndex
+        )
+
+        lo = max(-1, minV / 16384)
+        hi = min(+1, maxV / 16384)
+        reachableRanges[tag] = (lo, hi)
+
+        log.info(
+            "avar2 getExtremes range for %s: [%.4f, %.4f]",
+            tag,
+            lo,
+            hi,
+        )
+
+
+def _instantiateFvarForAvar2(varfont, axisLimits, selfContainedAxes=None):
+    """Update fvar for avar2 partial instancing.
+
+    Self-contained pinned axes (in selfContainedAxes dict) are removed from fvar
+    and their contributions folded into variation tables. Non-self-contained pinned
+    axes are kept as hidden axes. Restricted axes have their ranges updated.
+    """
+    fvar = varfont["fvar"]
+    pinnedLocation = axisLimits.pinnedLocation()
+    if selfContainedAxes is None:
+        selfContainedAxes = {}
+
+    log.info("Instantiating fvar table (avar2 mode)")
+
+    # Track removed axis indices for VarIdxMap update
+    removedAxisIndices = set()
+    originalAxisCount = len(fvar.axes)
+
+    axes = []
+    for axisIdx, axis in enumerate(fvar.axes):
+        tag = axis.axisTag
+        if tag in selfContainedAxes:
+            # Self-contained pinned axis: remove from fvar
+            removedAxisIndices.add(axisIdx)
+            continue
+        if tag in axisLimits:
+            triple = axisLimits[tag]
+            defV = triple.default if triple.default is not None else axis.defaultValue
+            axis.minValue = triple.minimum
+            axis.defaultValue = defV
+            axis.maxValue = triple.maximum
+            if tag in pinnedLocation:
+                # Non-self-contained pinned: keep as hidden
+                axis.flags |= 0x0001  # HIDDEN_AXIS
+        axes.append(axis)
+    fvar.axes = axes
+
+    # Update avar for removed axes
+    if removedAxisIndices and "avar" in varfont:
+        avar = varfont["avar"]
+
+        # Remove segment maps for removed axes
+        for tag in selfContainedAxes:
+            avar.segments.pop(tag, None)
+
+        # Update VarIdxMap to reflect new axis positions
+        if getattr(avar, "majorVersion", 1) >= 2:
+            varIdxMap = getattr(avar.table, "VarIdxMap", None)
+            if varIdxMap is not None:
+                varIdxMap.mapping = [
+                    varIdxMap.mapping[i]
+                    for i in range(len(varIdxMap.mapping))
+                    if i not in removedAxisIndices
+                ]
+            else:
+                # Implicit identity mapping: axis i → varIdx i.
+                # After removing axes, need explicit mapping if non-identity.
+                newMapping = [
+                    i for i in range(originalAxisCount) if i not in removedAxisIndices
+                ]
+                if newMapping != list(range(len(newMapping))):
+                    from fontTools.ttLib.tables import otTables as _otTables
+
+                    varIdxMap = _otTables.DeltaSetIndexMap()
+                    varIdxMap.Format = 0
+                    varIdxMap.mapping = newMapping
+                    avar.table.VarIdxMap = varIdxMap
+
+    # Filter named instances: keep those within the new ranges
+    instances = []
+    for instance in fvar.instances:
+        # Check that pinned axis values match
+        if any(
+            instance.coordinates.get(tag) != value
+            for tag, value in pinnedLocation.items()
+        ):
+            continue
+        if not isInstanceWithinAxisRanges(instance.coordinates, axisLimits):
+            continue
+        # Remove coordinates for removed axes
+        for tag in selfContainedAxes:
+            instance.coordinates.pop(tag, None)
+        instances.append(instance)
+    fvar.instances = instances
 
 
 def isInstanceWithinAxisRanges(location, axisRanges):
@@ -1637,7 +2247,7 @@ def setMacOverlapFlags(glyfTable):
             glyph.flags[0] |= flagOverlapSimple
 
 
-def normalize(value, triple, avarMapping):
+def normalize(value, triple, avarMapping=None):
     value = normalizeValue(value, triple)
     if avarMapping:
         value = piecewiseLinearMap(value, avarMapping)
@@ -1741,41 +2351,153 @@ def instantiateVariableFont(
         log.info("Updating name table")
         names.updateNameTable(varfont, axisLimits)
 
-    if "VARC" in varfont:
-        instantiateVARC(varfont, normalizedLimits)
+    # Detect avar2 partial instancing: avar v2 with VarStore, and not all
+    # fvar axes are pinned. In this mode, variation tables (gvar, HVAR, etc.)
+    # are kept in the old final-coordinate space, and the avar v2 offset
+    # compensation ensures the correct old-space final coordinates are produced.
+    _isAvar2PartialInstancing = (
+        "avar" in varfont
+        and getattr(varfont["avar"], "majorVersion", 1) >= 2
+        and getattr(varfont["avar"].table, "VarStore", None) is not None
+        and not set(axisLimits.pinnedLocation()).issuperset(
+            a.axisTag for a in varfont["fvar"].axes
+        )
+    )
 
-    if "CFF2" in varfont:
-        downgradeCFF2 = instantiateCFF2(
-            varfont, normalizedLimits, downgrade=downgradeCFF2
+    if _isAvar2PartialInstancing:
+        log.info(
+            "avar2 partial instancing: keeping variation tables in old "
+            "coordinate space"
+        )
+    else:
+        if "VARC" in varfont:
+            instantiateVARC(varfont, normalizedLimits)
+
+        if "CFF2" in varfont:
+            downgradeCFF2 = instantiateCFF2(
+                varfont, normalizedLimits, downgrade=downgradeCFF2
+            )
+
+        if "gvar" in varfont:
+            instantiateGvar(varfont, normalizedLimits, optimize=optimize)
+
+        if "cvar" in varfont:
+            instantiateCvar(varfont, normalizedLimits)
+
+        if "MVAR" in varfont:
+            instantiateMVAR(varfont, normalizedLimits)
+
+        if "HVAR" in varfont:
+            instantiateHVAR(varfont, normalizedLimits)
+
+        if "VVAR" in varfont:
+            instantiateVVAR(varfont, normalizedLimits)
+
+        instantiateOTL(varfont, normalizedLimits)
+
+        instantiateFeatureVariations(varfont, normalizedLimits)
+
+    # For avar2 partial instancing, compute old intermediate values BEFORE
+    # avar instancing modifies the segments. Used for both NO_VARIATION_INDEX
+    # reachable ranges and offset compensation in _instantiateAvarV2.
+    reachableRanges = {}
+    oldIntermediates = None
+    if _isAvar2PartialInstancing:
+        oldIntermediates = _computeOldIntermediates(varfont, axisLimits)
+
+        # For NO_VARIATION_INDEX axes (no IVS delta), the final coord equals
+        # the intermediate coord, so the reachable range is [a_i, b_i].
+        avar = varfont["avar"]
+        varIdxMap = getattr(avar.table, "VarIdxMap", None)
+        fvarAxes = varfont["fvar"].axes
+        NO_VARIATION_INDEX = 0xFFFFFFFF
+
+        for axisIdx, axis in enumerate(fvarAxes):
+            tag = axis.axisTag
+            if tag not in axisLimits:
+                continue
+            triple = axisLimits[tag]
+            if triple.minimum == triple.maximum:
+                continue  # Pinned axis, not restricted
+            if tag not in oldIntermediates:
+                continue
+
+            if varIdxMap is not None:
+                varIdx = varIdxMap[axisIdx]
+            else:
+                varIdx = axisIdx
+
+            if varIdx == NO_VARIATION_INDEX:
+                a_i, d_i, b_i = oldIntermediates[tag]
+                reachableRanges[tag] = (min(a_i, b_i), max(a_i, b_i))
+
+    selfContainedAxes = {}
+    if "avar" in varfont:
+        selfContainedAxes = (
+            instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates)
+            or {}
         )
 
-    if "gvar" in varfont:
-        instantiateGvar(varfont, normalizedLimits, optimize=optimize)
+    # For avar2 partial instancing, run variation instancing for
+    # self-contained pinned axes (those that can be removed from fvar).
+    # These axes have a constant old-space final coordinate, so we can
+    # fold their contributions into gvar/HVAR/etc. at that coordinate.
+    if _isAvar2PartialInstancing and selfContainedAxes:
+        scLimits = NormalizedAxisLimits(
+            {
+                tag: NormalizedAxisTripleAndDistances(v, v, v)
+                for tag, v in selfContainedAxes.items()
+            }
+        )
+        log.info(
+            "Instancing variation tables for self-contained axes: %s",
+            list(selfContainedAxes),
+        )
 
-    if "cvar" in varfont:
-        instantiateCvar(varfont, normalizedLimits)
+        if "VARC" in varfont:
+            instantiateVARC(varfont, scLimits)
 
-    if "MVAR" in varfont:
-        instantiateMVAR(varfont, normalizedLimits)
+        if "CFF2" in varfont:
+            instantiateCFF2(varfont, scLimits)
 
-    if "HVAR" in varfont:
-        instantiateHVAR(varfont, normalizedLimits)
+        if "gvar" in varfont:
+            instantiateGvar(varfont, scLimits, optimize=optimize)
 
-    if "VVAR" in varfont:
-        instantiateVVAR(varfont, normalizedLimits)
+        if "cvar" in varfont:
+            instantiateCvar(varfont, scLimits)
 
-    instantiateOTL(varfont, normalizedLimits)
+        if "MVAR" in varfont:
+            instantiateMVAR(varfont, scLimits)
 
-    instantiateFeatureVariations(varfont, normalizedLimits)
+        if "HVAR" in varfont:
+            instantiateHVAR(varfont, scLimits)
 
-    if "avar" in varfont:
-        instantiateAvar(varfont, axisLimits)
+        if "VVAR" in varfont:
+            instantiateVVAR(varfont, scLimits)
+
+        instantiateOTL(varfont, scLimits)
+
+        instantiateFeatureVariations(varfont, scLimits)
 
     with names.pruningUnusedNames(varfont):
         if "STAT" in varfont:
             instantiateSTAT(varfont, axisLimits)
 
-        instantiateFvar(varfont, axisLimits)
+        if _isAvar2PartialInstancing:
+            _instantiateFvarForAvar2(varfont, axisLimits, selfContainedAxes)
+        else:
+            instantiateFvar(varfont, axisLimits)
+
+    # Cull dead gvar/cvar regions outside reachable old-space final-coord
+    # ranges. Must be after _instantiateFvarForAvar2 so fvar and VarStore
+    # axis orders match for getExtremes.
+    if _isAvar2PartialInstancing:
+        # Extend reachable ranges for axes with IVS entries (conservative
+        # bounds via getExtremes on the instanced avar v2 VarStore).
+        _computeReachableRangesForAvar2(varfont, axisLimits, reachableRanges)
+
+        if reachableRanges:
+            _cullVariationsForAvar2(varfont, reachableRanges)
 
     if "OS/2" in varfont:
         varfont["OS/2"].recalcAvgCharWidth(varfont)
