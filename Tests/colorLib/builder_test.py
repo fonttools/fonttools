@@ -3,7 +3,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
 from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
-from fontTools.colorLib.builder import LayerListBuilder
+from fontTools.colorLib.builder import LayerListBuilder, buildCOLR
 from fontTools.colorLib.table_builder import TableBuilder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
@@ -1780,3 +1780,13 @@ class TrickyRadialGradientTest:
     )
     def test_nudge_start_circle_position(self, c0, r0, c1, r1, inside, expected):
         assert self.round_start_circle(c0, r0, c1, r1, inside) == expected
+
+
+def test_buildCOLR_missing_base_glyph_in_glyphMap_raises_clear_error():
+    glyphMap = {"A": 0}  # pretend the font only contains glyph A
+
+    # base glyph B does not exist in glyphMap
+    colorGlyphs = {"B": [("A", 0)]}
+
+    with pytest.raises(ColorLibError, match="base glyph\\(s\\) not found in glyphMap"):
+        buildCOLR(colorGlyphs, version=0, glyphMap=glyphMap)
