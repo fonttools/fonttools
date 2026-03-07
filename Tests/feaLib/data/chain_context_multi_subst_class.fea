@@ -1,0 +1,8 @@
+# https://github.com/fonttools/fonttools/issues/4016
+# Chained multiple substitution with a glyph class as the target
+# should produce a single ChainContextSubst subtable, not one per glyph.
+feature abvs {
+    lookup lookup1 {
+        sub [A B] [c d] [a b]' by NULL;
+    } lookup1;
+} abvs;
