@@ -5,6 +5,7 @@ Various round-to-integer helpers.
 import math
 import functools
 import logging
+from typing import Any
 
 log = logging.getLogger(__name__)
 
@@ -17,11 +18,11 @@ __all__ = [
 ]
 
 
-def noRound(value):
+def noRound(value: Any) -> Any:
     return value
 
 
-def otRound(value):
+def otRound(value: float) -> int:
     """Round float value to nearest integer towards ``+Infinity``.
 
     The OpenType spec (in the section on `"normalization" of OpenType Font Variations <https://docs.microsoft.com/en-us/typography/opentype/spec/otvaroverview#coordinate-scales-and-normalization>`_)
@@ -45,7 +46,7 @@ def otRound(value):
     return int(math.floor(value + 0.5))
 
 
-def maybeRound(v, tolerance, round=otRound):
+def maybeRound(v: Any, tolerance, round=otRound):
     rounded = round(v)
     return rounded if abs(rounded - v) <= tolerance else v
 
@@ -98,13 +99,13 @@ def nearestMultipleShortestRepr(value: float, factor: float) -> str:
         return str(float(round(value)))
 
     fmt = "%.8f"
-    lo = fmt % lo
-    hi = fmt % hi
-    assert len(lo) == len(hi) and lo != hi
-    for i in range(len(lo)):
-        if lo[i] != hi[i]:
+    loStr = fmt % lo
+    hiStr = fmt % hi
+    assert len(loStr) == len(hiStr) and loStr != hiStr
+    for i in range(len(loStr)):
+        if loStr[i] != hiStr[i]:
             break
-    period = lo.find(".")
+    period = loStr.find(".")
     assert period < i
     fmt = "%%.%df" % (i - period)
     return fmt % value
