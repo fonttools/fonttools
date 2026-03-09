@@ -34,6 +34,8 @@
   validate ``map`` CLI coordinates (#4051).
 - [cu2qu/qu2cu] Add input validation: reject non-positive tolerances, validate curve inputs
   and list lengths (#4052).
+- [colorLib] Raise a clear ``ColorLibError`` when base glyphs are missing from glyphMap,
+  instead of a confusing ``KeyError`` (#4041).
 - [glyf] Remove unnecessary ``fvar`` table dependency (#4017).
 - [fvar/trak] Remove unnecessary ``name`` table dependency (#4018).
 - [ufoLib] Relax guideline validation to follow the updated spec (#3537, #3553).
