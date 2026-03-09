@@ -1,3 +1,6 @@
+4.62.0 (released 2026-03-09)
+----------------------------
+
 - [diff] Add new ``fonttools diff`` command for comparing font files, imported from the
   ``fdiff`` project and heavily reworked (#1190, #4007, #4009, #4011, #4013, #4019).
 - [feaLib] Fix ``VariableScalar`` interpolation bug with non-linear avar mappings. Also
