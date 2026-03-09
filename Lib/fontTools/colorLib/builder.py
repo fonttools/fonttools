@@ -154,6 +154,7 @@ def populateCOLRv0(
             ``TTFont.getReverseGlyphMap()``, to optionally sort base records by GID.
     """
     if glyphMap is not None:
+        _check_base_glyphs_exist(colorGlyphsV0, glyphMap, "populateCOLRv0")
         colorGlyphItems = sorted(
             colorGlyphsV0.items(), key=lambda item: glyphMap[item[0]]
         )
@@ -621,6 +622,24 @@ def buildBaseGlyphPaintRecord(
     return self
 
 
+def _check_base_glyphs_exist(colorGlyphs, glyphMap, where):
+    """Checks that every base glyph name in colorGlyphs exists in glyphMap."""
+
+    missing = []
+    for baseGlyph in colorGlyphs.keys():
+        if baseGlyph not in glyphMap:
+            missing.append(baseGlyph)
+
+    if missing:
+        preview = ", ".join(missing[:10])
+        extra = ""
+        if len(missing) > 10:
+            extra = f" (and {len(missing) - 10} more)"
+        raise ColorLibError(
+            f"{where}: base glyph(s) not found in glyphMap: {preview}{extra}"
+        )
+
+
 def _format_glyph_errors(errors: Mapping[str, Exception]) -> str:
     lines = []
     for baseGlyph, error in sorted(errors.items()):
@@ -635,6 +654,7 @@ def buildColrV1(
     allowLayerReuse: bool = True,
 ) -> Tuple[Optional[ot.LayerList], ot.BaseGlyphList]:
     if glyphMap is not None:
+        _check_base_glyphs_exist(colorGlyphs, glyphMap, "buildColrV1")
         colorGlyphItems = sorted(
             colorGlyphs.items(), key=lambda item: glyphMap[item[0]]
         )
