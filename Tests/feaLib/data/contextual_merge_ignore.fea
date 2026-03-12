@@ -1,0 +1,14 @@
+# Ignore rules with the same backtrack and lookahead
+# but differing in input glyph should merge.
+
+lookup my_subst {
+    sub a by A;
+    sub b by B;
+} my_subst;
+
+feature calt {
+    ignore sub a' comma;
+    ignore sub b' comma;
+    ignore sub c' comma;
+    sub [a b]' lookup my_subst;
+} calt;
