@@ -1401,6 +1401,29 @@ class Builder(object):
             {g: (replacement,) for g in itertools.product(*glyphs)},
         )
 
+    @staticmethod
+    def _merge_contextual_rule(chain, prefix, glyphs, suffix, lookups):
+        """Merge with the last rule if same context and lookups, single input position.
+
+        Returns True if merged, False otherwise.
+        """
+        if len(glyphs) != 1:
+            return False
+        if not chain.rules or chain.rules[-1].is_subtable_break:
+            return False
+        last = chain.rules[-1]
+        if (
+            len(last.glyphs) == 1
+            and last.prefix == prefix
+            and last.suffix == suffix
+            and last.lookups == lookups
+        ):
+            if not isinstance(last.glyphs[0], set):
+                last.glyphs[0] = set(last.glyphs[0])
+            last.glyphs[0].update(glyphs[0])
+            return True
+        return False
+
     # GSUB 5/6
     def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
         if not all(glyphs) or not all(prefix) or not all(suffix):
@@ -1408,11 +1431,9 @@ class Builder(object):
                 "Empty glyph class in contextual substitution", location
             )
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-        lookup.rules.append(
-            ChainContextualRule(
-                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
-            )
-        )
+        resolved = self.find_lookup_builders_(lookups)
+        if not self._merge_contextual_rule(lookup, prefix, glyphs, suffix, resolved):
+            lookup.rules.append(ChainContextualRule(prefix, glyphs, suffix, resolved))
 
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
         if not mapping or not all(prefix) or not all(suffix):
@@ -1426,9 +1447,9 @@ class Builder(object):
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
-        chain.rules.append(
-            ChainContextualRule(prefix, [list(mapping.keys())], suffix, [sub])
-        )
+        keys = set(mapping.keys())
+        if not self._merge_contextual_rule(chain, prefix, [keys], suffix, [sub]):
+            chain.rules.append(ChainContextualRule(prefix, [keys], suffix, [sub]))
 
     def add_multi_subst_chained_(self, location, prefix, glyph, suffix, replacements):
         if not all(prefix) or not all(suffix):
@@ -1442,19 +1463,8 @@ class Builder(object):
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
         sub.mapping[glyph] = replacements
         # https://github.com/fonttools/fonttools/issues/4016
-        # If the last rule has the same context and lookup, merge the glyph
-        # into it instead of creating a new rule (avoids unnecessary subtables).
-        if chain.rules and not chain.rules[-1].is_subtable_break:
-            last = chain.rules[-1]
-            if (
-                last.prefix == prefix
-                and last.suffix == suffix
-                and last.lookups == [sub]
-            ):
-                assert len(last.glyphs) == 1
-                last.glyphs[0].add(glyph)
-                return
-        chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
+        if not self._merge_contextual_rule(chain, prefix, [{glyph}], suffix, [sub]):
+            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
 
     def add_ligature_subst_chained_(
         self, location, prefix, glyphs, suffix, replacement
@@ -1587,11 +1597,9 @@ class Builder(object):
                 "Empty glyph class in contextual positioning rule", location
             )
         lookup = self.get_lookup_(location, ChainContextPosBuilder)
-        lookup.rules.append(
-            ChainContextualRule(
-                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
-            )
-        )
+        resolved = self.find_lookup_builders_(lookups)
+        if not self._merge_contextual_rule(lookup, prefix, glyphs, suffix, resolved):
+            lookup.rules.append(ChainContextualRule(prefix, glyphs, suffix, resolved))
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         if not pos or not all(prefix) or not all(suffix):
@@ -1619,9 +1627,9 @@ class Builder(object):
                 sub.add_pos(location, glyph, otValue)
             subs.append(sub)
         assert len(pos) == len(subs), (pos, subs)
-        chain.rules.append(
-            ChainContextualRule(prefix, [g for g, v in pos], suffix, subs)
-        )
+        glyphs = [g for g, v in pos]
+        if not self._merge_contextual_rule(chain, prefix, glyphs, suffix, subs):
+            chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, subs))
 
     def add_marks_(self, location, lookupBuilder, marks):
         """Helper for add_mark_{base,liga,mark}_pos."""
