@@ -41,7 +41,7 @@ import zipfile
 from collections import OrderedDict
 from copy import deepcopy
 from os import fsdecode
-from typing import IO, TYPE_CHECKING, Any, Optional, Union, cast
+from typing import IO, TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
 
 from fontTools.misc import filesystem as fs
 from fontTools.misc import plistlib
@@ -2023,146 +2023,395 @@ fontInfoAttributesVersion1: set[str] = {
 }
 
 fontInfoAttributesVersion2ValueData: FontInfoAttributes = {
-    "familyName": dict(type=str),
-    "styleName": dict(type=str),
-    "styleMapFamilyName": dict(type=str),
+    "familyName": dict(type=str, description="Family name", annotation="str"),
+    "styleName": dict(type=str, description="Style name", annotation="str"),
+    "styleMapFamilyName": dict(
+        type=str,
+        description="Family name used for bold/italic style mapping",
+        annotation="str",
+    ),
     "styleMapStyleName": dict(
-        type=str, valueValidator=fontInfoStyleMapStyleNameValidator
+        type=str,
+        valueValidator=fontInfoStyleMapStyleNameValidator,
+        description="Style for style mapping: regular, italic, bold, or bold italic",
+        annotation="str",
     ),
-    "versionMajor": dict(type=int),
-    "versionMinor": dict(type=int),
-    "year": dict(type=int),
-    "copyright": dict(type=str),
-    "trademark": dict(type=str),
-    "unitsPerEm": dict(type=(int, float)),
-    "descender": dict(type=(int, float)),
-    "xHeight": dict(type=(int, float)),
-    "capHeight": dict(type=(int, float)),
-    "ascender": dict(type=(int, float)),
-    "italicAngle": dict(type=(float, int)),
-    "note": dict(type=str),
+    "versionMajor": dict(type=int, description="Major version number", annotation="int"),
+    "versionMinor": dict(type=int, description="Minor version number", annotation="int"),
+    "year": dict(type=int, description="Year the font was created", annotation="int"),
+    "copyright": dict(type=str, description="Copyright statement", annotation="str"),
+    "trademark": dict(type=str, description="Trademark statement", annotation="str"),
+    "unitsPerEm": dict(
+        type=(int, float), description="Units per em", annotation="Union[int, float]"
+    ),
+    "descender": dict(
+        type=(int, float), description="Descender value", annotation="Union[int, float]"
+    ),
+    "xHeight": dict(
+        type=(int, float), description="x-height value", annotation="Union[int, float]"
+    ),
+    "capHeight": dict(
+        type=(int, float), description="Cap height value", annotation="Union[int, float]"
+    ),
+    "ascender": dict(
+        type=(int, float), description="Ascender value", annotation="Union[int, float]"
+    ),
+    "italicAngle": dict(
+        type=(float, int),
+        description="Italic angle in counter-clockwise degrees",
+        annotation="Union[float, int]",
+    ),
+    "note": dict(type=str, description="Arbitrary note about the font", annotation="str"),
     "openTypeHeadCreated": dict(
-        type=str, valueValidator=fontInfoOpenTypeHeadCreatedValidator
+        type=str,
+        valueValidator=fontInfoOpenTypeHeadCreatedValidator,
+        description="Creation date in YYYY/MM/DD HH:MM:SS format",
+        annotation="str",
     ),
-    "openTypeHeadLowestRecPPEM": dict(type=(int, float)),
+    "openTypeHeadLowestRecPPEM": dict(
+        type=(int, float),
+        description="Smallest readable size in pixels per em",
+        annotation="Union[int, float]",
+    ),
     "openTypeHeadFlags": dict(
         type="integerList",
         valueValidator=genericIntListValidator,
         valueOptions=fontInfoOpenTypeHeadFlagsOptions,
+        description="List of head table flag bit numbers",
+        annotation="List[int]",
     ),
-    "openTypeHheaAscender": dict(type=(int, float)),
-    "openTypeHheaDescender": dict(type=(int, float)),
-    "openTypeHheaLineGap": dict(type=(int, float)),
-    "openTypeHheaCaretSlopeRise": dict(type=int),
-    "openTypeHheaCaretSlopeRun": dict(type=int),
-    "openTypeHheaCaretOffset": dict(type=(int, float)),
-    "openTypeNameDesigner": dict(type=str),
-    "openTypeNameDesignerURL": dict(type=str),
-    "openTypeNameManufacturer": dict(type=str),
-    "openTypeNameManufacturerURL": dict(type=str),
-    "openTypeNameLicense": dict(type=str),
-    "openTypeNameLicenseURL": dict(type=str),
-    "openTypeNameVersion": dict(type=str),
-    "openTypeNameUniqueID": dict(type=str),
-    "openTypeNameDescription": dict(type=str),
-    "openTypeNamePreferredFamilyName": dict(type=str),
-    "openTypeNamePreferredSubfamilyName": dict(type=str),
-    "openTypeNameCompatibleFullName": dict(type=str),
-    "openTypeNameSampleText": dict(type=str),
-    "openTypeNameWWSFamilyName": dict(type=str),
-    "openTypeNameWWSSubfamilyName": dict(type=str),
+    "openTypeHheaAscender": dict(
+        type=(int, float),
+        description="hhea table ascender",
+        annotation="Union[int, float]",
+    ),
+    "openTypeHheaDescender": dict(
+        type=(int, float),
+        description="hhea table descender",
+        annotation="Union[int, float]",
+    ),
+    "openTypeHheaLineGap": dict(
+        type=(int, float),
+        description="hhea table line gap",
+        annotation="Union[int, float]",
+    ),
+    "openTypeHheaCaretSlopeRise": dict(
+        type=int, description="Caret slope rise value", annotation="int"
+    ),
+    "openTypeHheaCaretSlopeRun": dict(
+        type=int, description="Caret slope run value", annotation="int"
+    ),
+    "openTypeHheaCaretOffset": dict(
+        type=(int, float),
+        description="Caret offset value",
+        annotation="Union[int, float]",
+    ),
+    "openTypeNameDesigner": dict(
+        type=str, description="Designer name (name ID 9)", annotation="str"
+    ),
+    "openTypeNameDesignerURL": dict(
+        type=str, description="Designer URL (name ID 12)", annotation="str"
+    ),
+    "openTypeNameManufacturer": dict(
+        type=str, description="Manufacturer name (name ID 8)", annotation="str"
+    ),
+    "openTypeNameManufacturerURL": dict(
+        type=str, description="Manufacturer URL (name ID 11)", annotation="str"
+    ),
+    "openTypeNameLicense": dict(
+        type=str, description="License text (name ID 13)", annotation="str"
+    ),
+    "openTypeNameLicenseURL": dict(
+        type=str, description="License URL (name ID 14)", annotation="str"
+    ),
+    "openTypeNameVersion": dict(
+        type=str, description="Version string (name ID 5)", annotation="str"
+    ),
+    "openTypeNameUniqueID": dict(
+        type=str, description="Unique font identifier string (name ID 3)", annotation="str"
+    ),
+    "openTypeNameDescription": dict(
+        type=str, description="Font description (name ID 10)", annotation="str"
+    ),
+    "openTypeNamePreferredFamilyName": dict(
+        type=str, description="Preferred family name (name ID 16)", annotation="str"
+    ),
+    "openTypeNamePreferredSubfamilyName": dict(
+        type=str, description="Preferred subfamily name (name ID 17)", annotation="str"
+    ),
+    "openTypeNameCompatibleFullName": dict(
+        type=str, description="Compatible full name (name ID 18)", annotation="str"
+    ),
+    "openTypeNameSampleText": dict(
+        type=str, description="Sample text (name ID 19)", annotation="str"
+    ),
+    "openTypeNameWWSFamilyName": dict(
+        type=str, description="WWS family name (name ID 21)", annotation="str"
+    ),
+    "openTypeNameWWSSubfamilyName": dict(
+        type=str, description="WWS subfamily name (name ID 22)", annotation="str"
+    ),
     "openTypeOS2WidthClass": dict(
-        type=int, valueValidator=fontInfoOpenTypeOS2WidthClassValidator
+        type=int,
+        valueValidator=fontInfoOpenTypeOS2WidthClassValidator,
+        description="Width class value (1-9)",
+        annotation="int",
     ),
     "openTypeOS2WeightClass": dict(
-        type=int, valueValidator=fontInfoOpenTypeOS2WeightClassValidator
+        type=int,
+        valueValidator=fontInfoOpenTypeOS2WeightClassValidator,
+        description="Weight class value",
+        annotation="int",
     ),
     "openTypeOS2Selection": dict(
         type="integerList",
         valueValidator=genericIntListValidator,
         valueOptions=fontInfoOpenTypeOS2SelectionOptions,
+        description="List of fsSelection flag bit numbers",
+        annotation="List[int]",
     ),
-    "openTypeOS2VendorID": dict(type=str),
+    "openTypeOS2VendorID": dict(
+        type=str, description="Four-character vendor identifier", annotation="str"
+    ),
     "openTypeOS2Panose": dict(
-        type="integerList", valueValidator=fontInfoVersion2OpenTypeOS2PanoseValidator
+        type="integerList",
+        valueValidator=fontInfoVersion2OpenTypeOS2PanoseValidator,
+        description="List of 10 Panose classification numbers",
+        annotation="List[int]",
     ),
     "openTypeOS2FamilyClass": dict(
-        type="integerList", valueValidator=fontInfoOpenTypeOS2FamilyClassValidator
+        type="integerList",
+        valueValidator=fontInfoOpenTypeOS2FamilyClassValidator,
+        description="Two-element list of class ID and subclass ID",
+        annotation="List[int]",
     ),
     "openTypeOS2UnicodeRanges": dict(
         type="integerList",
         valueValidator=genericIntListValidator,
         valueOptions=fontInfoOpenTypeOS2UnicodeRangesOptions,
+        description="List of supported Unicode range bit numbers",
+        annotation="List[int]",
     ),
     "openTypeOS2CodePageRanges": dict(
         type="integerList",
         valueValidator=genericIntListValidator,
         valueOptions=fontInfoOpenTypeOS2CodePageRangesOptions,
+        description="List of supported code page range bit numbers",
+        annotation="List[int]",
     ),
-    "openTypeOS2TypoAscender": dict(type=(int, float)),
-    "openTypeOS2TypoDescender": dict(type=(int, float)),
-    "openTypeOS2TypoLineGap": dict(type=(int, float)),
-    "openTypeOS2WinAscent": dict(type=(int, float)),
-    "openTypeOS2WinDescent": dict(type=(int, float)),
+    "openTypeOS2TypoAscender": dict(
+        type=(int, float),
+        description="Typographic ascender",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2TypoDescender": dict(
+        type=(int, float),
+        description="Typographic descender",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2TypoLineGap": dict(
+        type=(int, float),
+        description="Typographic line gap",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2WinAscent": dict(
+        type=(int, float),
+        description="Windows ascender (non-negative)",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2WinDescent": dict(
+        type=(int, float),
+        description="Windows descender (non-negative)",
+        annotation="Union[int, float]",
+    ),
     "openTypeOS2Type": dict(
         type="integerList",
         valueValidator=genericIntListValidator,
         valueOptions=fontInfoOpenTypeOS2TypeOptions,
+        description="List of embedding type flag bit numbers",
+        annotation="List[int]",
     ),
-    "openTypeOS2SubscriptXSize": dict(type=(int, float)),
-    "openTypeOS2SubscriptYSize": dict(type=(int, float)),
-    "openTypeOS2SubscriptXOffset": dict(type=(int, float)),
-    "openTypeOS2SubscriptYOffset": dict(type=(int, float)),
-    "openTypeOS2SuperscriptXSize": dict(type=(int, float)),
-    "openTypeOS2SuperscriptYSize": dict(type=(int, float)),
-    "openTypeOS2SuperscriptXOffset": dict(type=(int, float)),
-    "openTypeOS2SuperscriptYOffset": dict(type=(int, float)),
-    "openTypeOS2StrikeoutSize": dict(type=(int, float)),
-    "openTypeOS2StrikeoutPosition": dict(type=(int, float)),
-    "openTypeVheaVertTypoAscender": dict(type=(int, float)),
-    "openTypeVheaVertTypoDescender": dict(type=(int, float)),
-    "openTypeVheaVertTypoLineGap": dict(type=(int, float)),
-    "openTypeVheaCaretSlopeRise": dict(type=int),
-    "openTypeVheaCaretSlopeRun": dict(type=int),
-    "openTypeVheaCaretOffset": dict(type=(int, float)),
-    "postscriptFontName": dict(type=str),
-    "postscriptFullName": dict(type=str),
-    "postscriptSlantAngle": dict(type=(float, int)),
-    "postscriptUniqueID": dict(type=int),
-    "postscriptUnderlineThickness": dict(type=(int, float)),
-    "postscriptUnderlinePosition": dict(type=(int, float)),
-    "postscriptIsFixedPitch": dict(type=bool),
+    "openTypeOS2SubscriptXSize": dict(
+        type=(int, float),
+        description="Subscript horizontal size",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2SubscriptYSize": dict(
+        type=(int, float),
+        description="Subscript vertical size",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2SubscriptXOffset": dict(
+        type=(int, float),
+        description="Subscript x offset",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2SubscriptYOffset": dict(
+        type=(int, float),
+        description="Subscript y offset",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2SuperscriptXSize": dict(
+        type=(int, float),
+        description="Superscript horizontal size",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2SuperscriptYSize": dict(
+        type=(int, float),
+        description="Superscript vertical size",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2SuperscriptXOffset": dict(
+        type=(int, float),
+        description="Superscript x offset",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2SuperscriptYOffset": dict(
+        type=(int, float),
+        description="Superscript y offset",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2StrikeoutSize": dict(
+        type=(int, float),
+        description="Strikeout size",
+        annotation="Union[int, float]",
+    ),
+    "openTypeOS2StrikeoutPosition": dict(
+        type=(int, float),
+        description="Strikeout position",
+        annotation="Union[int, float]",
+    ),
+    "openTypeVheaVertTypoAscender": dict(
+        type=(int, float),
+        description="Vertical typographic ascender",
+        annotation="Union[int, float]",
+    ),
+    "openTypeVheaVertTypoDescender": dict(
+        type=(int, float),
+        description="Vertical typographic descender",
+        annotation="Union[int, float]",
+    ),
+    "openTypeVheaVertTypoLineGap": dict(
+        type=(int, float),
+        description="Vertical typographic line gap",
+        annotation="Union[int, float]",
+    ),
+    "openTypeVheaCaretSlopeRise": dict(
+        type=int, description="Vertical caret slope rise", annotation="int"
+    ),
+    "openTypeVheaCaretSlopeRun": dict(
+        type=int, description="Vertical caret slope run", annotation="int"
+    ),
+    "openTypeVheaCaretOffset": dict(
+        type=(int, float),
+        description="Vertical caret offset",
+        annotation="Union[int, float]",
+    ),
+    "postscriptFontName": dict(
+        type=str, description="PostScript FontName", annotation="str"
+    ),
+    "postscriptFullName": dict(
+        type=str, description="PostScript FullName", annotation="str"
+    ),
+    "postscriptSlantAngle": dict(
+        type=(float, int),
+        description="Artificial slant angle in counter-clockwise degrees",
+        annotation="Union[float, int]",
+    ),
+    "postscriptUniqueID": dict(
+        type=int, description="PostScript unique ID number", annotation="int"
+    ),
+    "postscriptUnderlineThickness": dict(
+        type=(int, float),
+        description="Underline thickness",
+        annotation="Union[int, float]",
+    ),
+    "postscriptUnderlinePosition": dict(
+        type=(int, float),
+        description="Underline position",
+        annotation="Union[int, float]",
+    ),
+    "postscriptIsFixedPitch": dict(
+        type=bool, description="Whether the font is monospaced", annotation="bool"
+    ),
     "postscriptBlueValues": dict(
-        type="integerList", valueValidator=fontInfoPostscriptBluesValidator
+        type="integerList",
+        valueValidator=fontInfoPostscriptBluesValidator,
+        description="List of pairs of integers or floats for alignment zones",
+        annotation="List[Union[int, float]]",
     ),
     "postscriptOtherBlues": dict(
-        type="integerList", valueValidator=fontInfoPostscriptOtherBluesValidator
+        type="integerList",
+        valueValidator=fontInfoPostscriptOtherBluesValidator,
+        description="List of pairs of integers or floats for other alignment zones",
+        annotation="List[Union[int, float]]",
     ),
     "postscriptFamilyBlues": dict(
-        type="integerList", valueValidator=fontInfoPostscriptBluesValidator
+        type="integerList",
+        valueValidator=fontInfoPostscriptBluesValidator,
+        description="List of pairs of integers or floats for family alignment zones",
+        annotation="List[Union[int, float]]",
     ),
     "postscriptFamilyOtherBlues": dict(
-        type="integerList", valueValidator=fontInfoPostscriptOtherBluesValidator
+        type="integerList",
+        valueValidator=fontInfoPostscriptOtherBluesValidator,
+        description="List of pairs of integers or floats for family other alignment zones",
+        annotation="List[Union[int, float]]",
     ),
     "postscriptStemSnapH": dict(
-        type="integerList", valueValidator=fontInfoPostscriptStemsValidator
+        type="integerList",
+        valueValidator=fontInfoPostscriptStemsValidator,
+        description="List of horizontal stem widths",
+        annotation="List[Union[int, float]]",
     ),
     "postscriptStemSnapV": dict(
-        type="integerList", valueValidator=fontInfoPostscriptStemsValidator
+        type="integerList",
+        valueValidator=fontInfoPostscriptStemsValidator,
+        description="List of vertical stem widths",
+        annotation="List[Union[int, float]]",
     ),
-    "postscriptBlueFuzz": dict(type=(int, float)),
-    "postscriptBlueShift": dict(type=(int, float)),
-    "postscriptBlueScale": dict(type=(float, int)),
-    "postscriptForceBold": dict(type=bool),
-    "postscriptDefaultWidthX": dict(type=(int, float)),
-    "postscriptNominalWidthX": dict(type=(int, float)),
-    "postscriptWeightName": dict(type=str),
-    "postscriptDefaultCharacter": dict(type=str),
+    "postscriptBlueFuzz": dict(
+        type=(int, float), description="BlueFuzz value", annotation="Union[int, float]"
+    ),
+    "postscriptBlueShift": dict(
+        type=(int, float), description="BlueShift value", annotation="Union[int, float]"
+    ),
+    "postscriptBlueScale": dict(
+        type=(float, int), description="BlueScale value", annotation="Union[float, int]"
+    ),
+    "postscriptForceBold": dict(
+        type=bool,
+        description="Whether to force bold appearance at small sizes",
+        annotation="bool",
+    ),
+    "postscriptDefaultWidthX": dict(
+        type=(int, float),
+        description="Default glyph width",
+        annotation="Union[int, float]",
+    ),
+    "postscriptNominalWidthX": dict(
+        type=(int, float),
+        description="Nominal glyph width",
+        annotation="Union[int, float]",
+    ),
+    "postscriptWeightName": dict(
+        type=str, description="Weight name string", annotation="str"
+    ),
+    "postscriptDefaultCharacter": dict(
+        type=str, description="Default character name for PFM", annotation="str"
+    ),
     "postscriptWindowsCharacterSet": dict(
-        type=int, valueValidator=fontInfoPostscriptWindowsCharacterSetValidator
+        type=int,
+        valueValidator=fontInfoPostscriptWindowsCharacterSetValidator,
+        description="Windows character set number (1-20)",
+        annotation="int",
     ),
-    "macintoshFONDFamilyID": dict(type=int),
-    "macintoshFONDName": dict(type=str),
+    "macintoshFONDFamilyID": dict(
+        type=int, description="FOND resource family ID", annotation="int"
+    ),
+    "macintoshFONDName": dict(
+        type=str, description="FOND resource name", annotation="str"
+    ),
 }
 fontInfoAttributesVersion2: set[str] = set(fontInfoAttributesVersion2ValueData.keys())
 
@@ -2171,84 +2420,189 @@ fontInfoAttributesVersion3ValueData: FontInfoAttributes = deepcopy(
 )
 fontInfoAttributesVersion3ValueData.update(
     {
-        "versionMinor": dict(type=int, valueValidator=genericNonNegativeIntValidator),
+        "versionMinor": dict(
+            type=int,
+            valueValidator=genericNonNegativeIntValidator,
+            description="Minor version number (non-negative)",
+            annotation="int",
+        ),
         "unitsPerEm": dict(
-            type=(int, float), valueValidator=genericNonNegativeNumberValidator
+            type=(int, float),
+            valueValidator=genericNonNegativeNumberValidator,
+            description="Units per em (non-negative)",
+            annotation="Union[int, float]",
         ),
         "openTypeHeadLowestRecPPEM": dict(
-            type=int, valueValidator=genericNonNegativeNumberValidator
+            type=int,
+            valueValidator=genericNonNegativeNumberValidator,
+            description="Smallest readable size in pixels per em (non-negative)",
+            annotation="int",
         ),
-        "openTypeHheaAscender": dict(type=int),
-        "openTypeHheaDescender": dict(type=int),
-        "openTypeHheaLineGap": dict(type=int),
-        "openTypeHheaCaretOffset": dict(type=int),
+        "openTypeHheaAscender": dict(
+            type=int, description="hhea table ascender", annotation="int"
+        ),
+        "openTypeHheaDescender": dict(
+            type=int, description="hhea table descender", annotation="int"
+        ),
+        "openTypeHheaLineGap": dict(
+            type=int, description="hhea table line gap", annotation="int"
+        ),
+        "openTypeHheaCaretOffset": dict(
+            type=int, description="Caret offset value", annotation="int"
+        ),
         "openTypeOS2Panose": dict(
             type="integerList",
             valueValidator=fontInfoVersion3OpenTypeOS2PanoseValidator,
+            description="List of 10 Panose classification numbers",
+            annotation="List[int]",
         ),
-        "openTypeOS2TypoAscender": dict(type=int),
-        "openTypeOS2TypoDescender": dict(type=int),
-        "openTypeOS2TypoLineGap": dict(type=int),
+        "openTypeOS2TypoAscender": dict(
+            type=int, description="Typographic ascender", annotation="int"
+        ),
+        "openTypeOS2TypoDescender": dict(
+            type=int, description="Typographic descender", annotation="int"
+        ),
+        "openTypeOS2TypoLineGap": dict(
+            type=int, description="Typographic line gap", annotation="int"
+        ),
         "openTypeOS2WinAscent": dict(
-            type=int, valueValidator=genericNonNegativeNumberValidator
+            type=int,
+            valueValidator=genericNonNegativeNumberValidator,
+            description="Windows ascender (non-negative)",
+            annotation="int",
         ),
         "openTypeOS2WinDescent": dict(
-            type=int, valueValidator=genericNonNegativeNumberValidator
+            type=int,
+            valueValidator=genericNonNegativeNumberValidator,
+            description="Windows descender (non-negative)",
+            annotation="int",
         ),
-        "openTypeOS2SubscriptXSize": dict(type=int),
-        "openTypeOS2SubscriptYSize": dict(type=int),
-        "openTypeOS2SubscriptXOffset": dict(type=int),
-        "openTypeOS2SubscriptYOffset": dict(type=int),
-        "openTypeOS2SuperscriptXSize": dict(type=int),
-        "openTypeOS2SuperscriptYSize": dict(type=int),
-        "openTypeOS2SuperscriptXOffset": dict(type=int),
-        "openTypeOS2SuperscriptYOffset": dict(type=int),
-        "openTypeOS2StrikeoutSize": dict(type=int),
-        "openTypeOS2StrikeoutPosition": dict(type=int),
+        "openTypeOS2SubscriptXSize": dict(
+            type=int, description="Subscript horizontal size", annotation="int"
+        ),
+        "openTypeOS2SubscriptYSize": dict(
+            type=int, description="Subscript vertical size", annotation="int"
+        ),
+        "openTypeOS2SubscriptXOffset": dict(
+            type=int, description="Subscript x offset", annotation="int"
+        ),
+        "openTypeOS2SubscriptYOffset": dict(
+            type=int, description="Subscript y offset", annotation="int"
+        ),
+        "openTypeOS2SuperscriptXSize": dict(
+            type=int, description="Superscript horizontal size", annotation="int"
+        ),
+        "openTypeOS2SuperscriptYSize": dict(
+            type=int, description="Superscript vertical size", annotation="int"
+        ),
+        "openTypeOS2SuperscriptXOffset": dict(
+            type=int, description="Superscript x offset", annotation="int"
+        ),
+        "openTypeOS2SuperscriptYOffset": dict(
+            type=int, description="Superscript y offset", annotation="int"
+        ),
+        "openTypeOS2StrikeoutSize": dict(
+            type=int, description="Strikeout size", annotation="int"
+        ),
+        "openTypeOS2StrikeoutPosition": dict(
+            type=int, description="Strikeout position", annotation="int"
+        ),
         "openTypeGaspRangeRecords": dict(
-            type="dictList", valueValidator=fontInfoOpenTypeGaspRangeRecordsValidator
+            type="dictList",
+            valueValidator=fontInfoOpenTypeGaspRangeRecordsValidator,
+            description="List of gasp range records",
+            annotation="List[Dict[str, Union[int, List[int]]]]",
         ),
         "openTypeNameRecords": dict(
-            type="dictList", valueValidator=fontInfoOpenTypeNameRecordsValidator
+            type="dictList",
+            valueValidator=fontInfoOpenTypeNameRecordsValidator,
+            description="List of name records with platformID, encodingID, languageID, string",
+            annotation="List[Dict[str, Union[int, str]]]",
         ),
-        "openTypeVheaVertTypoAscender": dict(type=int),
-        "openTypeVheaVertTypoDescender": dict(type=int),
-        "openTypeVheaVertTypoLineGap": dict(type=int),
-        "openTypeVheaCaretOffset": dict(type=int),
+        "openTypeVheaVertTypoAscender": dict(
+            type=int, description="Vertical typographic ascender", annotation="int"
+        ),
+        "openTypeVheaVertTypoDescender": dict(
+            type=int, description="Vertical typographic descender", annotation="int"
+        ),
+        "openTypeVheaVertTypoLineGap": dict(
+            type=int, description="Vertical typographic line gap", annotation="int"
+        ),
+        "openTypeVheaCaretOffset": dict(
+            type=int, description="Vertical caret offset", annotation="int"
+        ),
         "woffMajorVersion": dict(
-            type=int, valueValidator=genericNonNegativeIntValidator
+            type=int,
+            valueValidator=genericNonNegativeIntValidator,
+            description="WOFF major version number (non-negative)",
+            annotation="int",
         ),
         "woffMinorVersion": dict(
-            type=int, valueValidator=genericNonNegativeIntValidator
+            type=int,
+            valueValidator=genericNonNegativeIntValidator,
+            description="WOFF minor version number (non-negative)",
+            annotation="int",
         ),
         "woffMetadataUniqueID": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataUniqueIDValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataUniqueIDValidator,
+            description="WOFF metadata unique identification record",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataVendor": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataVendorValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataVendorValidator,
+            description="WOFF metadata vendor information",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataCredits": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataCreditsValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataCreditsValidator,
+            description="WOFF metadata font credits",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataDescription": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataDescriptionValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataDescriptionValidator,
+            description="WOFF metadata description",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataLicense": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataLicenseValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataLicenseValidator,
+            description="WOFF metadata license information",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataCopyright": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataCopyrightValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataCopyrightValidator,
+            description="WOFF metadata copyright information",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataTrademark": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataTrademarkValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataTrademarkValidator,
+            description="WOFF metadata trademark information",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataLicensee": dict(
-            type=dict, valueValidator=fontInfoWOFFMetadataLicenseeValidator
+            type=dict,
+            valueValidator=fontInfoWOFFMetadataLicenseeValidator,
+            description="WOFF metadata licensee information",
+            annotation="Dict[str, Any]",
         ),
         "woffMetadataExtensions": dict(
-            type=list, valueValidator=fontInfoWOFFMetadataExtensionsValidator
+            type=list,
+            valueValidator=fontInfoWOFFMetadataExtensionsValidator,
+            description="List of WOFF metadata extension records",
+            annotation="List[Dict[str, Any]]",
         ),
-        "guidelines": dict(type=list, valueValidator=guidelinesValidator),
+        "guidelines": dict(
+            type=list,
+            valueValidator=guidelinesValidator,
+            description="List of global font guidelines",
+            annotation="List[Dict[str, Union[int, float, str]]]",
+        ),
     }
 )
 fontInfoAttributesVersion3: set[str] = set(fontInfoAttributesVersion3ValueData.keys())
