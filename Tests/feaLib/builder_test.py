@@ -103,6 +103,7 @@ class BuilderTest(unittest.TestCase):
         contextual_merge_gsub_named
         contextual_merge_gpos_named
         contextual_merge_ignore
+        contextual_merge_alternate
     """.split()
 
     VARFONT_AXES = [

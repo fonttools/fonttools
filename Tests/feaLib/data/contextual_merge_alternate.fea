@@ -1,0 +1,8 @@
+# Chained alternate substitution with per-glyph rules:
+# consecutive rules sharing context should reuse the same
+# nested AlternateSubst lookup and merge into a single rule.
+
+feature calt {
+    sub a' comma from [A a.alt1 a.alt2];
+    sub b' comma from [B b.alt];
+} calt;

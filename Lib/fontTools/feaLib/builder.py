@@ -1368,8 +1368,15 @@ class Builder(object):
             return
         if prefix or suffix:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
-            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [lookup]))
+            lookup = chain.find_chainable_alternate_subst(glyph)
+            if lookup is None:
+                lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
+            if not self._merge_contextual_rule(
+                chain, prefix, [{glyph}], suffix, [lookup]
+            ):
+                chain.rules.append(
+                    ChainContextualRule(prefix, [{glyph}], suffix, [lookup])
+                )
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
