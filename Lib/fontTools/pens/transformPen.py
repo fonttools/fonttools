@@ -1,6 +1,5 @@
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 
-
 __all__ = ["TransformPen", "TransformPointPen"]
 
 
@@ -100,9 +99,9 @@ class TransformPointPen(FilterPointPen):
             self._transformPoint(pt), segmentType, smooth, name, **kwargs
         )
 
-    def addComponent(self, baseGlyphName, transformation, **kwargs):
+    def addComponent(self, glyphName, transformation, **kwargs):
         transformation = self._transformation.transform(transformation)
-        self._outPen.addComponent(baseGlyphName, transformation, **kwargs)
+        self._outPen.addComponent(glyphName, transformation, **kwargs)
 
 
 if __name__ == "__main__":
