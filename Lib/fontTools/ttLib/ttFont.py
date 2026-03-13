@@ -1178,7 +1178,17 @@ class TTFont(object):
     def getGlyphID(self, glyphName: str) -> int:
         """Returns the ID of the glyph with the given name."""
         try:
-            return self.getReverseGlyphMap()[glyphName]
+            gid = None
+            try:
+                gid = self.getReverseGlyphMap()[glyphName]
+            except KeyError:
+                if len(self.getGlyphOrder()) == len(self._reverseGlyphOrderDict):
+                    raise
+            if gid is not None and self.getGlyphName(gid) == glyphName:
+                return gid
+            self._buildReverseGlyphOrderDict()
+            return self._reverseGlyphOrderDict[glyphName]
+
         except KeyError:
             if glyphName[:5] == "glyph":
                 try:
