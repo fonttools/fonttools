@@ -2036,8 +2036,12 @@ fontInfoAttributesVersion2ValueData: FontInfoAttributes = {
         description="Style for style mapping: regular, italic, bold, or bold italic",
         annotation="str",
     ),
-    "versionMajor": dict(type=int, description="Major version number", annotation="int"),
-    "versionMinor": dict(type=int, description="Minor version number", annotation="int"),
+    "versionMajor": dict(
+        type=int, description="Major version number", annotation="int"
+    ),
+    "versionMinor": dict(
+        type=int, description="Minor version number", annotation="int"
+    ),
     "year": dict(type=int, description="Year the font was created", annotation="int"),
     "copyright": dict(type=str, description="Copyright statement", annotation="str"),
     "trademark": dict(type=str, description="Trademark statement", annotation="str"),
@@ -2051,7 +2055,9 @@ fontInfoAttributesVersion2ValueData: FontInfoAttributes = {
         type=(int, float), description="x-height value", annotation="Union[int, float]"
     ),
     "capHeight": dict(
-        type=(int, float), description="Cap height value", annotation="Union[int, float]"
+        type=(int, float),
+        description="Cap height value",
+        annotation="Union[int, float]",
     ),
     "ascender": dict(
         type=(int, float), description="Ascender value", annotation="Union[int, float]"
@@ -2061,7 +2067,9 @@ fontInfoAttributesVersion2ValueData: FontInfoAttributes = {
         description="Italic angle in counter-clockwise degrees",
         annotation="Union[float, int]",
     ),
-    "note": dict(type=str, description="Arbitrary note about the font", annotation="str"),
+    "note": dict(
+        type=str, description="Arbitrary note about the font", annotation="str"
+    ),
     "openTypeHeadCreated": dict(
         type=str,
         valueValidator=fontInfoOpenTypeHeadCreatedValidator,
@@ -2128,7 +2136,9 @@ fontInfoAttributesVersion2ValueData: FontInfoAttributes = {
         type=str, description="Version string (name ID 5)", annotation="str"
     ),
     "openTypeNameUniqueID": dict(
-        type=str, description="Unique font identifier string (name ID 3)", annotation="str"
+        type=str,
+        description="Unique font identifier string (name ID 3)",
+        annotation="str",
     ),
     "openTypeNameDescription": dict(
         type=str, description="Font description (name ID 10)", annotation="str"
