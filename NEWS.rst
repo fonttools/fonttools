@@ -1,3 +1,9 @@
+4.62.1 (released 2026-03-13)
+----------------------------
+
+- [feaLib] Extend contextual rule merging to all rule types: single subst, GSUB/GPOS
+  named lookups, ignore rules, and chained alternate subst (#4061).
+
 4.62.0 (released 2026-03-09)
 ----------------------------
 
