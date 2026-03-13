@@ -100,6 +100,10 @@ class BuilderTest(unittest.TestCase):
         combo_mult_and_lig_sub
         identical_feature_lookups
         cvparam_null
+        contextual_merge_gsub_named
+        contextual_merge_gpos_named
+        contextual_merge_ignore
+        contextual_merge_alternate
     """.split()
 
     VARFONT_AXES = [

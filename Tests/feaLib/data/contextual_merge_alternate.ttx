@@ -20,7 +20,7 @@
     <FeatureList>
       <!-- FeatureCount=1 -->
       <FeatureRecord index="0">
-        <FeatureTag value="ordn"/>
+        <FeatureTag value="calt"/>
         <Feature>
           <!-- LookupCount=1 -->
           <LookupListIndex index="0" value="0"/>
@@ -34,27 +34,16 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
-          <!-- BacktrackGlyphCount=1 -->
-          <BacktrackCoverage index="0">
-            <Glyph value="zero"/>
-            <Glyph value="one"/>
-            <Glyph value="two"/>
-            <Glyph value="three"/>
-            <Glyph value="four"/>
-            <Glyph value="five"/>
-            <Glyph value="six"/>
-            <Glyph value="seven"/>
-            <Glyph value="eight"/>
-            <Glyph value="nine"/>
-          </BacktrackCoverage>
+          <!-- BacktrackGlyphCount=0 -->
           <!-- InputGlyphCount=1 -->
           <InputCoverage index="0">
-            <Glyph value="A"/>
-            <Glyph value="O"/>
             <Glyph value="a"/>
-            <Glyph value="o"/>
+            <Glyph value="b"/>
           </InputCoverage>
-          <!-- LookAheadGlyphCount=0 -->
+          <!-- LookAheadGlyphCount=1 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="comma"/>
+          </LookAheadCoverage>
           <!-- SubstCount=1 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
@@ -63,15 +52,20 @@
         </ChainContextSubst>
       </Lookup>
       <Lookup index="1">
-        <LookupType value="1"/>
+        <LookupType value="3"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <SingleSubst index="0">
-          <Substitution in="A" out="ordfeminine"/>
-          <Substitution in="O" out="ordmasculine"/>
-          <Substitution in="a" out="ordfeminine"/>
-          <Substitution in="o" out="ordmasculine"/>
-        </SingleSubst>
+        <AlternateSubst index="0">
+          <AlternateSet glyph="a">
+            <Alternate glyph="A"/>
+            <Alternate glyph="a.alt1"/>
+            <Alternate glyph="a.alt2"/>
+          </AlternateSet>
+          <AlternateSet glyph="b">
+            <Alternate glyph="B"/>
+            <Alternate glyph="b.alt"/>
+          </AlternateSet>
+        </AlternateSubst>
       </Lookup>
     </LookupList>
   </GSUB>
