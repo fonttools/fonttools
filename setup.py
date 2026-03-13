@@ -69,18 +69,24 @@ if with_cython and not has_cython:
 
 ext_modules = []
 if with_cython is True or (with_cython is None and has_cython):
+    py_limited_api = "0x030A0000"
     # On POSIX systems (Linux, macOS, etc.), math functions like sqrt, pow, fabs
     # may require explicit linkage to libm. This is particularly needed on some
     # Linux distributions (e.g., Amazon Linux with Clang) where libm is not
     # automatically linked. On Windows, math functions are in msvcrt.
     # See https://github.com/fonttools/fonttools/issues/4028
     libraries = ["m"] if os.name == "posix" else []
+    ext_kwargs = {
+        "define_macros": [("Py_LIMITED_API", py_limited_api)],
+        "py_limited_api": True,
+    }
 
     ext_modules.append(
         Extension(
             "fontTools.cu2qu.cu2qu",
             ["Lib/fontTools/cu2qu/cu2qu.py"],
             libraries=libraries,
+            **ext_kwargs,
         ),
     )
     ext_modules.append(
@@ -88,6 +94,7 @@ if with_cython is True or (with_cython is None and has_cython):
             "fontTools.qu2cu.qu2cu",
             ["Lib/fontTools/qu2cu/qu2cu.py"],
             libraries=libraries,
+            **ext_kwargs,
         ),
     )
     ext_modules.append(
@@ -95,6 +102,7 @@ if with_cython is True or (with_cython is None and has_cython):
             "fontTools.misc.bezierTools",
             ["Lib/fontTools/misc/bezierTools.py"],
             libraries=libraries,
+            **ext_kwargs,
         ),
     )
     ext_modules.append(
@@ -102,13 +110,18 @@ if with_cython is True or (with_cython is None and has_cython):
             "fontTools.pens.momentsPen",
             ["Lib/fontTools/pens/momentsPen.py"],
             libraries=libraries,
+            **ext_kwargs,
         ),
     )
     ext_modules.append(
-        Extension("fontTools.varLib.iup", ["Lib/fontTools/varLib/iup.py"]),
+        Extension(
+            "fontTools.varLib.iup", ["Lib/fontTools/varLib/iup.py"], **ext_kwargs
+        ),
     )
     ext_modules.append(
-        Extension("fontTools.feaLib.lexer", ["Lib/fontTools/feaLib/lexer.py"]),
+        Extension(
+            "fontTools.feaLib.lexer", ["Lib/fontTools/feaLib/lexer.py"], **ext_kwargs
+        ),
     )
 
 extras_require = {
@@ -535,6 +548,7 @@ setup_params = dict(
     package_dir={"": "Lib"},
     packages=find_packages("Lib"),
     include_package_data=True,
+    exclude_package_data={"": ["*.so", "*.pyd"]},
     data_files=find_data_files(),
     ext_modules=ext_modules,
     setup_requires=setup_requires,
