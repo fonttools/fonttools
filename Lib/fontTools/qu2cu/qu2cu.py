@@ -1,6 +1,4 @@
 # cython: language_level=3
-# distutils: define_macros=CYTHON_TRACE_NOGIL=1
-
 # Copyright 2023 Google Inc. All Rights Reserved.
 # Copyright 2023 Behdad Esfahbod. All Rights Reserved.
 #

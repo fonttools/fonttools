@@ -9,7 +9,8 @@ on:
 
 env:
   # skip binary wheels for pypy (preferable to use pure-python) and 32-bit Linux
-  CIBW_SKIP: pp* cp*linux_i686
+  # skip free-threaded CPython too: abi3 wheels are currently incompatible there
+  CIBW_SKIP: pp* cp*linux_i686 cp31?t-*
   CIBW_ENVIRONMENT: FONTTOOLS_WITH_CYTHON=1
   CIBW_TEST_REQUIRES: tox
   # only test core fonttools library without extras for now, stuff like lxml or scipy

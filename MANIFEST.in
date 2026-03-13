@@ -41,3 +41,4 @@ recursive-include Tests *.xml *.designspace *.bin
 recursive-include Tests *.afm
 recursive-include Tests *.json
 recursive-include Tests *.ufoz
+global-exclude *.so *.pyd
