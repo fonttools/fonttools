@@ -73,7 +73,9 @@ class table__b_g_c_l(DefaultTable.DefaultTable):
         writer.endtag("json")
         writer.newline()
 
-    def fromXML(self, name: str, attrs: dict[str, str], content, ttFont: TTFont) -> None:
+    def fromXML(
+        self, name: str, attrs: dict[str, str], content, ttFont: TTFont
+    ) -> None:
         """Read JSON from the <json> element. `content` may be a list.
 
         This mirrors SVG/other table `fromXML` handlers which accept a
