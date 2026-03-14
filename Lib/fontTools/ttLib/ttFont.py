@@ -1486,12 +1486,6 @@ def newTable(tag: str | bytes) -> DefaultTable:
     return tableClass(tag)
 
 
-try:
-    registerCustomTableClass("BGCL", "fontTools.ttLib.tables.B_G_C_L_", "table_B_G_C_L_")
-except Exception:
-    pass
-
-
 def _escapechar(c: str) -> str:
     """Helper function for tagToIdentifier()"""
     import re
