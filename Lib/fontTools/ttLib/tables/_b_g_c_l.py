@@ -5,9 +5,12 @@ decompile and emit human readable JSON in the TTX via a <json> element.
 On compile we re-encode the JSON to UTF-8 bytes which is what Apple code
 reads via CTFontCopyTable then JSONDecoder.
 
-This is intentionally lightweight: it preserves the JSON structure and
-exposes convenience attributes `colors`, `emojicolors`, `indexmap` and
-`version` when available.
+On iOS 16 and later the `bgcl` payload is used as the wallpaper
+background color when the user selects an emoji wallpaper.
+
+This implementation is intentionally lightweight: it preserves the JSON
+structure and exposes convenience attributes `colors`, `emojicolors`,
+`indexmap` and `version` when available.
 """
 
 from __future__ import annotations
@@ -34,7 +37,12 @@ class table__b_g_c_l(DefaultTable.DefaultTable):
     """
 
     def decompile(self, data: bytes, ttFont: TTFont) -> None:
-        """Store raw bytes and attempt to parse JSON."""
+        """Store raw bytes and attempt to parse JSON.
+
+        The JSON commonly includes palette/lookup data used at runtime to
+        construct wallpaper/background colors for emoji wallpapers on
+        recent iOS releases.
+        """
         self.data = data
         try:
             text = tostr(data, "utf_8")
