@@ -8,7 +8,7 @@ reads via CTFontCopyTable then JSONDecoder.
 On iOS 16 and later the `bgcl` payload is used as the wallpaper
 background when the user selects an emoji wallpaper.
 
-Fields (expected structure and semantics):
+Fields:
 
 - ``colors``: list of palette entries. Each entry is an array of four
     integers ``[R, G, B, A]``. R/G/B are 0-255. A is 0-1.
