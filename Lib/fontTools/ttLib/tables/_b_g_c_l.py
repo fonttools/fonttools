@@ -6,11 +6,40 @@ On compile we re-encode the JSON to UTF-8 bytes which is what Apple code
 reads via CTFontCopyTable then JSONDecoder.
 
 On iOS 16 and later the `bgcl` payload is used as the wallpaper
-background color when the user selects an emoji wallpaper.
+background when the user selects an emoji wallpaper.
 
-This implementation is intentionally lightweight: it preserves the JSON
-structure and exposes convenience attributes `colors`, `emojicolors`,
-`indexmap` and `version` when available.
+Fields (expected structure and semantics):
+
+- ``colors``: list of palette entries. Each entry is an array of four
+    integers ``[R, G, B, A]``. R/G/B are 0-255. A is 0-1.
+
+- ``emojicolors``: list of per-emoji palettes. Each item is an array of
+    three sublists: primary/dominant, accent, contextual
+    (names inferred). Each sublist contains integer indexes referencing
+    entries in ``colors``; the runtime uses these to assemble layered
+    background tints for an emoji.
+
+- ``indexmap``: mapping (glyph identifier → palette index). The map
+    maps a glyph identity to an integer index selecting an entry in
+    ``emojicolors``. The font/UI uses this to pick the correct palette
+    for a glyph when rendering wallpaper backgrounds.
+
+- ``version``: integer table version used for parsing/compatibility.
+
+Runtime usage summary:
+
+- The system fetches the table bytes with ``CTFontCopyTable('bgcl')``,
+    decodes the bytes as UTF‑8 JSON and runs the JSON through the app's
+    decoder into an internal ``BgclTable`` structure. The app looks up a
+    glyph's entry in ``indexmap``, retrieves the corresponding
+    ``emojicolors`` palette, then converts the referenced ``colors``
+    entries into color objects (normalizing channels/alpha as needed).
+    This resulting color(s) drive the wallpaper background appearance for
+    emoji wallpapers on supported iOS versions.
+
+This implementation preserves the JSON payload and exposes convenience
+attributes ``colors``, ``emojicolors``, ``indexmap`` and ``version``
+when available.
 """
 
 from __future__ import annotations
