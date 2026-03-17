@@ -1536,7 +1536,7 @@ class UFOWriter(UFOReader):
         Return the GlyphSet object associated with the
         appropriate glyph directory in the .ufo.
         If layerName is None, the default glyph set
-        will be used. The defaultLayer flag indictes
+        will be used. The defaultLayer flag indicates
         that the layer should be saved into the default
         glyphs directory.
 
