@@ -54,10 +54,17 @@ jobs:
             arch: auto32
           - os: ubuntu-24.04-arm
             arch: aarch64
+          - os: ubuntu-latest
+            arch: riscv64
     steps:
     - uses: actions/checkout@v6
       with:
         submodules: recursive
+    - name: Set up QEMU
+      if: matrix.arch == 'riscv64'
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: riscv64
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
