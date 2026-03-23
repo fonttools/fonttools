@@ -141,6 +141,11 @@ class BaseConverter(object):
             "BaseGlyphRecordCount",
             "LayerRecordCount",
             "AxisIndicesList",
+            # IFT - propagated to GlyphMap/FeatureMap/MappingEntries subtables
+            "NumGlyphs",
+            "MaxGlyphMapEntryIndex",
+            "MaxEntryIndex",
+            "NumEntries",
         ]
         self.description = description
 
@@ -2017,6 +2022,278 @@ class CompositeMode(_UInt8Enum):
     enumClass = _CompositeMode
 
 
+class MappingEntryFormat:
+    def __init__(self, value):
+        self.value = value
+
+    @property
+    def has_subset_def(self):
+        return bool(self.value & 0x01)
+
+    @property
+    def has_child_entries(self):
+        return bool(self.value & 0x02)
+
+    @property
+    def has_entry_id(self):
+        return bool(self.value & 0x04)
+
+    @property
+    def has_patch_format(self):
+        return bool(self.value & 0x08)
+
+    @property
+    def has_code_points(self):
+        return bool(self.value & 0x30)
+
+    @property
+    def bias_present_u16(self):
+        return (self.value & 0x30) == 0x20
+
+    @property
+    def bias_present_u24(self):
+        return (self.value & 0x30) == 0x30
+
+
+
+# Reference implementation:
+# https://github.com/googlefonts/fontations/blob/main/read-fonts/src/tables/ift.rs
+class MappingEntriesConverter(BaseConverter):
+    def read(self, reader, font, tableDict):
+        from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+        from fontTools.misc.iftSparseBitSet import decode as sbsDecode
+
+        entryCount = reader["NumEntries"]
+        entries = []
+        lastEntryId = -1
+
+        for _ in range(entryCount):
+            entry = {}
+            formatFlags = MappingEntryFormat(reader.readUInt8())
+            entry["formatFlags"] = formatFlags
+
+            if formatFlags.has_subset_def:
+                featureCount = reader.readUInt8() 
+                features = []
+                for _ in range(featureCount):
+                    tag = reader.readTag() 
+                    features.append(tag)
+                entry["featureTags"] = features
+                designSpaceCount = reader.readUShort() 
+                segments = []
+                for _ in range(designSpaceCount):
+                    segTag = reader.readTag() 
+                    start = fi2fl(reader.readLong(), 16) 
+                    end = fi2fl(reader.readLong(), 16) 
+                    segments.append({"tag": segTag, "start": start, "end": end})
+                entry["designSpaceSegments"] = segments
+
+            if formatFlags.has_child_entries:
+                modeAndCount = reader.readUInt8() 
+                conjunctive = bool(modeAndCount & 0x80)
+                childCount = modeAndCount & 0x7F
+                entry["childEntryConjunctive"] = conjunctive
+                childIndices = []
+                for _ in range(childCount):
+                    idx = reader.readUInt24() 
+                    childIndices.append(idx)
+                entry["childEntryIndices"] = childIndices
+
+            if formatFlags.has_entry_id:
+                ids = []
+                while True:
+                    # Per IFT spec, Entry IDs are delta-encoded. The value is a
+                    # signed 24-bit integer. The least significant bit is a
+                    # continuation flag (1 if more IDs follow). The remaining
+                    # upper bits are a signed integer, representing the delta
+                    # from the previous ID.
+                    encodedVal = reader.readInt24()
+                    delta = encodedVal >> 1
+                    hasMore = encodedVal & 0x01
+                    currentEntryId = lastEntryId + 1 + delta
+                    ids.append(currentEntryId)
+                    lastEntryId = currentEntryId
+
+                    if not hasMore:
+                        break
+                entry["entryIds"] = ids
+            else:
+                entry["entryIds"] = [lastEntryId + 1]
+                lastEntryId = lastEntryId + 1
+
+            if formatFlags.has_patch_format:
+                entry["patchFormat"] = reader.readUInt8()
+
+            if formatFlags.has_code_points:
+                bias = 0
+                if formatFlags.bias_present_u24:
+                    bias = reader.readUInt24()
+                elif formatFlags.bias_present_u16:
+                    bias = reader.readUShort()
+                entry["codePointsBias"] = bias
+
+                codepoints, consumed = sbsDecode(
+                    reader.data[reader.pos :], bias=bias, maxValue=0x10FFFF
+                )
+                reader.advance(consumed)
+                entry["codePoints"] = sorted(codepoints)
+
+            entries.append(entry)
+        return entries
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        from fontTools.misc.iftSparseBitSet import encode as sbsEncode
+        from fontTools.misc.fixedTools import floatToFixed as fl2fi
+
+        entries = value
+        lastId = -1
+
+        for entry in entries:
+            format_flags = entry.get("formatFlags", MappingEntryFormat(0))
+            writer.writeUInt8(format_flags.value)
+
+            if format_flags.has_subset_def:
+                features = entry.get("featureTags", [])
+                writer.writeUInt8(len(features))
+                for tag in features:
+                    writer.writeTag(tag)
+                segments = entry.get("designSpaceSegments", [])
+                writer.writeUShort(len(segments))
+                for seg in segments:
+                    writer.writeTag(seg["tag"])
+                    writer.writeLong(fl2fi(seg["start"], 16))
+                    writer.writeLong(fl2fi(seg["end"], 16))
+
+            if format_flags.has_child_entries:
+                childIndices = entry.get("childEntryIndices", [])
+                conjunctive = entry.get("childEntryConjunctive", False)
+                modeAndCount = (len(childIndices) & 0x7F) | (
+                    0x80 if conjunctive else 0
+                )
+                writer.writeUInt8(modeAndCount)
+                for idx in childIndices:
+                    writer.writeUInt24(idx)
+
+            if format_flags.has_entry_id:
+                ids = entry.get("entryIds", [])
+                for i, eid in enumerate(ids):
+                    # Recreate the delta-encoded Entry ID. The delta is shifted
+                    # left by one bit, and the least significant bit is set to 1
+                    # if more IDs follow in the list.
+                    delta = eid - lastId - 1
+                    has_more = 1 if i < len(ids) - 1 else 0
+                    encoded_value = (delta << 1) | has_more
+                    writer.writeUInt24(encoded_value & 0xFFFFFF)
+                    lastId = eid
+            else:
+                lastId += 1
+
+            if format_flags.has_patch_format:
+                writer.writeUInt8(entry.get("patchFormat", 0))
+
+            if format_flags.has_code_points:
+                bias = entry.get("codePointsBias", 0)
+                if format_flags.bias_present_u24:
+                    writer.writeUInt24(bias)
+                elif format_flags.bias_present_u16:
+                    writer.writeUShort(bias)
+                codepoints = entry.get("codePoints", [])
+                writer.writeData(
+                    sbsEncode([c - bias for c in codepoints if c >= bias])
+                )
+
+    def xmlWrite(self, xmlWriter, font, value, name, attrs):
+        for entry in value:
+            format_flags = entry.get("formatFlags", MappingEntryFormat(0))
+            xmlWriter.begintag("entry", formatFlags=format_flags.value)
+            xmlWriter.newline()
+            if "entryIds" in entry:
+                for eid in entry["entryIds"]:
+                    xmlWriter.simpletag("entryId", value=eid)
+                    xmlWriter.newline()
+            if "featureTags" in entry:
+                for tag in entry["featureTags"]:
+                    xmlWriter.simpletag("featureTag", value=tag)
+                    xmlWriter.newline()
+            if "designSpaceSegments" in entry:
+                for seg in entry["designSpaceSegments"]:
+                    xmlWriter.simpletag(
+                        "designSpaceSegment",
+                        tag=seg["tag"],
+                        start=seg["start"],
+                        end=seg["end"],
+                    )
+                    xmlWriter.newline()
+            if "childEntryIndices" in entry:
+                xmlWriter.simpletag(
+                    "childEntryConjunctive",
+                    value=int(entry.get("childEntryConjunctive", False)),
+                )
+                xmlWriter.newline()
+                for idx in entry["childEntryIndices"]:
+                    xmlWriter.simpletag("childEntry", index=idx)
+                    xmlWriter.newline()
+            if "patchFormat" in entry:
+                xmlWriter.simpletag("patchFormat", value=entry["patchFormat"])
+                xmlWriter.newline()
+            if "codePoints" in entry:
+                xmlWriter.simpletag(
+                    "codePointsBias", value=entry.get("codePointsBias", 0)
+                )
+                xmlWriter.newline()
+                codePointsStr = " ".join(str(c) for c in entry["codePoints"])
+                xmlWriter.simpletag("codePoints", value=codePointsStr)
+                xmlWriter.newline()
+            xmlWriter.endtag("entry")
+            xmlWriter.newline()
+
+    def xmlRead(self, attrs, content, font):
+        entries = []
+        for elem in content:
+            if not isinstance(elem, tuple):
+                continue
+            name, attrs, content = elem
+            if name == "entry":
+                format_flags_int = safeEval(attrs.get("formatFlags", "0"))
+                entry = {"formatFlags": MappingEntryFormat(format_flags_int)}
+                for e_elem in content:
+                    if not isinstance(e_elem, tuple):
+                        continue
+                    ename, eattrs, econtent = e_elem
+                    if ename == "entryId":
+                        entry.setdefault("entryIds", []).append(
+                            safeEval(eattrs["value"])
+                        )
+                    elif ename == "featureTag":
+                        entry.setdefault("featureTags", []).append(eattrs["value"])
+                    elif ename == "designSpaceSegment":
+                        entry.setdefault("designSpaceSegments", []).append(
+                            {
+                                "tag": eattrs["tag"],
+                                "start": float(eattrs["start"]),
+                                "end": float(eattrs["end"]),
+                            }
+                        )
+                    elif ename == "childEntryConjunctive":
+                        entry["childEntryConjunctive"] = bool(
+                            safeEval(eattrs["value"])
+                        )
+                    elif ename == "childEntry":
+                        entry.setdefault("childEntryIndices", []).append(
+                            safeEval(eattrs["index"])
+                        )
+                    elif ename == "patchFormat":
+                        entry["patchFormat"] = safeEval(eattrs["value"])
+                    elif ename == "codePointsBias":
+                        entry["codePointsBias"] = safeEval(eattrs["value"])
+                    elif ename == "codePoints":
+                        entry["codePoints"] = [
+                            int(c) for c in eattrs["value"].split() if c
+                        ]
+                entries.append(entry)
+        return entries
+
+
 converterMapping = {
     # type		class
     "int8": Int8,
@@ -2040,6 +2317,7 @@ converterMapping = {
     "Angle": Angle,
     "BiasedAngle": BiasedAngle,
     "struct": Struct,
+    "MappingEntries": MappingEntriesConverter,
     "Offset": Table,
     "LOffset": LTable,
     "Offset24": Table24,

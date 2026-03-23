@@ -6397,4 +6397,96 @@ otData = [
             ("LOffset", "VarStore", None, "Version >= 0x00020000", ""),
         ],
     ),
+    #
+    # IFT - Incremental Font Transfer tables
+    # https://w3c.github.io/IFT/Overview.html
+    # Reference: https://github.com/googlefonts/fontations/blob/main/read-fonts/src/tables/ift.rs
+    #
+    (
+        "PatchMapFormat2",
+        [
+            (
+                "uint8",
+                "Format",
+                None,
+                None,
+                "Set to 2, identifies this as format 2.",
+            ),
+            ("uint24", "Reserved", None, None, "Not used, set to 0."),
+            (
+                "uint8",
+                "Flags",
+                None,
+                None,
+                "Bit 0: CffCharStringsOffset present. Bit 1: Cff2CharStringsOffset present.",
+            ),
+            (
+                "uint32",
+                "CompatibilityId",
+                4,
+                0,
+                "Unique ID to identify compatible patches (16 bytes).",
+            ),
+            (
+                "uint8",
+                "DefaultPatchFormat",
+                None,
+                None,
+                "Default format of patches linked to by urlTemplate.",
+            ),
+            (
+                "uint24",
+                "NumEntries",
+                None,
+                None,
+                "Number of entries encoded in this table.",
+            ),
+            (
+                "LOffset",
+                "MappingEntries",
+                None,
+                None,
+                "Offset to a MappingEntries sub-table.",
+            ),
+            (
+                "LOffset",
+                "EntryIdStringData",
+                None,
+                None,
+                "Offset to entry ID string data block. May be null (0).",
+            ),
+            (
+                "uint16",
+                "UrlTemplateLength",
+                None,
+                None,
+                "Length of the urlTemplate byte array.",
+            ),
+            (
+                "uint8",
+                "UrlTemplate",
+                "UrlTemplateLength",
+                0,
+                "URL Template bytes used to produce URL strings for each entry.",
+            ),
+            (
+                "uint32",
+                "CffCharStringsOffset",
+                None,
+                "Flags & 0x01",
+                "Offset from start of CFF table to CharStrings INDEX.",
+            ),
+            (
+                "uint32",
+                "Cff2CharStringsOffset",
+                None,
+                "Flags & 0x02",
+                "Offset from start of CFF2 table to CharStrings INDEX.",
+            ),
+        ],
+    ),
+    # 'MappingEntries' contains stateful, delta-encoded entry IDs.  The custom
+    # 'MappingEntriesConverter' is used to do a stateful parsing of all records.
+    ("MappingEntries", [("MappingEntries", "entries", None, None, "Array of MappingEntry records.")]),
+    ("EntryIdStringData", []),
 ]
