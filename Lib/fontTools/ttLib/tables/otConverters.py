@@ -39,6 +39,7 @@ import re
 import struct
 from typing import Optional
 import logging
+from enum import IntFlag
 
 
 log = logging.getLogger(__name__)
@@ -2022,37 +2023,21 @@ class CompositeMode(_UInt8Enum):
     enumClass = _CompositeMode
 
 
-class MappingEntryFormat:
-    def __init__(self, value):
-        self.value = value
-
-    @property
-    def has_subset_def(self):
-        return bool(self.value & 0x01)
-
-    @property
-    def has_child_entries(self):
-        return bool(self.value & 0x02)
-
-    @property
-    def has_entry_id(self):
-        return bool(self.value & 0x04)
-
-    @property
-    def has_patch_format(self):
-        return bool(self.value & 0x08)
-
-    @property
-    def has_code_points(self):
-        return bool(self.value & 0x30)
+class MappingEntryFormat(IntFlag):
+    HAS_SUBSET_DEF = 0x01
+    HAS_CHILD_ENTRIES = 0x02
+    HAS_ENTRY_ID = 0x04
+    HAS_PATCH_FORMAT = 0x08
+    # The code point bias is essentially a 2bit flag.
+    CODE_POINT_BIAS_BITS = 0x30
 
     @property
     def bias_present_u16(self):
-        return (self.value & 0x30) == 0x20
+        return (self & MappingEntryFormat.CODE_POINT_BIAS_BITS) == 0x20
 
     @property
     def bias_present_u24(self):
-        return (self.value & 0x30) == 0x30
+        return (self & MappingEntryFormat.CODE_POINT_BIAS_BITS) == 0x30
 
 
 
@@ -2072,7 +2057,7 @@ class MappingEntriesConverter(BaseConverter):
             formatFlags = MappingEntryFormat(reader.readUInt8())
             entry["formatFlags"] = formatFlags
 
-            if formatFlags.has_subset_def:
+            if formatFlags & MappingEntryFormat.HAS_SUBSET_DEF:
                 featureCount = reader.readUInt8() 
                 features = []
                 for _ in range(featureCount):
@@ -2088,7 +2073,7 @@ class MappingEntriesConverter(BaseConverter):
                     segments.append({"tag": segTag, "start": start, "end": end})
                 entry["designSpaceSegments"] = segments
 
-            if formatFlags.has_child_entries:
+            if formatFlags & MappingEntryFormat.HAS_CHILD_ENTRIES:
                 modeAndCount = reader.readUInt8() 
                 conjunctive = bool(modeAndCount & 0x80)
                 childCount = modeAndCount & 0x7F
@@ -2099,7 +2084,7 @@ class MappingEntriesConverter(BaseConverter):
                     childIndices.append(idx)
                 entry["childEntryIndices"] = childIndices
 
-            if formatFlags.has_entry_id:
+            if formatFlags & MappingEntryFormat.HAS_ENTRY_ID:
                 ids = []
                 while True:
                     # Per IFT spec, Entry IDs are delta-encoded. The value is a
@@ -2121,10 +2106,10 @@ class MappingEntriesConverter(BaseConverter):
                 entry["entryIds"] = [lastEntryId + 1]
                 lastEntryId = lastEntryId + 1
 
-            if formatFlags.has_patch_format:
+            if formatFlags & MappingEntryFormat.HAS_PATCH_FORMAT:
                 entry["patchFormat"] = reader.readUInt8()
 
-            if formatFlags.has_code_points:
+            if formatFlags & MappingEntryFormat.CODE_POINT_BIAS_BITS:
                 bias = 0
                 if formatFlags.bias_present_u24:
                     bias = reader.readUInt24()
@@ -2149,10 +2134,12 @@ class MappingEntriesConverter(BaseConverter):
         lastId = -1
 
         for entry in entries:
-            format_flags = entry.get("formatFlags", MappingEntryFormat(0))
-            writer.writeUInt8(format_flags.value)
+            # TODO: Automatically recompute formatFlags based on the contents of
+            # entry.
+            formatFlags = entry.get("formatFlags", MappingEntryFormat(0))
+            writer.writeUInt8(formatFlags.value)
 
-            if format_flags.has_subset_def:
+            if formatFlags & MappingEntryFormat.HAS_SUBSET_DEF:
                 features = entry.get("featureTags", [])
                 writer.writeUInt8(len(features))
                 for tag in features:
@@ -2164,7 +2151,7 @@ class MappingEntriesConverter(BaseConverter):
                     writer.writeLong(fl2fi(seg["start"], 16))
                     writer.writeLong(fl2fi(seg["end"], 16))
 
-            if format_flags.has_child_entries:
+            if formatFlags & MappingEntryFormat.HAS_CHILD_ENTRIES:
                 childIndices = entry.get("childEntryIndices", [])
                 conjunctive = entry.get("childEntryConjunctive", False)
                 modeAndCount = (len(childIndices) & 0x7F) | (
@@ -2174,7 +2161,7 @@ class MappingEntriesConverter(BaseConverter):
                 for idx in childIndices:
                     writer.writeUInt24(idx)
 
-            if format_flags.has_entry_id:
+            if formatFlags & MappingEntryFormat.HAS_ENTRY_ID:
                 ids = entry.get("entryIds", [])
                 for i, eid in enumerate(ids):
                     # Recreate the delta-encoded Entry ID. The delta is shifted
@@ -2188,14 +2175,14 @@ class MappingEntriesConverter(BaseConverter):
             else:
                 lastId += 1
 
-            if format_flags.has_patch_format:
+            if formatFlags & MappingEntryFormat.HAS_PATCH_FORMAT:
                 writer.writeUInt8(entry.get("patchFormat", 0))
 
-            if format_flags.has_code_points:
+            if formatFlags & MappingEntryFormat.CODE_POINT_BIAS_BITS:
                 bias = entry.get("codePointsBias", 0)
-                if format_flags.bias_present_u24:
+                if formatFlags.bias_present_u24:
                     writer.writeUInt24(bias)
-                elif format_flags.bias_present_u16:
+                elif formatFlags.bias_present_u16:
                     writer.writeUShort(bias)
                 codepoints = entry.get("codePoints", [])
                 writer.writeData(
