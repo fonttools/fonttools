@@ -41,7 +41,6 @@ from typing import Optional
 import logging
 from enum import IntFlag
 
-
 log = logging.getLogger(__name__)
 istuple = lambda t: isinstance(t, tuple)
 
@@ -1794,7 +1793,7 @@ class VarDataValue(BaseConverter):
         longWords = bool(wordCount & 0x8000)
         wordCount = wordCount & 0x7FFF
 
-        (writeBigArray, writeSmallArray) = {
+        writeBigArray, writeSmallArray = {
             False: (writer.writeShortArray, writer.writeInt8Array),
             True: (writer.writeLongArray, writer.writeShortArray),
         }[longWords]
@@ -2040,7 +2039,6 @@ class MappingEntryFormat(IntFlag):
         return (self & MappingEntryFormat.CODE_POINT_BIAS_BITS) == 0x30
 
 
-
 # Reference implementation:
 # https://github.com/googlefonts/fontations/blob/main/read-fonts/src/tables/ift.rs
 class MappingEntriesConverter(BaseConverter):
@@ -2058,29 +2056,29 @@ class MappingEntriesConverter(BaseConverter):
             entry["formatFlags"] = formatFlags
 
             if formatFlags & MappingEntryFormat.HAS_SUBSET_DEF:
-                featureCount = reader.readUInt8() 
+                featureCount = reader.readUInt8()
                 features = []
                 for _ in range(featureCount):
-                    tag = reader.readTag() 
+                    tag = reader.readTag()
                     features.append(tag)
                 entry["featureTags"] = features
-                designSpaceCount = reader.readUShort() 
+                designSpaceCount = reader.readUShort()
                 segments = []
                 for _ in range(designSpaceCount):
-                    segTag = reader.readTag() 
-                    start = fi2fl(reader.readLong(), 16) 
-                    end = fi2fl(reader.readLong(), 16) 
+                    segTag = reader.readTag()
+                    start = fi2fl(reader.readLong(), 16)
+                    end = fi2fl(reader.readLong(), 16)
                     segments.append({"tag": segTag, "start": start, "end": end})
                 entry["designSpaceSegments"] = segments
 
             if formatFlags & MappingEntryFormat.HAS_CHILD_ENTRIES:
-                modeAndCount = reader.readUInt8() 
+                modeAndCount = reader.readUInt8()
                 conjunctive = bool(modeAndCount & 0x80)
                 childCount = modeAndCount & 0x7F
                 entry["childEntryConjunctive"] = conjunctive
                 childIndices = []
                 for _ in range(childCount):
-                    idx = reader.readUInt24() 
+                    idx = reader.readUInt24()
                     childIndices.append(idx)
                 entry["childEntryIndices"] = childIndices
 
@@ -2154,9 +2152,7 @@ class MappingEntriesConverter(BaseConverter):
             if formatFlags & MappingEntryFormat.HAS_CHILD_ENTRIES:
                 childIndices = entry.get("childEntryIndices", [])
                 conjunctive = entry.get("childEntryConjunctive", False)
-                modeAndCount = (len(childIndices) & 0x7F) | (
-                    0x80 if conjunctive else 0
-                )
+                modeAndCount = (len(childIndices) & 0x7F) | (0x80 if conjunctive else 0)
                 writer.writeUInt8(modeAndCount)
                 for idx in childIndices:
                     writer.writeUInt24(idx)
@@ -2185,9 +2181,7 @@ class MappingEntriesConverter(BaseConverter):
                 elif formatFlags.bias_present_u16:
                     writer.writeUShort(bias)
                 codepoints = entry.get("codePoints", [])
-                writer.writeData(
-                    sbsEncode([c - bias for c in codepoints if c >= bias])
-                )
+                writer.writeData(sbsEncode([c - bias for c in codepoints if c >= bias]))
 
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         for entry in value:
@@ -2262,9 +2256,7 @@ class MappingEntriesConverter(BaseConverter):
                             }
                         )
                     elif ename == "childEntryConjunctive":
-                        entry["childEntryConjunctive"] = bool(
-                            safeEval(eattrs["value"])
-                        )
+                        entry["childEntryConjunctive"] = bool(safeEval(eattrs["value"]))
                     elif ename == "childEntry":
                         entry.setdefault("childEntryIndices", []).append(
                             safeEval(eattrs["index"])

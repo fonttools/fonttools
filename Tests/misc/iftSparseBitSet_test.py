@@ -1,6 +1,7 @@
 import unittest
 from fontTools.misc.iftSparseBitSet import encode, decode, SparseBitSetDecodeError
 
+
 class IftSparseBitSetTest(unittest.TestCase):
     def test_roundtrip_empty_success(self):
         values = set()
@@ -119,6 +120,7 @@ class IftSparseBitSetTest(unittest.TestCase):
         decoded, consumed = decode(encoded)
         self.assertEqual(decoded, values)
         self.assertEqual(consumed, len(encoded))
+
 
 if __name__ == "__main__":
     unittest.main()

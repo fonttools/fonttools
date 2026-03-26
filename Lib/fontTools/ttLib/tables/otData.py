@@ -6487,6 +6487,9 @@ otData = [
     ),
     # 'MappingEntries' contains stateful, delta-encoded entry IDs.  The custom
     # 'MappingEntriesConverter' is used to do a stateful parsing of all records.
-    ("MappingEntries", [("MappingEntries", "entries", None, None, "Array of MappingEntry records.")]),
+    (
+        "MappingEntries",
+        [("MappingEntries", "entries", None, None, "Array of MappingEntry records.")],
+    ),
     ("EntryIdStringData", []),
 ]

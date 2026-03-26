@@ -5,6 +5,7 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
+
 import copy
 from enum import IntEnum
 from functools import reduce
@@ -2585,6 +2586,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 # ---------------------------------------------------------------------------
 # IFT - Incremental Font Transfer tables
 # ---------------------------------------------------------------------------
+
 
 class EntryIdStringData(BaseTable):
     """IFT entry ID string data block (raw bytes pool)."""

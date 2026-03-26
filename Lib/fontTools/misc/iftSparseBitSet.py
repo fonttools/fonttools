@@ -19,7 +19,9 @@ class SparseBitSetDecodeError(Exception):
     pass
 
 
-def decode(data: bytes, bias: int = 0, maxValue: int = 0xFFFFFFFF) -> Tuple[Set[int], int]:
+def decode(
+    data: bytes, bias: int = 0, maxValue: int = 0xFFFFFFFF
+) -> Tuple[Set[int], int]:
     """Decode a sparse bit set from binary data.
 
     Args:
@@ -43,7 +45,10 @@ def decode(data: bytes, bias: int = 0, maxValue: int = 0xFFFFFFFF) -> Tuple[Set[
 
     return _decodeImpl(data, branchFactor, height, bias, maxValue)
 
-def _decodeImpl(data: bytes, branchFactor: int, height: int, bias: int, maxValue: int) -> Tuple[Set[int], int]:
+
+def _decodeImpl(
+    data: bytes, branchFactor: int, height: int, bias: int, maxValue: int
+) -> Tuple[Set[int], int]:
     if height == 0:
         # 1 byte was used for the header.
         return (set(), 1)
@@ -182,7 +187,9 @@ def _encodeWithBf(valueSet: Set[int], branchFactor: int, height: int) -> bytes:
     valuesSorted = sorted(valueSet)
 
     def rangeCount(lo: int, hi: int) -> int:
-        return bisect.bisect_right(valuesSorted, hi) - bisect.bisect_left(valuesSorted, lo)
+        return bisect.bisect_right(valuesSorted, hi) - bisect.bisect_left(
+            valuesSorted, lo
+        )
 
     # Emit nodes BFS order (root to leaves).
     # Queue entries: (nodeIndex, depthFromRoot, rangeStart, rangeEnd)
@@ -194,12 +201,17 @@ def _encodeWithBf(valueSet: Set[int], branchFactor: int, height: int) -> bytes:
         nodeIndex, depth, rangeStart, rangeEnd = queue.popleft()
         layerIdx = height - 1 - depth  # layers[0]=leaves, layers[height-1]=root
 
-        bitmask = layers[layerIdx].get(nodeIndex, 0) if 0 <= layerIdx < len(layers) else 0
+        bitmask = (
+            layers[layerIdx].get(nodeIndex, 0) if 0 <= layerIdx < len(layers) else 0
+        )
 
         # Zero-node optimization: if entire range is filled on an INTERNAL node,
         # write 0 and skip children.  At leaf level we always write the explicit
         # bitmask so the encoding matches the reference.
-        if depth < height - 1 and rangeCount(rangeStart, rangeEnd) == rangeEnd - rangeStart + 1:
+        if (
+            depth < height - 1
+            and rangeCount(rangeStart, rangeEnd) == rangeEnd - rangeStart + 1
+        ):
             stream.write(0)
             continue
 
@@ -236,7 +248,7 @@ class _InputBitStream:
         self.data = data
         self.branchFactor = branchFactor
         self.byteIndex = 1  # skip the header byte
-        self.subIndex = 0   # bit offset within current byte (for bf=2,4)
+        self.subIndex = 0  # bit offset within current byte (for bf=2,4)
 
     def next(self) -> Optional[int]:
         if self.branchFactor in (2, 4):
