@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
+from fontTools.annotations import GlyphSetMapping, Point
 from fontTools.cffLib.specializer import commandsToProgram, specializeCommands
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.misc.roundTools import otRound, roundFunc
@@ -25,33 +26,33 @@ class T2CharStringPen(BasePen):
     def __init__(
         self,
         width: float | None,
-        glyphSet: Dict[str, Any] | None,
+        glyphSet: GlyphSetMapping | None,
         roundTolerance: float = 0.5,
         CFF2: bool = False,
     ) -> None:
-        super(T2CharStringPen, self).__init__(glyphSet)
+        super().__init__(glyphSet)
         self.round = roundFunc(roundTolerance)
         self._CFF2 = CFF2
         self._width = width
-        self._commands: List[Tuple[str | bytes, List[float]]] = []
+        self._commands: list[tuple[str | bytes, list[float]]] = []
         self._p0 = (0, 0)
 
-    def _p(self, pt: Tuple[float, float]) -> List[float]:
+    def _p(self, pt: Point) -> list[float]:
         p0 = self._p0
         pt = self._p0 = (self.round(pt[0]), self.round(pt[1]))
         return [pt[0] - p0[0], pt[1] - p0[1]]
 
-    def _moveTo(self, pt: Tuple[float, float]) -> None:
+    def _moveTo(self, pt: Point) -> None:
         self._commands.append(("rmoveto", self._p(pt)))
 
-    def _lineTo(self, pt: Tuple[float, float]) -> None:
+    def _lineTo(self, pt: Point) -> None:
         self._commands.append(("rlineto", self._p(pt)))
 
     def _curveToOne(
         self,
-        pt1: Tuple[float, float],
-        pt2: Tuple[float, float],
-        pt3: Tuple[float, float],
+        pt1: Point,
+        pt2: Point,
+        pt3: Point,
     ) -> None:
         _p = self._p
         self._commands.append(("rrcurveto", _p(pt1) + _p(pt2) + _p(pt3)))
@@ -64,8 +65,8 @@ class T2CharStringPen(BasePen):
 
     def getCharString(
         self,
-        private: Dict | None = None,
-        globalSubrs: List | None = None,
+        private: dict | None = None,
+        globalSubrs: list | None = None,
         optimize: bool = True,
     ) -> T2CharString:
         commands = self._commands
