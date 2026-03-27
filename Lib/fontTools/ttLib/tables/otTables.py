@@ -5,6 +5,7 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
+
 import copy
 from enum import IntEnum
 from functools import reduce
@@ -2139,6 +2140,7 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 # subclass for each alternate field name.
 #
 _equivalents = {
+    "PatchMap": ("IFT ", "IFTX"),
     "MarkArray": ("Mark1Array",),
     "LangSys": ("DefaultLangSys",),
     "Coverage": (
@@ -2579,6 +2581,34 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 
 
 # End of OverFlow logic
+
+
+# ---------------------------------------------------------------------------
+# IFT - Incremental Font Transfer tables
+# ---------------------------------------------------------------------------
+
+
+class EntryIdStringData(BaseTable):
+    """IFT entry ID string data block (raw bytes pool)."""
+
+    def decompile(self, reader, font):
+        # This subtable is reached via an LOffset, so the reader's data buffer
+        # is already scoped to the bytes starting at the subtable's offset within
+        # the IFT table blob.  Reading to the end of that buffer is correct; the
+        # actual bytes consumed are determined by the entryIdStringLength fields
+        # in the MappingEntries records.
+        self.data = bytes(reader.data[reader.pos :])
+
+    def compile(self, writer, font):
+        writer.writeData(self.data)
+
+    def toXML2(self, xmlWriter, font):
+        xmlWriter.simpletag("data", value=self.data.hex())
+        xmlWriter.newline()
+
+    def fromXML(self, name, attrs, content, font):
+        if name == "data":
+            self.data = bytes.fromhex(attrs["value"])
 
 
 def _buildClasses():
