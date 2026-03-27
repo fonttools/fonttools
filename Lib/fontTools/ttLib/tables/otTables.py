@@ -2619,7 +2619,7 @@ def _buildClasses():
     namespace = globals()
 
     # populate module with classes
-    for name, table in otData:
+    for name, fields in otData:
         baseClass = BaseTable
         m = formatPat.match(name)
         if m:
@@ -2628,7 +2628,7 @@ def _buildClasses():
             # the first row of a format-switching otData table describes the Format;
             # the first column defines the type of the Format field.
             # Currently this can be either 'uint16' or 'uint8'.
-            formatType = table[0][0]
+            formatType = fields[0].type
             baseClass = getFormatSwitchingBaseTableClass(formatType)
         if name not in namespace:
             # the class doesn't exist yet, so the base implementation is used.
@@ -2702,7 +2702,7 @@ def _buildClasses():
     # add converters to classes
     from .otConverters import buildConverters
 
-    for name, table in otData:
+    for name, fields in otData:
         m = formatPat.match(name)
         if m:
             # XxxFormatN subtable, add converter to "base" table
@@ -2712,13 +2712,13 @@ def _buildClasses():
             if not hasattr(cls, "converters"):
                 cls.converters = {}
                 cls.convertersByName = {}
-            converters, convertersByName = buildConverters(table[1:], namespace)
+            converters, convertersByName = buildConverters(fields[1:], namespace)
             cls.converters[format] = converters
             cls.convertersByName[format] = convertersByName
             # XXX Add staticSize?
         else:
             cls = namespace[name]
-            cls.converters, cls.convertersByName = buildConverters(table, namespace)
+            cls.converters, cls.convertersByName = buildConverters(fields, namespace)
             # XXX Add staticSize?
 
 
