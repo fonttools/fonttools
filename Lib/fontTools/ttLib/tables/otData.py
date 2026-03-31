@@ -3147,6 +3147,7 @@ otData = [
             FieldSpec(
                 "VarIdxMapValue",
                 "mapping",
+                repeat="",
                 aux=0,
                 description="Array of compressed data",
             ),
@@ -3163,6 +3164,7 @@ otData = [
             FieldSpec(
                 "VarIdxMapValue",
                 "mapping",
+                repeat="",
                 aux=0,
                 description="Array of compressed data",
             ),
@@ -3179,6 +3181,7 @@ otData = [
             FieldSpec(
                 "VarIdxMapValue",
                 "mapping",
+                repeat="",
                 aux=0,
                 description="Array of compressed data",
             ),
@@ -3218,7 +3221,7 @@ otData = [
             FieldSpec("uint8", "Format", description="Set to 1."),
             FieldSpec("uint16", "VarRegionCount"),
             FieldSpec("uint16", "VarRegionIndex", repeat="VarRegionCount", aux=0),
-            FieldSpec("TupleList", "Item", aux=0),
+            FieldSpec("TupleList", "Item", repeat="", aux=0),
         ],
     ),
     (
@@ -3249,13 +3252,13 @@ otData = [
     (
         "AxisIndicesList",
         [
-            FieldSpec("TupleList", "Item", aux=0),
+            FieldSpec("TupleList", "Item", repeat="", aux=0),
         ],
     ),
     (
         "VarCompositeGlyphs",
         [
-            FieldSpec("VarCompositeGlyphList", "VarCompositeGlyph"),
+            FieldSpec("VarCompositeGlyphList", "VarCompositeGlyph", repeat=""),
         ],
     ),
     # Glyph advance variations
