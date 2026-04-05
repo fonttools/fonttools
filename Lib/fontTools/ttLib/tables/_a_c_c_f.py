@@ -170,11 +170,11 @@ _V1_OFF_IMAGE_DATA = HEADER_SIZE_V1  # 48112
 
 
 def _decode_palette(palette_bytes: bytes) -> List[Tuple[int, int, int]]:
-    """Decode packed 21-bit-per-entry RGB palette to a list of (R,G,B) tuples.
+    """Decode packed 21-bit-per-entry BGR palette to a list of (R,G,B) tuples.
 
-    Each 21-bit entry stores 7-bit R, 7-bit G, 7-bit B in MSB-first order
+    Each 21-bit entry stores 7-bit B, 7-bit G, 7-bit R in MSB-first order
     within the big-endian bit-stream.  Values are scaled ×2 (i.e. stored as
-    ``r7 << 1``) so that they map directly to the 0-254 range of a uint8.
+    ``b7 << 1``) so that they map directly to the 0-254 range of a uint8.
     """
     n = len(palette_bytes) * 8 // 21
     if n == 0:
@@ -191,19 +191,20 @@ def _decode_palette(palette_bytes: bytes) -> List[Tuple[int, int, int]]:
         if shift < 0:
             break
         entry = (bits >> shift) & 0x1FFFFF  # 21-bit value
-        r7 = (entry >> 14) & 0x7F
+        b7 = (entry >> 14) & 0x7F  # MSBs = Blue
         g7 = (entry >> 7) & 0x7F
-        b7 = entry & 0x7F
+        r7 = entry & 0x7F          # LSBs = Red
         # Scale 7-bit (0-127) → 8-bit (0-254); max maps to 254 (close to 255).
         result.append((r7 << 1, g7 << 1, b7 << 1))
     return result
 
 
 def _encode_palette(palette: List[Tuple[int, int, int]]) -> bytes:
-    """Encode a list of (R,G,B) 8-bit tuples to the packed 21-bit format.
+    """Encode a list of (R,G,B) 8-bit tuples to the packed 21-bit BGR format.
 
     The inverse of :func:`_decode_palette`.  Values are shifted right by 1
-    before packing (recovering the 7-bit representation).
+    before packing (recovering the 7-bit representation); B is placed in the
+    MSBs and R in the LSBs.
     """
     n = len(palette)
     total_bits = n * 21
@@ -214,7 +215,7 @@ def _encode_palette(palette: List[Tuple[int, int, int]]) -> bytes:
         r7 = (r >> 1) & 0x7F
         g7 = (g >> 1) & 0x7F
         b7 = (b >> 1) & 0x7F
-        entry = (r7 << 14) | (g7 << 7) | b7
+        entry = (b7 << 14) | (g7 << 7) | r7  # Apple packs BGR: B in MSBs, R in LSBs
         shift = total_bit_len - (i + 1) * 21
         bits |= entry << shift
 

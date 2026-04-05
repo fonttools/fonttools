@@ -130,13 +130,13 @@ class PaletteCodecTest(unittest.TestCase):
         self.assertEqual(_encode_palette([]), b"")
 
     def test_known_bit_pattern(self):
-        """Verify bit layout: entry 0 from bytes b0,b1,b2."""
-        # R=0x7F, G=0x3F, B=0x1F  (7-bit values)
-        # stored as R=0xFE, G=0x7E, B=0x3E  (×2)
-        # 21-bit entry = 0b 1111111 0111111 0011111
-        #              = 0x7F3F1F? Let's compute:
-        # entry = (0x7F << 14) | (0x3F << 7) | 0x1F
-        #       = 0x1FC000 | 0x1F80 | 0x1F = 0x1FDF9F
+        """Verify bit layout: entry 0 from bytes b0,b1,b2.
+
+        Apple packs BGR in MSB-first order: B in bits[20:14], G in bits[13:7],
+        R in bits[6:0].
+        """
+        # B=0x7F, G=0x3F, R=0x1F  (7-bit values → ×2 = 0xFE, 0x7E, 0x3E)
+        # 21-bit entry = (0x7F << 14) | (0x3F << 7) | 0x1F = 0x1FDF9F
         entry = (0x7F << 14) | (0x3F << 7) | 0x1F
         # Pack into 3 bytes big-endian (only 21 bits needed)
         # 3 bytes = 24 bits; entry occupies bits 3..23 (0=MSB of byte 0)
@@ -145,9 +145,9 @@ class PaletteCodecTest(unittest.TestCase):
         decoded = _decode_palette(raw)
         self.assertTrue(len(decoded) >= 1)
         r, g, b = decoded[0]
-        self.assertAlmostEqual(r, 0x7F * 2, delta=2)
-        self.assertAlmostEqual(g, 0x3F * 2, delta=2)
-        self.assertAlmostEqual(b, 0x1F * 2, delta=2)
+        self.assertAlmostEqual(r, 0x1F * 2, delta=2)  # R from LSBs
+        self.assertAlmostEqual(g, 0x3F * 2, delta=2)  # G from mid-bits
+        self.assertAlmostEqual(b, 0x7F * 2, delta=2)  # B from MSBs
 
 
 # ── image codec ──────────────────────────────────────────────────────────────
