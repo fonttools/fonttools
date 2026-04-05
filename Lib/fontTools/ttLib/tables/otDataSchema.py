@@ -2,12 +2,10 @@
 used to define the schema of OpenType tables in otData.py.
 """
 
-from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
 
-@dataclass
-class FieldSpec:
+class FieldSpec(NamedTuple):
     """Represents a single field in an OpenType table schema.
 
     These are defined in `otData.py` and used to construct converters in

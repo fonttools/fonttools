@@ -80,7 +80,9 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
             else:
                 converterClass = eval(spec.type, tableNamespace, converterMapping)
 
-        conv = converterClass(spec.name, spec.repeat, spec.aux, description=spec.description)
+        conv = converterClass(
+            spec.name, spec.repeat, spec.aux, description=spec.description
+        )
 
         if conv.tableClass:
             # A "template" such as OffsetTo(AType) knows the table class already
@@ -98,12 +100,16 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
             # also create reverse mapping
             for t in conv.lookupTypes.values():
                 for cls in t.values():
-                    convertersByName[cls.__name__] = Table(spec.name, spec.repeat, spec.aux, cls)
+                    convertersByName[cls.__name__] = Table(
+                        spec.name, spec.repeat, spec.aux, cls
+                    )
         if spec.name == "FeatureParams":
             conv.featureParamTypes = tableNamespace["featureParamTypes"]
             conv.defaultFeatureParams = tableNamespace["FeatureParams"]
             for cls in conv.featureParamTypes.values():
-                convertersByName[cls.__name__] = Table(spec.name, spec.repeat, spec.aux, cls)
+                convertersByName[cls.__name__] = Table(
+                    spec.name, spec.repeat, spec.aux, cls
+                )
         converters.append(conv)
         assert spec.name not in convertersByName, spec.name
         convertersByName[spec.name] = conv

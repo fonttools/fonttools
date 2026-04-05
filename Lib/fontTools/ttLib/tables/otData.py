@@ -54,9 +54,7 @@ otData = [
     (
         "LangSysRecord",
         [
-            FieldSpec(
-                "Tag", "LangSysTag", description="4-byte LangSysTag identifier"
-            ),
+            FieldSpec("Tag", "LangSysTag", description="4-byte LangSysTag identifier"),
             FieldSpec(
                 "Offset",
                 "LangSys",
@@ -189,9 +187,7 @@ otData = [
                 "FeatUITooltipTextNameID",
                 description="Feature UI tooltip text NameID.",
             ),
-            FieldSpec(
-                "NameID", "SampleTextNameID", description="Sample text NameID."
-            ),
+            FieldSpec("NameID", "SampleTextNameID", description="Sample text NameID."),
             FieldSpec(
                 "uint16",
                 "NumNamedParameters",
@@ -483,9 +479,7 @@ otData = [
                 "ValueFormat2",
                 description="Defines the types of data in ValueRecord2-for the second glyph in the pair -may be zero (0)",
             ),
-            FieldSpec(
-                "uint16", "PairSetCount", description="Number of PairSet tables"
-            ),
+            FieldSpec("uint16", "PairSetCount", description="Number of PairSet tables"),
             FieldSpec(
                 "Offset",
                 "PairSet",
@@ -879,9 +873,7 @@ otData = [
     (
         "PosRuleSet",
         [
-            FieldSpec(
-                "uint16", "PosRuleCount", description="Number of PosRule tables"
-            ),
+            FieldSpec("uint16", "PosRuleCount", description="Number of PosRule tables"),
             FieldSpec(
                 "Offset",
                 "PosRule",
@@ -1626,9 +1618,7 @@ otData = [
     (
         "SubRuleSet",
         [
-            FieldSpec(
-                "uint16", "SubRuleCount", description="Number of SubRule tables"
-            ),
+            FieldSpec("uint16", "SubRuleCount", description="Number of SubRule tables"),
             FieldSpec(
                 "Offset",
                 "SubRule",
@@ -3054,9 +3044,7 @@ otData = [
         "ConditionTableFormat5",
         [
             FieldSpec("uint16", "Format", description="Format, = 5"),
-            FieldSpec(
-                "Offset24", "ConditionTable", description="Condition to negate."
-            ),
+            FieldSpec("Offset24", "ConditionTable", description="Condition to negate."),
         ],
     ),
     (
@@ -4164,9 +4152,7 @@ otData = [
                 "Version",
                 description="Version of the feat table-initially set to 0x00010000.",
             ),
-            FieldSpec(
-                "FeatureNames", "FeatureNames", description="The feature names."
-            ),
+            FieldSpec("FeatureNames", "FeatureNames", description="The feature names."),
         ],
     ),
     (
@@ -4295,9 +4281,7 @@ otData = [
                 "Version",
                 description="Version number of the ligature caret table (0x00010000 for the initial version).",
             ),
-            FieldSpec(
-                "struct", "LigatureCarets", description="Ligature carets table."
-            ),
+            FieldSpec("struct", "LigatureCarets", description="Ligature carets table."),
         ],
     ),
     (
@@ -5006,9 +4990,7 @@ otData = [
     (
         "LayerList",
         [
-            FieldSpec(
-                "uint32", "LayerCount", description="Number of Version-1 Layers"
-            ),
+            FieldSpec("uint32", "LayerCount", description="Number of Version-1 Layers"),
             FieldSpec(
                 "LOffset",
                 "Paint",
@@ -5045,9 +5027,7 @@ otData = [
             FieldSpec(
                 "uint16", "EndGlyphID", description="Last glyph ID in the range."
             ),
-            FieldSpec(
-                "Offset24", "ClipBox", description="Offset to a ClipBox table."
-            ),
+            FieldSpec("Offset24", "ClipBox", description="Offset to a ClipBox table."),
         ],
     ),
     (
@@ -5220,9 +5200,7 @@ otData = [
                 "NumLayers",
                 description="Number of offsets to Paint to read from LayerList.",
             ),
-            FieldSpec(
-                "uint32", "FirstLayerIndex", description="Index into LayerList."
-            ),
+            FieldSpec("uint32", "FirstLayerIndex", description="Index into LayerList."),
         ],
     ),
     # PaintSolid
