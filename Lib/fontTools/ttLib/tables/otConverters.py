@@ -18,6 +18,7 @@ from .otBase import (
     OTTableWriter,
     ValueRecordFactory,
 )
+from .otDataSchema import FieldSpec
 from .otTables import (
     lookupTypes,
     VarCompositeGlyph,
@@ -45,67 +46,73 @@ log = logging.getLogger(__name__)
 istuple = lambda t: isinstance(t, tuple)
 
 
-def buildConverters(tableSpec, tableNamespace):
+def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
     """Given a table spec from otData.py, build a converter object for each
     field of the table. This is called for each table in otData.py, and
     the results are assigned to the corresponding class in otTables.py."""
     converters = []
     convertersByName = {}
-    for tp, name, repeat, aux, descr in tableSpec:
-        tableName = name
-        if name.startswith("ValueFormat"):
-            assert tp == "uint16"
+    for spec in tableSpec:
+        tableName = spec.name
+        if spec.name.startswith("ValueFormat"):
+            assert spec.type == "uint16"
             converterClass = ValueFormat
-        elif name.endswith("Count") or name in ("StructLength", "MorphType"):
+        elif spec.name.endswith("Count") or spec.name in ("StructLength", "MorphType"):
             converterClass = {
                 "uint8": ComputedUInt8,
                 "uint16": ComputedUShort,
                 "uint32": ComputedULong,
-            }[tp]
-        elif name == "SubTable":
+            }[spec.type]
+        elif spec.name == "SubTable":
             converterClass = SubTable
-        elif name == "ExtSubTable":
+        elif spec.name == "ExtSubTable":
             converterClass = ExtSubTable
-        elif name == "SubStruct":
+        elif spec.name == "SubStruct":
             converterClass = SubStruct
-        elif name == "FeatureParams":
+        elif spec.name == "FeatureParams":
             converterClass = FeatureParams
-        elif name in ("CIDGlyphMapping", "GlyphCIDMapping"):
+        elif spec.name in ("CIDGlyphMapping", "GlyphCIDMapping"):
             converterClass = StructWithLength
         else:
-            if not tp in converterMapping and "(" not in tp:
-                tableName = tp
+            if not spec.type in converterMapping and "(" not in spec.type:
+                tableName = spec.type
                 converterClass = Struct
             else:
-                converterClass = eval(tp, tableNamespace, converterMapping)
+                converterClass = eval(spec.type, tableNamespace, converterMapping)
 
-        conv = converterClass(name, repeat, aux, description=descr)
+        conv = converterClass(
+            spec.name, spec.repeat, spec.aux, description=spec.description
+        )
 
         if conv.tableClass:
             # A "template" such as OffsetTo(AType) knows the table class already
             tableClass = conv.tableClass
-        elif tp in ("MortChain", "MortSubtable", "MorxChain"):
-            tableClass = tableNamespace.get(tp)
+        elif spec.type in ("MortChain", "MortSubtable", "MorxChain"):
+            tableClass = tableNamespace.get(spec.type)
         else:
             tableClass = tableNamespace.get(tableName)
 
         if not conv.tableClass:
             conv.tableClass = tableClass
 
-        if name in ["SubTable", "ExtSubTable", "SubStruct"]:
+        if spec.name in ["SubTable", "ExtSubTable", "SubStruct"]:
             conv.lookupTypes = tableNamespace["lookupTypes"]
             # also create reverse mapping
             for t in conv.lookupTypes.values():
                 for cls in t.values():
-                    convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
-        if name == "FeatureParams":
+                    convertersByName[cls.__name__] = Table(
+                        spec.name, spec.repeat, spec.aux, cls
+                    )
+        if spec.name == "FeatureParams":
             conv.featureParamTypes = tableNamespace["featureParamTypes"]
             conv.defaultFeatureParams = tableNamespace["FeatureParams"]
             for cls in conv.featureParamTypes.values():
-                convertersByName[cls.__name__] = Table(name, repeat, aux, cls)
+                convertersByName[cls.__name__] = Table(
+                    spec.name, spec.repeat, spec.aux, cls
+                )
         converters.append(conv)
-        assert name not in convertersByName, name
-        convertersByName[name] = conv
+        assert spec.name not in convertersByName, spec.name
+        convertersByName[spec.name] = conv
     return converters, convertersByName
 
 
