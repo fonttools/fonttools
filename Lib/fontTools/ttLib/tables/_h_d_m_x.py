@@ -18,7 +18,10 @@ class _GlyphnamedList(Mapping):
         self._map = dict(reverseGlyphOrder)
 
     def __getitem__(self, k):
-        return self._array[self._map[k]]
+        idx = self._map[k]
+        if idx >= len(self._array):
+            return 0
+        return self._array[idx]
 
     def __len__(self):
         return len(self._map)
