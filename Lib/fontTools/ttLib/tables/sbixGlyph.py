@@ -56,7 +56,7 @@ class Glyph(object):
 
     def is_reference_type(self):
         """Returns True if this glyph is a reference to another glyph's image data."""
-        return self.graphicType == "dupe" or self.graphicType == "flip"
+        return self.graphicType in ("dupe", "flip", "iden")
 
     def decompile(self, ttFont):
         self.glyphName = ttFont.getGlyphName(self.gid)
@@ -77,8 +77,13 @@ class Glyph(object):
 
             if self.is_reference_type():
                 # this glyph is a reference to another glyph's image data
-                (gid,) = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
-                self.referenceGlyphName = ttFont.getGlyphName(gid)
+                if self.graphicType == "iden":
+                    self.referenceGlyphName = self.rawdata[
+                        sbixGlyphHeaderFormatSize:
+                    ].decode("ascii")
+                else:
+                    (gid,) = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
+                    self.referenceGlyphName = ttFont.getGlyphName(gid)
             else:
                 self.imageData = self.rawdata[sbixGlyphHeaderFormatSize:]
                 self.referenceGlyphName = None
@@ -99,7 +104,10 @@ class Glyph(object):
         else:
             rawdata = sstruct.pack(sbixGlyphHeaderFormat, self)
             if self.is_reference_type():
-                rawdata += struct.pack(">H", ttFont.getGlyphID(self.referenceGlyphName))
+                if self.graphicType == "iden":
+                    rawdata += self.referenceGlyphName.encode("ascii")
+                else:
+                    rawdata += struct.pack(">H", ttFont.getGlyphID(self.referenceGlyphName))
             else:
                 assert self.imageData is not None
                 rawdata += self.imageData
@@ -139,7 +147,10 @@ class Glyph(object):
             # in this case imageData contains the glyph id of the reference glyph
             # get glyph id from glyphname
             glyphname = safeEval("'''" + attrs["glyphname"] + "'''")
-            self.imageData = struct.pack(">H", ttFont.getGlyphID(glyphname))
+            if self.graphicType == "iden":
+                self.imageData = glyphname.encode("ascii")
+            else:
+                self.imageData = struct.pack(">H", ttFont.getGlyphID(glyphname))
             self.referenceGlyphName = glyphname
         elif name == "hexdata":
             self.imageData = readHex(content)
