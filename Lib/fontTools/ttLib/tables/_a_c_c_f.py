@@ -163,7 +163,7 @@ _V1_NUM_TIER_SLOTS = 4
 _V1_OFF_TIER_RANGE_META = _V1_LUT_BASE + _V1_NUM_TIER_SLOTS * _V1_LUT_BYTES  # 16040
 
 # Glyph-offset table and image data base for v1.
-_V1_OFF_GLYPH_OFFSET_TABLE = 16104   # = _V1_OFF_TIER_RANGE_META + 64
+_V1_OFF_GLYPH_OFFSET_TABLE = 16104  # = _V1_OFF_TIER_RANGE_META + 64
 _V1_OFF_IMAGE_DATA = HEADER_SIZE_V1  # 48112
 
 # ── palette helpers ─────────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ def _decode_palette(palette_bytes: bytes) -> List[Tuple[int, int, int]]:
         entry = (bits >> shift) & 0x1FFFFF  # 21-bit value
         b7 = (entry >> 14) & 0x7F  # MSBs = Blue
         g7 = (entry >> 7) & 0x7F
-        r7 = entry & 0x7F          # LSBs = Red
+        r7 = entry & 0x7F  # LSBs = Red
         # Scale 7-bit (0-127) → 8-bit (0-254); max maps to 254 (close to 255).
         result.append((r7 << 1, g7 << 1, b7 << 1))
     return result
@@ -255,16 +255,25 @@ def decode_image_record(record: bytes) -> bytes:
     if len(record) < 40:
         raise ValueError("Image record too short")
 
-    (width, height, palette_off, palette_size_bytes,
-     bits_per_idx, runs_off, _reserved0, _reserved1,
-     bitstream_off, bitstream_size) = struct.unpack_from("<IIIIIIIIII", record, 0)
+    (
+        width,
+        height,
+        palette_off,
+        palette_size_bytes,
+        bits_per_idx,
+        runs_off,
+        _reserved0,
+        _reserved1,
+        bitstream_off,
+        bitstream_size,
+    ) = struct.unpack_from("<IIIIIIIIII", record, 0)
 
     # ── palette ──
-    palette_raw = record[palette_off: palette_off + palette_size_bytes]
+    palette_raw = record[palette_off : palette_off + palette_size_bytes]
     palette = _decode_palette(palette_raw)
 
     # ── bit-stream ──
-    bitstream = record[bitstream_off: bitstream_off + bitstream_size]
+    bitstream = record[bitstream_off : bitstream_off + bitstream_size]
 
     # ── output buffer ──
     output = bytearray(4 * width * height)
@@ -282,7 +291,7 @@ def decode_image_record(record: bytes) -> bytes:
         if control & 0x80:
             # Mode B: per-pixel alpha
             count = control & 0x7F
-            alphas = record[run_pos + 3: run_pos + 3 + count]
+            alphas = record[run_pos + 3 : run_pos + 3 + count]
             run_pos += 3 + count
         else:
             # Mode A: uniform alpha for all pixels in this run
@@ -340,8 +349,8 @@ def encode_image_record(rgba: bytes, width: int, height: int) -> bytes:
     freq: Dict[Tuple[int, int, int], int] = {}
     for i in range(total):
         if rgba[i * 4 + 3] == 0:
-            continue        # transparent pixels have no colour in the output
-        r = rgba[i * 4    ] & 0xFE
+            continue  # transparent pixels have no colour in the output
+        r = rgba[i * 4] & 0xFE
         g = rgba[i * 4 + 1] & 0xFE
         b = rgba[i * 4 + 2] & 0xFE
         c = (r, g, b)
@@ -360,8 +369,8 @@ def encode_image_record(rgba: bytes, width: int, height: int) -> bytes:
     for i in range(total):
         a = rgba[i * 4 + 3]
         if a == 0:
-            continue        # skip fully transparent pixels
-        r = rgba[i * 4    ] & 0xFE
+            continue  # skip fully transparent pixels
+        r = rgba[i * 4] & 0xFE
         g = rgba[i * 4 + 1] & 0xFE
         b = rgba[i * 4 + 2] & 0xFE
         pixels.append((i, (r, g, b), a))
@@ -380,13 +389,13 @@ def encode_image_record(rgba: bytes, width: int, height: int) -> bytes:
         new_idx = color_to_idx[color]
         d = new_idx - cur_pal_idx
         if d == 0:
-            append_bits(0, 2)            # keep
+            append_bits(0, 2)  # keep
         elif d == 1:
-            append_bits(1, 2)            # +1
+            append_bits(1, 2)  # +1
         elif d == -1:
-            append_bits(2, 2)            # −1
+            append_bits(2, 2)  # −1
         else:
-            append_bits(3, 2)            # absolute
+            append_bits(3, 2)  # absolute
             append_bits(new_idx, bits_per_idx)
         cur_pal_idx = new_idx
 
@@ -429,9 +438,7 @@ def encode_image_record(rgba: bytes, width: int, height: int) -> bytes:
                     j += 1
                 count = len(mb)
                 alphas_b = bytes(p[2] for p in mb)
-                runs_parts.append(
-                    struct.pack("<HB", mb[0][0], 0x80 | count) + alphas_b
-                )
+                runs_parts.append(struct.pack("<HB", mb[0][0], 0x80 | count) + alphas_b)
                 for p in mb:
                     emit_color(p[1])
 
@@ -456,8 +463,8 @@ def encode_image_record(rgba: bytes, width: int, height: int) -> bytes:
         len(palette_bytes),
         bits_per_idx,
         runs_off,
-        0,   # reserved0
-        0,   # reserved1
+        0,  # reserved0
+        0,  # reserved1
         bitstream_off,
         len(bitstream_bytes),
     )
@@ -471,7 +478,7 @@ def encode_image_record(rgba: bytes, width: int, height: int) -> bytes:
 def _rgba_to_png(rgba: bytes, width: int, height: int) -> bytes:
     """Convert raw RGBA bytes to a PNG byte-string."""
     try:
-        from PIL import Image  # type: ignore
+        from PIL import Image
 
         img = Image.frombytes("RGBA", (width, height), rgba)
         buf = io.BytesIO()
@@ -487,7 +494,7 @@ def _rgba_to_png(rgba: bytes, width: int, height: int) -> bytes:
 def _png_to_rgba(png_data: bytes) -> Tuple[bytes, int, int]:
     """Convert PNG bytes to ``(rgba_bytes, width, height)``."""
     try:
-        from PIL import Image  # type: ignore
+        from PIL import Image
 
         img = Image.open(io.BytesIO(png_data)).convert("RGBA")
         w, h = img.size
@@ -514,14 +521,16 @@ def _write_png(rgba: bytes, width: int, height: int) -> bytes:
     row_bytes = width * 4
     for y in range(height):
         raw_rows.append(0)  # filter type = None
-        raw_rows += rgba[y * row_bytes: (y + 1) * row_bytes]
+        raw_rows += rgba[y * row_bytes : (y + 1) * row_bytes]
     idat_data = zlib.compress(bytes(raw_rows), 9)
 
     sig = b"\x89PNG\r\n\x1a\n"
-    return (sig
-            + make_chunk(b"IHDR", ihdr)
-            + make_chunk(b"IDAT", idat_data)
-            + make_chunk(b"IEND", b""))
+    return (
+        sig
+        + make_chunk(b"IHDR", ihdr)
+        + make_chunk(b"IDAT", idat_data)
+        + make_chunk(b"IEND", b"")
+    )
 
 
 def _read_png(png_data: bytes) -> Tuple[bytes, int, int]:
@@ -536,8 +545,8 @@ def _read_png(png_data: bytes) -> Tuple[bytes, int, int]:
     idat_parts: List[bytes] = []
     while pos < len(png_data):
         length = struct.unpack_from(">I", png_data, pos)[0]
-        tag = png_data[pos + 4: pos + 8]
-        data = png_data[pos + 8: pos + 8 + length]
+        tag = png_data[pos + 4 : pos + 8]
+        data = png_data[pos + 8 : pos + 8 + length]
         if tag == b"IHDR":
             chunks[tag] = data
         elif tag == b"IDAT":
@@ -562,8 +571,8 @@ def _read_png(png_data: bytes) -> Tuple[bytes, int, int]:
         filter_type = raw[y * (row_bytes + 1)]
         if filter_type != 0:
             raise ValueError("PNG filter types other than None (0) not supported")
-        row = raw[y * (row_bytes + 1) + 1: y * (row_bytes + 1) + 1 + row_bytes]
-        rgba[y * row_bytes: (y + 1) * row_bytes] = row
+        row = raw[y * (row_bytes + 1) + 1 : y * (row_bytes + 1) + 1 + row_bytes]
+        rgba[y * row_bytes : (y + 1) * row_bytes] = row
     return bytes(rgba), width, height
 
 
@@ -624,7 +633,7 @@ class CcfGlyph:
             encoded = base64.b64encode(data).decode("ascii")
             # Write in 76-char lines
             for i in range(0, len(encoded), 76):
-                writer.write(encoded[i: i + 76])
+                writer.write(encoded[i : i + 76])
                 writer.newline()
             writer.endtag("glyph")
         else:
@@ -636,9 +645,7 @@ class CcfGlyph:
 
         if name == "glyph":
             self.glyphName = attrs.get("name", self.glyphName)
-            raw_b64 = "".join(
-                item for item in content if isinstance(item, str)
-            ).strip()
+            raw_b64 = "".join(item for item in content if isinstance(item, str)).strip()
             if raw_b64:
                 self._imageData = base64.b64decode(raw_b64)
                 self._rawRecordData = None
@@ -783,7 +790,6 @@ class table__a_c_c_f(DefaultTable.DefaultTable):
 
             self.strikes[pixel_size] = strike
 
-
     # ── compile ──────────────────────────────────────────────────────────────
 
     def compile(self, ttFont) -> bytes:
@@ -861,7 +867,9 @@ class table__a_c_c_f(DefaultTable.DefaultTable):
             if self._rawHeader is None:
                 _build_v1_tier_range_meta(header, tier_luts)
         else:
-            struct.pack_into("<4sIII", header, 0, MAGIC, self.version, self.field3, num_tiers)
+            struct.pack_into(
+                "<4sIII", header, 0, MAGIC, self.version, self.field3, num_tiers
+            )
             for i, sz in enumerate(sorted_sizes):
                 struct.pack_into("<I", header, 16 + 4 * i, sz)
             struct.pack_into("<I", header, off_num_stored, num_stored)
@@ -875,12 +883,12 @@ class table__a_c_c_f(DefaultTable.DefaultTable):
             slot_base = lut_base + lut_bytes * tier_idx
             if tier_idx < num_tiers:
                 # Active tier — fill with no-image sentinel, then write real indices.
-                header[slot_base: slot_base + lut_bytes] = b"\xff" * lut_bytes
+                header[slot_base : slot_base + lut_bytes] = b"\xff" * lut_bytes
                 for gid, global_idx in tier_luts[tier_idx].items():
                     struct.pack_into("<H", header, slot_base + 2 * gid, global_idx)
             else:
                 # Unused tier — zeros (matches Apple-produced files).
-                header[slot_base: slot_base + lut_bytes] = b"\x00" * lut_bytes
+                header[slot_base : slot_base + lut_bytes] = b"\x00" * lut_bytes
 
         # Glyph offset table + image data section.
         # Identical records (same bytes) share one physical copy — this
@@ -888,7 +896,7 @@ class table__a_c_c_f(DefaultTable.DefaultTable):
         record_to_phys: Dict[bytes, int] = {}  # content → byte offset from IMG_BASE
         unique_buf: List[bytes] = []
         phys_cumulative = 0
-        global_phys_offsets: List[int] = []    # global_idx → physical offset
+        global_phys_offsets: List[int] = []  # global_idx → physical offset
 
         for record in all_records:
             if record in record_to_phys:
@@ -959,7 +967,7 @@ def _get_image_record(
     if abs_start + record_size > len(data):
         record_size = len(data) - abs_start
 
-    return data[abs_start: abs_start + record_size]
+    return data[abs_start : abs_start + record_size]
 
 
 def _build_v1_tier_range_meta(

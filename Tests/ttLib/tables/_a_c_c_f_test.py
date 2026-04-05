@@ -20,7 +20,9 @@ from fontTools.ttLib.tables._a_c_c_f import (
 # ── minimal synthetic helpers ────────────────────────────────────────────────
 
 
-def _make_solid_rgba(width: int, height: int, r: int, g: int, b: int, a: int = 255) -> bytes:
+def _make_solid_rgba(
+    width: int, height: int, r: int, g: int, b: int, a: int = 255
+) -> bytes:
     """Return a solid-colour RGBA image (all pixels the same)."""
     pixel = bytes([r, g, b, a])
     return pixel * (width * height)
@@ -49,8 +51,9 @@ def _build_minimal_ccf(
 
     # Encode images
     rgba = _make_solid_rgba(image_size, image_size, *solid_rgba)
-    encoded_records = [encode_image_record(rgba, image_size, image_size)
-                       for _ in range(num_stored)]
+    encoded_records = [
+        encode_image_record(rgba, image_size, image_size) for _ in range(num_stored)
+    ]
 
     # Glyph offset table
     offsets = []
@@ -87,14 +90,14 @@ def _build_minimal_ccf(
         lut_base = 212 + 5000 * tier_idx
         tier_img_start = tier_idx * images_per_tier
         for gid in range(images_per_tier):
-            struct.pack_into("<H", header, lut_base + 2 * gid,
-                             tier_img_start + gid)
+            struct.pack_into("<H", header, lut_base + 2 * gid, tier_img_start + gid)
         # remaining entries → 0xFFFF (no image)
         for gid in range(images_per_tier, 2500):
             struct.pack_into("<H", header, lut_base + 2 * gid, 0xFFFF)
 
     # Glyph offset table
     from fontTools.ttLib.tables._a_c_c_f import _OFF_GLYPH_OFFSET_TABLE
+
     for i, off in enumerate(offsets):
         struct.pack_into("<I", header, _OFF_GLYPH_OFFSET_TABLE + 4 * i, off)
 
@@ -163,8 +166,12 @@ class ImageCodecTest(unittest.TestCase):
         for i in range(width * height):
             off = i * 4
             self.assertAlmostEqual(decoded[off], r & 0xFE, delta=2, msg="R mismatch")
-            self.assertAlmostEqual(decoded[off + 1], g & 0xFE, delta=2, msg="G mismatch")
-            self.assertAlmostEqual(decoded[off + 2], b & 0xFE, delta=2, msg="B mismatch")
+            self.assertAlmostEqual(
+                decoded[off + 1], g & 0xFE, delta=2, msg="G mismatch"
+            )
+            self.assertAlmostEqual(
+                decoded[off + 2], b & 0xFE, delta=2, msg="B mismatch"
+            )
             self.assertEqual(decoded[off + 3], a, msg="A mismatch")
 
     def test_solid_red_4x4(self):
@@ -185,6 +192,7 @@ class ImageCodecTest(unittest.TestCase):
     def test_random_image_roundtrip(self):
         """A non-trivial image with multiple colours."""
         import random
+
         rng = random.Random(42)
         w, h = 10, 10
         rgba = bytes(rng.randint(0, 255) for _ in range(w * h * 4))
@@ -200,8 +208,9 @@ class ImageCodecTest(unittest.TestCase):
             for ch in range(3):
                 orig = rgba[i * 4 + ch] & 0xFE
                 got = decoded[i * 4 + ch]
-                self.assertAlmostEqual(orig, got, delta=2,
-                                       msg=f"pixel {i} channel {ch}")
+                self.assertAlmostEqual(
+                    orig, got, delta=2, msg=f"pixel {i} channel {ch}"
+                )
             # alpha is lossless
             self.assertEqual(rgba[i * 4 + 3], decoded[i * 4 + 3])
 
@@ -310,8 +319,9 @@ class TableTest(unittest.TestCase):
 
         # Re-import (strip XMLWriter declaration before parsing)
         from xml.etree import ElementTree as ET
+
         if xml_str.startswith("<?xml"):
-            xml_str = xml_str[xml_str.index("?>") + 2:].lstrip()
+            xml_str = xml_str[xml_str.index("?>") + 2 :].lstrip()
         root = ET.fromstring(f"<root>{xml_str}</root>")
         tbl2 = table__a_c_c_f(tag="accf")
         for child in root:

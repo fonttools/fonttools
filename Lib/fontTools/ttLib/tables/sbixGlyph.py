@@ -82,7 +82,9 @@ class Glyph(object):
                         sbixGlyphHeaderFormatSize:
                     ].decode("ascii")
                 else:
-                    (gid,) = struct.unpack(">H", self.rawdata[sbixGlyphHeaderFormatSize:])
+                    (gid,) = struct.unpack(
+                        ">H", self.rawdata[sbixGlyphHeaderFormatSize:]
+                    )
                     self.referenceGlyphName = ttFont.getGlyphName(gid)
             else:
                 self.imageData = self.rawdata[sbixGlyphHeaderFormatSize:]
@@ -107,7 +109,9 @@ class Glyph(object):
                 if self.graphicType == "iden":
                     rawdata += self.referenceGlyphName.encode("ascii")
                 else:
-                    rawdata += struct.pack(">H", ttFont.getGlyphID(self.referenceGlyphName))
+                    rawdata += struct.pack(
+                        ">H", ttFont.getGlyphID(self.referenceGlyphName)
+                    )
             else:
                 assert self.imageData is not None
                 rawdata += self.imageData
