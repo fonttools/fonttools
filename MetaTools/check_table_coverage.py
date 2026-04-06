@@ -84,7 +84,7 @@ KNOWN_GAPS: dict[str, set[str]] = {
     "B_A_S_E_": {"test_file"},
     "C_B_D_T_": {"test_file"},
     "C_B_L_C_": {"test_file"},
-    "C_F_F_":   {"test_file"},
+    "C_F_F_": {"test_file"},
     "C_O_L_R_": {"test_file"},
     "C_P_A_L_": {"test_file"},
     "D_S_I_G_": {"test_file"},
@@ -99,7 +99,7 @@ KNOWN_GAPS: dict[str, set[str]] = {
     "G__l_a_t": {"test_file"},
     "G__l_o_c": {"test_file"},
     "H_V_A_R_": {"test_file"},
-    "I_F_T_":   {"test_file"},
+    "I_F_T_": {"test_file"},
     "I_F_T_X_": {"test_file"},
     "J_S_T_F_": {"test_file"},
     "L_T_S_H_": {"test_file"},
@@ -137,6 +137,7 @@ KNOWN_GAPS: dict[str, set[str]] = {
 # Discovery
 # ---------------------------------------------------------------------------
 
+
 def get_table_modules() -> list[tuple[str, str]]:
     """Return sorted list of (module_name, tag_raw) for all table .py files."""
     modules = []
@@ -153,6 +154,7 @@ def get_table_modules() -> list[tuple[str, str]]:
 # ---------------------------------------------------------------------------
 # Individual checks
 # ---------------------------------------------------------------------------
+
 
 def check_init_py(
     modules: list[tuple[str, str]],
@@ -197,7 +199,9 @@ def check_ttx_rst(
     for module, tag in modules:
         tag_stripped = tag.strip()
         # Word-boundary search so e.g. "cvt" doesn't match inside another token
-        if not re.search(r"(?<![A-Za-z0-9/])" + re.escape(tag_stripped) + r"(?![A-Za-z0-9/])", block):
+        if not re.search(
+            r"(?<![A-Za-z0-9/])" + re.escape(tag_stripped) + r"(?![A-Za-z0-9/])", block
+        ):
             msg = (
                 f"[B] Doc/source/ttx.rst: tag '{tag_stripped}' is absent from the "
                 f"table list (module '{module}').\n"
@@ -228,10 +232,10 @@ def check_ttfont_py(
         # @overload stub — tag_raw (with any trailing space) inside Literal["..."]
         if f'Literal["{tag}"]' not in content:
             msg = (
-                f"[C] ttFont.py: @overload stub for Literal[\"{tag}\"] is missing "
+                f'[C] ttFont.py: @overload stub for Literal["{tag}"] is missing '
                 f"(module '{module}').\n"
                 f"      Fix: add @overload stubs for __getitem__ and get() "
-                f"with Literal[\"{tag}\"]."
+                f'with Literal["{tag}"].'
             )
             _report(msg, "ttfont_overload", module, errors, warnings, strict)
 
@@ -323,6 +327,7 @@ def check_test_files(
 # Helper
 # ---------------------------------------------------------------------------
 
+
 def _report(
     msg: str,
     check_id: str,
@@ -342,6 +347,7 @@ def _report(
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
