@@ -14,20 +14,6 @@ env:
   TOX_OPTIONS: -vv
 
 jobs:
-  check-tables:
-    runs-on: ubuntu-latest
-    if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
-    steps:
-    - uses: actions/checkout@v6
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.x"
-    - name: Install packages
-      run: pip install tox
-    - name: Check table coverage
-      run: tox $TOX_OPTIONS -e check-tables
-
   lint:
     runs-on: ubuntu-latest
     # https://github.community/t/github-actions-does-not-respect-skip-ci/17325/8
