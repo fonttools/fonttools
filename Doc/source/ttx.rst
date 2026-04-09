@@ -39,10 +39,10 @@ The following tables are currently supported::
     FFTM, Feat, GDEF, GPOS, GSUB, GVAR, Glat, Gloc, HVAR, IFT, IFTX,
     JSTF, LTSH, MATH, MVAR, OS/2, STAT, SVG, Silf, Sill, TSI0, TSI1,
     TSI2, TSI3, TSI5, TSIB, TSIC, TSID, TSIJ, TSIP, TSIS, TSIV, TTFA,
-    VARC, VDMX, VORG, VVAR, accf, ankr, avar, bgcl, bsln, cidg, cmap,
-    cvar, cvt, feat, fpgm, fvar, gasp, gcid, glyf, gvar, hdmx, head,
-    hhea, hmtx, kern, lcar, loca, ltag, maxp, meta, mort, morx, name,
-    opbd, post, prep, prop, sbix, trak, vhea and vmtx
+    VARC, VDMX, VORG, VVAR, ankr, avar, bgcl, bsln, cidg, cmap, cvar,
+    cvt, feat, fpgm, fvar, gasp, gcid, glyf, gvar, hdmx, head, hhea,
+    hmtx, kern, lcar, loca, ltag, maxp, meta, mort, morx, name, opbd,
+    post, prep, prop, sbix, trak, vhea and vmtx
 
 .. end table list
 
