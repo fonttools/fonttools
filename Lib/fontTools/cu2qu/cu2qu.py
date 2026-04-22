@@ -240,9 +240,9 @@ def split_cubic_into_three(p0, p1, p2, p3):
     mid2 = (p0 + 6 * p1 + 12 * p2 + 8 * p3) * (1 / 27)
     deriv2 = (4 * p3 - 3 * p1 - p0) * (1 / 27)
     return (
-        (p0, (2 * p0 + p1) / 3.0, mid1 - deriv1, mid1),
+        (p0, _complex_div_by_real(2 * p0 + p1, 3.0), mid1 - deriv1, mid1),
         (mid1, mid1 + deriv1, mid2 - deriv2, mid2),
-        (mid2, mid2 + deriv2, (p2 + 2 * p3) / 3.0, p3),
+        (mid2, mid2 + deriv2, _complex_div_by_real(p2 + 2 * p3, 3.0), p3),
     )
 
 
