@@ -254,6 +254,28 @@ def test_cu2qu_complex_division_floating_point_precision():
     assert result[1][5][1] == 326.49999999999994
 
 
+def test_cu2qu_split_cubic_into_three_complex_division():
+    # Same class of bug as test_cu2qu_complex_division_floating_point_precision above,
+    # but in split_cubic_into_three which has its own / 3.0 expressions not covered by
+    # the calc_cubic_points fix in PR #3930. These curves from JosefinSans-Italic
+    # (ordmasculine glyph, three masters) trigger n=3 splitting where the mathematical
+    # result is exactly 504.5. Cython's C complex division produces 504.49999999999994
+    # (just below .5, rounds down to 504) while pure Python gives 504.5000000000001
+    # (just above .5, rounds up to 505) — a ±1 coordinate difference in the final font.
+    # Pure Python already produces the correct result; this only fails under Cython.
+    # See: https://github.com/fonttools/fonttools/issues/3928
+
+    curves = [
+        [(217.833, 408.833), (299.667, 403.833), (372.333, 463.833), (382.5, 545.167)],
+        [(217, 413), (303, 408), (374, 468), (385, 551)],
+        [(213, 426), (313, 420), (381, 482), (392, 571)],
+    ]
+
+    result = curves_to_quadratic(curves, max_errors=[1.0] * len(curves))
+
+    assert result[0][3][1] == 504.5000000000001
+
+
 def test_curves_to_quadratic_rejects_mismatched_max_errors():
     curves = [[(0, 0), (0, 1), (2, 1), (2, 0)]]
     with pytest.raises(ValueError, match="max_errors must match"):
