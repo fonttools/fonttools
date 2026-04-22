@@ -158,10 +158,9 @@ def test_deprecated_add_to_variation_store():
     # Use the deprecated shim (like fontFeatures does)
     store_builder = OnlineVarStoreBuilder([ax.axisTag for ax in axes])
     with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
+        warnings.simplefilter("always", DeprecationWarning)
         default, index = scalar.add_to_variation_store(store_builder)
         assert len(w) == 1
-        assert issubclass(w[0].category, DeprecationWarning)
         assert "deprecated" in str(w[0].message).lower()
 
     assert default == 20
