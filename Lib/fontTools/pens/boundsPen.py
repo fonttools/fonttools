@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from fontTools.annotations import GlyphSetMapping, Point, RectFloat
 from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect
 from fontTools.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
 from fontTools.pens.basePen import BasePen
@@ -20,21 +23,21 @@ class ControlBoundsPen(BasePen):
     If ``ignoreSinglePoints`` is True, single points are ignored.
     """
 
-    def __init__(self, glyphSet, ignoreSinglePoints=False):
+    def __init__(self, glyphSet: GlyphSetMapping, ignoreSinglePoints: bool = False):
         BasePen.__init__(self, glyphSet)
         self.ignoreSinglePoints = ignoreSinglePoints
         self.init()
 
-    def init(self):
-        self.bounds = None
-        self._start = None
+    def init(self) -> None:
+        self.bounds: RectFloat | None = None
+        self._start: Point | None = None
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         self._start = pt
         if not self.ignoreSinglePoints:
             self._addMoveTo()
 
-    def _addMoveTo(self):
+    def _addMoveTo(self) -> None:
         if self._start is None:
             return
         bounds = self.bounds
@@ -45,11 +48,11 @@ class ControlBoundsPen(BasePen):
             self.bounds = (x, y, x, y)
         self._start = None
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point) -> None:
         self._addMoveTo()
         self.bounds = updateBounds(self.bounds, pt)
 
-    def _curveToOne(self, bcp1, bcp2, pt):
+    def _curveToOne(self, bcp1: Point, bcp2: Point, pt: Point) -> None:
         self._addMoveTo()
         bounds = self.bounds
         bounds = updateBounds(bounds, bcp1)
@@ -57,7 +60,7 @@ class ControlBoundsPen(BasePen):
         bounds = updateBounds(bounds, pt)
         self.bounds = bounds
 
-    def _qCurveToOne(self, bcp, pt):
+    def _qCurveToOne(self, bcp: Point, pt: Point) -> None:
         self._addMoveTo()
         bounds = self.bounds
         bounds = updateBounds(bounds, bcp)
@@ -77,22 +80,24 @@ class BoundsPen(ControlBoundsPen):
             (xMin, yMin, xMax, yMax)
     """
 
-    def _curveToOne(self, bcp1, bcp2, pt):
+    def _curveToOne(self, bcp1: Point, bcp2: Point, pt: Point) -> None:
         self._addMoveTo()
         bounds = self.bounds
         bounds = updateBounds(bounds, pt)
         if not pointInRect(bcp1, bounds) or not pointInRect(bcp2, bounds):
-            bounds = unionRect(
-                bounds, calcCubicBounds(self._getCurrentPoint(), bcp1, bcp2, pt)
-            )
+            currentPoint = self._getCurrentPoint()
+            if currentPoint is None:
+                return
+            bounds = unionRect(bounds, calcCubicBounds(currentPoint, bcp1, bcp2, pt))
         self.bounds = bounds
 
-    def _qCurveToOne(self, bcp, pt):
+    def _qCurveToOne(self, bcp: Point, pt: Point) -> None:
         self._addMoveTo()
         bounds = self.bounds
         bounds = updateBounds(bounds, pt)
         if not pointInRect(bcp, bounds):
-            bounds = unionRect(
-                bounds, calcQuadraticBounds(self._getCurrentPoint(), bcp, pt)
-            )
+            currentPoint = self._getCurrentPoint()
+            if currentPoint is None:
+                return
+            bounds = unionRect(bounds, calcQuadraticBounds(currentPoint, bcp, pt))
         self.bounds = bounds
