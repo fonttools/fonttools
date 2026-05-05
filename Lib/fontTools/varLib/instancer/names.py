@@ -217,13 +217,20 @@ def _updateNameRecords(varfont, axisValues):
             # we cannot update this set of name Records.
             continue
 
-        subFamilyName = " ".join(
-            getName(n, *platform).toUnicode() for n in ribbiNameIDs
-        )
-        if nonRibbiNameIDs:
-            typoSubFamilyName = " ".join(
-                getName(n, *platform).toUnicode() for n in axisValueNameIDs
+        try:
+            subFamilyName = " ".join(
+                getName(n, *platform).toUnicode() for n in ribbiNameIDs
             )
+        except AttributeError:
+            subFamilyName = None
+
+        if nonRibbiNameIDs:
+            try:
+                typoSubFamilyName = " ".join(
+                    getName(n, *platform).toUnicode() for n in axisValueNameIDs
+                )
+            except AttributeError:
+                typoSubFamilyName = None
         else:
             typoSubFamilyName = None
 
@@ -234,10 +241,12 @@ def _updateNameRecords(varfont, axisValues):
                 subFamilyName = getName(elidedNameID, *platform).toUnicode()
             else:
                 typoSubFamilyName = getName(elidedNameID, *platform).toUnicode()
-
-        familyNameSuffix = " ".join(
-            getName(n, *platform).toUnicode() for n in nonRibbiNameIDs
-        )
+        try:
+            familyNameSuffix = " ".join(
+                getName(n, *platform).toUnicode() for n in nonRibbiNameIDs
+            )
+        except AttributeError:
+            familyNameSuffix = None
 
         _updateNameTableStyleRecords(
             varfont,
