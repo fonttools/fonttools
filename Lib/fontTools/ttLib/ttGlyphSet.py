@@ -25,17 +25,25 @@ class _TTGlyphSet(Mapping):
     def __init__(self, font, location, glyphsMapping, *, recalcBounds=True):
         self.recalcBounds = recalcBounds
         self.font = font
-        self.defaultLocationNormalized = (
-            {axis.axisTag: 0 for axis in self.font["fvar"].axes}
-            if "fvar" in self.font
-            else {}
-        )
+
+        axes = self.font["fvar"].axes if "fvar" in self.font else []
+        hiddenAxisTags = {
+            axis.axisTag for axis in axes if axis.flags & 0x0001  # HIDDEN_AXIS
+        }
+
         self.location = location if location is not None else {}
-        self.rawLocation = {}  # VarComponent-only location
+        # For VarComponents and addVarComponent() we need to maintain a sparse
+        # location, so the addVarComponent() client can know which axes are set,
+        # and which to infer from the current global font location
+        self.sparseVarComponentLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
+        self.originalLocationNonHidden = {
+            k: 0 if k in hiddenAxisTags else v for k, v in self.originalLocation.items()
+        }
+
         self.depth = 0
         self.locationStack = []
-        self.rawLocationStack = []
+        self.sparseVarComponentLocationStack = []
         self.glyphsMapping = glyphsMapping
         self.hMetrics = font["hmtx"].metrics
         self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
@@ -53,21 +61,21 @@ class _TTGlyphSet(Mapping):
     @contextmanager
     def pushLocation(self, location, reset: bool):
         self.locationStack.append(self.location)
-        self.rawLocationStack.append(self.rawLocation)
+        self.sparseVarComponentLocationStack.append(self.sparseVarComponentLocation)
         if reset:
             self.location = self.originalLocation.copy()
-            self.rawLocation = self.defaultLocationNormalized.copy()
+            self.sparseVarComponentLocation = self.originalLocationNonHidden.copy()
         else:
             self.location = self.location.copy()
-            self.rawLocation = {}
+            self.sparseVarComponentLocation = {}
         self.location.update(location)
-        self.rawLocation.update(location)
+        self.sparseVarComponentLocation.update(location)
 
         try:
             yield None
         finally:
             self.location = self.locationStack.pop()
-            self.rawLocation = self.rawLocationStack.pop()
+            self.sparseVarComponentLocation = self.sparseVarComponentLocationStack.pop()
 
     @contextmanager
     def pushDepth(self):
@@ -376,7 +384,9 @@ class _TTGlyphVARC(_TTGlyph):
                     if not shouldDecompose:
                         try:
                             pen.addVarComponent(
-                                comp.glyphName, transform, self.glyphSet.rawLocation
+                                comp.glyphName,
+                                transform,
+                                self.glyphSet.sparseVarComponentLocation,
                             )
                         except AttributeError:
                             shouldDecompose = True
