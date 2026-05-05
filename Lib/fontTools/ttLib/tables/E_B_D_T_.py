@@ -31,9 +31,9 @@ ebdtTableVersionFormat = """
 
 ebdtComponentFormat = """
 	> # big endian
-	glyphCode: H
-	xOffset:   b
-	yOffset:   b
+	glyphID: H
+	xOffset: b
+	yOffset: b
 """
 
 
@@ -71,7 +71,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
         # The actual bitmap data is stored in the EBDT.
         locator = ttFont[self.__class__.locatorName]
         self.strikeData = []
-        for curStrike in locator.strikes:
+        for strikeIndex, curStrike in enumerate(locator.strikes):
             bitmapGlyphDict = {}
             self.strikeData.append(bitmapGlyphDict)
             for indexSubTable in curStrike.indexSubTables:
@@ -86,7 +86,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
                         imageFormatClass = self.getImageFormatClass(
                             indexSubTable.imageFormat
                         )
-                        curGlyph = imageFormatClass(curGlyphData, ttFont)
+                        curGlyph = imageFormatClass(curGlyphData, ttFont, strikeIndex)
                         glyphDict[curLoc] = curGlyph
                     bitmapGlyphDict[curName] = curGlyph
 
@@ -186,7 +186,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
                     imageFormat = safeEval(name[len(_bitmapGlyphSubclassPrefix) :])
                     glyphName = attrs["name"]
                     imageFormatClass = self.getImageFormatClass(imageFormat)
-                    curGlyph = imageFormatClass(None, None)
+                    curGlyph = imageFormatClass(None, None, strikeIndex)
                     curGlyph.fromXML(name, attrs, content, ttFont)
                     assert glyphName not in bitmapGlyphDict, (
                         "Duplicate glyphs with the same name '%s' in the same strike."
@@ -208,22 +208,26 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 
 class EbdtComponent(object):
     def toXML(self, writer, ttFont):
-        writer.begintag("ebdtComponent", [("name", self.name)])
+        writer.begintag("EbdtComponent", [("name", self.name)])
         writer.newline()
-        for componentName in sstruct.getformat(ebdtComponentFormat)[1][1:]:
+        for componentName in sstruct.getformat(ebdtComponentFormat)[1]:
+            if componentName == "glyphID":
+                continue
             writer.simpletag(componentName, value=getattr(self, componentName))
             writer.newline()
-        writer.endtag("ebdtComponent")
+        writer.endtag("EbdtComponent")
         writer.newline()
 
     def fromXML(self, name, attrs, content, ttFont):
         self.name = attrs["name"]
-        componentNames = set(sstruct.getformat(ebdtComponentFormat)[1][1:])
+        componentNames = set(sstruct.getformat(ebdtComponentFormat)[1])
         for element in content:
             if not isinstance(element, tuple):
                 continue
             name, attrs, content = element
-            if name in componentNames:
+            if name == "glyphID":
+                log.warning("provided glyphID is not used when parsing '%s'", name)
+            elif name in componentNames:
                 vars(self)[name] = safeEval(attrs["value"])
             else:
                 log.warning("unknown name '%s' being ignored by EbdtComponent.", name)
@@ -447,9 +451,11 @@ class BitmapGlyph(object):
         "extfile": (_writeExtFileImageData, _readExtFileImageData),
     }
 
-    def __init__(self, data, ttFont):
+    def __init__(self, data, ttFont, strikeIndex):
         self.data = data
         self.ttFont = ttFont
+        # keep track which strike this glyph belong to, used for format 8/9 component finding
+        self.strikeIndex = strikeIndex
         # TODO Currently non-lazy decompilation is untested here...
         # if not ttFont.lazy:
         # 	self.decompile()
@@ -765,12 +771,63 @@ class ComponentBitmapGlyph(BitmapGlyph):
                     if not isinstance(compElement, tuple):
                         continue
                     name, attrs, content = compElement
-                    if name == "ebdtComponent":
+                    if name == "EbdtComponent":
                         curComponent = EbdtComponent()
                         curComponent.fromXML(name, attrs, content, ttFont)
                         self.componentArray.append(curComponent)
                     else:
                         log.warning("'%s' being ignored in component array.", name)
+
+    def getRow(self, row: int, bitDepth=1, metrics=None, reverseBytes=False):
+        """Returns the bits in a row of the bitmap glyph as bytes. The bits are merged from all components in the glyph. 
+        Components that contains bits offsetted out of bounds will be cropped to match metrics.
+        Overlapped bits between components will be merged by ORing them.
+        This function dynamically calculates the bitmap from the components in the glyph. It should not be viewed as raw bitmap data from the font file.
+
+        Params:
+        * row: the row index of the bitmap glyph to get, starting from 0 at the top.
+        """
+        if metrics is None:
+            metrics = self.metrics
+        assert 0 <= row and row < metrics.height, "Illegal row access in bitmap"
+
+        numBytesInRow = (bitDepth * metrics.width + 7) // 8
+        rowData = int.from_bytes(bytes([0] * numBytesInRow))
+        for component in self.componentArray:
+            if row + component.yOffset < 0 or row + component.yOffset >= metrics.height:
+                # skip out of bound component rows
+                continue
+
+            componentGlyph = self.ttFont["EBDT"].strikeData[self.strikeIndex][component.name]
+            # get the row after shifting xOffset
+            componentRow = componentGlyph.getRow(row + component.xOffset, bitDepth, metrics, reverseBytes)
+            # pad row until it is the same length as the rowData
+            componentRow = componentRow + bytes([0] * (numBytesInRow - len(componentRow) ))
+            # shift row horizontally
+            if component.yOffset >= 0:
+                componentRowInt = int.from_bytes(componentRow) >> (component.yOffset * bitDepth)
+            else:
+                componentRowInt = int.from_bytes(componentRow) << (-component.yOffset * bitDepth)
+
+            # assume that the merging of two bits is done by ORing them
+            rowData = rowData | componentRowInt
+        
+        # mask out the bits that are out of bound
+        rowBitMask = ((1 << (bitDepth * metrics.width)) - 1) << (8 * numBytesInRow - bitDepth * metrics.width)
+        rowData = rowData & rowBitMask
+
+        return rowData.to_bytes(numBytesInRow, 'big')
+
+    def setRows(self, *args, **kwargs):
+        raise NotImplementedError("setRows() is unavailable for component bitmap glyphs, use addComponent() instead")
+    
+    def addComponent(self, glyphName, xOffset=0, yOffset=0):
+        component = EbdtComponent()
+        assert glyphName in self.ttFont["EBDT"].strikeData[self.strikeIndex], "Glyph '%s' not in font strike." % glyphName
+        component.name = glyphName
+        component.xOffset = xOffset
+        component.yOffset = yOffset
+        self.componentArray.append(component)
 
 
 class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
@@ -785,7 +842,7 @@ class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
         for i in range(numComponents):
             curComponent = EbdtComponent()
             dummy, data = sstruct.unpack2(ebdtComponentFormat, data, curComponent)
-            curComponent.name = self.ttFont.getGlyphName(curComponent.glyphCode)
+            curComponent.name = self.ttFont.getGlyphName(curComponent.glyphID)
             self.componentArray.append(curComponent)
 
     def compile(self, ttFont):
@@ -794,7 +851,7 @@ class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):
         dataList.append(b"\0")
         dataList.append(struct.pack(">H", len(self.componentArray)))
         for curComponent in self.componentArray:
-            curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
+            curComponent.glyphID = ttFont.getGlyphID(curComponent.name)
             dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
         return bytesjoin(dataList)
 
@@ -809,7 +866,7 @@ class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
         for i in range(numComponents):
             curComponent = EbdtComponent()
             dummy, data = sstruct.unpack2(ebdtComponentFormat, data, curComponent)
-            curComponent.name = self.ttFont.getGlyphName(curComponent.glyphCode)
+            curComponent.name = self.ttFont.getGlyphName(curComponent.glyphID)
             self.componentArray.append(curComponent)
 
     def compile(self, ttFont):
@@ -817,7 +874,7 @@ class ebdt_bitmap_format_9(BitmapPlusBigMetricsMixin, ComponentBitmapGlyph):
         dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
         dataList.append(struct.pack(">H", len(self.componentArray)))
         for curComponent in self.componentArray:
-            curComponent.glyphCode = ttFont.getGlyphID(curComponent.name)
+            curComponent.glyphID = ttFont.getGlyphID(curComponent.name)
             dataList.append(sstruct.pack(ebdtComponentFormat, curComponent))
         return bytesjoin(dataList)
 
