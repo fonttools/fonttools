@@ -27,6 +27,24 @@ import pytest
 # see Tests/varLib/instancer/conftest.py for "varfont" fixture definition
 
 TESTDATA = os.path.join(os.path.dirname(__file__), "data")
+TTLIB_TABLES_DATA = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "ttLib", "tables", "data")
+)
+AVAR2_SUBSET_PATH = os.path.join(TTLIB_TABLES_DATA, "Amstelvar-avar2.subset.ttf")
+AVAR2_FULL_INSTANCE_LOCATION = {
+    "GRAD": 0,
+    "XTRA": 562,
+    "XOPQ": 176,
+    "YOPQ": 124,
+    "YTLC": 500,
+    "YTUC": 750,
+    "YTAS": 767,
+    "YTDE": -240,
+    "YTFI": 760,
+    "wght": 650,
+    "wdth": 90,
+    "opsz": 32,
+}
 
 
 @pytest.fixture(params=[True, False], ids=["optimize", "no-optimize"])
@@ -1120,15 +1138,17 @@ class InstantiateAvarTest(object):
     @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
     def test_pin_and_drop_axis(self, varfont, location):
         location = instancer.AxisLimits(location)
+        normalized = location.normalize(varfont)
 
-        instancer.instantiateAvar(varfont, location)
+        instancer.instantiateAvar(varfont, location, normalized)
 
         assert set(varfont["avar"].segments).isdisjoint(location)
 
     def test_full_instance(self, varfont):
         location = instancer.AxisLimits(wght=0.0, wdth=0.0)
+        normalized = location.normalize(varfont)
 
-        instancer.instantiateAvar(varfont, location)
+        instancer.instantiateAvar(varfont, location, normalized)
 
         assert "avar" not in varfont
 
@@ -1296,8 +1316,9 @@ class InstantiateAvarTest(object):
     )
     def test_limit_axes(self, varfont, axisLimits, expectedSegments):
         axisLimits = instancer.AxisLimits(axisLimits)
+        normalized = axisLimits.normalize(varfont)
 
-        instancer.instantiateAvar(varfont, axisLimits)
+        instancer.instantiateAvar(varfont, axisLimits, normalized)
 
         newSegments = varfont["avar"].segments
         expectedSegments = {
@@ -1321,9 +1342,10 @@ class InstantiateAvarTest(object):
         varfont["avar"].segments["wght"] = invalidSegmentMap
 
         axisLimits = instancer.AxisLimits(wght=(100, 400))
+        normalized = axisLimits.normalize(varfont)
 
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
-            instancer.instantiateAvar(varfont, axisLimits)
+            instancer.instantiateAvar(varfont, axisLimits, normalized)
 
         assert "Invalid avar" in caplog.text
         assert "wght" not in varfont["avar"].segments
@@ -1598,6 +1620,11 @@ def varfont3():
     return f
 
 
+@pytest.fixture
+def avar2_varfont():
+    return ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+
+
 def _dump_ttx(ttFont):
     # compile to temporary bytes stream, reload and dump to XML
     tmp = BytesIO()
@@ -1623,6 +1650,55 @@ def _get_expected_instance_ttx(
         encoding="utf-8",
     ) as fp:
         return stripVariableItemsFromTTX(fp.read())
+
+
+class InstantiateAvar2Test(object):
+    def test_partial_limit_axis_roundtrip_matches_direct_instance(self, avar2_varfont):
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"wght": (300, 400, 700)}
+        )
+
+        wght = next(axis for axis in partial["fvar"].axes if axis.axisTag == "wght")
+        assert (wght.minValue, wght.defaultValue, wght.maxValue) == (300, 400, 700)
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+        assert getattr(partial["avar"].table, "VarIdxMap", None) is not None
+        assert all(tag in partial for tag in ("gvar", "HVAR", "MVAR"))
+
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+
+        staged = instancer.instantiateVariableFont(
+            partial, AVAR2_FULL_INSTANCE_LOCATION
+        )
+        direct = instancer.instantiateVariableFont(
+            ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False),
+            AVAR2_FULL_INSTANCE_LOCATION,
+        )
+
+        assert _dump_ttx(staged) == _dump_ttx(direct)
+
+    def test_partial_pin_self_contained_axis_preserves_avar2(self, avar2_varfont):
+        partial = instancer.instantiateVariableFont(avar2_varfont, {"wght": 650})
+
+        assert all(axis.axisTag != "wght" for axis in partial["fvar"].axes)
+        assert "wght" not in partial["avar"].segments
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+        assert getattr(partial["avar"].table, "VarIdxMap", None) is not None
+        assert all(tag in partial for tag in ("gvar", "HVAR", "MVAR"))
+
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+
+        assert all(axis.axisTag != "wght" for axis in partial["fvar"].axes)
+        assert "wght" not in partial["avar"].segments
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
 
 
 class InstantiateVariableFontTest(object):
