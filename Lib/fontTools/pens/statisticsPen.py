@@ -1,30 +1,36 @@
 """Pen calculating area, center of mass, variance and standard-deviation,
 covariance and correlation, and slant, of glyph shapes."""
 
+from __future__ import annotations
+
 from math import sqrt, degrees, atan
+from typing import Any, cast
+
+from fontTools.annotations import GlyphSetMapping, Point
 from fontTools.pens.basePen import BasePen, OpenContourError
 from fontTools.pens.momentsPen import MomentsPen
+from fontTools.ttLib.tables._h_e_a_d import table__h_e_a_d
 
 __all__ = ["StatisticsPen", "StatisticsControlPen"]
 
 
 class StatisticsBase:
-    def __init__(self):
+    def __init__(self) -> None:
         self._zero()
 
-    def _zero(self):
-        self.area = 0
-        self.meanX = 0
-        self.meanY = 0
-        self.varianceX = 0
-        self.varianceY = 0
-        self.stddevX = 0
-        self.stddevY = 0
-        self.covariance = 0
-        self.correlation = 0
-        self.slant = 0
+    def _zero(self) -> None:
+        self.area: float = 0
+        self.meanX: float = 0
+        self.meanY: float = 0
+        self.varianceX: float = 0
+        self.varianceY: float = 0
+        self.stddevX: float = 0
+        self.stddevY: float = 0
+        self.covariance: float = 0
+        self.correlation: float = 0
+        self.slant: float = 0
 
-    def _update(self):
+    def _update(self) -> None:
         # XXX The variance formulas should never produce a negative value,
         # but due to reasons I don't understand, both of our pens do.
         # So we take the absolute value here.
@@ -61,15 +67,15 @@ class StatisticsPen(StatisticsBase, MomentsPen):
     are not correct (but well-defined). Moreover, area will be
     negative if contour directions are clockwise."""
 
-    def __init__(self, glyphset=None):
+    def __init__(self, glyphset: GlyphSetMapping | None = None) -> None:
         MomentsPen.__init__(self, glyphset=glyphset)
         StatisticsBase.__init__(self)
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         MomentsPen._closePath(self)
         self._update()
 
-    def _update(self):
+    def _update(self) -> None:
         area = self.area
         if not area:
             self._zero()
@@ -99,39 +105,39 @@ class StatisticsControlPen(StatisticsBase, BasePen):
     are not correct (but well-defined). Moreover, area will be
     negative if contour directions are clockwise."""
 
-    def __init__(self, glyphset=None):
+    def __init__(self, glyphset: GlyphSetMapping | None = None) -> None:
         BasePen.__init__(self, glyphset)
         StatisticsBase.__init__(self)
-        self._nodes = []
+        self._nodes: list[complex] = []
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         self._nodes.append(complex(*pt))
         self._startPoint = pt
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point):
         self._nodes.append(complex(*pt))
 
-    def _qCurveToOne(self, pt1, pt2):
+    def _qCurveToOne(self, pt1: Point, pt2: Point) -> None:
         for pt in (pt1, pt2):
             self._nodes.append(complex(*pt))
 
-    def _curveToOne(self, pt1, pt2, pt3):
+    def _curveToOne(self, pt1: Point, pt2: Point, pt3: Point) -> None:
         for pt in (pt1, pt2, pt3):
             self._nodes.append(complex(*pt))
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         p0 = self._getCurrentPoint()
         if p0 != self._startPoint:
             self._lineTo(self._startPoint)
         self._update()
 
-    def _endPath(self):
+    def _endPath(self) -> None:
         p0 = self._getCurrentPoint()
         if p0 != self._startPoint:
             raise OpenContourError("Glyph statistics not defined on open contours.")
         self._update()
 
-    def _update(self):
+    def _update(self) -> None:
         nodes = self._nodes
         n = len(nodes)
 
@@ -175,19 +181,28 @@ class StatisticsControlPen(StatisticsBase, BasePen):
         StatisticsBase._update(self)
 
 
-def _test(glyphset, upem, glyphs, quiet=False, *, control=False):
+def _test(
+    glyphset: GlyphSetMapping,
+    upem: int,
+    glyphs: Any,
+    quiet: bool = False,
+    *,
+    control: bool = False,
+) -> None:
     from fontTools.pens.transformPen import TransformPen
     from fontTools.misc.transform import Scale
 
-    wght_sum = 0
-    wght_sum_perceptual = 0
-    wdth_sum = 0
-    slnt_sum = 0
-    slnt_sum_perceptual = 0
+    wght_sum: float = 0
+    wght_sum_perceptual: float = 0
+    wdth_sum: float = 0
+    slnt_sum: float = 0
+    slnt_sum_perceptual: float = 0
     for glyph_name in glyphs:
         glyph = glyphset[glyph_name]
         if control:
-            pen = StatisticsControlPen(glyphset=glyphset)
+            pen: StatisticsControlPen | StatisticsPen = StatisticsControlPen(
+                glyphset=glyphset
+            )
         else:
             pen = StatisticsPen(glyphset=glyphset)
         transformer = TransformPen(pen, Scale(1.0 / upem))
@@ -241,7 +256,7 @@ def _test(glyphset, upem, glyphs, quiet=False, *, control=False):
     print("slant (perceptual) angle:  %g" % -degrees(atan(slant_perceptual)))
 
 
-def main(args):
+def main(args) -> None:
     """Report font glyph shape geometricsl statistics"""
 
     if args is None:

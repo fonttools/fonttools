@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from enum import Enum
+import sys
+from typing import cast
 
 
 __all__ = ["StrEnum"]
 
 # StrEnum is only available in Python 3.11+
-try:
+if sys.version_info >= (3, 11):
     from enum import StrEnum
-except ImportError:
+else:
 
     class StrEnum(str, Enum):
         """
@@ -20,4 +22,4 @@ except ImportError:
         """
 
         def __str__(self) -> str:
-            return self.value
+            return cast(str, self.value)
