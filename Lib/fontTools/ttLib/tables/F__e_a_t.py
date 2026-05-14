@@ -110,7 +110,13 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
     def toXML(self, writer, ttFont):
         writer.simpletag("version", version=self.version)
         writer.newline()
+        nameTable = ttFont["name"] if "name" in ttFont else None
         for f, v in sorted(self.features.items(), key=lambda x: x[1].index):
+            name = nameTable.getDebugName(v.label) if nameTable else None
+            if name is not None:
+                writer.newline()
+                writer.comment(name)
+                writer.newline()
             writer.begintag(
                 "feature",
                 fid=f,
@@ -121,6 +127,10 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
             writer.newline()
             for s, l in sorted(v.settings.items()):
                 writer.simpletag("setting", value=s, label=l)
+                name = nameTable.getDebugName(l) if nameTable else None
+                if name is not None:
+                    writer.write("  ")
+                    writer.comment(name)
                 writer.newline()
             writer.endtag("feature")
             writer.newline()

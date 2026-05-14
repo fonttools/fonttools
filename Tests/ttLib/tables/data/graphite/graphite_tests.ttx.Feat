@@ -3,15 +3,21 @@
 
   <Feat>
     <version version="2.0"/>
+
+    <!-- Language -->
     <feature default="0" fid="1" flags="32768" label="258">
     </feature>
+
+    <!-- No Manual -->
     <feature default="0" fid="nom " flags="32768" label="262">
-      <setting label="261" value="0"/>
-      <setting label="260" value="1"/>
+      <setting label="261" value="0"/>  <!-- no -->
+      <setting label="260" value="1"/>  <!-- yes -->
     </feature>
+
+    <!-- Yes manual -->
     <feature default="0" fid="yesm" flags="32768" label="259">
-      <setting label="261" value="0"/>
-      <setting label="260" value="1"/>
+      <setting label="261" value="0"/>  <!-- no -->
+      <setting label="260" value="1"/>  <!-- yes -->
     </feature>
   </Feat>
 
