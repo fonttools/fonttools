@@ -1,3 +1,6 @@
+4.63.0 (released 2026-05-14)
+----------------------------
+
 - [ttLib] Add support for Apple Color Emoji ``bgcl`` table (#4065).
 - [ttLib] Add support for ``IFT`` and ``IFTX`` tables (Incremental Font Transfer,
   PatchMapFormat2) (#4070, #4072).
