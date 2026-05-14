@@ -33,11 +33,11 @@ class OS2TableTest(unittest.TestCase):
         table.ulUnicodeRange2 = 0
         table.ulUnicodeRange3 = 0
         table.ulUnicodeRange4 = 0
-        bits = set(range(123))
+        bits = set(range(128))
         table.setUnicodeRanges(bits)
         self.assertEqual(table.getUnicodeRanges(), bits)
         with self.assertRaises(ValueError):
-            table.setUnicodeRanges([-1, 127, 255])
+            table.setUnicodeRanges([-1, 128, 255])
 
     def test_recalcUnicodeRanges(self):
         font, os2, cmap = self.makeOS2_cmap(
