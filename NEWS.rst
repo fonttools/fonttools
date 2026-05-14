@@ -1,3 +1,23 @@
+- [ttLib] Add support for Apple Color Emoji ``bgcl`` table (#4065).
+- [ttLib] Add support for ``IFT`` and ``IFTX`` tables (Incremental Font Transfer,
+  PatchMapFormat2) (#4070, #4072).
+- [otData] Introduce ``FieldSpec`` dataclass for OpenType table schema definitions,
+  replacing raw tuples in ``otData.py`` (#4076).
+- [Feat] Show ``name`` table strings as comments next to label IDs in TTX output,
+  matching the convention used by ``fvar``, ``STAT``, ``trak`` (#4089).
+- [cu2qu] Fix Cython complex-division rounding difference in
+  ``split_cubic_into_three`` that could cause ±1 off-curve coordinate shifts
+  (#3928, #4083).
+- [designspaceLib] Fix ``map_backward`` for many-to-one (flat-segment) axis maps
+  that silently dropped entries via dict comprehension
+  (googlefonts/ufo2ft#978, #4085).
+- [OS/2] Fix ``setUnicodeRanges`` to accept reserved bits 123-127, restoring
+  round-trip with ``getUnicodeRanges`` and fixing ``recalcUnicodeRanges`` crash
+  in the subsetter (#4087, #4088).
+- [cython] Declare Cython extensions as free-threading compatible on Python 3.13+,
+  so that importing them on free-threaded Python no longer re-enables the GIL
+  (#4073, #4090).
+
 4.62.1 (released 2026-03-13)
 ----------------------------
 
