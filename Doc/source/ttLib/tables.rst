@@ -141,6 +141,7 @@ Tables currently supported
    tables/C_F_F__2
    tables/_c_i_d_g
    tables/_c_m_a_p
+   tables/_c_n_t_r
    tables/C_O_L_R_
    tables/C_P_A_L_
    tables/_c_v_a_r
