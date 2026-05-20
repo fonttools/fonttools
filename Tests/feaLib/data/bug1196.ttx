@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <name>
+    <namerecord nameID="0" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Copyright © 2001-2010 Adobe Systems Incorporated. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="9" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Masahiko Kozuka
+    </namerecord>
+    <namerecord nameID="0" platformID="1" platEncID="1" langID="0xb" unicode="True">
+      Copyright © 2001-2010 Adobe Systems Incorporated. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="9" platformID="1" platEncID="1" langID="0xb" unicode="True">
+      Masahiko Kozuka 小塚昌彦
+    </namerecord>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright © 2001-2010 Adobe Systems Incorporated. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Masahiko Kozuka 小塚昌彦
+    </namerecord>
+  </name>
+
+</ttFont>
