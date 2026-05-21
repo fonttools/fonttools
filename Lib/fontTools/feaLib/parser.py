@@ -1284,7 +1284,7 @@ class Parser(object):
                     out.append(int(token[1:], 16))
                 elif token:
                     out.extend(token.encode(encoding))
-            s = bytes(out).decode(encoding)
+            s = out.decode(encoding)
         # We now have a Unicode string, but it might contain surrogate pairs.
         # We convert surrogates to actual Unicode by round-tripping through
         # Python's UTF-16 codec in a special mode.
