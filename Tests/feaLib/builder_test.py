@@ -72,14 +72,14 @@ class BuilderTest(unittest.TestCase):
         spec9a spec9a2 spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
         spec9g spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
-        bug512 bug514 bug568 bug633 bug1307 bug1459 bug2276 variable_bug2772
+        bug512 bug514 bug568 bug633 bug1196 bug1307 bug1459 bug2276 variable_bug2772
         name size size2 multiple_feature_blocks omitted_GlyphClassDef
         ZeroValue_SinglePos_horizontal ZeroValue_SinglePos_vertical
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
-        PairPosSubtable ChainSubstSubtable SubstSubtable ChainPosSubtable 
-        LigatureSubtable AlternateSubtable MultipleSubstSubtable 
-        SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
+        PairPosSubtable ChainSubstSubtable SubstSubtable ChainPosSubtable
+        LigatureSubtable AlternateSubtable MultipleSubstSubtable
+        SingleSubstSubtable aalt_chain_contextual_subst AlternateChained
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset

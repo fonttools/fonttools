@@ -1336,6 +1336,25 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(name.string, "Jovica Veljović")
         self.assertEqual(name.asFea(), r'nameid 9 1 0 18 "Jovica Veljovi\e6";')
 
+    def test_nameid_mac_japanese(self):
+        # Literal text and \XX escapes are combined into a single byte
+        # sequence before decoding, so multibyte Shift-JIS chars work even
+        # when one of the constituent bytes is a printable ASCII char (#1196).
+        # Here \95F is the Shift-JIS byte pair 0x95 0x46 = 彦.
+        doc = self.parse(
+            r'table name { nameid 9 1 1 11 "Kozuka \8f\ac\92\cb\8f\b9\95F"; } name;'
+        )
+        name = doc.statements[0].statements[0]
+        self.assertEqual(name.nameID, 9)
+        self.assertEqual(name.platformID, 1)
+        self.assertEqual(name.platEncID, 1)
+        self.assertEqual(name.langID, 11)
+        self.assertEqual(name.string, "Kozuka 小塚昌彦")
+        self.assertEqual(
+            name.asFea(),
+            r'nameid 9 1 1 11 "Kozuka \8f\ac\92\cb\8f\b9\95F";',
+        )
+
     def test_nameid_unsupported_platform(self):
         self.assertRaisesRegex(
             FeatureLibError,
