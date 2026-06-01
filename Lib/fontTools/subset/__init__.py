@@ -3356,7 +3356,7 @@ class Options(object):
         "rand": ["rand"],
         "justify": ["jalt"],
         "private": ["Harf", "HARF", "Buzz", "BUZZ"],
-        "east_asian_spacing": ["chws", "vchw", "halt", "vhal"],
+        "east_asian_spacing": ["chws", "vchw", "halt", "vhal", "palt"],
         # Complex shapers
         "arabic": [
             "init",
