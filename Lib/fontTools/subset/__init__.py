@@ -2929,12 +2929,12 @@ def subset_glyphs(self, s):
 @_add_method(otTables.MathVariants)
 def subset_glyphs(self, s):
     if self.VertGlyphCoverage:
-        indices = self.VertGlyphCoverage.subset(s.glyphs)
+        indices = self.VertGlyphCoverage.subset(s.glyphs_wo_math_closure)
         self.VertGlyphConstruction = _list_subset(self.VertGlyphConstruction, indices)
         self.VertGlyphCount = len(self.VertGlyphConstruction)
 
     if self.HorizGlyphCoverage:
-        indices = self.HorizGlyphCoverage.subset(s.glyphs)
+        indices = self.HorizGlyphCoverage.subset(s.glyphs_wo_math_closure)
         self.HorizGlyphConstruction = _list_subset(self.HorizGlyphConstruction, indices)
         self.HorizGlyphCount = len(self.HorizGlyphConstruction)
 
@@ -3642,6 +3642,7 @@ class Subsetter(object):
                     self.glyphs.add(font.getGlyphName(i))
                 log.info("Added first four glyphs to subset")
 
+        self.glyphs_wo_math_closure = frozenset(self.glyphs)
         if "MATH" in font:
             with timer("close glyph list over 'MATH'"):
                 log.info(
