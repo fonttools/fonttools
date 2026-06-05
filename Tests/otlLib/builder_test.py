@@ -454,6 +454,12 @@ class BuilderTest(object):
             "</LigCaretList>",
         ]
 
+    def test_buildLigCaretList_extended(self):
+        carets = builder.buildLigCaretList(
+            {"f_f_i": [300]}, {}, ExtendedGlyphMap(self.GLYPHMAP)
+        )
+        assert isinstance(carets, otTables.LigCaretList2)
+
     def test_buildLigCaretList_empty(self):
         assert builder.buildLigCaretList({}, {}, self.GLYPHMAP) is None
 

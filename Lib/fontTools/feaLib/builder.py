@@ -817,7 +817,7 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if "GPOS" in self.font:
                     self.font["GPOS"].table.remap_device_varidxes(varidx_map)
-        if any(
+        has_data = any(
             (
                 gdef.GlyphClassDef,
                 gdef.AttachList,
@@ -825,12 +825,26 @@ class Builder(object):
                 gdef.MarkAttachClassDef,
                 gdef.MarkGlyphSetsDef,
             )
-        ) or hasattr(gdef, "VarStore"):
+        ) or hasattr(gdef, "VarStore")
+        if self.font.hasExtendedGlyphIDs():
+            self.promoteGDEF_(gdef)
+        if has_data:
             result = newTable("GDEF")
             result.table = gdef
             return result
         else:
             return None
+
+    def promoteGDEF_(self, gdef):
+        gdef.Version = 0x00010004
+        gdef.GlyphClassDef2, gdef.GlyphClassDef = gdef.GlyphClassDef, None
+        gdef.AttachList2, gdef.AttachList = gdef.AttachList, None
+        gdef.LigCaretList2, gdef.LigCaretList = gdef.LigCaretList, None
+        gdef.MarkAttachClassDef2, gdef.MarkAttachClassDef = (
+            gdef.MarkAttachClassDef,
+            None,
+        )
+        gdef.MarkGlyphSetsDef2, gdef.MarkGlyphSetsDef = gdef.MarkGlyphSetsDef, None
 
     def buildGDEFGlyphClassDef_(self):
         if self.glyphClassDefs_:
