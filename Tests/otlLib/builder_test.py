@@ -903,6 +903,13 @@ class BuilderTest(object):
             "</PairPos>",
         ]
 
+    def test_buildPairPosClassesSubtable_format4(self):
+        subtable = builder.buildPairPosClassesSubtable(
+            {(("one",), ("two",)): (builder.buildValue({}), None)},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 4
+
     def test_buildPairPosGlyphs(self):
         d50 = builder.buildValue({"XPlacement": -50})
         d8020 = builder.buildValue({"XPlacement": -80, "YPlacement": -20})
@@ -989,6 +996,15 @@ class BuilderTest(object):
             "  </PairSet>",
             "</PairPos>",
         ]
+
+    def test_buildPairPosGlyphsSubtable_format3(self):
+        subtable = builder.buildPairPosGlyphsSubtable(
+            {("one", "two"): (builder.buildValue({}), None)},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 3
+        assert isinstance(subtable.PairSet[0], otTables.PairSet2)
+        assert isinstance(subtable.PairSet[0].PairValueRecord[0], otTables.PairValue2)
 
     def test_buildSinglePos(self):
         subtables = builder.buildSinglePos(

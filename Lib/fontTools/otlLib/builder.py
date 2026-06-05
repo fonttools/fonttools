@@ -2388,7 +2388,7 @@ def buildPairPosClassesSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2
         classDef1.add(gc1)
         classDef2.add(gc2)
     self = ot.PairPos()
-    self.Format = 2
+    self.Format = 4 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 2
     valueFormat1 = self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
     valueFormat2 = self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
     self.Coverage = buildCoverage(coverage, glyphMap)
@@ -2497,7 +2497,8 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
         A ``otTables.PairPos`` object.
     """
     self = ot.PairPos()
-    self.Format = 1
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self.Format = 3 if extended else 1
     valueFormat1 = self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
     valueFormat2 = self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
     p = {}
@@ -2506,11 +2507,11 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
     self.Coverage = buildCoverage({g for g, _ in pairs.keys()}, glyphMap)
     self.PairSet = []
     for glyph in self.Coverage.glyphs:
-        ps = ot.PairSet()
+        ps = ot.PairSet2() if extended else ot.PairSet()
         ps.PairValueRecord = []
         self.PairSet.append(ps)
         for glyph2, val1, val2 in sorted(p[glyph], key=lambda x: glyphMap[x[0]]):
-            pvr = ot.PairValueRecord()
+            pvr = ot.PairValue2() if extended else ot.PairValueRecord()
             pvr.SecondGlyph = glyph2
             pvr.Value1 = (
                 ValueRecord(src=val1, valueFormat=valueFormat1)
