@@ -14,6 +14,136 @@ def makeCoverage(glyphs):
     return coverage
 
 
+def compileTable(table, font):
+    writer = OTTableWriter()
+    table.compile(writer, font)
+    return hexStr(writer.getAllData())
+
+
+def decompileTable(table, data, font):
+    table.decompile(OTTableReader(deHexStr(data)), font)
+    return table
+
+
+class SparseFakeFont:
+    def __init__(self, glyphMap):
+        self.glyphMap = glyphMap
+        self.reverseGlyphMap = {glyphID: name for name, glyphID in glyphMap.items()}
+        self.lazy = False
+
+    def getGlyphID(self, name):
+        return self.glyphMap[name]
+
+    def getGlyphIDMany(self, names):
+        return [self.getGlyphID(name) for name in names]
+
+    def getGlyphName(self, glyphID):
+        return self.reverseGlyphMap[glyphID]
+
+    def getGlyphNameMany(self, glyphIDs):
+        return [self.getGlyphName(glyphID) for glyphID in glyphIDs]
+
+
+class CoverageTest(unittest.TestCase):
+    def setUp(self):
+        self.font = SparseFakeFont(
+            {"a": 0x10000, "b": 0x10001, "c": 0x10002, "d": 0x10003}
+        )
+
+    def test_postRead_format3(self):
+        table = otTables.Coverage()
+        table.Format = 3
+        table.postRead({"GlyphArray": ["a", "c"]}, self.font)
+        self.assertEqual(table.glyphs, ["a", "c"])
+
+    def test_postRead_format4(self):
+        record = otTables.RangeRecord2()
+        record.Start = "a"
+        record.End = "d"
+        record.StartCoverageIndex = 0
+        table = otTables.Coverage()
+        table.Format = 4
+        table.postRead({"RangeRecord": [record]}, self.font)
+        self.assertEqual(table.glyphs, ["a", "b", "c", "d"])
+
+    def test_decompile_format4(self):
+        table = decompileTable(
+            otTables.Coverage(),
+            "0004000001010000010003000000",
+            self.font,
+        )
+        self.assertEqual(table.glyphs, ["a", "b", "c", "d"])
+
+    def test_preWrite_format3(self):
+        table = makeCoverage(["a", "c"])
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 3)
+        self.assertEqual(rawTable["GlyphArray"], ["a", "c"])
+        self.assertEqual(compileTable(table, self.font), "0003000002010000010002")
+
+    def test_preWrite_format4(self):
+        table = makeCoverage(["a", "b", "c", "d"])
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 4)
+        self.assertIsInstance(rawTable["RangeRecord"][0], otTables.RangeRecord2)
+        self.assertEqual(compileTable(table, self.font), "0004000001010000010003000000")
+
+
+class ClassDefTest(unittest.TestCase):
+    def setUp(self):
+        self.font = SparseFakeFont(
+            {"a": 0x10000, "b": 0x10001, "c": 0x20000, "d": 0x20001}
+        )
+
+    def test_postRead_format3(self):
+        table = otTables.ClassDef()
+        table.Format = 3
+        table.postRead(
+            {"StartGlyph": "a", "ClassValueArray": [1, 2]},
+            self.font,
+        )
+        self.assertEqual(table.classDefs, {"a": 1, "b": 2})
+
+    def test_postRead_format4(self):
+        record = otTables.ClassRangeRecord2()
+        record.Start = "c"
+        record.End = "d"
+        record.Class = 3
+        table = otTables.ClassDef()
+        table.Format = 4
+        table.postRead({"ClassRangeRecord": [record]}, self.font)
+        self.assertEqual(table.classDefs, {"c": 3, "d": 3})
+
+    def test_decompile_format4(self):
+        table = decompileTable(
+            otTables.ClassDef(),
+            "000400000201000001000000010200000200000002",
+            self.font,
+        )
+        self.assertEqual(table.classDefs, {"a": 1, "c": 2})
+
+    def test_preWrite_format3(self):
+        table = otTables.ClassDef()
+        table.classDefs = {"a": 1, "b": 2}
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 3)
+        self.assertEqual(rawTable["ClassValueArray"], [1, 2])
+        self.assertEqual(compileTable(table, self.font), "000301000000000200010002")
+
+    def test_preWrite_format4(self):
+        table = otTables.ClassDef()
+        table.classDefs = {"a": 1, "c": 2}
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 4)
+        self.assertIsInstance(
+            rawTable["ClassRangeRecord"][0], otTables.ClassRangeRecord2
+        )
+        self.assertEqual(
+            compileTable(table, self.font),
+            "000400000201000001000000010200000200000002",
+        )
+
+
 class SingleSubstTest(unittest.TestCase):
     def setUp(self):
         self.glyphs = ".notdef A B C D E a b c d e".split()

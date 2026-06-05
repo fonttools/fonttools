@@ -331,8 +331,8 @@ otData = [
             ),
             FieldSpec("uint24", "RangeCount", description="Number of RangeRecord2s"),
             FieldSpec(
-                "struct",
                 "RangeRecord2",
+                "RangeRecord",
                 repeat="RangeCount",
                 aux=0,
                 description="Array of glyph ranges-ordered by Start GlyphID",
@@ -437,8 +437,8 @@ otData = [
                 "uint24", "ClassRangeCount", description="Number of ClassRangeRecord2s"
             ),
             FieldSpec(
-                "struct",
                 "ClassRangeRecord2",
+                "ClassRangeRecord",
                 repeat="ClassRangeCount",
                 aux=0,
                 description="Array of ClassRangeRecord2s-ordered by Start GlyphID",
