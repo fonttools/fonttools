@@ -2063,6 +2063,22 @@ class ChainContextualRulesetTest(object):
         assert set(cd[2].classes()[1:]) == set()
 
 
+def test_buildExtendedReverseChainSingleSubst():
+    font = ttLib.TTFont()
+    font.setGlyphOrder([".notdef", "a", "b", "c", "d"])
+    lookupBuilder = builder.ReverseChainSingleSubstBuilder(font, None)
+    lookupBuilder.glyphMap = ExtendedGlyphMap(font.getReverseGlyphMap())
+    lookupBuilder.rules.append(([["a"]], [["d"]], {"c": "b"}))
+
+    lookup = lookupBuilder.build()
+    subtable = lookup.SubTable[0]
+    assert subtable.Format == 2
+    assert subtable.BacktrackCoverage[0].glyphs == ["a"]
+    assert subtable.LookAheadCoverage[0].glyphs == ["d"]
+    assert subtable.Coverage.glyphs == ["c"]
+    assert subtable.Substitute == ["b"]
+
+
 if __name__ == "__main__":
     import sys
 
