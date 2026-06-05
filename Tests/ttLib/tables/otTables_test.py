@@ -1,7 +1,7 @@
 from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
+from fontTools.ttLib.tables.otBase import CountReference, OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 from io import StringIO
 from types import SimpleNamespace
@@ -16,7 +16,13 @@ def makeCoverage(glyphs):
 
 
 def compileTable(table, font):
-    writer = OTTableWriter()
+    localState = None
+    if hasattr(table.__class__, "LookupType"):
+        lookupType = {"LookupType": None}
+        localState = {
+            "LookupType": CountReference(lookupType, "LookupType"),
+        }
+    writer = OTTableWriter(localState=localState)
     table.compile(writer, font)
     return hexStr(writer.getAllData())
 
@@ -168,6 +174,30 @@ class SingleSubstTest(unittest.TestCase):
         table.postRead(rawTable, self.font)
         self.assertEqual(table.mapping, {"A": "c", "B": "b", "C": "a"})
 
+    def test_postRead_format3(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x10002})
+        table = otTables.SingleSubst()
+        table.Format = 3
+        table.postRead(
+            {"Coverage": makeCoverage(["a", "b"]), "DeltaGlyphID": 1},
+            font,
+        )
+        self.assertEqual(table.mapping, {"a": "b", "b": "c"})
+
+    def test_postRead_format4(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.SingleSubst()
+        table.Format = 4
+        table.postRead(
+            {
+                "Coverage": makeCoverage(["a", "b"]),
+                "GlyphCount": 2,
+                "Substitute": ["c", "a"],
+            },
+            font,
+        )
+        self.assertEqual(table.mapping, {"a": "c", "b": "a"})
+
     def test_postRead_formatUnknown(self):
         table = otTables.SingleSubst()
         table.Format = 987
@@ -189,6 +219,30 @@ class SingleSubstTest(unittest.TestCase):
         self.assertEqual(table.Format, 2)
         self.assertEqual(rawTable["Coverage"].glyphs, ["A", "B", "C"])
         self.assertEqual(rawTable["Substitute"], ["c", "b", "a"])
+
+    def test_preWrite_format3(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x10002})
+        table = otTables.SingleSubst()
+        table.mapping = {"a": "b", "b": "c"}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 3)
+        self.assertEqual(rawTable["DeltaGlyphID"], 1)
+        self.assertEqual(
+            compileTable(table, font),
+            "0003000000090000010003000002010000010001",
+        )
+
+    def test_preWrite_format4(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.SingleSubst()
+        table.mapping = {"a": "c", "b": "a"}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 4)
+        self.assertEqual(rawTable["Substitute"], ["c", "a"])
+        self.assertEqual(
+            compileTable(table, font),
+            "00040000000f0000020200000100000003000002010000010001",
+        )
 
     def test_preWrite_emptyMapping(self):
         table = otTables.SingleSubst()
