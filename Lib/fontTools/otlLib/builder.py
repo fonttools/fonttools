@@ -29,6 +29,10 @@ import copy
 log = logging.getLogger(__name__)
 
 
+def _glyphMapHasExtendedGlyphIDs(glyphMap):
+    return len(glyphMap) > 0x10000
+
+
 def buildCoverage(glyphs, glyphMap):
     """Builds a coverage table.
 
@@ -2645,14 +2649,15 @@ def buildSinglePosSubtable(values, glyphMap):
         ValueRecord(src=values[g], valueFormat=valueFormat)
         for g in self.Coverage.glyphs
     ]
+    formatOffset = 2 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 0
     if all(v == valueRecords[0] for v in valueRecords):
-        self.Format = 1
+        self.Format = 1 + formatOffset
         if self.ValueFormat != 0:
             self.Value = valueRecords[0]
         else:
             self.Value = None
     else:
-        self.Format = 2
+        self.Format = 2 + formatOffset
         self.Value = valueRecords
         self.ValueCount = len(self.Value)
     return self

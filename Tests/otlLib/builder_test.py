@@ -8,6 +8,11 @@ from fontTools.ttLib.tables import otTables
 import pytest
 
 
+class ExtendedGlyphMap(dict):
+    def __len__(self):
+        return 0x10001
+
+
 class BuilderTest(object):
     GLYPHS = (
         ".notdef space zero one two three four five six "
@@ -1075,6 +1080,23 @@ class BuilderTest(object):
             '  <Value index="1" XPlacement="0" YPlacement="-888"/>',
             "</SinglePos>",
         ]
+
+    def test_buildSinglePosSubtable_format3(self):
+        subtable = builder.buildSinglePosSubtable(
+            {"one": builder.buildValue({"XPlacement": 777})},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 3
+
+    def test_buildSinglePosSubtable_format4(self):
+        subtable = builder.buildSinglePosSubtable(
+            {
+                "one": builder.buildValue({"XPlacement": 777}),
+                "two": builder.buildValue({"YPlacement": -888}),
+            },
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 4
 
     def test_buildValue(self):
         value = builder.buildValue({"XPlacement": 7, "YPlacement": 23})
