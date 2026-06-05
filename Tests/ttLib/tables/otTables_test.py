@@ -49,6 +49,9 @@ class SparseFakeFont:
     def getGlyphNameMany(self, glyphIDs):
         return [self.getGlyphName(glyphID) for glyphID in glyphIDs]
 
+    def hasExtendedGlyphIDs(self):
+        return True
+
 
 class CoverageTest(unittest.TestCase):
     def setUp(self):

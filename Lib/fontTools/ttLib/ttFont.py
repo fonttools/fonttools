@@ -1084,6 +1084,10 @@ class TTFont(object):
             self._getGlyphNamesFromCmap()
         return self.glyphOrder
 
+    def hasExtendedGlyphIDs(self) -> bool:
+        """Returns whether the font has glyph IDs that do not fit in 16 bits."""
+        return len(self.getGlyphOrder()) > 0x10000
+
     def _getGlyphNamesFromCmap(self) -> None:
         #
         # This is rather convoluted, but then again, it's an interesting problem:

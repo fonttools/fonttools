@@ -89,6 +89,9 @@ class FakeFont:
     def getGlyphOrder(self):
         return self.glyphOrder_
 
+    def hasExtendedGlyphIDs(self):
+        return len(self.glyphOrder_) > 0x10000
+
     def getReverseGlyphMap(self):
         return self.reverseGlyphOrderDict_
 
