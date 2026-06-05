@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.beyond64k import lower_tables, upper_tables
 
@@ -101,3 +102,43 @@ def test_lower_rejects_large_glyph_count():
 
     with pytest.raises(ValueError, match="does not fit"):
         lower_tables(font, tables={"maxp"}, validate=False)
+
+
+def test_layout_header_round_trip():
+    font = TTFont()
+    font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
+    addOpenTypeFeaturesFromString(
+        font,
+        """
+        feature kern { pos period period -20; } kern;
+        feature liga { sub period period by ellipsis; } liga;
+        """,
+    )
+
+    upper_tables(font, tables={"GSUB", "GPOS"})
+
+    for tag in ("GSUB", "GPOS"):
+        table = font[tag].table
+        assert table.Version == 0x00010002
+        assert table.ScriptList is None
+        assert table.FeatureList is None
+        assert table.LookupList is None
+        assert table.ScriptList2 is not None
+        assert table.FeatureList2 is not None
+        assert table.LookupList2 is not None
+
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    lower_tables(font, tables={"GSUB", "GPOS"})
+
+    for tag in ("GSUB", "GPOS"):
+        table = font[tag].table
+        assert table.Version == 0x00010000
+        assert table.ScriptList is not None
+        assert table.FeatureList is not None
+        assert table.LookupList is not None
+        assert table.ScriptList2 is None
+        assert table.FeatureList2 is None
+        assert table.LookupList2 is None

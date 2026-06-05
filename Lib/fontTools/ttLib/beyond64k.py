@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import Callable
 
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.ttLib import TTFont, TTLibError, newTable
@@ -19,16 +21,72 @@ _TABLE_PAIRS = {
     "vmtx": "VMTX",
     "gvar": "GVAR",
 }
-_UPPER_TABLES = _TABLE_PAIRS
-_LOWER_TABLES = {upper: lower for lower, upper in _TABLE_PAIRS.items()}
 _TABLE_IDENTITIES = {
     tag: lower for lower, upper in _TABLE_PAIRS.items() for tag in (lower, upper)
+}
+_TABLE_IDENTITIES.update({"GSUB": "GSUB", "GPOS": "GPOS"})
+
+
+@dataclass(frozen=True)
+class _TableConversion:
+    destination: str
+    transform: Callable | None = None
+
+
+def _upper_layout_header(font, table, overwrite):
+    table = table.table
+    for name in ("ScriptList", "FeatureList", "LookupList"):
+        source = getattr(table, name, None)
+        destination_name = name + "2"
+        destination = getattr(table, destination_name, None)
+        if source is not None and destination is not None and not overwrite:
+            raise ValueError(
+                f"Both {name!r} and {destination_name!r} exist; "
+                "set overwrite=True to replace the destination"
+            )
+        if source is not None:
+            setattr(table, destination_name, source)
+            setattr(table, name, None)
+    table.Version = max(table.Version, 0x00010002)
+
+
+def _lower_layout_header(font, table, overwrite):
+    table = table.table
+    for name in ("ScriptList", "FeatureList", "LookupList"):
+        source_name = name + "2"
+        source = getattr(table, source_name, None)
+        destination = getattr(table, name, None)
+        if source is not None and destination is not None and not overwrite:
+            raise ValueError(
+                f"Both {source_name!r} and {name!r} exist; "
+                "set overwrite=True to replace the destination"
+            )
+        if source is not None:
+            setattr(table, name, source)
+            setattr(table, source_name, None)
+    table.Version = (
+        0x00010001 if getattr(table, "FeatureVariations", None) else 0x00010000
+    )
+
+
+_UPPER_TABLES = {
+    **{
+        source: _TableConversion(destination)
+        for source, destination in _TABLE_PAIRS.items()
+    },
+    "GSUB": _TableConversion("GSUB", _upper_layout_header),
+    "GPOS": _TableConversion("GPOS", _upper_layout_header),
+}
+_LOWER_TABLES = {
+    **{upper: _TableConversion(lower) for lower, upper in _TABLE_PAIRS.items()},
+    "GSUB": _TableConversion("GSUB", _lower_layout_header),
+    "GPOS": _TableConversion("GPOS", _lower_layout_header),
 }
 
 
 def _normalize_tables(tables: Iterable[str] | None) -> set[str]:
     if tables is None:
-        return set(_TABLE_PAIRS)
+        return set(_TABLE_IDENTITIES.values())
 
     normalized = set()
     for tag in tables:
@@ -49,7 +107,7 @@ def _validate_family(font: TTFont) -> None:
         )
 
 
-def _validate_lowering(font: TTFont, conversions: dict[str, str]) -> None:
+def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -> None:
     if "MAXP" in conversions and "MAXP" in font and font["MAXP"].numGlyphs > 0xFFFF:
         raise ValueError("MAXP.numGlyphs does not fit in maxp")
     if "HHEA" in conversions and "HHEA" in font:
@@ -60,7 +118,18 @@ def _validate_lowering(font: TTFont, conversions: dict[str, str]) -> None:
             raise ValueError("VHEA.numberOfVMetrics does not fit in vhea")
 
 
-def _convert_table(font: TTFont, source, source_tag: str, destination_tag: str) -> None:
+def _convert_table(
+    font: TTFont,
+    source,
+    source_tag: str,
+    conversion: _TableConversion,
+    overwrite: bool,
+) -> None:
+    destination_tag = conversion.destination
+    if conversion.transform is not None:
+        conversion.transform(font, source, overwrite)
+    if source_tag == destination_tag:
+        return
     destination = newTable(destination_tag)
     table_tag = destination.tableTag
     destination.__dict__.update(source.__dict__)
@@ -73,7 +142,7 @@ def _convert_tables(
     font: TTFont,
     *,
     tables: Iterable[str] | None,
-    table_conversions: dict[str, str],
+    table_conversions: dict[str, _TableConversion],
     validate: bool,
     overwrite: bool,
     ignore_missing: bool,
@@ -81,19 +150,25 @@ def _convert_tables(
 ) -> None:
     tables = _normalize_tables(tables)
     conversions = {
-        source: destination
-        for source, destination in table_conversions.items()
+        source: conversion
+        for source, conversion in table_conversions.items()
         if _TABLE_IDENTITIES[source] in tables
     }
     if validate_conversion is not None:
         validate_conversion(font, conversions)
 
     pending = []
-    for source_tag, destination_tag in conversions.items():
+    for source_tag, conversion in conversions.items():
+        destination_tag = conversion.destination
         source_exists = source_tag in font
         destination_exists = destination_tag in font
 
-        if source_exists and destination_exists and not overwrite:
+        if (
+            source_tag != destination_tag
+            and source_exists
+            and destination_exists
+            and not overwrite
+        ):
             raise ValueError(
                 f"Both {source_tag!r} and {destination_tag!r} exist; "
                 "set overwrite=True to replace the destination"
@@ -102,11 +177,12 @@ def _convert_tables(
             if destination_exists or ignore_missing:
                 continue
             raise KeyError(source_tag)
-        pending.append((source_tag, destination_tag))
+        pending.append((source_tag, conversion))
 
     if validate:
         result_tags = set(font.keys())
-        for source_tag, destination_tag in pending:
+        for source_tag, conversion in pending:
+            destination_tag = conversion.destination
             result_tags.discard(source_tag)
             result_tags.add(destination_tag)
         lower = sorted(tag for tag in _TABLE_PAIRS if tag in result_tags)
@@ -118,8 +194,8 @@ def _convert_tables(
             )
 
     sources = {source_tag: font[source_tag] for source_tag, _ in pending}
-    for source_tag, destination_tag in pending:
-        _convert_table(font, sources[source_tag], source_tag, destination_tag)
+    for source_tag, conversion in pending:
+        _convert_table(font, sources[source_tag], source_tag, conversion, overwrite)
 
     if validate:
         _validate_family(font)
