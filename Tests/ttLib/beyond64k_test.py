@@ -378,6 +378,54 @@ def test_contextual_layout_end_to_end_round_trip():
     assert_contextual_formats(font, False)
 
 
+def test_gdef_end_to_end_round_trip():
+    font = TTFont()
+    font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
+    addOpenTypeFeaturesFromString(
+        font,
+        """
+        table GDEF {
+            GlyphClassDef [period], [ellipsis], , ;
+            LigatureCaretByPos ellipsis 300;
+        } GDEF;
+        """,
+    )
+
+    upper_tables(font, tables={"GDEF"})
+    table = font["GDEF"].table
+    assert table.Version == 0x00010004
+    assert table.GlyphClassDef is None
+    assert table.GlyphClassDef2 is not None
+    assert table.LigCaretList is None
+    assert isinstance(table.LigCaretList2, otTables.LigCaretList2)
+
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    table = font["GDEF"].table
+    assert table.Version == 0x00010004
+    assert table.GlyphClassDef2 is not None
+    assert isinstance(table.LigCaretList2, otTables.LigCaretList2)
+
+    lower_tables(font, tables={"GDEF"})
+    table = font["GDEF"].table
+    assert table.Version == 0x00010000
+    assert table.GlyphClassDef is not None
+    assert table.GlyphClassDef2 is None
+    assert isinstance(table.LigCaretList, otTables.LigCaretList)
+    assert table.LigCaretList2 is None
+
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    table = font["GDEF"].table
+    assert table.Version == 0x00010000
+    assert table.GlyphClassDef is not None
+    assert isinstance(table.LigCaretList, otTables.LigCaretList)
+
+
 def test_round_trip_companion_tables():
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")

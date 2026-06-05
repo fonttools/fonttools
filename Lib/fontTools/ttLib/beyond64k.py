@@ -26,7 +26,7 @@ _TABLE_PAIRS = {
 _TABLE_IDENTITIES = {
     tag: lower for lower, upper in _TABLE_PAIRS.items() for tag in (lower, upper)
 }
-_TABLE_IDENTITIES.update({"GSUB": "GSUB", "GPOS": "GPOS"})
+_TABLE_IDENTITIES.update({"GDEF": "GDEF", "GSUB": "GSUB", "GPOS": "GPOS"})
 
 
 @dataclass(frozen=True)
@@ -292,38 +292,90 @@ def _force_layout_formats(table, extended):
             subtable._forceExtended = extended
 
 
-def _upper_layout_header(font, table, overwrite):
-    table = table.table
-    for name in ("ScriptList", "FeatureList", "LookupList"):
-        source = getattr(table, name, None)
-        destination_name = name + "2"
+def _convert_table_object(table, table_type):
+    converted = table_type()
+    converted.__dict__.update(table.__dict__)
+    return converted
+
+
+def _move_fields(table, names, extended, overwrite):
+    for name in names:
+        compact_name = name
+        extended_name = name + "2"
+        source_name, destination_name = (
+            (compact_name, extended_name) if extended else (extended_name, compact_name)
+        )
+        source = getattr(table, source_name, None)
         destination = getattr(table, destination_name, None)
         if source is not None and destination is not None and not overwrite:
             raise ValueError(
-                f"Both {name!r} and {destination_name!r} exist; "
+                f"Both {source_name!r} and {destination_name!r} exist; "
                 "set overwrite=True to replace the destination"
             )
         if source is not None:
             setattr(table, destination_name, source)
-            setattr(table, name, None)
+            setattr(table, source_name, None)
+
+
+def _upper_gdef(font, table, overwrite):
+    table = table.table
+    _move_fields(
+        table,
+        (
+            "GlyphClassDef",
+            "AttachList",
+            "LigCaretList",
+            "MarkAttachClassDef",
+            "MarkGlyphSetsDef",
+        ),
+        True,
+        overwrite,
+    )
+    if getattr(table, "LigCaretList2", None) is not None:
+        table.LigCaretList2 = _convert_table_object(
+            table.LigCaretList2, otTables.LigCaretList2
+        )
+    table.Version = max(table.Version, 0x00010004)
+    _force_layout_formats(table, True)
+
+
+def _lower_gdef(font, table, overwrite):
+    table = table.table
+    _move_fields(
+        table,
+        (
+            "GlyphClassDef",
+            "AttachList",
+            "LigCaretList",
+            "MarkAttachClassDef",
+            "MarkGlyphSetsDef",
+        ),
+        False,
+        overwrite,
+    )
+    if getattr(table, "LigCaretList", None) is not None:
+        table.LigCaretList = _convert_table_object(
+            table.LigCaretList, otTables.LigCaretList
+        )
+    if getattr(table, "VarStore", None) is not None:
+        table.Version = 0x00010003
+    elif getattr(table, "MarkGlyphSetsDef", None) is not None:
+        table.Version = 0x00010002
+    else:
+        table.Version = 0x00010000
+    _force_layout_formats(table, False)
+
+
+def _upper_layout_header(font, table, overwrite):
+    table = table.table
+    _move_fields(table, ("ScriptList", "FeatureList", "LookupList"), True, overwrite)
     table.Version = max(table.Version, 0x00010002)
     _force_layout_formats(table, True)
 
 
 def _lower_layout_header(font, table, overwrite):
     table = table.table
-    for name in ("ScriptList", "FeatureList", "LookupList"):
-        source_name = name + "2"
-        source = getattr(table, source_name, None)
-        destination = getattr(table, name, None)
-        if source is not None and destination is not None and not overwrite:
-            raise ValueError(
-                f"Both {source_name!r} and {name!r} exist; "
-                "set overwrite=True to replace the destination"
-            )
-        if source is not None:
-            setattr(table, name, source)
-            setattr(table, source_name, None)
+    _move_fields(table, ("ScriptList", "FeatureList", "LookupList"), False, overwrite)
     table.Version = (
         0x00010001 if getattr(table, "FeatureVariations", None) else 0x00010000
     )
@@ -335,11 +387,13 @@ _UPPER_TABLES = {
         source: _TableConversion(destination)
         for source, destination in _TABLE_PAIRS.items()
     },
+    "GDEF": _TableConversion("GDEF", _upper_gdef),
     "GSUB": _TableConversion("GSUB", _upper_layout_header),
     "GPOS": _TableConversion("GPOS", _upper_layout_header),
 }
 _LOWER_TABLES = {
     **{upper: _TableConversion(lower) for lower, upper in _TABLE_PAIRS.items()},
+    "GDEF": _TableConversion("GDEF", _lower_gdef),
     "GSUB": _TableConversion("GSUB", _lower_layout_header),
     "GPOS": _TableConversion("GPOS", _lower_layout_header),
 }
