@@ -1137,7 +1137,9 @@ otData = [
     (
         "ContextPosFormat4",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 4"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint24", "SeqRuleSetCount"),
             FieldSpec(
@@ -1151,7 +1153,9 @@ otData = [
     (
         "ContextPosFormat5",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 5"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 5"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("LOffset", "ClassDef"),
             FieldSpec("uint24", "ClassSeqRuleSetCount"),
@@ -1166,7 +1170,9 @@ otData = [
     (
         "ContextPosFormat6",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 6"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 6"
+            ),
             FieldSpec("uint16", "GlyphCount"),
             FieldSpec("uint16", "SeqLookupCount"),
             FieldSpec("Offset24", "Coverage", repeat="GlyphCount", aux=0),
@@ -1430,7 +1436,9 @@ otData = [
     (
         "ChainContextPosFormat4",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 4"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint24", "ChainedSeqRuleSetCount"),
             FieldSpec(
@@ -1444,7 +1452,9 @@ otData = [
     (
         "ChainContextPosFormat5",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 5"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 5"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("LOffset", "BacktrackClassDef"),
             FieldSpec("LOffset", "InputClassDef"),
@@ -1564,7 +1574,9 @@ otData = [
     (
         "SinglePosFormat3",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 3"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 3"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint16", "ValueFormat"),
             FieldSpec("ValueRecord", "Value"),
@@ -1573,7 +1585,9 @@ otData = [
     (
         "SinglePosFormat4",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 4"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint16", "ValueFormat"),
             FieldSpec("uint24", "ValueCount"),
@@ -1583,14 +1597,14 @@ otData = [
     (
         "PairPosFormat3",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 3"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 3"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint16", "ValueFormat1"),
             FieldSpec("uint16", "ValueFormat2"),
             FieldSpec("uint24", "PairSetCount"),
-            FieldSpec(
-                "LOffsetTo(PairSet2)", "PairSet", repeat="PairSetCount", aux=0
-            ),
+            FieldSpec("LOffsetTo(PairSet2)", "PairSet", repeat="PairSetCount", aux=0),
         ],
     ),
     (
@@ -1611,7 +1625,9 @@ otData = [
     (
         "PairPosFormat4",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 4"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint16", "ValueFormat1"),
             FieldSpec("uint16", "ValueFormat2"),
@@ -1625,7 +1641,9 @@ otData = [
     (
         "CursivePosFormat2",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 2"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint24", "EntryExitCount"),
             FieldSpec("EntryExit2", "EntryExitRecord", repeat="EntryExitCount", aux=0),
@@ -1641,7 +1659,9 @@ otData = [
     (
         "MarkBasePosFormat2",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 2"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
             FieldSpec("LOffset", "MarkCoverage"),
             FieldSpec("LOffset", "BaseCoverage"),
             FieldSpec("uint16", "ClassCount"),
@@ -1670,7 +1690,9 @@ otData = [
     (
         "MarkLigPosFormat2",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 2"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
             FieldSpec("LOffset", "MarkCoverage"),
             FieldSpec("LOffset", "LigatureCoverage"),
             FieldSpec("uint16", "ClassCount"),
@@ -1716,7 +1738,9 @@ otData = [
     (
         "MarkMarkPosFormat2",
         [
-            FieldSpec("uint16", "PosFormat", description="Format identifier-format = 2"),
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
             FieldSpec("LOffset", "Mark1Coverage"),
             FieldSpec("LOffset", "Mark2Coverage"),
             FieldSpec("uint16", "ClassCount"),
