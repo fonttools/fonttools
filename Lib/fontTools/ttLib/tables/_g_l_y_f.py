@@ -89,9 +89,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
     # no padding, except for when padding would allow to use short loca offsets.
     padding = 1
+    locaTag = "loca"
+    maxpTag = "maxp"
+    hheaTag = "hhea"
+    hmtxTag = "hmtx"
+    vmtxTag = "vmtx"
+    extended = False
 
     def decompile(self, data, ttFont):
-        loca = ttFont["loca"]
+        loca = ttFont[self.locaTag]
         pos = int(loca[0])
         nextPos = 0
         noname = 0
@@ -171,10 +177,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                 locations[len(dataList)] = currentLocation
 
         data = b"".join(dataList)
-        if "loca" in ttFont:
-            ttFont["loca"].set(locations)
-        if "maxp" in ttFont:
-            ttFont["maxp"].numGlyphs = len(self.glyphs)
+        if self.locaTag in ttFont:
+            ttFont[self.locaTag].set(locations)
+        if self.maxpTag in ttFont:
+            ttFont[self.maxpTag].numGlyphs = len(self.glyphs)
         if not data:
             # As a special case when all glyph in the font are empty, add a zero byte
             # to the table, so that OTS doesn’t reject it, and to make the table work
@@ -508,10 +514,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         For rationale see:
         https://github.com/fonttools/fonttools/pull/2266/files#r613569473
         """
-        vMetrics = getattr(ttFont.get("vmtx"), "metrics", None)
+        vMetrics = getattr(ttFont.get(self.vmtxTag), "metrics", None)
         if vMetrics is None:
             verticalAdvanceWidth = ttFont["head"].unitsPerEm
-            topSideY = getattr(ttFont.get("hhea"), "ascent", None)
+            topSideY = getattr(ttFont.get(self.hheaTag), "ascent", None)
             if topSideY is None:
                 if defaultVerticalOrigin is not None:
                     topSideY = defaultVerticalOrigin
@@ -527,7 +533,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
         """Old public name for self._getPhantomPoints().
         See: https://github.com/fonttools/fonttools/pull/2266"""
-        hMetrics = ttFont["hmtx"].metrics
+        hMetrics = ttFont[self.hmtxTag].metrics
         vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
         return self._getPhantomPoints(glyphName, hMetrics, vMetrics)
 
@@ -537,7 +543,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
         """Old public name for self._getCoordinatesAndControls().
         See: https://github.com/fonttools/fonttools/pull/2266"""
-        hMetrics = ttFont["hmtx"].metrics
+        hMetrics = ttFont[self.hmtxTag].metrics
         vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
         return self._getCoordinatesAndControls(glyphName, hMetrics, vMetrics)
 
@@ -545,8 +551,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     def setCoordinates(self, glyphName, ttFont):
         """Old public name for self._setCoordinates().
         See: https://github.com/fonttools/fonttools/pull/2266"""
-        hMetrics = ttFont["hmtx"].metrics
-        vMetrics = getattr(ttFont.get("vmtx"), "metrics", None)
+        hMetrics = ttFont[self.hmtxTag].metrics
+        vMetrics = getattr(ttFont.get(self.vmtxTag), "metrics", None)
         self._setCoordinates(glyphName, hMetrics, vMetrics)
 
 
@@ -659,6 +665,7 @@ USE_MY_METRICS = 0x0200  # apply these metrics to parent glyph
 OVERLAP_COMPOUND = 0x0400  # used by Apple in GX fonts
 SCALED_COMPONENT_OFFSET = 0x0800  # composite designed to have the component offset scaled (designed for Apple)
 UNSCALED_COMPONENT_OFFSET = 0x1000  # composite designed not to have the component offset scaled (designed for MS)
+GID_IS_24_BIT = 0x2000  # component glyph ID is encoded as uint24 in GLYF
 
 
 CompositeMaxpValues = namedtuple(
@@ -1350,8 +1357,10 @@ class Glyph(object):
         components = []
         more = 1
         while more:
-            flags, glyphID = struct.unpack(">HH", data[i : i + 4])
-            i += 4
+            (flags,) = struct.unpack(">H", data[i : i + 2])
+            glyphIDSize = 3 if glyfTable.extended and flags & GID_IS_24_BIT else 2
+            glyphID = int.from_bytes(data[i + 2 : i + 2 + glyphIDSize], "big")
+            i += 2 + glyphIDSize
             flags = int(flags)
             components.append(glyfTable.getGlyphName(int(glyphID)))
 
@@ -1777,11 +1786,12 @@ class GlyphComponent(object):
         return self.glyphName, trans
 
     def decompile(self, data, glyfTable):
-        flags, glyphID = struct.unpack(">HH", data[:4])
+        (flags,) = struct.unpack(">H", data[:2])
         self.flags = int(flags)
-        glyphID = int(glyphID)
+        glyphIDSize = 3 if glyfTable.extended and flags & GID_IS_24_BIT else 2
+        glyphID = int.from_bytes(data[2 : 2 + glyphIDSize], "big")
         self.glyphName = glyfTable.getGlyphName(int(glyphID))
-        data = data[4:]
+        data = data[2 + glyphIDSize :]
 
         if self.flags & ARG_1_AND_2_ARE_WORDS:
             if self.flags & ARGS_ARE_XY_VALUES:
@@ -1883,7 +1893,13 @@ class GlyphComponent(object):
                 data = data + struct.pack(">h", transform[0][0])
 
         glyphID = glyfTable.getGlyphID(self.glyphName)
-        return struct.pack(">HH", flags, glyphID) + data
+        if glyfTable.extended and glyphID > 0xFFFF:
+            flags |= GID_IS_24_BIT
+            glyphIDSize = 3
+        else:
+            flags &= ~GID_IS_24_BIT
+            glyphIDSize = 2
+        return struct.pack(">H", flags) + glyphID.to_bytes(glyphIDSize, "big") + data
 
     def toXML(self, writer, ttFont):
         attrs = [("glyphName", self.glyphName)]

@@ -17,6 +17,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
     """
 
     dependencies = ["glyf"]
+    maxpTag = "maxp"
 
     def decompile(self, data, ttFont):
         longFormat = ttFont["head"].indexToLocFormat
@@ -30,11 +31,11 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
             locations.byteswap()
         if not longFormat:
             locations = array.array("I", (2 * l for l in locations))
-        if len(locations) < (ttFont["maxp"].numGlyphs + 1):
+        if len(locations) < (ttFont[self.maxpTag].numGlyphs + 1):
             log.warning(
                 "corrupt 'loca' table, or wrong numGlyphs in 'maxp': %d %d",
                 len(locations) - 1,
-                ttFont["maxp"].numGlyphs,
+                ttFont[self.maxpTag].numGlyphs,
             )
         self.locations = locations
 
