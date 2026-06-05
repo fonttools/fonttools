@@ -36,24 +36,31 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
     """
 
     dependencies = ["glyf"]
+    glyphTableTag = "glyf"
+    metricsTableTag = "hmtx"
+    numGlyphsSize = 2
 
     def decompile(self, data, ttFont):
-        dummy, data = sstruct.unpack2(maxpFormat_0_5, data, self)
+        headerSize = 4 + self.numGlyphsSize
+        self.tableVersion = int.from_bytes(data[:4], "big")
+        self.numGlyphs = int.from_bytes(data[4:headerSize], "big")
+        data = data[headerSize:]
         self.numGlyphs = int(self.numGlyphs)
         if self.tableVersion != 0x00005000:
             dummy, data = sstruct.unpack2(maxpFormat_1_0_add, data, self)
         assert len(data) == 0
 
     def compile(self, ttFont):
-        if "glyf" in ttFont:
-            if ttFont.isLoaded("glyf") and ttFont.recalcBBoxes:
+        if self.glyphTableTag in ttFont:
+            if ttFont.isLoaded(self.glyphTableTag) and ttFont.recalcBBoxes:
                 self.recalc(ttFont)
         else:
             pass  # CFF
         self.numGlyphs = len(ttFont.getGlyphOrder())
         if self.tableVersion != 0x00005000:
             self.tableVersion = 0x00010000
-        data = sstruct.pack(maxpFormat_0_5, self)
+        data = self.tableVersion.to_bytes(4, "big")
+        data += self.numGlyphs.to_bytes(self.numGlyphsSize, "big")
         if self.tableVersion == 0x00010000:
             data = data + sstruct.pack(maxpFormat_1_0_add, self)
         return data
@@ -63,8 +70,8 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
         for the TT instructions values. Also recalculate the value of bit 1
         of the flags field and the font bounding box of the 'head' table.
         """
-        glyfTable = ttFont["glyf"]
-        hmtxTable = ttFont["hmtx"]
+        glyfTable = ttFont[self.glyphTableTag]
+        hmtxTable = ttFont[self.metricsTableTag]
         headTable = ttFont["head"]
         self.numGlyphs = len(glyfTable)
         INFINITY = 100000
@@ -132,7 +139,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
         if self.tableVersion != 0x00005000:
             writer.comment("Most of this table will be recalculated by the compiler")
             writer.newline()
-        formatstring, names, fixes = sstruct.getformat(maxpFormat_0_5)
+        names = {"tableVersion": None, "numGlyphs": None}
         if self.tableVersion != 0x00005000:
             formatstring, names_1_0, fixes = sstruct.getformat(maxpFormat_1_0_add)
             names = {**names, **names_1_0}

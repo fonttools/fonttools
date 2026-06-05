@@ -57,6 +57,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
     dependencies = ["fvar", "glyf"]
     gid_size = 2
+    glyphTableTag = "glyf"
 
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
@@ -105,7 +106,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
     def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
         optimizeSpeed = ttFont.cfg[OPTIMIZE_FONT_SPEED]
         result = []
-        glyf = ttFont["glyf"]
+        glyf = ttFont[self.glyphTableTag]
         for glyphName in ttFont.getGlyphOrder():
             variations = self.variations.get(glyphName, [])
             if not variations:
@@ -151,7 +152,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         )
         variations = {}
         offsetToData = self.offsetToGlyphVariationData
-        glyf = ttFont["glyf"]
+        glyf = ttFont[self.glyphTableTag]
 
         def get_read_item():
             reverseGlyphMap = ttFont.getReverseGlyphMap()
@@ -264,7 +265,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
             if not hasattr(self, "variations"):
                 self.variations = {}
             glyphName = attrs["glyph"]
-            glyph = ttFont["glyf"][glyphName]
+            glyph = ttFont[self.glyphTableTag][glyphName]
             numPointsInGlyph = self.getNumPoints_(glyph)
             glyphVariations = []
             for element in content:

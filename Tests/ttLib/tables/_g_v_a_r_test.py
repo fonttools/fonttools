@@ -146,19 +146,34 @@ class GVARTableTest(unittest.TestCase):
                         self.assertAlmostEqual(s1, s2)
                 self.assertEqual(v1.coordinates, v2.coordinates)
 
-    def makeFont(self, variations):
+    def makeFont(self, variations, tableTag="gvar", glyphTableTag="glyf"):
         glyphs = [".notdef", "space", "I"]
         Axis = getTableModule("fvar").Axis
         Glyph = getTableModule("glyf").Glyph
-        glyf, fvar, gvar = newTable("glyf"), newTable("fvar"), newTable("gvar")
+        glyf, fvar, gvar = (
+            newTable(glyphTableTag),
+            newTable("fvar"),
+            newTable(tableTag),
+        )
         font = FakeFont(glyphs)
-        font.tables = {"glyf": glyf, "gvar": gvar, "fvar": fvar}
+        font.tables = {glyphTableTag: glyf, tableTag: gvar, "fvar": fvar}
         glyf.glyphs = {glyph: Glyph() for glyph in glyphs}
         glyf.glyphs["I"].coordinates = [(10, 10), (10, 20), (20, 20), (20, 10)]
         fvar.axes = [Axis(), Axis()]
         fvar.axes[0].axisTag, fvar.axes[1].axisTag = "wght", "wdth"
         gvar.variations = variations
         return font, gvar
+
+    def test_GVAR_compile_decompile(self):
+        font, gvar = self.makeFont({}, "GVAR", "GLYF")
+        data = gvar.compile(font)
+        self.assertEqual(data[12:15], b"\x00\x00\x03")
+
+        decompiled = newTable("GVAR")
+        font.tables["GVAR"] = decompiled
+        decompiled.decompile(data, font)
+        self.assertEqual(decompiled.glyphCount, 3)
+        self.assertEqual(decompiled.variations, {".notdef": [], "space": [], "I": []})
 
     def test_compile(self):
         font, gvar = self.makeFont(GVAR_VARIATIONS)
