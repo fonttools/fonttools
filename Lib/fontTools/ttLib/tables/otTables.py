@@ -944,9 +944,9 @@ class Coverage(FormatSwitchingBaseTable):
             self.glyphs = []
 
     def postRead(self, rawTable, font):
-        if self.Format == 1:
+        if self.Format in (1, 3):
             self.glyphs = rawTable["GlyphArray"]
-        elif self.Format == 2:
+        elif self.Format in (2, 4):
             glyphs = self.glyphs = []
             ranges = rawTable["RangeRecord"]
             # Some SIL fonts have coverage entries that don't have sorted
@@ -988,11 +988,12 @@ class Coverage(FormatSwitchingBaseTable):
                 last = glyphID
             ranges[-1].append(last)
 
-            if brokenOrder or len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
-                # Format 2 is more compact
+            extended = max(glyphIDs) > 0xFFFF or len(glyphs) > 0xFFFF
+            if brokenOrder or len(ranges) * 3 < len(glyphs):
+                # Range format is more compact.
                 index = 0
                 for i, (start, end) in enumerate(ranges):
-                    r = RangeRecord()
+                    r = RangeRecord2() if extended else RangeRecord()
                     r.StartID = start
                     r.Start = font.getGlyphName(start)
                     r.End = font.getGlyphName(end)
@@ -1004,10 +1005,10 @@ class Coverage(FormatSwitchingBaseTable):
                     ranges.sort(key=lambda a: a.StartID)
                 for r in ranges:
                     del r.StartID
-                format = 2
+                format = 4 if extended else 2
                 rawTable = {"RangeRecord": ranges}
-            # else:
-            # 	fallthrough; Format 1 is more compact
+            elif extended:
+                format = 3
         self.Format = format
         return rawTable
 
@@ -1341,7 +1342,7 @@ class ClassDef(FormatSwitchingBaseTable):
     def postRead(self, rawTable, font):
         classDefs = {}
 
-        if self.Format == 1:
+        if self.Format in (1, 3):
             start = rawTable["StartGlyph"]
             classList = rawTable["ClassValueArray"]
             startID = font.getGlyphID(start)
@@ -1351,7 +1352,7 @@ class ClassDef(FormatSwitchingBaseTable):
                 if cls:
                     classDefs[glyphName] = cls
 
-        elif self.Format == 2:
+        elif self.Format in (2, 4):
             records = rawTable["ClassRangeRecord"]
             for rec in records:
                 cls = rec.Class
@@ -1402,24 +1403,32 @@ class ClassDef(FormatSwitchingBaseTable):
             startGlyph = ranges[0][1]
             endGlyph = ranges[-1][3]
             glyphCount = endGlyph - startGlyph + 1
-            if len(ranges) * 3 < glyphCount + 1:
-                # Format 2 is more compact
+            extended = (
+                startGlyph > 0xFFFF
+                or endGlyph > 0xFFFF
+                or glyphCount > 0xFFFF
+                or len(ranges) > 0xFFFF
+            )
+            rangeSize = (5 + len(ranges) * 8) if extended else (4 + len(ranges) * 6)
+            arraySize = (8 + glyphCount * 2) if extended else (6 + glyphCount * 2)
+            if rangeSize < arraySize:
+                # Range format is more compact.
                 for i, (cls, start, startName, end, endName) in enumerate(ranges):
-                    rec = ClassRangeRecord()
+                    rec = ClassRangeRecord2() if extended else ClassRangeRecord()
                     rec.Start = startName
                     rec.End = endName
                     rec.Class = cls
                     ranges[i] = rec
-                format = 2
+                format = 4 if extended else 2
                 rawTable = {"ClassRangeRecord": ranges}
             else:
-                # Format 1 is more compact
+                # Array format is more compact.
                 startGlyphName = ranges[0][2]
                 classes = [0] * glyphCount
                 for cls, start, startName, end, endName in ranges:
                     for g in range(start - startGlyph, end - startGlyph + 1):
                         classes[g] = cls
-                format = 1
+                format = 3 if extended else 1
                 rawTable = {"StartGlyph": startGlyphName, "ClassValueArray": classes}
         self.Format = format
         return rawTable
