@@ -22,7 +22,16 @@ class _TTGlyphSet(Mapping):
     glyph shape from TrueType or CFF.
     """
 
-    def __init__(self, font, location, glyphsMapping, *, recalcBounds=True):
+    def __init__(
+        self,
+        font,
+        location,
+        glyphsMapping,
+        *,
+        hMetricsTag="hmtx",
+        vMetricsTag="vmtx",
+        recalcBounds=True,
+    ):
         self.recalcBounds = recalcBounds
         self.font = font
         self.defaultLocationNormalized = (
@@ -37,8 +46,8 @@ class _TTGlyphSet(Mapping):
         self.locationStack = []
         self.rawLocationStack = []
         self.glyphsMapping = glyphsMapping
-        self.hMetrics = font["hmtx"].metrics
-        self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
+        self.hMetrics = font[hMetricsTag].metrics
+        self.vMetrics = getattr(font.get(vMetricsTag), "metrics", None)
         self.hvarTable = None
         if location:
             from fontTools.varLib.varStore import VarStoreInstancer
@@ -95,10 +104,17 @@ class _TTGlyphSet(Mapping):
 
 
 class _TTGlyphSetGlyf(_TTGlyphSet):
-    def __init__(self, font, location, recalcBounds=True):
-        self.glyfTable = font["glyf"]
-        super().__init__(font, location, self.glyfTable, recalcBounds=recalcBounds)
-        self.gvarTable = font.get("gvar")
+    def __init__(self, font, location, glyfTag, recalcBounds=True):
+        self.glyfTable = font[glyfTag]
+        super().__init__(
+            font,
+            location,
+            self.glyfTable,
+            hMetricsTag=self.glyfTable.hmtxTag,
+            vMetricsTag=self.glyfTable.vmtxTag,
+            recalcBounds=recalcBounds,
+        )
+        self.gvarTable = font.get(self.glyfTable.gvarTag)
 
     def __getitem__(self, glyphName):
         return _TTGlyphGlyf(self, glyphName, recalcBounds=self.recalcBounds)

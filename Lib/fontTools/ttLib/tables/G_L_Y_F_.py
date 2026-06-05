@@ -7,4 +7,5 @@ class table_G_L_Y_F_(table__g_l_y_f):
     hheaTag = "HHEA"
     hmtxTag = "HMTX"
     vmtxTag = "VMTX"
+    gvarTag = "GVAR"
     extended = True

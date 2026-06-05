@@ -552,7 +552,7 @@ class TTFont(object):
             attrs["raw"] = True
         writer.begintag(xmlTag, **attrs)
         writer.newline()
-        if tag == "glyf":
+        if tag in ("glyf", "GLYF"):
             table.toXML(writer, self, splitGlyphs=splitGlyphs)
         else:
             table.toXML(writer, self)
@@ -569,7 +569,7 @@ class TTFont(object):
         if quiet is not None:
             deprecateArgument("quiet", "configure logging instead")
 
-        if "maxp" in self and "post" in self:
+        if ("MAXP" in self or "maxp" in self) and "post" in self:
             # Make sure the glyph order is loaded, as it otherwise gets
             # lost if the XML doesn't contain the glyph order, yet does
             # contain the table which was originally used to extract the
@@ -1081,8 +1081,9 @@ class TTFont(object):
         self.glyphOrder = glyphOrder
         if hasattr(self, "_reverseGlyphOrderDict"):
             del self._reverseGlyphOrderDict
-        if self.isLoaded("glyf"):
-            self["glyf"].setGlyphOrder(glyphOrder)
+        for tag in ("GLYF", "glyf"):
+            if self.isLoaded(tag):
+                self[tag].setGlyphOrder(glyphOrder)
 
     def getGlyphOrder(self) -> list[str]:
         """Returns a list of glyph names ordered by their position in the font."""
@@ -1103,7 +1104,7 @@ class TTFont(object):
                 # in combination with the Adobe Glyph List (AGL).
                 #
                 self._getGlyphNamesFromCmap()
-            elif len(glyphOrder) < self["maxp"].numGlyphs:
+            elif len(glyphOrder) < self.getGlyphCount():
                 #
                 # Not enough names found in the 'post' table.
                 # Can happen when 'post' format 1 is improperly used on a font that
@@ -1122,6 +1123,11 @@ class TTFont(object):
     def hasExtendedGlyphIDs(self) -> bool:
         """Returns whether the font has glyph IDs that do not fit in 16 bits."""
         return len(self.getGlyphOrder()) > 0x10000
+
+    def getGlyphCount(self) -> int:
+        """Returns the number of glyphs in the font."""
+        maxpTag = "MAXP" if "MAXP" in self else "maxp"
+        return int(self[maxpTag].numGlyphs)
 
     def _getGlyphNamesFromCmap(self) -> None:
         #
@@ -1151,7 +1157,7 @@ class TTFont(object):
         # Make up glyph names based on glyphID, which will be used by the
         # temporary cmap and by the real cmap in case we don't find a unicode
         # cmap.
-        numGlyphs = int(self["maxp"].numGlyphs)
+        numGlyphs = self.getGlyphCount()
         glyphOrder = ["glyph%.5d" % i for i in range(numGlyphs)]
         glyphOrder[0] = ".notdef"
         # Set the glyph order, so the cmap parser has something
@@ -1325,12 +1331,12 @@ class TTFont(object):
 
         If the font is CFF-based, the outlines will be taken from the ``CFF ``
         or ``CFF2`` tables. Otherwise the outlines will be taken from the
-        ``glyf`` table.
+        ``GLYF`` or ``glyf`` table.
 
-        If the font contains both a ``CFF ``/``CFF2`` and a ``glyf`` table, you
-        can use the ``preferCFF`` argument to specify which one should be taken.
-        If the font contains both a ``CFF `` and a ``CFF2`` table, the latter is
-        taken.
+        If the font contains both a ``CFF ``/``CFF2`` and a ``GLYF``/``glyf``
+        table, you can use the ``preferCFF`` argument to specify which one
+        should be taken. If the font contains both a ``CFF `` and a ``CFF2``
+        table, the latter is taken.
 
         If the ``location`` parameter is set, it should be a dictionary mapping
         four-letter variation tags to their float values, and the returned
@@ -1346,10 +1352,14 @@ class TTFont(object):
         if location and not normalized:
             location = self.normalizeLocation(location)
         glyphSet = None
-        if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
+        glyfTag = "GLYF" if "GLYF" in self else "glyf"
+        hasGlyf = glyfTag in self
+        if ("CFF " in self or "CFF2" in self) and (preferCFF or not hasGlyf):
             glyphSet = _TTGlyphSetCFF(self, location)
-        elif "glyf" in self:
-            glyphSet = _TTGlyphSetGlyf(self, location, recalcBounds=recalcBounds)
+        elif hasGlyf:
+            glyphSet = _TTGlyphSetGlyf(
+                self, location, glyfTag, recalcBounds=recalcBounds
+            )
         else:
             raise TTLibError("Font contains no outlines")
         if "VARC" in self:
