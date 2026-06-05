@@ -220,10 +220,19 @@ class Builder(object):
             table = self.makeTable(tag)
             if self.feature_variations_:
                 self.makeFeatureVariations(table, tag)
+            if self.font.hasExtendedGlyphIDs():
+                self.promoteLayoutTable_(table)
+                scriptList = table.ScriptList2
+                featureList = table.FeatureList2
+                lookupList = table.LookupList2
+            else:
+                scriptList = table.ScriptList
+                featureList = table.FeatureList
+                lookupList = table.LookupList
             if (
-                table.ScriptList.ScriptCount > 0
-                or table.FeatureList.FeatureCount > 0
-                or table.LookupList.LookupCount > 0
+                scriptList.ScriptCount > 0
+                or featureList.FeatureCount > 0
+                or lookupList.LookupCount > 0
             ):
                 fontTable = self.font[tag] = newTable(tag)
                 fontTable.table = table
@@ -1002,6 +1011,12 @@ class Builder(object):
         table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
         table.LookupList.LookupCount = len(table.LookupList.Lookup)
         return table
+
+    def promoteLayoutTable_(self, table):
+        table.Version = 0x00010002
+        table.ScriptList2, table.ScriptList = table.ScriptList, None
+        table.FeatureList2, table.FeatureList = table.FeatureList, None
+        table.LookupList2, table.LookupList = table.LookupList, None
 
     def makeFeatureVariations(self, table, table_tag):
         feature_vars = {}

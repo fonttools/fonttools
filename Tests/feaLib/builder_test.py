@@ -183,6 +183,35 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeaturesFromString(font, featureFile, tables=tables)
         return font
 
+    def test_extended_layout_table_headers(self):
+        font = makeTTFont()
+        font.hasExtendedGlyphIDs = lambda: True
+        addOpenTypeFeaturesFromString(
+            font,
+            """
+            feature kern { pos A B -20; } kern;
+            feature liga { sub f i by f_i; } liga;
+            """,
+        )
+
+        for tag in ("GPOS", "GSUB"):
+            table = font[tag].table
+            self.assertEqual(table.Version, 0x00010002)
+            self.assertIsNone(table.ScriptList)
+            self.assertIsNone(table.FeatureList)
+            self.assertIsNone(table.LookupList)
+            self.assertIsNotNone(table.ScriptList2)
+            self.assertIsNotNone(table.FeatureList2)
+            self.assertIsNotNone(table.LookupList2)
+
+            data = font[tag].compile(font)
+            font[tag].decompile(data, font)
+            table = font[tag].table
+            self.assertEqual(table.Version, 0x00010002)
+            self.assertIsNotNone(table.ScriptList2)
+            self.assertIsNotNone(table.FeatureList2)
+            self.assertIsNotNone(table.LookupList2)
+
     def check_feature_file(self, name):
         font = makeTTFont()
         if name.startswith("variable_"):
