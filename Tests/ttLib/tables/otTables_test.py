@@ -537,6 +537,30 @@ class AlternateSubstTest(unittest.TestCase):
         table.postRead(rawTable, self.font)
         self.assertEqual(table.alternates, {"G": ["G.alt2", "G.alt1"], "Z": ["Z.fina"]})
 
+    def test_postRead_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        alternateSet = otTables.AlternateSet2()
+        alternateSet.Alternate = ["b", "c"]
+        table = otTables.AlternateSubst()
+        table.Format = 2
+        table.postRead(
+            {
+                "Coverage": makeCoverage(["a"]),
+                "AlternateSet": [alternateSet],
+            },
+            font,
+        )
+        self.assertEqual(table.alternates, {"a": ["b", "c"]})
+
+    def test_decompile_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = decompileTable(
+            otTables.AlternateSubst(),
+            "0002000000150000010000000d00020100010200000003000001010000",
+            font,
+        )
+        self.assertEqual(table.alternates, {"a": ["b", "c"]})
+
     def test_postRead_formatUnknown(self):
         table = otTables.AlternateSubst()
         table.Format = 987
@@ -553,6 +577,19 @@ class AlternateSubstTest(unittest.TestCase):
         self.assertEqual(g.Alternate, ["G.alt2", "G.alt1"])
         self.assertIsInstance(z, otTables.AlternateSet)
         self.assertEqual(z.Alternate, ["Z.fina"])
+
+    def test_preWrite_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.AlternateSubst()
+        table.alternates = {"a": ["b", "c"]}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["AlternateSet"][0], otTables.AlternateSet2)
+        self.assertEqual(rawTable["AlternateSet"][0].Alternate, ["b", "c"])
+        self.assertEqual(
+            compileTable(table, font),
+            "0002000000150000010000000d00020100010200000003000001010000",
+        )
 
     def test_toXML2(self):
         writer = XMLWriter(StringIO())

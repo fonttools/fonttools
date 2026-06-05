@@ -1470,7 +1470,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 
     def postRead(self, rawTable, font):
         alternates = {}
-        if self.Format == 1:
+        if self.Format in (1, 2):
             input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
             alts = rawTable["AlternateSet"]
             assert len(input) == len(alts)
@@ -1482,10 +1482,15 @@ class AlternateSubst(FormatSwitchingBaseTable):
         del self.Format  # Don't need this anymore
 
     def preWrite(self, font):
-        self.Format = 1
         alternates = getattr(self, "alternates", None)
         if alternates is None:
             alternates = self.alternates = {}
+        extended = len(alternates) > 0xFFFF or any(
+            font.getGlyphID(glyph) > 0xFFFF
+            for inputGlyph, alternateSet in alternates.items()
+            for glyph in (inputGlyph, *alternateSet)
+        )
+        self.Format = 2 if extended else 1
         items = list(alternates.items())
         for i, (glyphName, set) in enumerate(items):
             items[i] = font.getGlyphID(glyphName), glyphName, set
@@ -1495,7 +1500,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
         alternates = []
         setList = [item[-1] for item in items]
         for set in setList:
-            alts = AlternateSet()
+            alts = AlternateSet2() if extended else AlternateSet()
             alts.Alternate = set
             alternates.append(alts)
         # a special case to deal with the fact that several hundred Adobe Japan1-5
