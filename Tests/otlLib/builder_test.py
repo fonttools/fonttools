@@ -1961,6 +1961,58 @@ def test_buildMathTable_horizAssembly():
 
 
 class ChainContextualRulesetTest(object):
+    @pytest.mark.parametrize(
+        "builderClass",
+        [builder.ChainContextSubstBuilder, builder.ChainContextPosBuilder],
+    )
+    @pytest.mark.parametrize("chaining", [False, True])
+    def test_buildExtendedFormats(self, builderClass, chaining):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b", "c", "d"])
+        lookupBuilder = builderClass(font, None)
+        lookupBuilder.glyphMap = ExtendedGlyphMap(font.getReverseGlyphMap())
+
+        prefix = [["a"]] if chaining else []
+        suffix = [["d"]] if chaining else []
+        lookup = builder.SingleSubstBuilder(font, None)
+        lookup.lookup_index = 3
+        rule = builder.ChainContextualRule(
+            prefix, [["b"], ["c"]], suffix, [[lookup], None]
+        )
+        ruleset = builder.ChainContextualRuleset()
+        ruleset.addRule(rule)
+
+        format1 = lookupBuilder.buildFormat1Subtable(ruleset, chaining)
+        assert format1.Format == 4
+        ruleSetAttr = "ChainedSeqRuleSet" if chaining else "SeqRuleSet"
+        ruleAttr = "ChainedSeqRule" if chaining else "SeqRule"
+        format1Rule = getattr(getattr(format1, ruleSetAttr)[0], ruleAttr)[0]
+        assert format1Rule.InputSequence == ["c"]
+        assert format1Rule.SeqLookupCount == 1
+        assert format1Rule.SeqLookupRecord[0].LookupListIndex == 3
+        if chaining:
+            assert format1Rule.BacktrackSequence == ["a"]
+            assert format1Rule.LookAheadSequence == ["d"]
+
+        classdefs = ruleset.format2ClassDefs()
+        format2 = lookupBuilder.buildFormat2Subtable(ruleset, classdefs, chaining)
+        assert format2.Format == 5
+        ruleSetAttr = "ChainedClassSeqRuleSet" if chaining else "ClassSeqRuleSet"
+        ruleAttr = "ChainedClassSeqRule" if chaining else "ClassSeqRule"
+        format2Rule = next(
+            getattr(ruleSet, ruleAttr)[0]
+            for ruleSet in getattr(format2, ruleSetAttr)
+            if ruleSet is not None
+        )
+        assert len(format2Rule.InputSequence) == 1
+        assert format2Rule.SeqLookupCount == 1
+
+        if not chaining:
+            format3 = lookupBuilder.buildFormat3Subtable(rule, chaining)
+            assert format3.Format == 6
+            assert format3.SeqLookupCount == 1
+            assert format3.SeqLookupRecord[0].LookupListIndex == 3
+
     def test_makeRulesets(self):
         font = ttLib.TTFont()
         font.setGlyphOrder(["a", "b", "c", "d", "A", "B", "C", "D", "E"])

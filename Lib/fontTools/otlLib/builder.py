@@ -434,11 +434,15 @@ class ChainContextualBuilder(LookupBuilder):
             # the subtables in each format for this ruleset (including a dummy
             # "format 0" to make the addressing match the format numbers).
 
-            # We can always build a format 3 lookup by accumulating each of
-            # the rules into a list, so start with that.
+            extended = _glyphMapHasExtendedGlyphIDs(self.glyphMap)
+
+            # We can build a format 3 lookup by accumulating each of the rules
+            # into a list. The extended chained-context formats do not include
+            # a coverage-based equivalent.
             candidates = [None, None, None, []]
-            for rule in ruleset.rules:
-                candidates[3].append(self.buildFormat3Subtable(rule, chaining))
+            if not (extended and chaining):
+                for rule in ruleset.rules:
+                    candidates[3].append(self.buildFormat3Subtable(rule, chaining))
 
             # Can we express the whole ruleset as a format 2 subtable?
             classdefs = ruleset.format2ClassDefs()
@@ -475,7 +479,7 @@ class ChainContextualBuilder(LookupBuilder):
 
     def buildFormat1Subtable(self, ruleset, chaining=True):
         st = self.newSubtable_(chaining=chaining)
-        st.Format = 1
+        st.Format = self.subtableFormat_(format=1, chaining=chaining)
         st.populateDefaults()
         coverage = set()
         rulesetsByFirstGlyph = {}
@@ -487,14 +491,26 @@ class ChainContextualBuilder(LookupBuilder):
             if chaining:
                 ruleAsSubtable.BacktrackGlyphCount = len(rule.prefix)
                 ruleAsSubtable.LookAheadGlyphCount = len(rule.suffix)
-                ruleAsSubtable.Backtrack = [list(x)[0] for x in reversed(rule.prefix)]
-                ruleAsSubtable.LookAhead = [list(x)[0] for x in rule.suffix]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Backtrack"),
+                    [list(x)[0] for x in reversed(rule.prefix)],
+                )
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("LookAhead"),
+                    [list(x)[0] for x in rule.suffix],
+                )
 
                 ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
             else:
                 ruleAsSubtable.GlyphCount = len(rule.glyphs)
 
-            ruleAsSubtable.Input = [list(x)[0] for x in rule.glyphs[1:]]
+            setattr(
+                ruleAsSubtable,
+                self.sequenceAttr_("Input"),
+                [list(x)[0] for x in rule.glyphs[1:]],
+            )
 
             self.buildLookupList(rule, ruleAsSubtable)
 
@@ -521,7 +537,7 @@ class ChainContextualBuilder(LookupBuilder):
 
     def buildFormat2Subtable(self, ruleset, classdefs, chaining=True):
         st = self.newSubtable_(chaining=chaining)
-        st.Format = 2
+        st.Format = self.subtableFormat_(format=2, chaining=chaining)
         st.populateDefaults()
 
         if chaining:
@@ -551,26 +567,36 @@ class ChainContextualBuilder(LookupBuilder):
                 # The glyphs in the rule may be list, tuple, odict_keys...
                 # Order is not important anyway because they are guaranteed
                 # to be members of the same class.
-                ruleAsSubtable.Backtrack = [
-                    st.BacktrackClassDef.classDefs[list(x)[0]]
-                    for x in reversed(rule.prefix)
-                ]
-                ruleAsSubtable.LookAhead = [
-                    st.LookAheadClassDef.classDefs[list(x)[0]] for x in rule.suffix
-                ]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Backtrack"),
+                    [
+                        st.BacktrackClassDef.classDefs[list(x)[0]]
+                        for x in reversed(rule.prefix)
+                    ],
+                )
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("LookAhead"),
+                    [st.LookAheadClassDef.classDefs[list(x)[0]] for x in rule.suffix],
+                )
 
                 ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
-                ruleAsSubtable.Input = [
-                    st.InputClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
-                ]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Input"),
+                    [st.InputClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]],
+                )
                 setForThisRule = classSets[
                     st.InputClassDef.classDefs[list(rule.glyphs[0])[0]]
                 ]
             else:
                 ruleAsSubtable.GlyphCount = len(rule.glyphs)
-                ruleAsSubtable.Class = [  # The spec calls this InputSequence
-                    st.ClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
-                ]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Class"),
+                    [st.ClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]],
+                )
                 setForThisRule = classSets[
                     st.ClassDef.classDefs[list(rule.glyphs[0])[0]]
                 ]
@@ -597,7 +623,7 @@ class ChainContextualBuilder(LookupBuilder):
 
     def buildFormat3Subtable(self, rule, chaining=True):
         st = self.newSubtable_(chaining=chaining)
-        st.Format = 3
+        st.Format = self.subtableFormat_(format=3, chaining=chaining)
         if chaining:
             self.setBacktrackCoverage_(rule.prefix, st)
             self.setLookAheadCoverage_(rule.suffix, st)
@@ -643,9 +669,36 @@ class ChainContextualBuilder(LookupBuilder):
         if chaining:
             subtablename = "Chain" + subtablename
         st = getattr(ot, subtablename)()  # ot.ChainContextPos()/ot.ChainSubst()/etc.
-        setattr(st, f"{self.subtable_type}Count", 0)
-        setattr(st, f"{self.subtable_type}LookupRecord", [])
+        setattr(st, self.lookupCountAttr_(), 0)
+        setattr(st, self.lookupRecordAttr_(), [])
         return st
+
+    def isExtended_(self):
+        return _glyphMapHasExtendedGlyphIDs(self.glyphMap)
+
+    def subtableFormat_(self, format, chaining=True):
+        if not self.isExtended_():
+            return format
+        if chaining:
+            assert format in (1, 2)
+        return format + 3
+
+    def sequenceAttr_(self, attr):
+        if not self.isExtended_():
+            return attr
+        if attr == "Class":
+            attr = "Input"
+        return attr + "Sequence"
+
+    def lookupRecordAttr_(self):
+        if self.isExtended_():
+            return "SeqLookupRecord"
+        return self.subtable_type + "LookupRecord"
+
+    def lookupCountAttr_(self):
+        if self.isExtended_():
+            return "SeqLookupCount"
+        return self.subtable_type + "Count"
 
     # Format 1 and format 2 GSUB5/GSUB6/GPOS7/GPOS8 rulesets and rules form a family:
     #
@@ -658,6 +711,9 @@ class ChainContextualBuilder(LookupBuilder):
     # The following functions generate the attribute names and subtables according
     # to this naming convention.
     def ruleSetAttr_(self, format=1, chaining=True):
+        if self.isExtended_():
+            formatType = "SeqRuleSet" if format == 1 else "ClassSeqRuleSet"
+            return ("Chained" if chaining else "") + formatType
         if format == 1:
             formatType = "Rule"
         elif format == 2:
@@ -670,6 +726,9 @@ class ChainContextualBuilder(LookupBuilder):
         return subtablename
 
     def ruleAttr_(self, format=1, chaining=True):
+        if self.isExtended_():
+            formatType = "SeqRule" if format == 1 else "ClassSeqRule"
+            return ("Chained" if chaining else "") + formatType
         if format == 1:
             formatType = ""
         elif format == 2:
@@ -682,16 +741,18 @@ class ChainContextualBuilder(LookupBuilder):
         return subtablename
 
     def newRuleSet_(self, format=1, chaining=True):
-        st = getattr(
-            ot, self.ruleSetAttr_(format, chaining)
-        )()  # ot.ChainPosRuleSet()/ot.SubRuleSet()/etc.
+        name = self.ruleSetAttr_(format, chaining)
+        if self.isExtended_():
+            name += "2"
+        st = getattr(ot, name)()  # ot.ChainPosRuleSet()/ot.SubRuleSet()/etc.
         st.populateDefaults()
         return st
 
     def newRule_(self, format=1, chaining=True):
-        st = getattr(
-            ot, self.ruleAttr_(format, chaining)
-        )()  # ot.ChainPosClassRule()/ot.SubClassRule()/etc.
+        name = self.ruleAttr_(format, chaining)
+        if self.isExtended_() and format == 1:
+            name += "2"
+        st = getattr(ot, name)()  # ot.ChainPosClassRule()/ot.SubClassRule()/etc.
         st.populateDefaults()
         return st
 
@@ -724,8 +785,9 @@ class ChainContextualBuilder(LookupBuilder):
     def newLookupRecord_(self, st):
         return self.attachSubtableWithCount_(
             st,
-            f"{self.subtable_type}LookupRecord",
-            f"{self.subtable_type}Count",
+            self.lookupRecordAttr_(),
+            self.lookupCountAttr_(),
+            existing=ot.SeqLookup() if self.isExtended_() else None,
             chaining=False,
         )  # Oddly, it isn't ChainSubstLookupRecord
 
