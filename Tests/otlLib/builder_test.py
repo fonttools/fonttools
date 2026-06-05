@@ -263,6 +263,14 @@ class BuilderTest(object):
             "</CursivePos>",
         ]
 
+    def test_buildCursivePos_format2(self):
+        pos = builder.buildCursivePosSubtable(
+            {"two": (self.ANCHOR1, self.ANCHOR2)},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert pos.Format == 2
+        assert isinstance(pos.EntryExitRecord[0], otTables.EntryExit2)
+
     def test_buildDevice_format1(self):
         device = builder.buildDevice({1: 1, 0: 0})
         assert getXML(device.toXML) == [
@@ -673,6 +681,16 @@ class BuilderTest(object):
             "</MarkBasePos>",
         ]
 
+    def test_buildMarkBasePosSubtable_format2(self):
+        table = builder.buildMarkBasePosSubtable(
+            {"acute": (0, self.ANCHOR1)},
+            {"A": {0: self.ANCHOR2}},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert table.Format == 2
+        assert isinstance(table.MarkArray, otTables.MarkArray2)
+        assert isinstance(table.BaseArray, otTables.BaseArray2)
+
     def test_buildMarkGlyphSetsDef(self):
         marksets = builder.buildMarkGlyphSetsDef(
             [{"acute", "grave"}, {"cedilla", "grave"}], self.GLYPHMAP
@@ -810,6 +828,27 @@ class BuilderTest(object):
             "  </LigatureArray>",
             "</MarkLigPos>",
         ]
+
+    def test_buildMarkLigPosSubtable_format2(self):
+        table = builder.buildMarkLigPosSubtable(
+            {"acute": (0, self.ANCHOR1)},
+            {"f_i": [{0: self.ANCHOR2}]},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert table.Format == 2
+        assert isinstance(table.MarkArray, otTables.MarkArray2)
+        assert isinstance(table.LigatureArray, otTables.LigatureArray2)
+
+    def test_MarkMarkPosBuilder_format2(self):
+        font = ttLib.TTFont()
+        font.getReverseGlyphMap = lambda: ExtendedGlyphMap(self.GLYPHMAP)
+        lookupBuilder = builder.MarkMarkPosBuilder(font, None)
+        lookupBuilder.marks = {"acute": ("top", self.ANCHOR1)}
+        lookupBuilder.baseMarks = {"grave": {"top": self.ANCHOR2}}
+        [subtable] = lookupBuilder.build().SubTable
+        assert subtable.Format == 2
+        assert isinstance(subtable.Mark1Array, otTables.MarkArray2)
+        assert isinstance(subtable.Mark2Array, otTables.Mark2Array2)
 
     def test_buildMarkRecord(self):
         rec = builder.buildMarkRecord(17, builder.buildAnchor(500, -20))
