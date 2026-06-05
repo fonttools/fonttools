@@ -1198,9 +1198,7 @@ class SingleSubst(FormatSwitchingBaseTable):
             for inp, out in zip(input, outNames):
                 mapping[inp] = out
         elif self.Format in (2, 4):
-            assert (
-                len(input) == rawTable["GlyphCount"]
-            ), "invalid SingleSubst table"
+            assert len(input) == rawTable["GlyphCount"], "invalid SingleSubst table"
             subst = rawTable["Substitute"]
             for inp, sub in zip(input, subst):
                 mapping[inp] = sub
