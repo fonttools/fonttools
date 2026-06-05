@@ -5,6 +5,7 @@ import pytest
 
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.otlLib import builder
+from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.beyond64k import (
     _convert_contextual_layout_formats,
@@ -27,6 +28,16 @@ def layout_subtables(font, tag, table_type):
         for path in dfs_base_table(font[tag].table)
         if isinstance(path[-1].value, table_type)
     ]
+
+
+def glyph_paths(font):
+    glyph_set = font.getGlyphSet()
+    paths = {}
+    for name in font.getGlyphOrder():
+        pen = SVGPathPen(glyph_set)
+        glyph_set[name].draw(pen)
+        paths[name] = pen.getCommands()
+    return paths
 
 
 def assert_layout_formats(font, extended):
@@ -535,6 +546,7 @@ def test_round_trip_companion_tables():
     font.save(data)
     data.seek(0)
     font = TTFont(data)
+    expected_paths = glyph_paths(font)
 
     upper_tables(font)
 
@@ -545,6 +557,7 @@ def test_round_trip_companion_tables():
     font.save(data)
     data.seek(0)
     font = TTFont(data)
+    assert glyph_paths(font) == expected_paths
 
     lower_tables(font)
 
@@ -554,7 +567,9 @@ def test_round_trip_companion_tables():
     data = BytesIO()
     font.save(data)
     data.seek(0)
-    assert TTFont(data).getGlyphOrder() == font.getGlyphOrder()
+    font = TTFont(data)
+    assert font.getGlyphOrder() == list(expected_paths)
+    assert glyph_paths(font) == expected_paths
 
 
 @pytest.mark.parametrize("tag", ["glyf", "GLYF"])
