@@ -1275,7 +1275,7 @@ class MultipleSubst(FormatSwitchingBaseTable):
 
     def postRead(self, rawTable, font):
         mapping = {}
-        if self.Format == 1:
+        if self.Format in (1, 2):
             glyphs = _getGlyphsFromCoverageTable(rawTable["Coverage"])
             subst = [s.Substitute for s in rawTable["Sequence"]]
             mapping = dict(zip(glyphs, subst))
@@ -1290,10 +1290,17 @@ class MultipleSubst(FormatSwitchingBaseTable):
             mapping = self.mapping = {}
         cov = Coverage()
         cov.glyphs = sorted(list(mapping.keys()), key=font.getGlyphID)
-        self.Format = 1
+        extended = len(mapping) > 0xFFFF or any(
+            font.getGlyphID(glyph) > 0xFFFF
+            for inputGlyph, substitutes in mapping.items()
+            for glyph in (inputGlyph, *substitutes)
+        )
+        self.Format = 2 if extended else 1
         rawTable = {
             "Coverage": cov,
-            "Sequence": [self.makeSequence_(mapping[glyph]) for glyph in cov.glyphs],
+            "Sequence": [
+                self.makeSequence_(mapping[glyph], extended) for glyph in cov.glyphs
+            ],
         }
         return rawTable
 
@@ -1337,8 +1344,8 @@ class MultipleSubst(FormatSwitchingBaseTable):
         mapping[attrs["in"]] = [g.strip() for g in outGlyphs]
 
     @staticmethod
-    def makeSequence_(g):
-        seq = Sequence()
+    def makeSequence_(g, extended=False):
+        seq = Sequence2() if extended else Sequence()
         seq.Substitute = g
         return seq
 
