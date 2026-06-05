@@ -442,6 +442,35 @@ class LigatureSubstTest(unittest.TestCase):
         self.assertEqual(table.ligatures["f"][2].LigGlyph, "f_i")
         self.assertEqual(table.ligatures["f"][2].Component, ["f", "i"])
 
+    def test_postRead_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        ligature = otTables.Ligature2()
+        ligature.LigGlyph = "c"
+        ligature.Component = ["b"]
+        ligatureSet = otTables.LigatureSet2()
+        ligatureSet.Ligature = [ligature]
+        table = otTables.LigatureSubst()
+        table.Format = 2
+        table.postRead(
+            {
+                "Coverage": makeCoverage(["a"]),
+                "LigatureSet": [ligatureSet],
+            },
+            font,
+        )
+        self.assertEqual(table.ligatures["a"][0].LigGlyph, "c")
+        self.assertEqual(table.ligatures["a"][0].Component, ["b"])
+
+    def test_decompile_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = decompileTable(
+            otTables.LigatureSubst(),
+            "00020000001b0000010000000d00010000000602000000020100010003000001010000",
+            font,
+        )
+        self.assertEqual(table.ligatures["a"][0].LigGlyph, "c")
+        self.assertEqual(table.ligatures["a"][0].Component, ["b"])
+
     def test_postRead_formatUnknown(self):
         table = otTables.LigatureSubst()
         table.Format = 987
@@ -474,6 +503,37 @@ class LigatureSubstTest(unittest.TestCase):
         self.assertIsInstance(fi, otTables.Ligature)
         self.assertEqual(fi.LigGlyph, "f_i")
         self.assertEqual(fi.Component, ["f", "i"])
+
+    def test_preWrite_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        ligature = otTables.Ligature()
+        ligature.LigGlyph = "c"
+        ligature.Component = ["b"]
+        table = otTables.LigatureSubst()
+        table.ligatures = {"a": [ligature]}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["LigatureSet"][0], otTables.LigatureSet2)
+        self.assertIsInstance(
+            rawTable["LigatureSet"][0].Ligature[0],
+            otTables.Ligature2,
+        )
+        self.assertEqual(
+            compileTable(table, font),
+            "00020000001b0000010000000d00010000000602000000020100010003000001010000",
+        )
+
+    def test_preWrite_format2_highLevel(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.LigatureSubst()
+        table.ligatures = {("a", "b"): "c"}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["LigatureSet"][0], otTables.LigatureSet2)
+        self.assertIsInstance(
+            rawTable["LigatureSet"][0].Ligature[0],
+            otTables.Ligature2,
+        )
 
     def test_toXML2(self):
         writer = XMLWriter(StringIO())
