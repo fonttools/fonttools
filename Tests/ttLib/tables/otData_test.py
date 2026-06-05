@@ -26,6 +26,7 @@ def test_extended_layout_header_fields():
 
     assert field("GDEF", "GlyphClassDef2").type == "LOffsetTo(ClassDef)"
     assert field("GDEF", "LigCaretList2").type == "LOffsetTo(LigCaretList2)"
+    assert field("JSTF", "JstfScriptRecord2").condition == "Version >= 0x00010001"
 
 
 def test_extended_context_count_exceptions():
