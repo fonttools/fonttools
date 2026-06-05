@@ -5,7 +5,11 @@ import pytest
 
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import TTFont, newTable
-from fontTools.ttLib.beyond64k import lower_tables, upper_tables
+from fontTools.ttLib.beyond64k import (
+    _convert_explicit_layout_formats,
+    lower_tables,
+    upper_tables,
+)
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent, flagCubic
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
@@ -65,6 +69,138 @@ def test_force_auto_layout_format(
         assert table.Format == expected_format
         if "Coverage" in raw_table:
             assert raw_table["Coverage"]._forceExtended == extended
+
+
+@pytest.mark.parametrize(
+    "table_type,compact_format,extended_format,compact_nested,extended_nested",
+    [
+        (otTables.SinglePos, 1, 3, (), ()),
+        (otTables.SinglePos, 2, 4, (), ()),
+        (
+            otTables.PairPos,
+            1,
+            3,
+            (otTables.PairSet, otTables.PairValueRecord),
+            (otTables.PairSet2, otTables.PairValue2),
+        ),
+        (otTables.PairPos, 2, 4, (), ()),
+        (
+            otTables.CursivePos,
+            1,
+            2,
+            (otTables.EntryExitRecord,),
+            (otTables.EntryExit2,),
+        ),
+        (
+            otTables.MarkBasePos,
+            1,
+            2,
+            (
+                otTables.MarkArray,
+                otTables.MarkRecord,
+                otTables.BaseArray,
+                otTables.BaseRecord,
+            ),
+            (
+                otTables.MarkArray2,
+                otTables.MarkRecord2,
+                otTables.BaseArray2,
+                otTables.BaseRecord2,
+            ),
+        ),
+        (
+            otTables.MarkLigPos,
+            1,
+            2,
+            (
+                otTables.MarkArray,
+                otTables.MarkRecord,
+                otTables.LigatureArray,
+                otTables.LigatureAttach,
+                otTables.ComponentRecord,
+            ),
+            (
+                otTables.MarkArray2,
+                otTables.MarkRecord2,
+                otTables.LigatureArray2,
+                otTables.LigatureAttach2,
+                otTables.ComponentRecord2,
+            ),
+        ),
+        (
+            otTables.MarkMarkPos,
+            1,
+            2,
+            (
+                otTables.MarkArray,
+                otTables.MarkRecord,
+                otTables.Mark2Array,
+                otTables.Mark2Record,
+            ),
+            (
+                otTables.MarkArray2,
+                otTables.MarkRecord2,
+                otTables.Mark2Array2,
+                otTables.Mark2Record2,
+            ),
+        ),
+        (otTables.ReverseChainSingleSubst, 1, 2, (), ()),
+    ],
+)
+def test_convert_explicit_layout_format(
+    table_type,
+    compact_format,
+    extended_format,
+    compact_nested,
+    extended_nested,
+):
+    table = table_type()
+    table.Format = compact_format
+    populate_explicit_layout_table(table)
+
+    _convert_explicit_layout_formats(table, True)
+
+    assert table.Format == extended_format
+    assert nested_types(table, compact_nested + extended_nested) == extended_nested
+
+    _convert_explicit_layout_formats(table, False)
+
+    assert table.Format == compact_format
+    assert nested_types(table, compact_nested + extended_nested) == compact_nested
+
+
+def populate_explicit_layout_table(table):
+    if isinstance(table, otTables.PairPos) and table.Format == 1:
+        pair_set = otTables.PairSet()
+        pair_set.PairValueRecord = [otTables.PairValueRecord()]
+        table.PairSet = [pair_set]
+    elif isinstance(table, otTables.CursivePos):
+        table.EntryExitRecord = [otTables.EntryExitRecord()]
+    elif isinstance(table, otTables.MarkBasePos):
+        table.MarkArray = otTables.MarkArray()
+        table.MarkArray.MarkRecord = [otTables.MarkRecord()]
+        table.BaseArray = otTables.BaseArray()
+        table.BaseArray.BaseRecord = [otTables.BaseRecord()]
+    elif isinstance(table, otTables.MarkLigPos):
+        table.MarkArray = otTables.MarkArray()
+        table.MarkArray.MarkRecord = [otTables.MarkRecord()]
+        table.LigatureArray = otTables.LigatureArray()
+        ligature_attach = otTables.LigatureAttach()
+        ligature_attach.ComponentRecord = [otTables.ComponentRecord()]
+        table.LigatureArray.LigatureAttach = [ligature_attach]
+    elif isinstance(table, otTables.MarkMarkPos):
+        table.Mark1Array = otTables.MarkArray()
+        table.Mark1Array.MarkRecord = [otTables.MarkRecord()]
+        table.Mark2Array = otTables.Mark2Array()
+        table.Mark2Array.Mark2Record = [otTables.Mark2Record()]
+
+
+def nested_types(table, types):
+    return tuple(
+        type(path[-1].value)
+        for path in dfs_base_table(table, skip_root=True)
+        if isinstance(path[-1].value, types)
+    )
 
 
 def test_round_trip_companion_tables():

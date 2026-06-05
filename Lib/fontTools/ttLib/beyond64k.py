@@ -45,7 +45,96 @@ _AUTO_FORMAT_TABLES = (
 )
 
 
+_EXPLICIT_LAYOUT_FORMATS = {
+    (otTables.SinglePos, 1): (3, {}),
+    (otTables.SinglePos, 2): (4, {}),
+    (otTables.PairPos, 1): (
+        3,
+        {
+            otTables.PairSet: otTables.PairSet2,
+            otTables.PairValueRecord: otTables.PairValue2,
+        },
+    ),
+    (otTables.PairPos, 2): (4, {}),
+    (otTables.CursivePos, 1): (
+        2,
+        {otTables.EntryExitRecord: otTables.EntryExit2},
+    ),
+    (otTables.MarkBasePos, 1): (
+        2,
+        {
+            otTables.MarkArray: otTables.MarkArray2,
+            otTables.MarkRecord: otTables.MarkRecord2,
+            otTables.BaseArray: otTables.BaseArray2,
+            otTables.BaseRecord: otTables.BaseRecord2,
+        },
+    ),
+    (otTables.MarkLigPos, 1): (
+        2,
+        {
+            otTables.MarkArray: otTables.MarkArray2,
+            otTables.MarkRecord: otTables.MarkRecord2,
+            otTables.LigatureArray: otTables.LigatureArray2,
+            otTables.LigatureAttach: otTables.LigatureAttach2,
+            otTables.ComponentRecord: otTables.ComponentRecord2,
+        },
+    ),
+    (otTables.MarkMarkPos, 1): (
+        2,
+        {
+            otTables.MarkArray: otTables.MarkArray2,
+            otTables.MarkRecord: otTables.MarkRecord2,
+            otTables.Mark2Array: otTables.Mark2Array2,
+            otTables.Mark2Record: otTables.Mark2Record2,
+        },
+    ),
+    (otTables.ReverseChainSingleSubst, 1): (2, {}),
+}
+
+
+def _replace_layout_classes(table, replacements):
+    for path in reversed(list(dfs_base_table(table))):
+        subtable = path[-1].value
+        replacement_type = replacements.get(type(subtable))
+        if replacement_type is None:
+            continue
+        replacement = replacement_type()
+        replacement.__dict__.update(subtable.__dict__)
+        parent = path[-2].value
+        entry = path[-1]
+        if entry.index is None:
+            setattr(parent, entry.name, replacement)
+        else:
+            getattr(parent, entry.name)[entry.index] = replacement
+
+
+def _convert_explicit_layout_formats(table, extended):
+    conversions = _EXPLICIT_LAYOUT_FORMATS
+    if not extended:
+        conversions = {
+            (table_type, extended_format): (
+                compact_format,
+                {extended: compact for compact, extended in replacements.items()},
+            )
+            for (table_type, compact_format), (
+                extended_format,
+                replacements,
+            ) in conversions.items()
+        }
+
+    for path in dfs_base_table(table):
+        subtable = path[-1].value
+        conversion = conversions.get(
+            (type(subtable), getattr(subtable, "Format", None))
+        )
+        if conversion is None:
+            continue
+        subtable.Format, replacements = conversion
+        _replace_layout_classes(subtable, replacements)
+
+
 def _force_layout_formats(table, extended):
+    _convert_explicit_layout_formats(table, extended)
     for path in dfs_base_table(table):
         subtable = path[-1].value
         if isinstance(subtable, _AUTO_FORMAT_TABLES):
