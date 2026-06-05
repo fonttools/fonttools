@@ -61,6 +61,7 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
             converterClass = {
                 "uint8": ComputedUInt8,
                 "uint16": ComputedUShort,
+                "uint24": ComputedUInt24,
                 "uint32": ComputedULong,
             }[spec.type]
         elif spec.name == "SubTable":
@@ -369,6 +370,17 @@ class UInt8(IntValue):
         writer.writeUInt8Array(values)
 
 
+class Int24(IntValue):
+    staticSize = 3
+
+    def read(self, reader, font, tableDict):
+        return reader.readInt24()
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        assert -(1 << 23) <= value < (1 << 23), value
+        writer.writeUInt24(value & 0xFFFFFF)
+
+
 class UInt24(IntValue):
     staticSize = 3
 
@@ -391,6 +403,10 @@ class ComputedUInt8(ComputedInt, UInt8):
 
 
 class ComputedUShort(ComputedInt, UShort):
+    pass
+
+
+class ComputedUInt24(ComputedInt, UInt24):
     pass
 
 
@@ -425,6 +441,22 @@ class GlyphID(SimpleValue):
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
         writer.writeValue(self.typecode, font.getGlyphID(value))
+
+
+class GlyphID24(GlyphID):
+    staticSize = 3
+
+    def readArray(self, reader, font, tableDict, count):
+        return font.getGlyphNameMany(reader.readUInt24Array(count))
+
+    def read(self, reader, font, tableDict):
+        return font.getGlyphName(reader.readUInt24())
+
+    def writeArray(self, writer, font, tableDict, values):
+        writer.writeUInt24Array(font.getGlyphIDMany(values))
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        writer.writeUInt24(font.getGlyphID(value))
 
 
 class GlyphID32(GlyphID):
@@ -2284,6 +2316,7 @@ converterMapping = {
     # type		class
     "int8": Int8,
     "int16": Short,
+    "int24": Int24,
     "int32": Long,
     "uint8": UInt8,
     "uint16": UShort,
@@ -2295,6 +2328,7 @@ converterMapping = {
     "Version": Version,
     "Tag": Tag,
     "GlyphID": GlyphID,
+    "GlyphID24": GlyphID24,
     "GlyphID32": GlyphID32,
     "NameID": NameID,
     "DeciPoints": DeciPoints,
