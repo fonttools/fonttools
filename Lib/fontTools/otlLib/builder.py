@@ -2902,7 +2902,10 @@ def buildLigCaretList(coords, points, glyphMap):
     carets = {g: c for g, c in carets.items() if c is not None}
     if not carets:
         return None
-    self = ot.LigCaretList()
+    if _glyphMapHasExtendedGlyphIDs(glyphMap):
+        self = ot.LigCaretList2()
+    else:
+        self = ot.LigCaretList()
     self.Coverage = buildCoverage(carets.keys(), glyphMap)
     self.LigGlyph = [carets[g] for g in self.Coverage.glyphs]
     self.LigGlyphCount = len(self.LigGlyph)
