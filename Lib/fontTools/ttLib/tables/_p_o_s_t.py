@@ -82,17 +82,18 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
         return glyphOrder
 
     def decode_format_1_0(self, data, ttFont):
-        self.glyphOrder = standardGlyphOrder[: ttFont["maxp"].numGlyphs]
+        self.glyphOrder = standardGlyphOrder[: ttFont.getGlyphCount()]
 
     def decode_format_2_0(self, data, ttFont):
         (numGlyphs,) = struct.unpack(">H", data[:2])
         numGlyphs = int(numGlyphs)
-        if numGlyphs > ttFont["maxp"].numGlyphs:
+        glyphCount = ttFont.getGlyphCount()
+        if numGlyphs > glyphCount:
             # Assume the numGlyphs field is bogus, so sync with maxp.
             # I've seen this in one font, and if the assumption is
             # wrong elsewhere, well, so be it: it's hard enough to
             # work around _one_ non-conforming post format...
-            numGlyphs = ttFont["maxp"].numGlyphs
+            numGlyphs = glyphCount
         data = data[2:]
         indices = array.array("H")
         indices.frombytes(data[: 2 * numGlyphs])
@@ -101,7 +102,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
         data = data[2 * numGlyphs :]
         maxIndex = max(indices)
         self.extraNames = extraNames = unpackPStrings(data, maxIndex - 257)
-        self.glyphOrder = glyphOrder = [""] * int(ttFont["maxp"].numGlyphs)
+        self.glyphOrder = glyphOrder = [""] * glyphCount
         for glyphID in range(numGlyphs):
             index = indices[glyphID]
             if index > 257:
@@ -119,7 +120,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
         mapping = {}
         allNames = {}
         glyphOrderNames = set(self.glyphOrder)
-        for i in range(ttFont["maxp"].numGlyphs):
+        for i in range(ttFont.getGlyphCount()):
             glyphName = psName = self.glyphOrder[i]
             if glyphName == "":
                 glyphName = "glyph%.5d" % i
@@ -148,7 +149,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
     def decode_format_4_0(self, data, ttFont):
         from fontTools import agl
 
-        numGlyphs = ttFont["maxp"].numGlyphs
+        numGlyphs = ttFont.getGlyphCount()
         indices = array.array("H")
         indices.frombytes(data)
         if sys.byteorder != "big":
@@ -166,7 +167,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
         self.build_psNameMapping(ttFont)
 
     def encode_format_2_0(self, ttFont):
-        numGlyphs = ttFont["maxp"].numGlyphs
+        numGlyphs = ttFont.getGlyphCount()
         glyphOrder = ttFont.getGlyphOrder()
         assert len(glyphOrder) == numGlyphs
         indices = array.array("H")
@@ -199,7 +200,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
     def encode_format_4_0(self, ttFont):
         from fontTools import agl
 
-        numGlyphs = ttFont["maxp"].numGlyphs
+        numGlyphs = ttFont.getGlyphCount()
         glyphOrder = ttFont.getGlyphOrder()
         assert len(glyphOrder) == numGlyphs
         indices = array.array("H")

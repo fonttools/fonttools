@@ -94,6 +94,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     hheaTag = "hhea"
     hmtxTag = "hmtx"
     vmtxTag = "vmtx"
+    gvarTag = "gvar"
     extended = False
 
     def decompile(self, data, ttFont):
@@ -225,7 +226,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     )
                     glyphWriter.begintag("ttFont", ttLibVersion=version)
                     glyphWriter.newline()
-                    glyphWriter.begintag("glyf")
+                    glyphWriter.begintag(self.tableTag)
                     glyphWriter.newline()
                     glyphWriter.comment(notice)
                     glyphWriter.newline()
@@ -247,7 +248,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                 glyphWriter.endtag("TTGlyph")
                 glyphWriter.newline()
                 if splitGlyphs:
-                    glyphWriter.endtag("glyf")
+                    glyphWriter.endtag(self.tableTag)
                     glyphWriter.newline()
                     glyphWriter.endtag("ttFont")
                     glyphWriter.newline()

@@ -92,6 +92,10 @@ class FakeFont:
     def hasExtendedGlyphIDs(self):
         return len(self.glyphOrder_) > 0x10000
 
+    def getGlyphCount(self):
+        maxpTag = "MAXP" if "MAXP" in self else "maxp"
+        return int(self[maxpTag].numGlyphs)
+
     def getReverseGlyphMap(self):
         return self.reverseGlyphOrderDict_
 

@@ -1,3 +1,4 @@
+from fontTools.misc import xmlWriter
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._g_l_y_f import (
     ARGS_ARE_XY_VALUES,
@@ -43,3 +44,29 @@ def test_compile_updates_locked_uppercase_tables():
     font["GLYF"].compile(font)
     assert len(font["LOCA"].locations) == 3
     assert font["MAXP"].numGlyphs == 2
+
+
+def test_split_glyphs_use_uppercase_table_tag(tmp_path):
+    class OutlineGlyph:
+        numberOfContours = 1
+        xMin = yMin = xMax = yMax = 0
+
+        def expand(self, glyfTable):
+            pass
+
+        def toXML(self, writer, ttFont):
+            pass
+
+    font = TTFont()
+    font.setGlyphOrder(["a"])
+    glyf = font["GLYF"] = newTable("GLYF")
+    glyf.glyphs = {"a": OutlineGlyph()}
+    glyf.glyphOrder = font.getGlyphOrder()
+    path = tmp_path / "GLYF.ttx"
+
+    writer = xmlWriter.XMLWriter(path)
+    glyf.toXML(writer, font, splitGlyphs=True)
+    writer.close()
+
+    glyphPath = next(p for p in tmp_path.iterdir() if p != path)
+    assert "<GLYF>" in glyphPath.read_text()
