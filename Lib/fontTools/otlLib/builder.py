@@ -1274,17 +1274,18 @@ class MarkMarkPosBuilder(LookupBuilder):
             }
 
             st = ot.MarkMarkPos()
-            st.Format = 1
+            extended = _glyphMapHasExtendedGlyphIDs(self.glyphMap)
+            st.Format = 2 if extended else 1
             st.ClassCount = len(markClasses)
             st.Mark1Coverage = buildCoverage(marks, self.glyphMap)
             st.Mark2Coverage = buildCoverage(subtable[1], self.glyphMap)
             st.Mark1Array = buildMarkArray(marks, self.glyphMap)
-            st.Mark2Array = ot.Mark2Array()
+            st.Mark2Array = ot.Mark2Array2() if extended else ot.Mark2Array()
             st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
             st.Mark2Array.Mark2Record = []
             for base in st.Mark2Coverage.glyphs:
                 anchors = [subtable[1][base].get(mc) for mc in markClassList]
-                st.Mark2Array.Mark2Record.append(buildMark2Record(anchors))
+                st.Mark2Array.Mark2Record.append(buildMark2Record(anchors, extended))
             subtables.append(st)
         return self.buildLookup_(subtables)
 
@@ -1996,24 +1997,25 @@ def buildBaseArray(bases, numMarkClasses, glyphMap):
     Returns:
         An ``otTables.BaseArray`` object.
     """
-    self = ot.BaseArray()
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self = ot.BaseArray2() if extended else ot.BaseArray()
     self.BaseRecord = []
     for base in sorted(bases, key=glyphMap.__getitem__):
         b = bases[base]
         anchors = [b.get(markClass) for markClass in range(numMarkClasses)]
-        self.BaseRecord.append(buildBaseRecord(anchors))
+        self.BaseRecord.append(buildBaseRecord(anchors, extended))
     self.BaseCount = len(self.BaseRecord)
     return self
 
 
-def buildBaseRecord(anchors):
+def buildBaseRecord(anchors, extended=False):
     # [otTables.Anchor, otTables.Anchor, ...] --> otTables.BaseRecord
-    self = ot.BaseRecord()
+    self = ot.BaseRecord2() if extended else ot.BaseRecord()
     self.BaseAnchor = anchors
     return self
 
 
-def buildComponentRecord(anchors):
+def buildComponentRecord(anchors, extended=False):
     """Builds a component record.
 
     As part of building mark-to-ligature positioning rules, you will need to
@@ -2030,7 +2032,7 @@ def buildComponentRecord(anchors):
     """
     if not anchors:
         return None
-    self = ot.ComponentRecord()
+    self = ot.ComponentRecord2() if extended else ot.ComponentRecord()
     self.LigatureAnchor = anchors
     return self
 
@@ -2063,12 +2065,13 @@ def buildCursivePosSubtable(attach, glyphMap):
     if not attach:
         return None
     self = ot.CursivePos()
-    self.Format = 1
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self.Format = 2 if extended else 1
     self.Coverage = buildCoverage(attach.keys(), glyphMap)
     self.EntryExitRecord = []
     for glyph in self.Coverage.glyphs:
         entryAnchor, exitAnchor = attach[glyph]
-        rec = ot.EntryExitRecord()
+        rec = ot.EntryExit2() if extended else ot.EntryExitRecord()
         rec.EntryAnchor = entryAnchor
         rec.ExitAnchor = exitAnchor
         self.EntryExitRecord.append(rec)
@@ -2146,21 +2149,22 @@ def buildLigatureArray(ligs, numMarkClasses, glyphMap):
     Returns:
         An ``otTables.LigatureArray`` object if deltas were supplied.
     """
-    self = ot.LigatureArray()
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self = ot.LigatureArray2() if extended else ot.LigatureArray()
     self.LigatureAttach = []
     for lig in sorted(ligs, key=glyphMap.__getitem__):
         anchors = []
         for component in ligs[lig]:
             anchors.append([component.get(mc) for mc in range(numMarkClasses)])
-        self.LigatureAttach.append(buildLigatureAttach(anchors))
+        self.LigatureAttach.append(buildLigatureAttach(anchors, extended))
     self.LigatureCount = len(self.LigatureAttach)
     return self
 
 
-def buildLigatureAttach(components):
+def buildLigatureAttach(components, extended=False):
     # [[Anchor, Anchor], [Anchor, Anchor, Anchor]] --> LigatureAttach
-    self = ot.LigatureAttach()
-    self.ComponentRecord = [buildComponentRecord(c) for c in components]
+    self = ot.LigatureAttach2() if extended else ot.LigatureAttach()
+    self.ComponentRecord = [buildComponentRecord(c, extended) for c in components]
     self.ComponentCount = len(self.ComponentRecord)
     return self
 
@@ -2191,11 +2195,12 @@ def buildMarkArray(marks, glyphMap):
     Returns:
         An ``otTables.MarkArray`` object.
     """
-    self = ot.MarkArray()
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self = ot.MarkArray2() if extended else ot.MarkArray()
     self.MarkRecord = []
     for mark in sorted(marks.keys(), key=glyphMap.__getitem__):
         markClass, anchor = marks[mark]
-        markrec = buildMarkRecord(markClass, anchor)
+        markrec = buildMarkRecord(markClass, anchor, extended)
         self.MarkRecord.append(markrec)
     self.MarkCount = len(self.MarkRecord)
     return self
@@ -2243,7 +2248,7 @@ def buildMarkBasePosSubtable(marks, bases, glyphMap):
         A ``otTables.MarkBasePos`` object.
     """
     self = ot.MarkBasePos()
-    self.Format = 1
+    self.Format = 2 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 1
     self.MarkCoverage = buildCoverage(marks, glyphMap)
     self.MarkArray = buildMarkArray(marks, glyphMap)
     self.ClassCount = max([mc for mc, _ in marks.values()]) + 1
@@ -2305,7 +2310,7 @@ def buildMarkLigPosSubtable(marks, ligs, glyphMap):
         A ``otTables.MarkLigPos`` object.
     """
     self = ot.MarkLigPos()
-    self.Format = 1
+    self.Format = 2 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 1
     self.MarkCoverage = buildCoverage(marks, glyphMap)
     self.MarkArray = buildMarkArray(marks, glyphMap)
     self.ClassCount = max([mc for mc, _ in marks.values()]) + 1
@@ -2314,18 +2319,18 @@ def buildMarkLigPosSubtable(marks, ligs, glyphMap):
     return self
 
 
-def buildMarkRecord(classID, anchor):
+def buildMarkRecord(classID, anchor, extended=False):
     assert isinstance(classID, int)
     assert isinstance(anchor, ot.Anchor)
-    self = ot.MarkRecord()
+    self = ot.MarkRecord2() if extended else ot.MarkRecord()
     self.Class = classID
     self.MarkAnchor = anchor
     return self
 
 
-def buildMark2Record(anchors):
+def buildMark2Record(anchors, extended=False):
     # [otTables.Anchor, otTables.Anchor, ...] --> otTables.Mark2Record
-    self = ot.Mark2Record()
+    self = ot.Mark2Record2() if extended else ot.Mark2Record()
     self.Mark2Anchor = anchors
     return self
 
