@@ -9,6 +9,8 @@ from typing import Callable
 
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.ttLib import TTFont, TTLibError, newTable
+from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.tables.otTraverse import dfs_base_table
 
 
 _TABLE_PAIRS = {
@@ -33,6 +35,23 @@ class _TableConversion:
     transform: Callable | None = None
 
 
+_AUTO_FORMAT_TABLES = (
+    otTables.Coverage,
+    otTables.ClassDef,
+    otTables.SingleSubst,
+    otTables.MultipleSubst,
+    otTables.AlternateSubst,
+    otTables.LigatureSubst,
+)
+
+
+def _force_layout_formats(table, extended):
+    for path in dfs_base_table(table):
+        subtable = path[-1].value
+        if isinstance(subtable, _AUTO_FORMAT_TABLES):
+            subtable._forceExtended = extended
+
+
 def _upper_layout_header(font, table, overwrite):
     table = table.table
     for name in ("ScriptList", "FeatureList", "LookupList"):
@@ -48,6 +67,7 @@ def _upper_layout_header(font, table, overwrite):
             setattr(table, destination_name, source)
             setattr(table, name, None)
     table.Version = max(table.Version, 0x00010002)
+    _force_layout_formats(table, True)
 
 
 def _lower_layout_header(font, table, overwrite):
@@ -67,6 +87,7 @@ def _lower_layout_header(font, table, overwrite):
     table.Version = (
         0x00010001 if getattr(table, "FeatureVariations", None) else 0x00010000
     )
+    _force_layout_formats(table, False)
 
 
 _UPPER_TABLES = {
