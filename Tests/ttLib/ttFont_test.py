@@ -277,6 +277,14 @@ def test_getGlyphID():
         font.getGlyphID("glyph_prefix_but_invalid_id")
 
 
+def test_hasExtendedGlyphIDs():
+    font = TTFont()
+    font.setGlyphOrder(["glyph"] * 0x10000)
+    assert not font.hasExtendedGlyphIDs()
+    font.setGlyphOrder(["glyph"] * 0x10001)
+    assert font.hasExtendedGlyphIDs()
+
+
 def test_spooled_tempfile_may_not_have_attribute_seekable():
     # SpooledTemporaryFile only got a seekable attribute on Python 3.11
     # https://github.com/fonttools/fonttools/issues/3052

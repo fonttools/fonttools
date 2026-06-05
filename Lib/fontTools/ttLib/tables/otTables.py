@@ -988,7 +988,9 @@ class Coverage(FormatSwitchingBaseTable):
                 last = glyphID
             ranges[-1].append(last)
 
-            extended = max(glyphIDs) > 0xFFFF or len(glyphs) > 0xFFFF
+            extended = font.hasExtendedGlyphIDs() and (
+                max(glyphIDs) > 0xFFFF or len(glyphs) > 0xFFFF
+            )
             if brokenOrder or len(ranges) * 3 < len(glyphs):
                 # Range format is more compact.
                 index = 0
@@ -1216,7 +1218,7 @@ class SingleSubst(FormatSwitchingBaseTable):
         gidItems = [(getGlyphID(a), getGlyphID(b)) for a, b in items]
         sortableItems = sorted(zip(gidItems, items))
 
-        extended = (
+        extended = font.hasExtendedGlyphIDs() and (
             len(items) > 0xFFFF
             or any(inID > 0xFFFF or outID > 0xFFFF for inID, outID in gidItems)
         )
@@ -1290,10 +1292,13 @@ class MultipleSubst(FormatSwitchingBaseTable):
             mapping = self.mapping = {}
         cov = Coverage()
         cov.glyphs = sorted(list(mapping.keys()), key=font.getGlyphID)
-        extended = len(mapping) > 0xFFFF or any(
-            font.getGlyphID(glyph) > 0xFFFF
-            for inputGlyph, substitutes in mapping.items()
-            for glyph in (inputGlyph, *substitutes)
+        extended = font.hasExtendedGlyphIDs() and (
+            len(mapping) > 0xFFFF
+            or any(
+                font.getGlyphID(glyph) > 0xFFFF
+                for inputGlyph, substitutes in mapping.items()
+                for glyph in (inputGlyph, *substitutes)
+            )
         )
         self.Format = 2 if extended else 1
         rawTable = {
@@ -1419,7 +1424,7 @@ class ClassDef(FormatSwitchingBaseTable):
             startGlyph = ranges[0][1]
             endGlyph = ranges[-1][3]
             glyphCount = endGlyph - startGlyph + 1
-            extended = (
+            extended = font.hasExtendedGlyphIDs() and (
                 startGlyph > 0xFFFF
                 or endGlyph > 0xFFFF
                 or glyphCount > 0xFFFF
@@ -1485,10 +1490,13 @@ class AlternateSubst(FormatSwitchingBaseTable):
         alternates = getattr(self, "alternates", None)
         if alternates is None:
             alternates = self.alternates = {}
-        extended = len(alternates) > 0xFFFF or any(
-            font.getGlyphID(glyph) > 0xFFFF
-            for inputGlyph, alternateSet in alternates.items()
-            for glyph in (inputGlyph, *alternateSet)
+        extended = font.hasExtendedGlyphIDs() and (
+            len(alternates) > 0xFFFF
+            or any(
+                font.getGlyphID(glyph) > 0xFFFF
+                for inputGlyph, alternateSet in alternates.items()
+                for glyph in (inputGlyph, *alternateSet)
+            )
         )
         self.Format = 2 if extended else 1
         items = list(alternates.items())
@@ -1603,14 +1611,17 @@ class LigatureSubst(FormatSwitchingBaseTable):
                 newLigatures.setdefault(comps[0], []).append(ligature)
             ligatures = newLigatures
 
-        extended = len(ligatures) > 0xFFFF or any(
-            font.getGlyphID(glyph) > 0xFFFF
-            for firstComponent, ligatureSet in ligatures.items()
-            for ligature in ligatureSet
-            for glyph in (
-                firstComponent,
-                ligature.LigGlyph,
-                *ligature.Component,
+        extended = font.hasExtendedGlyphIDs() and (
+            len(ligatures) > 0xFFFF
+            or any(
+                font.getGlyphID(glyph) > 0xFFFF
+                for firstComponent, ligatureSet in ligatures.items()
+                for ligature in ligatureSet
+                for glyph in (
+                    firstComponent,
+                    ligature.LigGlyph,
+                    *ligature.Component,
+                )
             )
         )
         self.Format = 2 if extended else 1
