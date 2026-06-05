@@ -6,6 +6,7 @@ import pytest
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.beyond64k import lower_tables, upper_tables
+from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent, flagCubic
 
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -102,6 +103,34 @@ def test_lower_rejects_large_glyph_count():
 
     with pytest.raises(ValueError, match="does not fit"):
         lower_tables(font, tables={"maxp"}, validate=False)
+
+
+def test_lower_rejects_cubic_glyph():
+    font = TTFont()
+    font.setGlyphOrder([".notdef"])
+    font["GLYF"] = newTable("GLYF")
+    glyph = Glyph()
+    glyph.numberOfContours = 1
+    glyph.flags = [flagCubic]
+    font["GLYF"].glyphs = {".notdef": glyph}
+
+    with pytest.raises(ValueError, match="cubic outlines"):
+        lower_tables(font, tables={"glyf"}, validate=False)
+
+
+def test_lower_rejects_large_component_glyph_id():
+    font = TTFont()
+    font.setGlyphOrder([".notdef"] + [f"glyph{i}" for i in range(0x10000)])
+    font["GLYF"] = newTable("GLYF")
+    glyph = Glyph()
+    glyph.numberOfContours = -1
+    component = GlyphComponent()
+    component.glyphName = "glyph65535"
+    glyph.components = [component]
+    font["GLYF"].glyphs = {".notdef": glyph}
+
+    with pytest.raises(ValueError, match="does not fit"):
+        lower_tables(font, tables={"glyf"}, validate=False)
 
 
 def test_layout_header_round_trip():
