@@ -4,14 +4,17 @@ from pathlib import Path
 import pytest
 
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.otlLib import builder
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.beyond64k import (
+    _convert_contextual_layout_formats,
     _convert_explicit_layout_formats,
     lower_tables,
     upper_tables,
 )
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent, flagCubic
+from fontTools.ttLib.tables.otBase import CountReference, OTTableWriter
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 
 
@@ -201,6 +204,178 @@ def nested_types(table, types):
         for path in dfs_base_table(table, skip_root=True)
         if isinstance(path[-1].value, types)
     )
+
+
+@pytest.mark.parametrize(
+    "builder_type,lookup_prefix",
+    [
+        (builder.ChainContextSubstBuilder, "Subst"),
+        (builder.ChainContextPosBuilder, "Pos"),
+    ],
+)
+@pytest.mark.parametrize("chaining", [False, True])
+def test_convert_contextual_layout_formats(builder_type, lookup_prefix, chaining):
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "a", "b", "c", "d"])
+    lookup_builder = builder_type(font, None)
+    lookup = builder.SingleSubstBuilder(font, None)
+    lookup.lookup_index = 3
+    rule = builder.ChainContextualRule(
+        [["a"]] if chaining else [],
+        [["b"], ["c"]],
+        [["d"]] if chaining else [],
+        [[lookup], None],
+    )
+    ruleset = builder.ChainContextualRuleset()
+    ruleset.addRule(rule)
+
+    subtables = [
+        lookup_builder.buildFormat1Subtable(ruleset, chaining),
+        lookup_builder.buildFormat2Subtable(
+            ruleset, ruleset.format2ClassDefs(), chaining
+        ),
+    ]
+    if not chaining:
+        subtables.append(lookup_builder.buildFormat3Subtable(rule, chaining))
+
+    for compact_format, subtable in enumerate(subtables, 1):
+        _convert_contextual_layout_formats(subtable, True)
+        assert subtable.Format == compact_format + 3
+        assert_contextual_layout_attributes(
+            subtable, lookup_prefix, compact_format, chaining, extended=True
+        )
+        compile_layout_subtable(subtable, font)
+
+        _convert_contextual_layout_formats(subtable, False)
+        assert subtable.Format == compact_format
+        assert_contextual_layout_attributes(
+            subtable, lookup_prefix, compact_format, chaining, extended=False
+        )
+        compile_layout_subtable(subtable, font)
+
+
+def assert_contextual_layout_attributes(
+    table, lookup_prefix, format, chaining, extended
+):
+    compact_prefix = ("Chain" if chaining else "") + lookup_prefix[:3]
+    compact_rule = compact_prefix + ("ClassRule" if format == 2 else "Rule")
+    compact_rule_set = compact_prefix + ("ClassSet" if format == 2 else "RuleSet")
+    extended_rule = ("Chained" if chaining else "") + (
+        "ClassSeqRule" if format == 2 else "SeqRule"
+    )
+    extended_rule_set = extended_rule + "Set"
+
+    if format in (1, 2):
+        rule_set_name = extended_rule_set if extended else compact_rule_set
+        rule_name = extended_rule if extended else compact_rule
+        rule_set = next(value for value in getattr(table, rule_set_name) if value)
+        rule = getattr(rule_set, rule_name)[0]
+    else:
+        rule = table
+
+    lookup_count = "SeqLookupCount" if extended else lookup_prefix + "Count"
+    lookup_record = "SeqLookupRecord" if extended else lookup_prefix + "LookupRecord"
+    assert getattr(rule, lookup_count) == 1
+    assert isinstance(
+        getattr(rule, lookup_record)[0],
+        (
+            otTables.SeqLookup
+            if extended
+            else getattr(otTables, lookup_prefix + "LookupRecord")
+        ),
+    )
+
+    if format in (1, 2):
+        input_name = "InputSequence"
+        if not extended:
+            input_name = "Class" if format == 2 and not chaining else "Input"
+        assert getattr(rule, input_name)
+        if chaining:
+            backtrack_name = "BacktrackSequence" if extended else "Backtrack"
+            lookahead_name = "LookAheadSequence" if extended else "LookAhead"
+            assert getattr(rule, backtrack_name)
+            assert getattr(rule, lookahead_name)
+
+
+def compile_layout_subtable(table, font):
+    lookup_type = {"LookupType": None}
+    writer = OTTableWriter(
+        localState={"LookupType": CountReference(lookup_type, "LookupType")}
+    )
+    table.compile(writer, font)
+    writer.getAllData()
+
+
+def build_contextual_layout_font():
+    font = TTFont()
+    font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
+    addOpenTypeFeaturesFromString(
+        font,
+        """
+        feature calt { sub period by ellipsis; } calt;
+        feature kern { pos period -20; } kern;
+        """,
+    )
+    lookup = builder.SingleSubstBuilder(font, None)
+    lookup.lookup_index = 0
+    rule = builder.ChainContextualRule(
+        [["space"]], [["period"], ["ellipsis"]], [["space"]], [[lookup], None]
+    )
+    ruleset = builder.ChainContextualRuleset()
+    ruleset.addRule(rule)
+
+    for tag, builder_type in (
+        ("GSUB", builder.ChainContextSubstBuilder),
+        ("GPOS", builder.ChainContextPosBuilder),
+    ):
+        lookup_builder = builder_type(font, None)
+        subtables = []
+        for chaining in (False, True):
+            subtables.extend(
+                [
+                    lookup_builder.buildFormat1Subtable(ruleset, chaining),
+                    lookup_builder.buildFormat2Subtable(
+                        ruleset, ruleset.format2ClassDefs(), chaining
+                    ),
+                ]
+            )
+            if not chaining:
+                subtables.append(lookup_builder.buildFormat3Subtable(rule, chaining))
+        lookups = [builder.buildLookup([subtable], table=tag) for subtable in subtables]
+        font[tag].table.LookupList.Lookup = lookups
+        font[tag].table.LookupList.LookupCount = len(lookups)
+    return font
+
+
+def assert_contextual_formats(font, extended):
+    expected = {
+        otTables.ContextSubst: [4, 5, 6] if extended else [1, 2, 3],
+        otTables.ChainContextSubst: [4, 5] if extended else [1, 2],
+        otTables.ContextPos: [4, 5, 6] if extended else [1, 2, 3],
+        otTables.ChainContextPos: [4, 5] if extended else [1, 2],
+    }
+    for table_type, formats in expected.items():
+        tag = "GSUB" if "Subst" in table_type.__name__ else "GPOS"
+        subtables = layout_subtables(font, tag, table_type)
+        assert [subtable.Format for subtable in subtables] == formats
+
+
+def test_contextual_layout_end_to_end_round_trip():
+    font = build_contextual_layout_font()
+
+    upper_tables(font, tables={"GSUB", "GPOS"})
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    assert_contextual_formats(font, True)
+
+    lower_tables(font, tables={"GSUB", "GPOS"})
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    assert_contextual_formats(font, False)
 
 
 def test_round_trip_companion_tables():

@@ -92,6 +92,118 @@ _EXPLICIT_LAYOUT_FORMATS = {
 }
 
 
+def _contextual_layout_conversion(
+    table_type, compact_format, lookup_prefix, chaining=False
+):
+    compact_prefix = ("Chain" if chaining else "") + lookup_prefix[:3]
+    class_based = compact_format == 2
+    compact_rule = compact_prefix + ("ClassRule" if class_based else "Rule")
+    compact_rule_set = compact_prefix + ("ClassSet" if class_based else "RuleSet")
+    extended_rule = ("Chained" if chaining else "") + (
+        "ClassSeqRule" if class_based else "SeqRule"
+    )
+    extended_rule_set = extended_rule + "Set"
+    lookup_count = lookup_prefix + "Count"
+    lookup_record = lookup_prefix + "LookupRecord"
+    replacements = {getattr(otTables, lookup_record): (otTables.SeqLookup, {})}
+    outer_renames = {
+        lookup_count: "SeqLookupCount",
+        lookup_record: "SeqLookupRecord",
+    }
+
+    if compact_format in (1, 2):
+        replacements[getattr(otTables, compact_rule_set)] = (
+            getattr(otTables, extended_rule_set + "2"),
+            {
+                compact_rule + "Count": extended_rule + "Count",
+                compact_rule: extended_rule,
+            },
+        )
+        rule_renames = {
+            lookup_count: "SeqLookupCount",
+            lookup_record: "SeqLookupRecord",
+        }
+        if chaining:
+            rule_renames.update(
+                {
+                    "Backtrack": "BacktrackSequence",
+                    "Input": "InputSequence",
+                    "LookAhead": "LookAheadSequence",
+                }
+            )
+        else:
+            rule_renames["Class" if class_based else "Input"] = "InputSequence"
+        replacements[getattr(otTables, compact_rule)] = (
+            getattr(otTables, extended_rule + ("" if class_based else "2")),
+            rule_renames,
+        )
+        outer_renames = {
+            compact_rule_set + "Count": extended_rule_set + "Count",
+            compact_rule_set: extended_rule_set,
+        }
+
+    return table_type, compact_format, compact_format + 3, outer_renames, replacements
+
+
+_CONTEXTUAL_LAYOUT_FORMATS = {
+    (table_type, compact_format): (extended_format, outer_renames, replacements)
+    for (
+        table_type,
+        compact_format,
+        extended_format,
+        outer_renames,
+        replacements,
+    ) in (
+        *(
+            _contextual_layout_conversion(otTables.ContextSubst, format, "Subst")
+            for format in (1, 2, 3)
+        ),
+        *(
+            _contextual_layout_conversion(otTables.ContextPos, format, "Pos")
+            for format in (1, 2, 3)
+        ),
+        *(
+            _contextual_layout_conversion(
+                otTables.ChainContextSubst, format, "Subst", chaining=True
+            )
+            for format in (1, 2)
+        ),
+        *(
+            _contextual_layout_conversion(
+                otTables.ChainContextPos, format, "Pos", chaining=True
+            )
+            for format in (1, 2)
+        ),
+    )
+}
+
+
+def _rename_layout_attributes(table, renames):
+    for source, destination in renames.items():
+        if hasattr(table, source):
+            setattr(table, destination, getattr(table, source))
+            delattr(table, source)
+
+
+def _replace_layout_subtree(table, replacements):
+    for path in reversed(list(dfs_base_table(table))):
+        subtable = path[-1].value
+        replacement_type, renames = replacements.get(
+            type(subtable), (type(subtable), {})
+        )
+        _rename_layout_attributes(subtable, renames)
+        if replacement_type is type(subtable):
+            continue
+        replacement = replacement_type()
+        replacement.__dict__.update(subtable.__dict__)
+        parent = path[-2].value
+        entry = path[-1]
+        if entry.index is None:
+            setattr(parent, entry.name, replacement)
+        else:
+            getattr(parent, entry.name)[entry.index] = replacement
+
+
 def _replace_layout_classes(table, replacements):
     for path in reversed(list(dfs_base_table(table))):
         subtable = path[-1].value
@@ -106,6 +218,44 @@ def _replace_layout_classes(table, replacements):
             setattr(parent, entry.name, replacement)
         else:
             getattr(parent, entry.name)[entry.index] = replacement
+
+
+def _convert_contextual_layout_formats(table, extended):
+    conversions = _CONTEXTUAL_LAYOUT_FORMATS
+    if not extended:
+        conversions = {
+            (table_type, extended_format): (
+                compact_format,
+                {destination: source for source, destination in outer_renames.items()},
+                {
+                    extended_type: (
+                        compact_type,
+                        {
+                            destination: source
+                            for source, destination in renames.items()
+                        },
+                    )
+                    for compact_type, (extended_type, renames) in replacements.items()
+                },
+            )
+            for (table_type, compact_format), (
+                extended_format,
+                outer_renames,
+                replacements,
+            ) in conversions.items()
+        }
+
+    for path in dfs_base_table(table):
+        subtable = path[-1].value
+        conversion = conversions.get(
+            (type(subtable), getattr(subtable, "Format", None))
+        )
+        if conversion is None:
+            continue
+        format, outer_renames, replacements = conversion
+        _replace_layout_subtree(subtable, replacements)
+        _rename_layout_attributes(subtable, outer_renames)
+        subtable.Format = format
 
 
 def _convert_explicit_layout_formats(table, extended):
@@ -134,6 +284,7 @@ def _convert_explicit_layout_formats(table, extended):
 
 
 def _force_layout_formats(table, extended):
+    _convert_contextual_layout_formats(table, extended)
     _convert_explicit_layout_formats(table, extended)
     for path in dfs_base_table(table):
         subtable = path[-1].value
