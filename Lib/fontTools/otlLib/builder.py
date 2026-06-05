@@ -1400,7 +1400,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
         subtables = []
         for prefix, suffix, mapping in self.rules:
             st = ot.ReverseChainSingleSubst()
-            st.Format = 1
+            st.Format = 2 if _glyphMapHasExtendedGlyphIDs(self.glyphMap) else 1
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             st.Coverage = buildCoverage(mapping.keys(), self.glyphMap)
