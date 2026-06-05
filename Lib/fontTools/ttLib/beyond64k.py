@@ -108,6 +108,20 @@ def _validate_family(font: TTFont) -> None:
 
 
 def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -> None:
+    if "GLYF" in conversions and "GLYF" in font:
+        from fontTools.ttLib.tables._g_l_y_f import flagCubic
+
+        glyf = font["GLYF"]
+        for glyph_name in font.getGlyphOrder():
+            glyph = glyf[glyph_name]
+            if glyph.isComposite():
+                for component in glyph.components:
+                    if font.getGlyphID(component.glyphName) > 0xFFFF:
+                        raise ValueError(
+                            f"GLYF component {component.glyphName!r} does not fit in glyf"
+                        )
+            elif any(flag & flagCubic for flag in getattr(glyph, "flags", ())):
+                raise ValueError(f"GLYF glyph {glyph_name!r} has cubic outlines")
     if "MAXP" in conversions and "MAXP" in font and font["MAXP"].numGlyphs > 0xFFFF:
         raise ValueError("MAXP.numGlyphs does not fit in maxp")
     if "HHEA" in conversions and "HHEA" in font:
