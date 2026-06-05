@@ -84,6 +84,8 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
         conv = converterClass(
             spec.name, spec.repeat, spec.aux, description=spec.description
         )
+        if spec.condition:
+            conv.condition = compile(spec.condition, "<string>", "eval")
 
         if conv.tableClass:
             # A "template" such as OffsetTo(AType) knows the table class already
@@ -156,6 +158,10 @@ class BaseConverter(object):
             "NumEntries",
         ]
         self.description = description
+        self.condition = None
+
+    def isEnabled(self, table):
+        return self.condition is None or eval(self.condition, None, table)
 
     def readArray(self, reader, font, tableDict, count):
         """Read an array of values from the reader."""
