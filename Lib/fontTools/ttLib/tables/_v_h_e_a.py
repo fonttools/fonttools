@@ -46,30 +46,32 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
     # Note: Keep in sync with table__h_h_e_a
 
     dependencies = ["vmtx", "glyf", "CFF ", "CFF2"]
+    tableFormat = vheaFormat
+    glyphTableTag = "glyf"
+    metricsTableTag = "vmtx"
+    outlineTags = ("glyf", "CFF ", "CFF2")
 
     def decompile(self, data, ttFont):
-        sstruct.unpack(vheaFormat, data, self)
+        sstruct.unpack(self.tableFormat, data, self)
 
     def compile(self, ttFont):
         if ttFont.recalcBBoxes and (
-            ttFont.isLoaded("glyf")
-            or ttFont.isLoaded("CFF ")
-            or ttFont.isLoaded("CFF2")
+            any(ttFont.isLoaded(tag) for tag in self.outlineTags)
         ):
             self.recalc(ttFont)
         self.tableVersion = fi2ve(self.tableVersion)
-        return sstruct.pack(vheaFormat, self)
+        return sstruct.pack(self.tableFormat, self)
 
     def recalc(self, ttFont):
-        if "vmtx" not in ttFont:
+        if self.metricsTableTag not in ttFont:
             return
 
-        vmtxTable = ttFont["vmtx"]
+        vmtxTable = ttFont[self.metricsTableTag]
         self.advanceHeightMax = max(adv for adv, _ in vmtxTable.metrics.values())
 
         boundsHeightDict = {}
-        if "glyf" in ttFont:
-            glyfTable = ttFont["glyf"]
+        if self.glyphTableTag in ttFont:
+            glyfTable = ttFont[self.glyphTableTag]
             for name in ttFont.getGlyphOrder():
                 g = glyfTable[name]
                 if g.numberOfContours == 0:
@@ -114,7 +116,7 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
             self.yMaxExtent = 0
 
     def toXML(self, writer, ttFont):
-        formatstring, names, fixes = sstruct.getformat(vheaFormat)
+        formatstring, names, fixes = sstruct.getformat(self.tableFormat)
         for name in names:
             value = getattr(self, name)
             if name == "tableVersion":
