@@ -1187,17 +1187,18 @@ class SingleSubst(FormatSwitchingBaseTable):
     def postRead(self, rawTable, font):
         mapping = {}
         input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
-        if self.Format == 1:
+        if self.Format in (1, 3):
             delta = rawTable["DeltaGlyphID"]
             inputGIDS = font.getGlyphIDMany(input)
-            outGIDS = [(glyphID + delta) % 65536 for glyphID in inputGIDS]
+            modulus = 0x1000000 if self.Format == 3 else 0x10000
+            outGIDS = [(glyphID + delta) % modulus for glyphID in inputGIDS]
             outNames = font.getGlyphNameMany(outGIDS)
             for inp, out in zip(input, outNames):
                 mapping[inp] = out
-        elif self.Format == 2:
+        elif self.Format in (2, 4):
             assert (
                 len(input) == rawTable["GlyphCount"]
-            ), "invalid SingleSubstFormat2 table"
+            ), "invalid SingleSubst table"
             subst = rawTable["Substitute"]
             for inp, sub in zip(input, subst):
                 mapping[inp] = sub
@@ -1215,21 +1216,27 @@ class SingleSubst(FormatSwitchingBaseTable):
         gidItems = [(getGlyphID(a), getGlyphID(b)) for a, b in items]
         sortableItems = sorted(zip(gidItems, items))
 
+        extended = (
+            len(items) > 0xFFFF
+            or any(inID > 0xFFFF or outID > 0xFFFF for inID, outID in gidItems)
+        )
+        modulus = 0x1000000 if extended else 0x10000
+
         # figure out format
-        format = 2
+        format = 4 if extended else 2
         delta = None
         for inID, outID in gidItems:
             if delta is None:
-                delta = (outID - inID) % 65536
+                delta = (outID - inID) % modulus
 
-            if (inID + delta) % 65536 != outID:
+            if (inID + delta) % modulus != outID:
                 break
         else:
             if delta is None:
                 # the mapping is empty, better use format 2
-                format = 2
+                format = 4 if extended else 2
             else:
-                format = 1
+                format = 3 if extended else 1
 
         rawTable = {}
         self.Format = format
@@ -1238,8 +1245,10 @@ class SingleSubst(FormatSwitchingBaseTable):
         subst = [item[1][1] for item in sortableItems]
         cov.glyphs = input
         rawTable["Coverage"] = cov
-        if format == 1:
+        if format in (1, 3):
             assert delta is not None
+            if format == 3 and delta >= 0x800000:
+                delta -= 0x1000000
             rawTable["DeltaGlyphID"] = delta
         else:
             rawTable["Substitute"] = subst
