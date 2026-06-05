@@ -6,10 +6,65 @@ import pytest
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.beyond64k import lower_tables, upper_tables
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent, flagCubic
+from fontTools.ttLib.tables.otTraverse import dfs_base_table
 
 
 DATA_DIR = Path(__file__).parent / "data"
+
+
+def layout_subtables(font, tag, table_type):
+    return [
+        path[-1].value
+        for path in dfs_base_table(font[tag].table)
+        if isinstance(path[-1].value, table_type)
+    ]
+
+
+def assert_layout_formats(font, extended):
+    coverage_formats = (3, 4) if extended else (1, 2)
+    ligature_format = 2 if extended else 1
+    for tag in ("GSUB", "GPOS"):
+        for coverage in layout_subtables(font, tag, otTables.Coverage):
+            coverage.preWrite(font)
+            assert coverage.Format in coverage_formats
+    for ligature in layout_subtables(font, "GSUB", otTables.LigatureSubst):
+        raw_table = ligature.preWrite(font)
+        assert ligature.Format == ligature_format
+        raw_table["Coverage"].preWrite(font)
+        assert raw_table["Coverage"].Format in coverage_formats
+
+
+@pytest.mark.parametrize(
+    "table_type, attribute, value, compact_format, extended_format",
+    [
+        (otTables.Coverage, "glyphs", ["a", "b"], 1, 3),
+        (otTables.ClassDef, "classDefs", {"a": 1, "b": 2}, 1, 3),
+        (otTables.SingleSubst, "mapping", {"a": "b"}, 1, 3),
+        (otTables.MultipleSubst, "mapping", {"a": ["b", "c"]}, 1, 2),
+        (otTables.AlternateSubst, "alternates", {"a": ["b", "c"]}, 1, 2),
+        (otTables.LigatureSubst, "ligatures", {("a", "b"): "c"}, 1, 2),
+    ],
+)
+def test_force_auto_layout_format(
+    table_type, attribute, value, compact_format, extended_format
+):
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "a", "b", "c"])
+
+    for extended, expected_format in (
+        (False, compact_format),
+        (True, extended_format),
+    ):
+        table = table_type()
+        setattr(table, attribute, value)
+        table._forceExtended = extended
+        raw_table = table.preWrite(font)
+
+        assert table.Format == expected_format
+        if "Coverage" in raw_table:
+            assert raw_table["Coverage"]._forceExtended == extended
 
 
 def test_round_trip_companion_tables():
@@ -155,11 +210,28 @@ def test_layout_header_round_trip():
         assert table.ScriptList2 is not None
         assert table.FeatureList2 is not None
         assert table.LookupList2 is not None
+        assert all(
+            subtable._forceExtended
+            for subtable in layout_subtables(
+                font,
+                tag,
+                (
+                    otTables.Coverage,
+                    otTables.ClassDef,
+                    otTables.SingleSubst,
+                    otTables.MultipleSubst,
+                    otTables.AlternateSubst,
+                    otTables.LigatureSubst,
+                ),
+            )
+        )
+    assert_layout_formats(font, True)
 
     data = BytesIO()
     font.save(data)
     data.seek(0)
     font = TTFont(data)
+
     lower_tables(font, tables={"GSUB", "GPOS"})
 
     for tag in ("GSUB", "GPOS"):
@@ -171,3 +243,24 @@ def test_layout_header_round_trip():
         assert table.ScriptList2 is None
         assert table.FeatureList2 is None
         assert table.LookupList2 is None
+        assert all(
+            not subtable._forceExtended
+            for subtable in layout_subtables(
+                font,
+                tag,
+                (
+                    otTables.Coverage,
+                    otTables.ClassDef,
+                    otTables.SingleSubst,
+                    otTables.MultipleSubst,
+                    otTables.AlternateSubst,
+                    otTables.LigatureSubst,
+                ),
+            )
+        )
+    assert_layout_formats(font, False)
+
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    TTFont(data)
