@@ -292,6 +292,26 @@ class MultipleSubstTest(unittest.TestCase):
         table.postRead(rawTable, self.font)
         self.assertEqual(table.mapping, {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]})
 
+    def test_postRead_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.MultipleSubst()
+        table.Format = 2
+        rawTable = {
+            "Coverage": makeCoverage(["a"]),
+            "Sequence": [table.makeSequence_(["b", "c"], extended=True)],
+        }
+        table.postRead(rawTable, font)
+        self.assertEqual(table.mapping, {"a": ["b", "c"]})
+
+    def test_decompile_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = decompileTable(
+            otTables.MultipleSubst(),
+            "00020000000d0000010000001500030000010100000002010001020000",
+            font,
+        )
+        self.assertEqual(table.mapping, {"a": ["b", "c"]})
+
     def test_postRead_formatUnknown(self):
         table = otTables.MultipleSubst()
         table.Format = 987
@@ -303,6 +323,19 @@ class MultipleSubstTest(unittest.TestCase):
         rawTable = table.preWrite(self.font)
         self.assertEqual(table.Format, 1)
         self.assertEqual(rawTable["Coverage"].glyphs, ["c_t", "f_f_i"])
+
+    def test_preWrite_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.MultipleSubst()
+        table.mapping = {"a": ["b", "c"]}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["Sequence"][0], otTables.Sequence2)
+        self.assertEqual(rawTable["Sequence"][0].Substitute, ["b", "c"])
+        self.assertEqual(
+            compileTable(table, font),
+            "00020000000d0000010000001500030000010100000002010001020000",
+        )
 
     def test_toXML2(self):
         writer = XMLWriter(StringIO())
