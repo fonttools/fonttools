@@ -26,7 +26,9 @@ _TABLE_PAIRS = {
 _TABLE_IDENTITIES = {
     tag: lower for lower, upper in _TABLE_PAIRS.items() for tag in (lower, upper)
 }
-_TABLE_IDENTITIES.update({"GDEF": "GDEF", "GSUB": "GSUB", "GPOS": "GPOS"})
+_TABLE_IDENTITIES.update(
+    {"BASE": "BASE", "GDEF": "GDEF", "GPOS": "GPOS", "GSUB": "GSUB", "JSTF": "JSTF"}
+)
 
 
 @dataclass(frozen=True)
@@ -46,6 +48,7 @@ _AUTO_FORMAT_TABLES = (
 
 
 _EXPLICIT_LAYOUT_FORMATS = {
+    (otTables.BaseCoord, 2): (4, {}),
     (otTables.SinglePos, 1): (3, {}),
     (otTables.SinglePos, 2): (4, {}),
     (otTables.PairPos, 1): (
@@ -366,6 +369,54 @@ def _lower_gdef(font, table, overwrite):
     _force_layout_formats(table, False)
 
 
+def _upper_layout_formats(font, table, overwrite):
+    _force_layout_formats(table.table, True)
+
+
+def _lower_layout_formats(font, table, overwrite):
+    _force_layout_formats(table.table, False)
+
+
+def _upper_jstf(font, table, overwrite):
+    table = table.table
+    _replace_layout_subtree(
+        table,
+        {
+            otTables.JstfScriptRecord: (otTables.JstfScriptRecord2, {}),
+            otTables.JstfScript: (otTables.JstfScript2, {}),
+            otTables.ExtenderGlyph: (otTables.ExtenderGlyph2, {}),
+        },
+    )
+    _rename_layout_attributes(
+        table,
+        {
+            "JstfScriptCount": "JstfScriptCount2",
+            "JstfScriptRecord": "JstfScriptRecord2",
+        },
+    )
+    table.Version = max(table.Version, 0x00010001)
+
+
+def _lower_jstf(font, table, overwrite):
+    table = table.table
+    _replace_layout_subtree(
+        table,
+        {
+            otTables.JstfScriptRecord2: (otTables.JstfScriptRecord, {}),
+            otTables.JstfScript2: (otTables.JstfScript, {}),
+            otTables.ExtenderGlyph2: (otTables.ExtenderGlyph, {}),
+        },
+    )
+    _rename_layout_attributes(
+        table,
+        {
+            "JstfScriptCount2": "JstfScriptCount",
+            "JstfScriptRecord2": "JstfScriptRecord",
+        },
+    )
+    table.Version = 0x00010000
+
+
 def _upper_layout_header(font, table, overwrite):
     table = table.table
     _move_fields(table, ("ScriptList", "FeatureList", "LookupList"), True, overwrite)
@@ -387,15 +438,19 @@ _UPPER_TABLES = {
         source: _TableConversion(destination)
         for source, destination in _TABLE_PAIRS.items()
     },
+    "BASE": _TableConversion("BASE", _upper_layout_formats),
     "GDEF": _TableConversion("GDEF", _upper_gdef),
     "GSUB": _TableConversion("GSUB", _upper_layout_header),
     "GPOS": _TableConversion("GPOS", _upper_layout_header),
+    "JSTF": _TableConversion("JSTF", _upper_jstf),
 }
 _LOWER_TABLES = {
     **{upper: _TableConversion(lower) for lower, upper in _TABLE_PAIRS.items()},
+    "BASE": _TableConversion("BASE", _lower_layout_formats),
     "GDEF": _TableConversion("GDEF", _lower_gdef),
     "GSUB": _TableConversion("GSUB", _lower_layout_header),
     "GPOS": _TableConversion("GPOS", _lower_layout_header),
+    "JSTF": _TableConversion("JSTF", _lower_jstf),
 }
 
 
