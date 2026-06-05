@@ -1544,7 +1544,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 
     def postRead(self, rawTable, font):
         ligatures = {}
-        if self.Format == 1:
+        if self.Format in (1, 2):
             input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
             ligSets = rawTable["LigatureSet"]
             assert len(input) == len(ligSets)
@@ -1585,7 +1585,6 @@ class LigatureSubst(FormatSwitchingBaseTable):
         return -len(components)
 
     def preWrite(self, font):
-        self.Format = 1
         ligatures = getattr(self, "ligatures", None)
         if ligatures is None:
             ligatures = self.ligatures = {}
@@ -1604,6 +1603,18 @@ class LigatureSubst(FormatSwitchingBaseTable):
                 newLigatures.setdefault(comps[0], []).append(ligature)
             ligatures = newLigatures
 
+        extended = len(ligatures) > 0xFFFF or any(
+            font.getGlyphID(glyph) > 0xFFFF
+            for firstComponent, ligatureSet in ligatures.items()
+            for ligature in ligatureSet
+            for glyph in (
+                firstComponent,
+                ligature.LigGlyph,
+                *ligature.Component,
+            )
+        )
+        self.Format = 2 if extended else 1
+
         items = list(ligatures.items())
         for i, (glyphName, set) in enumerate(items):
             items[i] = font.getGlyphID(glyphName), glyphName, set
@@ -1614,10 +1625,17 @@ class LigatureSubst(FormatSwitchingBaseTable):
         ligSets = []
         setList = [item[-1] for item in items]
         for set in setList:
-            ligSet = LigatureSet()
+            ligSet = LigatureSet2() if extended else LigatureSet()
             ligs = ligSet.Ligature = []
             for lig in set:
-                ligs.append(lig)
+                ligatureClass = Ligature2 if extended else Ligature
+                if isinstance(lig, ligatureClass):
+                    out = lig
+                else:
+                    out = ligatureClass()
+                    out.LigGlyph = lig.LigGlyph
+                    out.Component = lig.Component
+                ligs.append(out)
             ligSets.append(ligSet)
         # Useful in that when splitting a sub-table because of an offset overflow
         # I don't need to calculate the change in subtabl offset due to the coverage table size.
