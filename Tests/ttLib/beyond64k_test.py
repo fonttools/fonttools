@@ -426,6 +426,108 @@ def test_gdef_end_to_end_round_trip():
     assert isinstance(table.LigCaretList, otTables.LigCaretList)
 
 
+def test_base_end_to_end_round_trip():
+    font = TTFont()
+    font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
+    addOpenTypeFeaturesFromString(
+        font,
+        """
+        table BASE {
+            HorizAxis.BaseTagList romn;
+            HorizAxis.BaseScriptList latn romn 0;
+        } BASE;
+        """,
+    )
+    coord = (
+        font["BASE"]
+        .table.HorizAxis.BaseScriptList.BaseScriptRecord[0]
+        .BaseScript.BaseValues.BaseCoord[0]
+    )
+    coord.Format = 2
+    coord.ReferenceGlyph = "period"
+    coord.BaseCoordPoint = 0
+
+    upper_tables(font, tables={"BASE"})
+    assert coord.Format == 4
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    coord = (
+        font["BASE"]
+        .table.HorizAxis.BaseScriptList.BaseScriptRecord[0]
+        .BaseScript.BaseValues.BaseCoord[0]
+    )
+    assert coord.Format == 4
+
+    lower_tables(font, tables={"BASE"})
+    assert coord.Format == 2
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    coord = (
+        font["BASE"]
+        .table.HorizAxis.BaseScriptList.BaseScriptRecord[0]
+        .BaseScript.BaseValues.BaseCoord[0]
+    )
+    assert coord.Format == 2
+
+
+def test_jstf_end_to_end_round_trip():
+    font = TTFont()
+    font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
+    font["JSTF"] = newTable("JSTF")
+    table = font["JSTF"].table = otTables.JSTF()
+    table.Version = 0x00010000
+    table.JstfScriptCount = 1
+    record = otTables.JstfScriptRecord()
+    record.JstfScriptTag = "latn"
+    record.JstfScript = otTables.JstfScript()
+    record.JstfScript.ExtenderGlyph = otTables.ExtenderGlyph()
+    record.JstfScript.ExtenderGlyph.GlyphCount = 1
+    record.JstfScript.ExtenderGlyph.ExtenderGlyph = ["period"]
+    record.JstfScript.DefJstfLangSys = None
+    record.JstfScript.JstfLangSysCount = 0
+    record.JstfScript.JstfLangSysRecord = []
+    table.JstfScriptRecord = [record]
+
+    upper_tables(font, tables={"JSTF"})
+    table = font["JSTF"].table
+    assert table.Version == 0x00010001
+    assert getattr(table, "JstfScriptRecord", None) is None
+    assert isinstance(table.JstfScriptRecord2[0], otTables.JstfScriptRecord2)
+    assert isinstance(table.JstfScriptRecord2[0].JstfScript, otTables.JstfScript2)
+    assert isinstance(
+        table.JstfScriptRecord2[0].JstfScript.ExtenderGlyph, otTables.ExtenderGlyph2
+    )
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    assert isinstance(
+        font["JSTF"].table.JstfScriptRecord2[0].JstfScript.ExtenderGlyph,
+        otTables.ExtenderGlyph2,
+    )
+
+    lower_tables(font, tables={"JSTF"})
+    table = font["JSTF"].table
+    assert table.Version == 0x00010000
+    assert isinstance(table.JstfScriptRecord[0], otTables.JstfScriptRecord)
+    assert isinstance(table.JstfScriptRecord[0].JstfScript, otTables.JstfScript)
+    assert isinstance(
+        table.JstfScriptRecord[0].JstfScript.ExtenderGlyph, otTables.ExtenderGlyph
+    )
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+    assert isinstance(
+        font["JSTF"].table.JstfScriptRecord[0].JstfScript.ExtenderGlyph,
+        otTables.ExtenderGlyph,
+    )
+
+
 def test_round_trip_companion_tables():
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
