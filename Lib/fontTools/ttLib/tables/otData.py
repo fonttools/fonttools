@@ -1652,8 +1652,8 @@ otData = [
     (
         "EntryExit2",
         [
-            FieldSpec("LOffsetTo(Anchor)", "EntryAnchor"),
-            FieldSpec("LOffsetTo(Anchor)", "ExitAnchor"),
+            FieldSpec("Offset24To(Anchor)", "EntryAnchor"),
+            FieldSpec("Offset24To(Anchor)", "ExitAnchor"),
         ],
     ),
     (
