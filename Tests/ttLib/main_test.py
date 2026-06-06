@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 from fontTools.ttLib import __main__, TTFont, TTCollection
+from fontTools.ttLib.beyond64k import upper_tables
 
 import pytest
 
@@ -62,6 +63,20 @@ def test_ttLib_open_save_ttfont(tmp_path, ttfont_path, flavor):
 
     assert output_path.exists()
     assert TTFont(output_path).getGlyphOrder() == TTFont(ttfont_path).getGlyphOrder()
+
+
+def test_ttLib_open_save_beyond64k_ttfont_optimize_font_speed(tmp_path, ttfont_path):
+    font = TTFont(ttfont_path)
+    upper_tables(font)
+    font.save(ttfont_path)
+
+    output_path = tmp_path / "TestTTF-Regular.ttf"
+    __main__.main(["--optimize-font-speed", "-o", str(output_path), str(ttfont_path)])
+
+    font = TTFont(output_path)
+    assert "GLYF" in font
+    assert "glyf" not in font
+    assert font.getGlyphOrder() == TTFont(ttfont_path).getGlyphOrder()
 
 
 def test_ttLib_open_ttcollection(ttcollection_path):
