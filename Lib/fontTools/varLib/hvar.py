@@ -20,7 +20,7 @@ def _get_advance_metrics(font, axisTags, tableFields):
     # 2. For each master peak, pull out the deltas of the advance width directly,
     #    and feed these to the VarStoreBuilder, forgoing the remodeling step.
     # We'll go with the second option, as it's simpler, faster, and more direct.
-    gvar = font["gvar"]
+    gvar = font["GVAR"] if "GVAR" in font else font["gvar"]
     vhAdvanceDeltasAndSupports = {}
     glyphOrder = font.getGlyphOrder()
     phantomIndex = tableFields.phantomIndex
@@ -56,8 +56,8 @@ def add_HVAR(font):
 def add_VVAR(font):
     if "VVAR" in font:
         del font["VVAR"]
-    getAdvanceMetrics = partial(_get_advance_metrics, font, axisTags, VVAR_FIELDS)
     axisTags = [axis.axisTag for axis in font["fvar"].axes]
+    getAdvanceMetrics = partial(_get_advance_metrics, font, axisTags, VVAR_FIELDS)
     _add_VHVAR(font, axisTags, VVAR_FIELDS, getAdvanceMetrics)
 
 
@@ -95,7 +95,7 @@ def main(args=None):
         return 1
 
     add_HVAR(font)
-    if "vmtx" in font:
+    if "vmtx" in font or "VMTX" in font:
         add_VVAR(font)
 
     if options.output_file is None:
