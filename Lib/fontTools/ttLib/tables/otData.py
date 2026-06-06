@@ -228,6 +228,21 @@ otData = [
         ],
     ),
     (
+        "LookupList2",
+        [
+            FieldSpec(
+                "uint16", "LookupCount", description="Number of lookups in this table"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Lookup",
+                repeat="LookupCount",
+                aux=0,
+                description="Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)",
+            ),
+        ],
+    ),
+    (
         "Lookup",
         [
             FieldSpec(
@@ -532,7 +547,7 @@ otData = [
                 description="Offset to FeatureList table-from beginning of GPOS table",
             ),
             FieldSpec(
-                "LOffsetTo(LookupList)",
+                "LOffsetTo(LookupList2)",
                 "LookupList2",
                 aux="Version >= 0x00010002",
                 description="Offset to LookupList table-from beginning of GPOS table",
@@ -1825,7 +1840,7 @@ otData = [
                 description="Offset to FeatureList table-from beginning of GSUB table",
             ),
             FieldSpec(
-                "LOffsetTo(LookupList)",
+                "LOffsetTo(LookupList2)",
                 "LookupList2",
                 aux="Version >= 0x00010002",
                 description="Offset to LookupList table-from beginning of GSUB table",
