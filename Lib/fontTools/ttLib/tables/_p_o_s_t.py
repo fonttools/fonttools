@@ -36,6 +36,8 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/post
     """
 
+    dependencies = ["maxp", "MAXP"]
+
     def decompile(self, data, ttFont):
         sstruct.unpack(postFormat, data[:postFormatSize], self)
         data = data[postFormatSize:]

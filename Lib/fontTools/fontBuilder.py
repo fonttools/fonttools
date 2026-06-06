@@ -310,7 +310,9 @@ def _getOS2Defaults():
 
 
 class FontBuilder(object):
-    def __init__(self, unitsPerEm=None, font=None, isTTF=True, glyphDataFormat=0):
+    def __init__(
+        self, unitsPerEm=None, font=None, isTTF=True, glyphDataFormat=0, beyond64k=False
+    ):
         """Initialize a FontBuilder instance.
 
         If the `font` argument is not given, a new `TTFont` will be
@@ -329,12 +331,16 @@ class FontBuilder(object):
         that contain cubic splines or varcomposites. This is to prevent accidentally
         creating fonts that are incompatible with existing TrueType implementations.
 
+        If `beyond64k` is True, FontBuilder will create the uppercase companion
+        table family where the OpenType beyond-64k specification defines one.
+
         If `font` is given, it must be a `TTFont` instance and `unitsPerEm`
         must _not_ be given. The `isTTF` and `glyphDataFormat` arguments will be ignored.
         """
         if font is None:
             self.font = TTFont(recalcTimestamp=False)
             self.isTTF = isTTF
+            self.beyond64k = beyond64k
             now = timestampNow()
             assert unitsPerEm is not None
             self.setupHead(
@@ -347,7 +353,20 @@ class FontBuilder(object):
         else:
             assert unitsPerEm is None
             self.font = font
-            self.isTTF = "glyf" in font
+            self.isTTF = "glyf" in font or "GLYF" in font
+            self.beyond64k = beyond64k or any(
+                tag in font
+                for tag in (
+                    "GLYF",
+                    "GVAR",
+                    "HHEA",
+                    "HMTX",
+                    "LOCA",
+                    "MAXP",
+                    "VHEA",
+                    "VMTX",
+                )
+            )
 
     def save(self, file):
         """Save the font. The 'file' argument can be either a pathname or a
@@ -367,6 +386,34 @@ class FontBuilder(object):
         table = self.font[tableTag]
         for k, v in values.items():
             setattr(table, k, v)
+
+    def _tableTag(self, lower, upper):
+        return upper if self.beyond64k else lower
+
+    def _glyfTableTag(self):
+        return self._tableTag("glyf", "GLYF")
+
+    def _locaTableTag(self):
+        return self._tableTag("loca", "LOCA")
+
+    def _maxpTableTag(self):
+        return self._tableTag("maxp", "MAXP")
+
+    def _gvarTableTag(self):
+        return self._tableTag("gvar", "GVAR")
+
+    def _metricsTableTag(self, tableTag):
+        if tableTag in ("hmtx", "HMTX"):
+            return self._tableTag("hmtx", "HMTX")
+        if tableTag in ("vmtx", "VMTX"):
+            return self._tableTag("vmtx", "VMTX")
+        raise AssertionError(tableTag)
+
+    def _hheaTableTag(self):
+        return self._tableTag("hhea", "HHEA")
+
+    def _vheaTableTag(self):
+        return self._tableTag("vhea", "VHEA")
 
     def setupHead(self, **values):
         """Create a new `head` table and initialize it with default values,
@@ -496,8 +543,8 @@ class FontBuilder(object):
         self._initTableWithValues("OS/2", _getOS2Defaults(), values)
         if "xAvgCharWidth" not in values:
             assert (
-                "hmtx" in self.font
-            ), "the 'hmtx' table must be setup before the 'OS/2' table"
+                self._metricsTableTag("hmtx") in self.font
+            ), "the 'hmtx' or 'HMTX' table must be setup before the 'OS/2' table"
             self.font["OS/2"].recalcAvgCharWidth(self.font)
         if not (
             "ulUnicodeRange1" in values
@@ -662,11 +709,13 @@ class FontBuilder(object):
                         "either convert to quadratics with cu2qu or set glyphDataFormat=1."
                     )
 
-        self.font["loca"] = newTable("loca")
-        self.font["glyf"] = newTable("glyf")
-        self.font["glyf"].glyphs = glyphs
+        locaTag = self._locaTableTag()
+        glyfTag = self._glyfTableTag()
+        self.font[locaTag] = newTable(locaTag)
+        self.font[glyfTag] = newTable(glyfTag)
+        self.font[glyfTag].glyphs = glyphs
         if hasattr(self.font, "glyphOrder"):
-            self.font["glyf"].glyphOrder = self.font.glyphOrder
+            self.font[glyfTag].glyphOrder = self.font.glyphOrder
         if calcGlyphBounds:
             self.calcGlyphBounds()
 
@@ -709,13 +758,8 @@ class FontBuilder(object):
         _add_avar(self.font, axes, mappings, axisTags)
 
     def setupGvar(self, variations):
-        gvar = self.font["gvar"] = newTable("gvar")
-        gvar.version = 1
-        gvar.reserved = 0
-        gvar.variations = variations
-
-    def setupGVAR(self, variations):
-        gvar = self.font["GVAR"] = newTable("GVAR")
+        gvarTag = self._gvarTableTag()
+        gvar = self.font[gvarTag] = newTable(gvarTag)
         gvar.version = 1
         gvar.reserved = 0
         gvar.variations = variations
@@ -724,7 +768,7 @@ class FontBuilder(object):
         """Calculate the bounding boxes of all glyphs in the `glyf` table.
         This is usually not called explicitly by client code.
         """
-        glyphTable = self.font["glyf"]
+        glyphTable = self.font[self._glyfTableTag()]
         for glyph in glyphTable.glyphs.values():
             glyph.recalcBounds(glyphTable)
 
@@ -746,7 +790,7 @@ class FontBuilder(object):
 
     def setupMetrics(self, tableTag, metrics):
         """See `setupHorizontalMetrics()` and `setupVerticalMetrics()`."""
-        assert tableTag in ("hmtx", "vmtx")
+        tableTag = self._metricsTableTag(tableTag)
         mtxTable = self.font[tableTag] = newTable(tableTag)
         roundedMetrics = {}
         for gn in metrics:
@@ -758,13 +802,13 @@ class FontBuilder(object):
         """Create a new `hhea` table initialize it with default values,
         which can be overridden by keyword arguments.
         """
-        self._initTableWithValues("hhea", _hheaDefaults, values)
+        self._initTableWithValues(self._hheaTableTag(), _hheaDefaults, values)
 
     def setupVerticalHeader(self, **values):
         """Create a new `vhea` table initialize it with default values,
         which can be overridden by keyword arguments.
         """
-        self._initTableWithValues("vhea", _vheaDefaults, values)
+        self._initTableWithValues(self._vheaTableTag(), _vheaDefaults, values)
 
     def setupVerticalOrigins(self, verticalOrigins, defaultVerticalOrigin=None):
         """Create a new `VORG` table. The `verticalOrigins` argument must be
@@ -818,7 +862,7 @@ class FontBuilder(object):
             defaults = _maxpDefaultsTTF
         else:
             defaults = _maxpDefaultsOTF
-        self._initTableWithValues("maxp", defaults, {})
+        self._initTableWithValues(self._maxpTableTag(), defaults, {})
 
     def setupDummyDSIG(self):
         """This adds an empty DSIG table to the font to make some MS applications
