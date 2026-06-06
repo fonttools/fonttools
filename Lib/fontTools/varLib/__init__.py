@@ -41,7 +41,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.merger import VariationMerger, COLRVariationMerger
-from fontTools.varLib.mvar import MVAR_ENTRIES
+from fontTools.varLib.mvar import MVAR_ENTRIES, getMVARTableTag
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, InstanceDescriptor
@@ -756,25 +756,28 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
     specialTags = {"unds": -0x8000, "undo": -0x8000}
 
     for tag, (tableTag, itemName) in sorted(MVAR_ENTRIES.items(), key=lambda kv: kv[1]):
+        fontTableTag = getMVARTableTag(font, tableTag)
         # For each tag, fetch the associated table from all fonts (or not when we are
         # still looking at a tag from the same tables) and set up the variation model
         # for them.
-        if tableTag != lastTableTag:
+        if fontTableTag != lastTableTag:
             tables = fontTable = None
-            if tableTag in font:
-                fontTable = font[tableTag]
+            if fontTableTag in font:
+                fontTable = font[fontTableTag]
                 tables = []
                 for master in master_ttfs:
-                    if tableTag not in master or (
+                    masterTableTag = getMVARTableTag(master, tableTag)
+                    if masterTableTag not in master or (
                         tag in specialTags
-                        and getattr(master[tableTag], itemName) == specialTags[tag]
+                        and getattr(master[masterTableTag], itemName)
+                        == specialTags[tag]
                     ):
                         tables.append(None)
                     else:
-                        tables.append(master[tableTag])
+                        tables.append(master[masterTableTag])
                 model, tables = masterModel.getSubModel(tables)
                 store_builder.setModel(model)
-            lastTableTag = tableTag
+            lastTableTag = fontTableTag
 
         if tables is None:  # Tag not applicable to the master font.
             continue
@@ -790,7 +793,7 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 
         if varIdx is None:
             continue
-        log.info("	%s: %s.%s	%s", tag, tableTag, itemName, master_values)
+        log.info("	%s: %s.%s	%s", tag, fontTableTag, itemName, master_values)
         rec = ot.MetricsValueRecord()
         rec.ValueTag = tag
         rec.VarIdx = varIdx
