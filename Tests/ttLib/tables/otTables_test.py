@@ -311,7 +311,7 @@ class MultipleSubstTest(unittest.TestCase):
         font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
         table = decompileTable(
             otTables.MultipleSubst(),
-            "00020000000d0000010000001500030000010100000002010001020000",
+            "00020000000c00000100001400030000010100000002010001020000",
             font,
         )
         self.assertEqual(table.mapping, {"a": ["b", "c"]})
@@ -338,7 +338,7 @@ class MultipleSubstTest(unittest.TestCase):
         self.assertEqual(rawTable["Sequence"][0].Substitute, ["b", "c"])
         self.assertEqual(
             compileTable(table, font),
-            "00020000000d0000010000001500030000010100000002010001020000",
+            "00020000000c00000100001400030000010100000002010001020000",
         )
 
     def test_toXML2(self):
@@ -468,7 +468,7 @@ class LigatureSubstTest(unittest.TestCase):
         font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
         table = decompileTable(
             otTables.LigatureSubst(),
-            "00020000001b0000010000000d00010000000602000000020100010003000001010000",
+            "00020000001900000100000c000100000502000000020100010003000001010000",
             font,
         )
         self.assertEqual(table.ligatures["a"][0].LigGlyph, "c")
@@ -523,7 +523,7 @@ class LigatureSubstTest(unittest.TestCase):
         )
         self.assertEqual(
             compileTable(table, font),
-            "00020000001b0000010000000d00010000000602000000020100010003000001010000",
+            "00020000001900000100000c000100000502000000020100010003000001010000",
         )
 
     def test_preWrite_format2_highLevel(self):
@@ -619,7 +619,7 @@ class AlternateSubstTest(unittest.TestCase):
         font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
         table = decompileTable(
             otTables.AlternateSubst(),
-            "0002000000150000010000000d00020100010200000003000001010000",
+            "00020000001400000100000c00020100010200000003000001010000",
             font,
         )
         self.assertEqual(table.alternates, {"a": ["b", "c"]})
@@ -651,7 +651,7 @@ class AlternateSubstTest(unittest.TestCase):
         self.assertEqual(rawTable["AlternateSet"][0].Alternate, ["b", "c"])
         self.assertEqual(
             compileTable(table, font),
-            "0002000000150000010000000d00020100010200000003000001010000",
+            "00020000001400000100000c00020100010200000003000001010000",
         )
 
     def test_toXML2(self):
