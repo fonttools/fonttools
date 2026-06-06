@@ -40,6 +40,8 @@ class MainTest(object):
         output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
         font = TTFont(output_path)
         assert font["head"].glyphDataFormat == 1
+        assert "GLYF" in font
+        assert "glyf" not in font
         assert os.stat(ttf_path).st_size > os.stat(output_path).st_size
 
     def test_output_file(self, test_paths):
@@ -50,6 +52,8 @@ class MainTest(object):
 
         font = TTFont(output_path)
         assert font["head"].glyphDataFormat == 1
+        assert "GLYF" in font
+        assert "glyf" not in font
 
     def test_stats(self, test_paths):
         ttf_path = test_paths[0]
@@ -63,6 +67,8 @@ class MainTest(object):
         output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
         font = TTFont(output_path)
         assert font["head"].glyphDataFormat == 1
+        assert "GLYF" in font
+        assert "glyf" not in font
 
     def test_beyond64k_glyf(self, test_paths):
         ttf_path = test_paths[0]
