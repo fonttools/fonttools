@@ -2324,6 +2324,10 @@ _equivalents = {
 #
 
 
+def _getLookupList(table):
+    return getattr(table, "LookupList", None) or getattr(table, "LookupList2", None)
+
+
 def fixLookupOverFlows(ttf, overflowRecord):
     """Either the offset from the LookupList to a lookup overflowed, or
     an offset from a lookup to a subtable overflowed.
@@ -2363,7 +2367,7 @@ def fixLookupOverFlows(ttf, overflowRecord):
     elif overflowRecord.tableType == "GPOS":
         extType = 9
 
-    lookups = ttf[overflowRecord.tableType].table.LookupList.Lookup
+    lookups = _getLookupList(ttf[overflowRecord.tableType].table).Lookup
     lookup = lookups[lookupIndex]
     # If the previous lookup is an extType, look further back. Very unlikely, but possible.
     while lookup.SubTable[0].__class__.LookupType == extType:
@@ -2628,7 +2632,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
     An offset has overflowed within a sub-table. We need to divide this subtable into smaller parts.
     """
     table = ttf[overflowRecord.tableType].table
-    lookup = table.LookupList.Lookup[overflowRecord.LookupListIndex]
+    lookup = _getLookupList(table).Lookup[overflowRecord.LookupListIndex]
     subIndex = overflowRecord.SubTableIndex
     subtable = lookup.SubTable[subIndex]
 

@@ -801,7 +801,7 @@ class OTTableWriter(object):
 
     def getOverflowErrorRecord(self, item):
         LookupListIndex = SubTableIndex = itemName = itemIndex = None
-        if self.name == "LookupList":
+        if self.name in ("LookupList", "LookupList2"):
             LookupListIndex = item.repeatIndex
         elif self.name == "Lookup":
             LookupListIndex = self.repeatIndex
