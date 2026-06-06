@@ -22,7 +22,7 @@ def test_extended_layout_header_fields():
     for table in ("GSUB", "GPOS"):
         assert field(table, "ScriptList2").type == "LOffsetTo(ScriptList)"
         assert field(table, "FeatureList2").type == "LOffsetTo(FeatureList)"
-        assert field(table, "LookupList2").type == "LOffsetTo(LookupList)"
+        assert field(table, "LookupList2").type == "LOffsetTo(LookupList2)"
 
     assert field("GDEF", "GlyphClassDef2").type == "LOffsetTo(ClassDef)"
     assert field("GDEF", "LigCaretList2").type == "LOffsetTo(LigCaretList2)"
