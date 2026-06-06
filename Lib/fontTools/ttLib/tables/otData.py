@@ -1604,7 +1604,7 @@ otData = [
             FieldSpec("uint16", "ValueFormat1"),
             FieldSpec("uint16", "ValueFormat2"),
             FieldSpec("uint24", "PairSetCount"),
-            FieldSpec("LOffsetTo(PairSet2)", "PairSet", repeat="PairSetCount", aux=0),
+            FieldSpec("Offset24To(PairSet2)", "PairSet", repeat="PairSetCount", aux=0),
         ],
     ),
     (
