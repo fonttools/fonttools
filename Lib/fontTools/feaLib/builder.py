@@ -1030,9 +1030,7 @@ class Builder(object):
         table.Version = 0x00010002
         table.ScriptList2, table.ScriptList = table.ScriptList, None
         table.FeatureList2, table.FeatureList = table.FeatureList, None
-        table.LookupList2 = otTables.LookupList2()
-        table.LookupList2.__dict__.update(table.LookupList.__dict__)
-        table.LookupList = None
+        table.LookupList2, table.LookupList = table.LookupList, None
 
     def makeFeatureVariations(self, table, table_tag):
         feature_vars = {}
