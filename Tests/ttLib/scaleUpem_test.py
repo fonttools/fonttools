@@ -1,4 +1,5 @@
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.scaleUpem import scale_upem
 from io import BytesIO
 import difflib
@@ -64,6 +65,28 @@ class ScaleUpemTest(unittest.TestCase):
 
         expected_ttx_path = self.get_path("I-512upem.ttx")
         self.expect_ttx(font, expected_ttx_path, tables)
+
+    def test_scale_upem_beyond64k_ttf(self):
+        font = TTFont(self.get_path("I.ttf"))
+        upper_tables(font)
+
+        scale_upem(font, 512)
+
+        assert font["head"].unitsPerEm == 512
+        assert font["HHEA"].ascent == 475
+        assert font["HHEA"].descent == -125
+        assert font["HMTX"]["I"] == (136, 44)
+        assert font["GLYF"]["I"].xMin == 44
+        assert font["GLYF"]["I"].xMax == 92
+        assert font["GVAR"].variations["I"][0].coordinates[1] == (-24, 0)
+
+        # Save / load to ensure calculated companion-table values are valid.
+        iobytes = BytesIO()
+        font.save(iobytes)
+        iobytes.seek(0)
+        font = TTFont(iobytes)
+        assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
+        assert font["HMTX"]["I"] == (136, 44)
 
     def test_scale_upem_varComposite(self):
         font = TTFont(self.get_path("varc-ac00-ac01.ttf"))
