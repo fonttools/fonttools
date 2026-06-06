@@ -158,10 +158,15 @@ class Merger(object):
     def mergeObjects(self, returnTable, logic, tables):
         # Right now we don't use self at all.  Will use in the future
         # for options and logging.
+        tables = [table for table in tables if table is not NotImplemented]
+        if not tables:
+            return NotImplemented
+        tables = [table for table in tables if table is not None]
+        if not tables:
+            return None
 
         allKeys = set.union(
-            set(),
-            *(vars(table).keys() for table in tables if table is not NotImplemented),
+            set(), *(vars(table).keys() for table in tables)
         )
         for key in allKeys:
             log.info(" %s", key)
