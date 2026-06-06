@@ -119,6 +119,11 @@ class BaseTTXConverter(DefaultTable):
         # or it errors out; False, don't use it, even if you can.
         use_hb_repack = font.cfg[USE_HARFBUZZ_REPACKER]
         if self.tableTag in ("GSUB", "GPOS"):
+            if (
+                use_hb_repack is None
+                and getattr(self.table, "Version", 0) >= 0x00010002
+            ):
+                use_hb_repack = False
             if use_hb_repack is False:
                 log.debug(
                     "hb.repack disabled, compiling '%s' with pure-python serializer",
