@@ -22,11 +22,12 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         "all_cubic": kwargs["all_cubic"],
     }
 
-    if "gvar" in font:
+    if "gvar" in font or "GVAR" in font:
         raise ValueError("Cannot convert variable font")
     glyphSet = font.getGlyphSet()
     glyphOrder = font.getGlyphOrder()
-    glyf = font["glyf"]
+    glyfTag = "GLYF" if "GLYF" in font else "glyf"
+    glyf = font[glyfTag]
     for glyphName in glyphOrder:
         glyph = glyphSet[glyphName]
         ttpen = TTGlyphPen(glyphSet)
