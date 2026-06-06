@@ -129,6 +129,7 @@ otTables.LookupList.mergeMap = {
     "LookupCount": sum,
     "Lookup": sumLists,
 }
+otTables.LookupList2.mergeMap = otTables.LookupList.mergeMap
 
 otTables.Coverage.mergeMap = {
     "Format": min,
@@ -169,16 +170,20 @@ otTables.BaseTagList.mergeMap = {
     "BaselineTag": sumLists,
 }
 
-otTables.GDEF.mergeMap = otTables.GSUB.mergeMap = otTables.GPOS.mergeMap = (
-    otTables.BASE.mergeMap
-) = otTables.JSTF.mergeMap = otTables.MATH.mergeMap = {
+otTables.GDEF.mergeMap = (
+    otTables.GSUB.mergeMap
+) = (
+    otTables.GPOS.mergeMap
+) = otTables.BASE.mergeMap = otTables.JSTF.mergeMap = otTables.MATH.mergeMap = {
     "*": mergeObjects,
     "Version": max,
 }
 
-ttLib.getTableClass("GDEF").mergeMap = ttLib.getTableClass("GSUB").mergeMap = (
-    ttLib.getTableClass("GPOS").mergeMap
-) = ttLib.getTableClass("BASE").mergeMap = ttLib.getTableClass(
+ttLib.getTableClass("GDEF").mergeMap = ttLib.getTableClass(
+    "GSUB"
+).mergeMap = ttLib.getTableClass("GPOS").mergeMap = ttLib.getTableClass(
+    "BASE"
+).mergeMap = ttLib.getTableClass(
     "JSTF"
 ).mergeMap = ttLib.getTableClass(
     "MATH"
@@ -364,7 +369,7 @@ def mapLookups(self, lookupMap):
         st.mapLookups(lookupMap)
 
 
-@add_method(otTables.LookupList)
+@add_method(otTables.LookupList, otTables.LookupList2)
 def mapLookups(self, lookupMap):
     for l in self.Lookup:
         if not l:
@@ -378,7 +383,7 @@ def mapMarkFilteringSets(self, markFilteringSetMap):
         self.MarkFilteringSet = markFilteringSetMap[self.MarkFilteringSet]
 
 
-@add_method(otTables.LookupList)
+@add_method(otTables.LookupList, otTables.LookupList2)
 def mapMarkFilteringSets(self, markFilteringSetMap):
     for l in self.Lookup:
         if not l:
