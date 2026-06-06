@@ -11,6 +11,7 @@ from fontTools.merge.cmap import (
 )
 from fontTools.merge.layout import layoutPreMerge, layoutPostMerge
 from fontTools.merge.options import Options
+from fontTools.ttLib.beyond64k import upper_tables
 import fontTools.merge.tables
 from fontTools.misc.loggingTools import Timer
 from functools import reduce
@@ -20,6 +21,23 @@ import logging
 
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__ + ".timer"), level=logging.INFO)
+
+
+_UPPER_TABLES = {"GLYF", "GVAR", "HHEA", "HMTX", "LOCA", "MAXP", "VHEA", "VMTX"}
+_COMPANION_TABLES = {
+    "glyf",
+    "gvar",
+    "hhea",
+    "hmtx",
+    "loca",
+    "maxp",
+    "vhea",
+    "vmtx",
+}
+
+
+def _fontHasUpperTables(font):
+    return bool(_UPPER_TABLES.intersection(font.keys()))
 
 
 class Merger(object):
@@ -79,6 +97,9 @@ class Merger(object):
         fonts = self._openFonts(fontfiles)
         glyphOrders = [list(font.getGlyphOrder()) for font in fonts]
         computeMegaGlyphOrder(self, glyphOrders)
+        self.beyond64k = len(self.glyphOrder) > 0x10000 or any(
+            _fontHasUpperTables(font) for font in fonts
+        )
 
         # Take first input file sfntVersion
         sfntVersion = fonts[0].sfntVersion
@@ -89,6 +110,8 @@ class Merger(object):
             font.setGlyphOrder(glyphOrder)
             if "CFF " in font:
                 renameCFFCharStrings(self, glyphOrder, font["CFF "])
+            if self.beyond64k:
+                upper_tables(font, tables=_COMPANION_TABLES)
 
         cmaps = [font["cmap"] for font in fonts]
         self.duplicateGlyphsPerFont = [{} for _ in fonts]
@@ -127,6 +150,8 @@ class Merger(object):
         del self.fonts
 
         self._postMerge(mega)
+        if self.beyond64k:
+            upper_tables(mega)
 
         return mega
 

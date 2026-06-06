@@ -25,6 +25,7 @@ ttLib.getTableClass("maxp").mergeMap = {
     # TODO When we correctly merge hinting data, update these values:
     # maxFunctionDefs, maxInstructionDefs, maxSizeOfInstructions
 }
+ttLib.getTableClass("MAXP").mergeMap = ttLib.getTableClass("maxp").mergeMap
 
 headFlagsMergeBitMap = {
     "size": 16,
@@ -77,6 +78,7 @@ ttLib.getTableClass("hhea").mergeMap = {
     "caretOffset": first,
     "numberOfHMetrics": recalculate,
 }
+ttLib.getTableClass("HHEA").mergeMap = ttLib.getTableClass("hhea").mergeMap
 
 ttLib.getTableClass("vhea").mergeMap = {
     "*": equal,
@@ -94,6 +96,7 @@ ttLib.getTableClass("vhea").mergeMap = {
     "caretOffset": first,
     "numberOfVMetrics": recalculate,
 }
+ttLib.getTableClass("VHEA").mergeMap = ttLib.getTableClass("vhea").mergeMap
 
 os2FsTypeMergeBitMap = {
     "size": 16,
@@ -195,6 +198,8 @@ ttLib.getTableClass("vmtx").mergeMap = ttLib.getTableClass("hmtx").mergeMap = {
     "tableTag": equal,
     "metrics": sumDicts,
 }
+ttLib.getTableClass("HMTX").mergeMap = ttLib.getTableClass("hmtx").mergeMap
+ttLib.getTableClass("VMTX").mergeMap = ttLib.getTableClass("vmtx").mergeMap
 
 ttLib.getTableClass("name").mergeMap = {
     "tableTag": equal,
@@ -205,6 +210,7 @@ ttLib.getTableClass("loca").mergeMap = {
     "*": recalculate,
     "tableTag": equal,
 }
+ttLib.getTableClass("LOCA").mergeMap = ttLib.getTableClass("loca").mergeMap
 
 ttLib.getTableClass("glyf").mergeMap = {
     "tableTag": equal,
@@ -213,9 +219,10 @@ ttLib.getTableClass("glyf").mergeMap = {
     "_reverseGlyphOrder": recalculate,
     "axisTags": equal,
 }
+ttLib.getTableClass("GLYF").mergeMap = ttLib.getTableClass("glyf").mergeMap
 
 
-@add_method(ttLib.getTableClass("glyf"))
+@add_method(ttLib.getTableClass("glyf"), ttLib.getTableClass("GLYF"))
 def merge(self, m, tables):
     for i, table in enumerate(tables):
         for g in table.glyphs.values():
