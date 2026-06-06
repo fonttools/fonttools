@@ -784,9 +784,11 @@ def main(args=None):
             ttGlyphSets = {}
             glyphsets = defaultdict(dict)
 
-            if "gvar" in font:
-                gvar = font["gvar"]
-                glyf = font["glyf"]
+            if "gvar" in font or "GVAR" in font:
+                gvarTag = "GVAR" if "GVAR" in font else "gvar"
+                glyfTag = "GLYF" if gvarTag == "GVAR" else "glyf"
+                gvar = font[gvarTag]
+                glyf = font[glyfTag]
 
                 if glyphs is None:
                     glyphs = sorted(gvar.variations.keys())
