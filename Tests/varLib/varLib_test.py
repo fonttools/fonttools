@@ -1,5 +1,6 @@
 from fontTools.colorLib.builder import buildCOLR
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import (
     build,
@@ -174,6 +175,49 @@ class BuildTest(unittest.TestCase):
             tables=["GDEF", "HVAR", "MVAR", "fvar", "gvar"],
             expected_ttx_name="Build",
         )
+
+    def test_varlib_build_ttf_beyond64k(self):
+        """Designspace file contains uppercase beyond-64k companion masters."""
+
+        def upper_master(font, savepath):
+            upper_tables(font)
+            font.save(savepath, reorderTables=None)
+
+        ds_path = self.get_test_input("Build.designspace")
+        ufo_dir = self.get_test_input("master_ufo")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily-")
+        for path in ttx_paths:
+            font, savepath = self.compile_font(path, ".ttf", self.tempdir)
+            upper_master(font, savepath)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace(".ufo", ".ttf")
+        varfont, _, _ = build(ds_path, finder)
+
+        assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX", "GVAR"} <= set(varfont.keys())
+        assert not {"glyf", "loca", "maxp", "hhea", "hmtx", "gvar"} & set(
+            varfont.keys()
+        )
+
+    def test_varlib_build_ttf_mixed_beyond64k_masters(self):
+        """Designspace masters must not mix compact and uppercase glyf families."""
+        ds_path = self.get_test_input("Build.designspace")
+        ufo_dir = self.get_test_input("master_ufo")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily-")
+        for i, path in enumerate(ttx_paths):
+            font, savepath = self.compile_font(path, ".ttf", self.tempdir)
+            if i == 0:
+                upper_tables(font)
+                font.save(savepath, reorderTables=None)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace(".ufo", ".ttf")
+        with pytest.raises(VarLibValidationError, match="same glyf/GLYF table family"):
+            build(ds_path, finder)
 
     def test_varlib_build_ttf_reuse_nameid_2(self):
         """Instances at the default location can reuse name ID 2 or 17."""
