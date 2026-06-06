@@ -144,6 +144,61 @@ def test_build_ttf(tmpdir):
     _verifyOutput(outPath)
 
 
+def test_build_beyond64k_ttf(tmpdir):
+    outPath = os.path.join(str(tmpdir), "test.ttf")
+
+    fb = FontBuilder(1024, isTTF=True, beyond64k=True)
+    fb.setupGlyphOrder([".notdef", "A"])
+    fb.setupCharacterMap({65: "A"})
+
+    pen = TTGlyphPen(None)
+    emptyGlyph = pen.glyph()
+
+    pen = TTGlyphPen(None)
+    pen.moveTo((50, 0))
+    pen.lineTo((50, 200))
+    pen.lineTo((250, 200))
+    pen.lineTo((250, 0))
+    pen.closePath()
+    glyph = pen.glyph()
+
+    fb.setupGlyf({".notdef": emptyGlyph, "A": glyph})
+    glyphTable = fb.font["GLYF"]
+    fb.setupHorizontalMetrics(
+        {
+            ".notdef": (600, 0),
+            "A": (500, glyphTable["A"].xMin),
+        }
+    )
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupNameTable({"familyName": "Upper", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+
+    assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(fb.font.keys())
+    assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(fb.font.keys())
+    assert fb.font["OS/2"].xAvgCharWidth == 550
+
+    fb.save(outPath)
+
+    font = TTFont(outPath)
+    assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
+    assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(font.keys())
+
+
+def test_setupGvar_uses_selected_table_family():
+    fb = FontBuilder(1024, isTTF=True)
+    fb.setupGvar({})
+    assert "gvar" in fb.font
+    assert "GVAR" not in fb.font
+
+    fb = FontBuilder(1024, isTTF=True, beyond64k=True)
+    fb.setupGvar({})
+    assert "GVAR" in fb.font
+    assert "gvar" not in fb.font
+    assert not hasattr(fb, "setupGVAR")
+
+
 def test_build_cubic_ttf(tmp_path):
     pen = TTGlyphPen(None)
     pen.moveTo((100, 100))
