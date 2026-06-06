@@ -2,7 +2,9 @@ import io
 import itertools
 from fontTools import ttLib
 from fontTools.ttLib.tables._g_l_y_f import Glyph
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.fontBuilder import FontBuilder
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.merge import Merger, main as merge_main
 import difflib
 import os
@@ -344,6 +346,43 @@ def _make_fontfile_with_OS2(*, version, **kwargs):
     return _compile(fb.font)
 
 
+def _make_fontfile_with_glyphs(first_gid, glyph_count, *, add_layout=False):
+    upem = 1000
+    glyphOrder = [".notdef"] + [
+        f"glyph{gid:05d}" for gid in range(first_gid, first_gid + glyph_count - 1)
+    ]
+    cmap = {
+        first_gid + codepoint: glyphName
+        for codepoint, glyphName in enumerate(glyphOrder[1:])
+    }
+    glyphs = {gn: Glyph() for gn in glyphOrder}
+    hmtx = {gn: (500, 0) for gn in glyphOrder}
+    names = {"familyName": "TestMerge", "styleName": "Regular"}
+
+    fb = FontBuilder(unitsPerEm=upem)
+    fb.setupGlyphOrder(glyphOrder)
+    fb.setupCharacterMap(cmap)
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics(hmtx)
+    fb.setupHorizontalHeader()
+    fb.setupNameTable(names)
+    fb.setupOS2()
+    if add_layout:
+        glyph1, glyph2 = glyphOrder[1:3]
+        addOpenTypeFeaturesFromString(
+            fb.font,
+            f"feature salt {{ sub {glyph1} by {glyph2}; }} salt;",
+        )
+
+    return _compile(fb.font)
+
+
+def _upper_fontfile(fontfile):
+    font = ttLib.TTFont(fontfile)
+    upper_tables(font)
+    return _compile(font)
+
+
 def _merge_and_recompile(fontfiles, options=None):
     merger = Merger(options)
     merged = merger.merge(fontfiles)
@@ -360,6 +399,70 @@ def test_merge_OS2_mixed_versions(v1, v2):
     ]
     merged = _merge_and_recompile(fontfiles)
     assert merged["OS/2"].version == max(v1, v2)
+
+
+def test_merge_keeps_compact_tables_below_glyph_limit():
+    fontfiles = [
+        _make_fontfile_with_glyphs(0xE000, 10),
+        _make_fontfile_with_glyphs(0xE100, 10),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    assert "glyf" in merged
+    assert "GLYF" not in merged
+    assert "maxp" in merged
+    assert "MAXP" not in merged
+
+
+def test_merge_uses_upper_tables_above_glyph_limit():
+    fontfiles = [
+        _make_fontfile_with_glyphs(0x10000, 0x8001),
+        _make_fontfile_with_glyphs(0x20000, 0x8001),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    assert merged.hasExtendedGlyphIDs()
+    assert "GLYF" in merged
+    assert "glyf" not in merged
+    assert "MAXP" in merged
+    assert "maxp" not in merged
+    assert "HHEA" in merged
+    assert "HMTX" in merged
+    assert "LOCA" in merged
+
+
+def test_merge_uses_upper_layout_above_glyph_limit():
+    fontfiles = [
+        _make_fontfile_with_glyphs(0x10000, 0x8001, add_layout=True),
+        _make_fontfile_with_glyphs(0x20000, 0x8001),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    table = merged["GSUB"].table
+    assert table.Version == 0x00010002
+    assert table.ScriptList is None
+    assert table.FeatureList is None
+    assert table.LookupList is None
+    assert table.ScriptList2 is not None
+    assert table.FeatureList2 is not None
+    assert table.LookupList2 is not None
+
+
+def test_merge_preserves_upper_input_family_below_glyph_limit():
+    fontfiles = [
+        _upper_fontfile(_make_fontfile_with_glyphs(0xE000, 10)),
+        _make_fontfile_with_glyphs(0xE100, 10),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    assert "GLYF" in merged
+    assert "glyf" not in merged
+    assert "MAXP" in merged
+    assert "maxp" not in merged
 
 
 if __name__ == "__main__":
