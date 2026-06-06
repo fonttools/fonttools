@@ -33,7 +33,7 @@ class ScalerVisitor(TTVisitor):
         (ttLib.getTableClass("post"), ("underlinePosition", "underlineThickness")),
         (ttLib.getTableClass("VORG"), ("defaultVertOriginY")),
         (
-            ttLib.getTableClass("hhea"),
+            (ttLib.getTableClass("hhea"), ttLib.getTableClass("HHEA")),
             (
                 "ascent",
                 "descent",
@@ -46,7 +46,7 @@ class ScalerVisitor(TTVisitor):
             ),
         ),
         (
-            ttLib.getTableClass("vhea"),
+            (ttLib.getTableClass("vhea"), ttLib.getTableClass("VHEA")),
             (
                 "ascent",
                 "descent",
@@ -97,7 +97,13 @@ def visit(visitor, obj, attr, value):
 
 
 @ScalerVisitor.register_attr(
-    (ttLib.getTableClass("hmtx"), ttLib.getTableClass("vmtx")), "metrics"
+    (
+        ttLib.getTableClass("hmtx"),
+        ttLib.getTableClass("HMTX"),
+        ttLib.getTableClass("vmtx"),
+        ttLib.getTableClass("VMTX"),
+    ),
+    "metrics",
 )
 def visit(visitor, obj, attr, metrics):
     for g in metrics:
@@ -111,7 +117,9 @@ def visit(visitor, obj, attr, VOriginRecords):
         VOriginRecords[g] = visitor.scale(VOriginRecords[g])
 
 
-@ScalerVisitor.register_attr(ttLib.getTableClass("glyf"), "glyphs")
+@ScalerVisitor.register_attr(
+    (ttLib.getTableClass("glyf"), ttLib.getTableClass("GLYF")), "glyphs"
+)
 def visit(visitor, obj, attr, glyphs):
     for g in glyphs.values():
         for attr in ("xMin", "xMax", "yMin", "yMax"):
@@ -131,9 +139,11 @@ def visit(visitor, obj, attr, glyphs):
                 coordinates[i] = visitor.scale(x), visitor.scale(y)
 
 
-@ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
+@ScalerVisitor.register_attr(
+    (ttLib.getTableClass("gvar"), ttLib.getTableClass("GVAR")), "variations"
+)
 def visit(visitor, obj, attr, variations):
-    glyfTable = visitor.font["glyf"]
+    glyfTable = visitor.font[obj.glyphTableTag]
 
     for glyphName, varlist in variations.items():
         glyph = glyfTable[glyphName]
