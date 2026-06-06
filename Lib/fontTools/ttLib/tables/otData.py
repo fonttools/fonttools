@@ -1143,7 +1143,7 @@ otData = [
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint24", "SeqRuleSetCount"),
             FieldSpec(
-                "LOffsetTo(SeqRuleSet2)",
+                "LOffset24To(SeqRuleSet2)",
                 "SeqRuleSet",
                 repeat="SeqRuleSetCount",
                 aux=0,
@@ -1160,7 +1160,7 @@ otData = [
             FieldSpec("LOffset", "ClassDef"),
             FieldSpec("uint24", "ClassSeqRuleSetCount"),
             FieldSpec(
-                "LOffsetTo(ClassSeqRuleSet2)",
+                "LOffset24To(ClassSeqRuleSet2)",
                 "ClassSeqRuleSet",
                 repeat="ClassSeqRuleSetCount",
                 aux=0,
@@ -1442,7 +1442,7 @@ otData = [
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint24", "ChainedSeqRuleSetCount"),
             FieldSpec(
-                "LOffsetTo(ChainedSeqRuleSet2)",
+                "LOffset24To(ChainedSeqRuleSet2)",
                 "ChainedSeqRuleSet",
                 repeat="ChainedSeqRuleSetCount",
                 aux=0,
@@ -1461,7 +1461,7 @@ otData = [
             FieldSpec("LOffset", "LookAheadClassDef"),
             FieldSpec("uint16", "ChainedClassSeqRuleSetCount"),
             FieldSpec(
-                "LOffsetTo(ChainedClassSeqRuleSet2)",
+                "LOffset24To(ChainedClassSeqRuleSet2)",
                 "ChainedClassSeqRuleSet",
                 repeat="ChainedClassSeqRuleSetCount",
                 aux=0,
@@ -1680,7 +1680,7 @@ otData = [
         "BaseRecord2",
         [
             FieldSpec(
-                "LOffsetTo(Anchor)",
+                "LOffset24To(Anchor)",
                 "BaseAnchor",
                 repeat="ClassCount",
                 aux=0,
@@ -1705,7 +1705,7 @@ otData = [
         [
             FieldSpec("uint24", "LigatureCount"),
             FieldSpec(
-                "LOffsetTo(LigatureAttach2)",
+                "LOffset24To(LigatureAttach2)",
                 "LigatureAttach",
                 repeat="LigatureCount",
                 aux=0,
@@ -1728,7 +1728,7 @@ otData = [
         "ComponentRecord2",
         [
             FieldSpec(
-                "LOffsetTo(Anchor)",
+                "LOffset24To(Anchor)",
                 "LigatureAnchor",
                 repeat="ClassCount",
                 aux=0,
@@ -1759,7 +1759,7 @@ otData = [
         "Mark2Record2",
         [
             FieldSpec(
-                "LOffsetTo(Anchor)",
+                "LOffset24To(Anchor)",
                 "Mark2Anchor",
                 repeat="ClassCount",
                 aux=0,
@@ -1777,7 +1777,7 @@ otData = [
         "MarkRecord2",
         [
             FieldSpec("uint16", "Class"),
-            FieldSpec("LOffsetTo(Anchor)", "MarkAnchor"),
+            FieldSpec("LOffset24To(Anchor)", "MarkAnchor"),
         ],
     ),
     #
@@ -1977,7 +1977,7 @@ otData = [
                 description="Number of Sequence2 table offsets in the Sequence array",
             ),
             FieldSpec(
-                "LOffsetTo(Sequence2)",
+                "LOffset24To(Sequence2)",
                 "Sequence",
                 repeat="SequenceCount",
                 aux=0,
@@ -2061,7 +2061,7 @@ otData = [
                 description="Number of AlternateSet2 tables",
             ),
             FieldSpec(
-                "LOffsetTo(AlternateSet2)",
+                "LOffset24To(AlternateSet2)",
                 "AlternateSet",
                 repeat="AlternateSetCount",
                 aux=0,
@@ -2159,7 +2159,7 @@ otData = [
                 "uint24", "LigSetCount", description="Number of LigatureSet2 tables"
             ),
             FieldSpec(
-                "LOffsetTo(LigatureSet2)",
+                "LOffset24To(LigatureSet2)",
                 "LigatureSet",
                 repeat="LigSetCount",
                 aux=0,
@@ -2174,7 +2174,7 @@ otData = [
                 "uint16", "LigatureCount", description="Number of Ligature2 tables"
             ),
             FieldSpec(
-                "LOffsetTo(Ligature2)",
+                "LOffset24To(Ligature2)",
                 "Ligature",
                 repeat="LigatureCount",
                 aux=0,
@@ -2401,7 +2401,7 @@ otData = [
                 description="Number of SeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffsetTo(SeqRuleSet2)",
+                "LOffset24To(SeqRuleSet2)",
                 "SeqRuleSet",
                 repeat="SeqRuleSetCount",
                 aux=0,
@@ -2473,7 +2473,7 @@ otData = [
                 description="Number of ClassSeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffsetTo(ClassSeqRuleSet2)",
+                "LOffset24To(ClassSeqRuleSet2)",
                 "ClassSeqRuleSet",
                 repeat="ClassSeqRuleSetCount",
                 aux=0,
@@ -2490,7 +2490,7 @@ otData = [
                 description="Number of ClassSeqRule tables",
             ),
             FieldSpec(
-                "LOffsetTo(ClassSeqRule)",
+                "LOffset24To(ClassSeqRule)",
                 "ClassSeqRule",
                 repeat="ClassSeqRuleCount",
                 aux=0,
@@ -2827,7 +2827,7 @@ otData = [
                 description="Number of ChainedSeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffsetTo(ChainedSeqRuleSet2)",
+                "LOffset24To(ChainedSeqRuleSet2)",
                 "ChainedSeqRuleSet",
                 repeat="ChainedSeqRuleSetCount",
                 aux=0,
@@ -2844,7 +2844,7 @@ otData = [
                 description="Number of ChainedSeqRule2 tables",
             ),
             FieldSpec(
-                "LOffsetTo(ChainedSeqRule2)",
+                "OffsetTo(ChainedSeqRule2)",
                 "ChainedSeqRule",
                 repeat="ChainedSeqRuleCount",
                 aux=0,
@@ -2925,7 +2925,7 @@ otData = [
                 description="Number of ChainedClassSeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffsetTo(ChainedClassSeqRuleSet2)",
+                "LOffset24To(ChainedClassSeqRuleSet2)",
                 "ChainedClassSeqRuleSet",
                 repeat="ChainedClassSeqRuleSetCount",
                 aux=0,
@@ -2944,7 +2944,7 @@ otData = [
                 description="Number of ChainedClassSeqRule tables",
             ),
             FieldSpec(
-                "LOffsetTo(ChainedClassSeqRule)",
+                "LOffset24To(ChainedClassSeqRule)",
                 "ChainedClassSeqRule",
                 repeat="ChainedClassSeqRuleCount",
                 aux=0,
@@ -3065,7 +3065,7 @@ otData = [
                 description="Number of glyphs in the backtracking sequence",
             ),
             FieldSpec(
-                "LOffset",
+                "Offset24",
                 "BacktrackCoverage",
                 repeat="BacktrackGlyphCount",
                 aux=0,
@@ -3077,7 +3077,7 @@ otData = [
                 description="Number of glyphs in lookahead sequence",
             ),
             FieldSpec(
-                "LOffset",
+                "Offset24",
                 "LookAheadCoverage",
                 repeat="LookAheadGlyphCount",
                 aux=0,
