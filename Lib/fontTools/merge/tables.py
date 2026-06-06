@@ -323,11 +323,16 @@ def merge(self, m, tables):
         computeMegaCmap(m, tables)
     cmap = m.cmap
 
-    cmapBmpOnly = {uni: gid for uni, gid in cmap.items() if uni <= 0xFFFF}
+    glyphMap = {glyphName: glyphID for glyphID, glyphName in enumerate(m.glyphOrder)}
+    cmapBmpOnly = {
+        uni: gid
+        for uni, gid in cmap.items()
+        if uni <= 0xFFFF and glyphMap[gid] <= 0xFFFF
+    }
     self.tables = []
     module = ttLib.getTableModule("cmap")
     if len(cmapBmpOnly) != len(cmap):
-        # format-12 required.
+        # format-12 required for non-BMP codepoints or glyph IDs beyond 64k.
         cmapTable = module.cmap_classes[12](12)
         cmapTable.platformID = 3
         cmapTable.platEncID = 10
