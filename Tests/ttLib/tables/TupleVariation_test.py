@@ -822,6 +822,29 @@ class TupleVariationTest(unittest.TestCase):
             variations,
         )
 
+    def test_compileTupleVariationStore_roundTrip_GVAR(self):
+        deltas = [(1, 1), (2, 2), (3, 3), (4, 4)]
+        variations = [
+            TupleVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, deltas),
+            TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, deltas),
+        ]
+        tupleVariationCount, tuples, data = compileTupleVariationStore(
+            variations, pointCount=4, axisTags=["wght", "wdth"], sharedTupleIndices={}
+        )
+        self.assertEqual(
+            decompileTupleVariationStore(
+                "GVAR",
+                ["wght", "wdth"],
+                tupleVariationCount,
+                pointCount=4,
+                sharedTuples={},
+                data=(tuples + data),
+                pos=0,
+                dataPos=len(tuples),
+            ),
+            variations,
+        )
+
     def test_decompileTupleVariationStore_Skia_I(self):
         tvar = decompileTupleVariationStore(
             tableTag="gvar",
