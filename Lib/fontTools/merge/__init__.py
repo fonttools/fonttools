@@ -188,11 +188,21 @@ class Merger(object):
 
     def _postMerge(self, font):
         layoutPostMerge(font)
+        self._dropPostGlyphNamesIfNeeded(font)
 
         if "OS/2" in font:
             # https://github.com/fonttools/fonttools/issues/2538
             # TODO: Add an option to disable this?
             font["OS/2"].recalcAvgCharWidth(font)
+
+    def _dropPostGlyphNamesIfNeeded(self, font):
+        if "post" not in font or len(font.getGlyphOrder()) <= 0xFFFF:
+            return
+        post = font["post"]
+        if post.formatType == 2.0:
+            post.formatType = 3.0
+            post.extraNames = []
+            post.mapping = {}
 
 
 __all__ = ["Options", "Merger", "main"]
