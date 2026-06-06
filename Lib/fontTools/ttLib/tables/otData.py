@@ -1143,7 +1143,7 @@ otData = [
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint24", "SeqRuleSetCount"),
             FieldSpec(
-                "LOffset24To(SeqRuleSet2)",
+                "Offset24To(SeqRuleSet2)",
                 "SeqRuleSet",
                 repeat="SeqRuleSetCount",
                 aux=0,
@@ -1160,7 +1160,7 @@ otData = [
             FieldSpec("LOffset", "ClassDef"),
             FieldSpec("uint24", "ClassSeqRuleSetCount"),
             FieldSpec(
-                "LOffset24To(ClassSeqRuleSet2)",
+                "Offset24To(ClassSeqRuleSet2)",
                 "ClassSeqRuleSet",
                 repeat="ClassSeqRuleSetCount",
                 aux=0,
@@ -1442,7 +1442,7 @@ otData = [
             FieldSpec("LOffset", "Coverage"),
             FieldSpec("uint24", "ChainedSeqRuleSetCount"),
             FieldSpec(
-                "LOffset24To(ChainedSeqRuleSet2)",
+                "Offset24To(ChainedSeqRuleSet2)",
                 "ChainedSeqRuleSet",
                 repeat="ChainedSeqRuleSetCount",
                 aux=0,
@@ -1461,7 +1461,7 @@ otData = [
             FieldSpec("LOffset", "LookAheadClassDef"),
             FieldSpec("uint16", "ChainedClassSeqRuleSetCount"),
             FieldSpec(
-                "LOffset24To(ChainedClassSeqRuleSet2)",
+                "Offset24To(ChainedClassSeqRuleSet2)",
                 "ChainedClassSeqRuleSet",
                 repeat="ChainedClassSeqRuleSetCount",
                 aux=0,
@@ -1680,7 +1680,7 @@ otData = [
         "BaseRecord2",
         [
             FieldSpec(
-                "LOffset24To(Anchor)",
+                "Offset24To(Anchor)",
                 "BaseAnchor",
                 repeat="ClassCount",
                 aux=0,
@@ -1705,7 +1705,7 @@ otData = [
         [
             FieldSpec("uint24", "LigatureCount"),
             FieldSpec(
-                "LOffset24To(LigatureAttach2)",
+                "Offset24To(LigatureAttach2)",
                 "LigatureAttach",
                 repeat="LigatureCount",
                 aux=0,
@@ -1728,7 +1728,7 @@ otData = [
         "ComponentRecord2",
         [
             FieldSpec(
-                "LOffset24To(Anchor)",
+                "Offset24To(Anchor)",
                 "LigatureAnchor",
                 repeat="ClassCount",
                 aux=0,
@@ -1759,7 +1759,7 @@ otData = [
         "Mark2Record2",
         [
             FieldSpec(
-                "LOffset24To(Anchor)",
+                "Offset24To(Anchor)",
                 "Mark2Anchor",
                 repeat="ClassCount",
                 aux=0,
@@ -1777,7 +1777,7 @@ otData = [
         "MarkRecord2",
         [
             FieldSpec("uint16", "Class"),
-            FieldSpec("LOffset24To(Anchor)", "MarkAnchor"),
+            FieldSpec("Offset24To(Anchor)", "MarkAnchor"),
         ],
     ),
     #
@@ -1977,7 +1977,7 @@ otData = [
                 description="Number of Sequence2 table offsets in the Sequence array",
             ),
             FieldSpec(
-                "LOffset24To(Sequence2)",
+                "Offset24To(Sequence2)",
                 "Sequence",
                 repeat="SequenceCount",
                 aux=0,
@@ -2061,7 +2061,7 @@ otData = [
                 description="Number of AlternateSet2 tables",
             ),
             FieldSpec(
-                "LOffset24To(AlternateSet2)",
+                "Offset24To(AlternateSet2)",
                 "AlternateSet",
                 repeat="AlternateSetCount",
                 aux=0,
@@ -2159,7 +2159,7 @@ otData = [
                 "uint24", "LigSetCount", description="Number of LigatureSet2 tables"
             ),
             FieldSpec(
-                "LOffset24To(LigatureSet2)",
+                "Offset24To(LigatureSet2)",
                 "LigatureSet",
                 repeat="LigSetCount",
                 aux=0,
@@ -2174,7 +2174,7 @@ otData = [
                 "uint16", "LigatureCount", description="Number of Ligature2 tables"
             ),
             FieldSpec(
-                "LOffset24To(Ligature2)",
+                "Offset24To(Ligature2)",
                 "Ligature",
                 repeat="LigatureCount",
                 aux=0,
@@ -2401,7 +2401,7 @@ otData = [
                 description="Number of SeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffset24To(SeqRuleSet2)",
+                "Offset24To(SeqRuleSet2)",
                 "SeqRuleSet",
                 repeat="SeqRuleSetCount",
                 aux=0,
@@ -2473,7 +2473,7 @@ otData = [
                 description="Number of ClassSeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffset24To(ClassSeqRuleSet2)",
+                "Offset24To(ClassSeqRuleSet2)",
                 "ClassSeqRuleSet",
                 repeat="ClassSeqRuleSetCount",
                 aux=0,
@@ -2490,7 +2490,7 @@ otData = [
                 description="Number of ClassSeqRule tables",
             ),
             FieldSpec(
-                "LOffset24To(ClassSeqRule)",
+                "Offset24To(ClassSeqRule)",
                 "ClassSeqRule",
                 repeat="ClassSeqRuleCount",
                 aux=0,
@@ -2827,7 +2827,7 @@ otData = [
                 description="Number of ChainedSeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffset24To(ChainedSeqRuleSet2)",
+                "Offset24To(ChainedSeqRuleSet2)",
                 "ChainedSeqRuleSet",
                 repeat="ChainedSeqRuleSetCount",
                 aux=0,
@@ -2925,7 +2925,7 @@ otData = [
                 description="Number of ChainedClassSeqRuleSet2 tables",
             ),
             FieldSpec(
-                "LOffset24To(ChainedClassSeqRuleSet2)",
+                "Offset24To(ChainedClassSeqRuleSet2)",
                 "ChainedClassSeqRuleSet",
                 repeat="ChainedClassSeqRuleSetCount",
                 aux=0,
@@ -2944,7 +2944,7 @@ otData = [
                 description="Number of ChainedClassSeqRule tables",
             ),
             FieldSpec(
-                "LOffset24To(ChainedClassSeqRule)",
+                "Offset24To(ChainedClassSeqRule)",
                 "ChainedClassSeqRule",
                 repeat="ChainedClassSeqRuleCount",
                 aux=0,
@@ -6425,7 +6425,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 5"
             ),
             FieldSpec(
-                "LOffset24To(VarColorLine)",
+                "Offset24To(VarColorLine)",
                 "ColorLine",
                 description="Offset (from beginning of PaintVarLinearGradient table) to VarColorLine subtable.",
             ),
@@ -6470,7 +6470,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 7"
             ),
             FieldSpec(
-                "LOffset24To(VarColorLine)",
+                "Offset24To(VarColorLine)",
                 "ColorLine",
                 description="Offset (from beginning of PaintVarRadialGradient table) to VarColorLine subtable.",
             ),
@@ -6521,7 +6521,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 9"
             ),
             FieldSpec(
-                "LOffset24To(VarColorLine)",
+                "Offset24To(VarColorLine)",
                 "ColorLine",
                 description="Offset (from beginning of PaintVarSweepGradient table) to VarColorLine subtable.",
             ),
@@ -6592,7 +6592,7 @@ otData = [
                 description="Offset (from beginning of PaintTransform table) to Paint subtable.",
             ),
             FieldSpec(
-                "LOffset24To(Affine2x3)",
+                "Offset24To(Affine2x3)",
                 "Transform",
                 description="2x3 matrix for 2D affine transformations.",
             ),
@@ -6611,7 +6611,7 @@ otData = [
                 description="Offset (from beginning of PaintVarTransform table) to Paint subtable.",
             ),
             FieldSpec(
-                "LOffset24To(VarAffine2x3)",
+                "Offset24To(VarAffine2x3)",
                 "Transform",
                 description="2x3 matrix for 2D affine transformations.",
             ),
@@ -6974,7 +6974,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 32"
             ),
             FieldSpec(
-                "LOffset24To(Paint)",
+                "Offset24To(Paint)",
                 "SourcePaint",
                 description="Offset (from beginning of PaintComposite table) to source Paint subtable.",
             ),
@@ -6984,7 +6984,7 @@ otData = [
                 description="A CompositeMode enumeration value.",
             ),
             FieldSpec(
-                "LOffset24To(Paint)",
+                "Offset24To(Paint)",
                 "BackdropPaint",
                 description="Offset (from beginning of PaintComposite table) to backdrop Paint subtable.",
             ),

@@ -2370,5 +2370,5 @@ converterMapping = {
     "STXHeader": lambda C: partial(STXHeader, tableClass=C),
     "OffsetTo": lambda C: partial(Table, tableClass=C),
     "LOffsetTo": lambda C: partial(LTable, tableClass=C),
-    "LOffset24To": lambda C: partial(Table24, tableClass=C),
+    "Offset24To": lambda C: partial(Table24, tableClass=C),
 }
