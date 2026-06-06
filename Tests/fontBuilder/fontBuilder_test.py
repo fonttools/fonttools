@@ -116,6 +116,37 @@ def _verifyOutput(outPath, tables=None):
     assert refData == testData
 
 
+def _setupBeyond64kFontBuilder():
+    fb = FontBuilder(1024, isTTF=True, beyond64k=True)
+    fb.setupGlyphOrder([".notdef", "A"])
+    fb.setupCharacterMap({65: "A"})
+
+    pen = TTGlyphPen(None)
+    emptyGlyph = pen.glyph()
+
+    pen = TTGlyphPen(None)
+    pen.moveTo((50, 0))
+    pen.lineTo((50, 200))
+    pen.lineTo((250, 200))
+    pen.lineTo((250, 0))
+    pen.closePath()
+    glyph = pen.glyph()
+
+    fb.setupGlyf({".notdef": emptyGlyph, "A": glyph})
+    glyphTable = fb.font["GLYF"]
+    fb.setupHorizontalMetrics(
+        {
+            ".notdef": (600, 0),
+            "A": (500, glyphTable["A"].xMin),
+        }
+    )
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupNameTable({"familyName": "Upper", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    return fb
+
+
 def test_build_ttf(tmpdir):
     outPath = os.path.join(str(tmpdir), "test.ttf")
 
@@ -147,33 +178,7 @@ def test_build_ttf(tmpdir):
 def test_build_beyond64k_ttf(tmpdir):
     outPath = os.path.join(str(tmpdir), "test.ttf")
 
-    fb = FontBuilder(1024, isTTF=True, beyond64k=True)
-    fb.setupGlyphOrder([".notdef", "A"])
-    fb.setupCharacterMap({65: "A"})
-
-    pen = TTGlyphPen(None)
-    emptyGlyph = pen.glyph()
-
-    pen = TTGlyphPen(None)
-    pen.moveTo((50, 0))
-    pen.lineTo((50, 200))
-    pen.lineTo((250, 200))
-    pen.lineTo((250, 0))
-    pen.closePath()
-    glyph = pen.glyph()
-
-    fb.setupGlyf({".notdef": emptyGlyph, "A": glyph})
-    glyphTable = fb.font["GLYF"]
-    fb.setupHorizontalMetrics(
-        {
-            ".notdef": (600, 0),
-            "A": (500, glyphTable["A"].xMin),
-        }
-    )
-    fb.setupHorizontalHeader(ascent=824, descent=200)
-    fb.setupNameTable({"familyName": "Upper", "styleName": "Regular"})
-    fb.setupOS2()
-    fb.setupPost()
+    fb = _setupBeyond64kFontBuilder()
 
     assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(fb.font.keys())
     assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(fb.font.keys())
@@ -184,6 +189,25 @@ def test_build_beyond64k_ttf(tmpdir):
     font = TTFont(outPath)
     assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
     assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(font.keys())
+
+
+def test_build_beyond64k_ttf_xml_round_trip(tmpdir):
+    xmlPath = os.path.join(str(tmpdir), "test.ttx")
+    outPath = os.path.join(str(tmpdir), "test.ttf")
+
+    fb = _setupBeyond64kFontBuilder()
+    fb.font.saveXML(xmlPath)
+
+    font = TTFont()
+    font.importXML(xmlPath)
+    assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
+    assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(font.keys())
+
+    font.save(outPath)
+    font = TTFont(outPath)
+    assert font.getGlyphOrder() == [".notdef", "A"]
+    assert font["HMTX"]["A"] == (500, 50)
+    assert font["GLYF"]["A"].xMin == 50
 
 
 def test_setupGvar_uses_selected_table_family():
