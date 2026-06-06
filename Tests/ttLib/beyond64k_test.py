@@ -11,6 +11,7 @@ from fontTools.ttLib.beyond64k import (
     _convert_contextual_layout_formats,
     _convert_explicit_layout_formats,
     lower_tables,
+    main,
     upper_tables,
 )
 from fontTools.ttLib.tables import otTables
@@ -625,6 +626,18 @@ def test_missing_tables_are_ignored_by_default():
 def test_missing_tables_can_be_rejected():
     with pytest.raises(KeyError):
         upper_tables(TTFont(), tables={"glyf"}, ignore_missing=False)
+
+
+def test_cli_help_documents_usage(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+
+    assert exc_info.value.code == 0
+    help_text = capsys.readouterr().out
+    assert "fonttools ttLib.beyond64k upper input.ttf -o upper.ttf" in help_text
+    assert "fonttools ttLib.beyond64k lower upper.ttf -o lower.ttf" in help_text
+    assert "--no-validate" in help_text
+    assert "--overwrite" in help_text
 
 
 def test_lower_rejects_large_glyph_count():

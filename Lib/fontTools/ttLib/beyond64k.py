@@ -1,4 +1,27 @@
-"""Convert between OpenType beyond-64k companion tables."""
+"""Convert between OpenType beyond-64k companion tables.
+
+The OpenType beyond-64k specification adds uppercase companion tables and
+extended Layout formats that can address glyph IDs above 65535. This module
+provides helpers to convert a :class:`fontTools.ttLib.TTFont` in place between
+the compact lowercase table family and the extended uppercase table family.
+
+The high-level APIs are :func:`upper_tables` and :func:`lower_tables`. By
+default they convert every known table present in the font and validate that
+the result does not mix lowercase and uppercase companion tables. Both helpers
+accept an optional ``tables`` iterable; each entry may use either the compact or
+extended spelling, e.g. ``"glyf"`` and ``"GLYF"`` both identify the glyph table
+family.
+
+The module is also available as a command-line tool::
+
+    fonttools ttLib.beyond64k upper input.ttf -o upper.ttf
+    fonttools ttLib.beyond64k lower upper.ttf -o lower.ttf
+    fonttools ttLib.beyond64k upper input.ttf GSUB GPOS glyf
+
+Lowering validates lossy cases such as ``MAXP.numGlyphs`` values above 65535,
+``GLYF`` glyphs with cubic outlines, and component glyph IDs that do not fit in
+the compact ``glyf`` table.
+"""
 
 from __future__ import annotations
 
@@ -593,7 +616,22 @@ def upper_tables(
     overwrite: bool = False,
     ignore_missing: bool = True,
 ) -> None:
-    """Convert selected tables to their beyond-64k companion forms."""
+    """Convert selected tables to their beyond-64k companion forms.
+
+    Args:
+        font: Font to modify in place.
+        tables: Optional iterable of table tags to convert. If omitted, all
+            supported tables present in ``font`` are converted. Tags may use
+            either spelling of a companion table family, such as ``"glyf"`` or
+            ``"GLYF"``.
+        validate: If true, reject conversions that leave the font with a mixed
+            lowercase/uppercase companion table family.
+        overwrite: If true, replace an existing destination table. Otherwise an
+            existing destination raises ``ValueError``.
+        ignore_missing: If true, requested source tables that are not present
+            are ignored unless their destination is already present. Otherwise
+            missing source tables raise ``KeyError``.
+    """
     _convert_tables(
         font,
         tables=tables,
@@ -612,7 +650,13 @@ def lower_tables(
     overwrite: bool = False,
     ignore_missing: bool = True,
 ) -> None:
-    """Convert selected tables from their beyond-64k companion forms."""
+    """Convert selected tables from their beyond-64k companion forms.
+
+    Args are the same as :func:`upper_tables`. In addition to mixed-family
+    validation, lowering rejects data that cannot be represented in compact
+    tables, including glyph counts above 65535, cubic ``GLYF`` outlines, and
+    component glyph IDs that do not fit in ``glyf``.
+    """
     _convert_tables(
         font,
         tables=tables,
@@ -627,16 +671,37 @@ def lower_tables(
 def main(args=None):
     parser = argparse.ArgumentParser(
         "fonttools ttLib.beyond64k",
-        description="Convert between OpenType beyond-64k companion tables",
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("direction", choices=("upper", "lower"))
-    parser.add_argument("input", metavar="INPUT")
-    parser.add_argument("tables", metavar="TABLE", nargs="*")
-    parser.add_argument("-o", "--output", metavar="OUTPUT")
-    parser.add_argument("--no-validate", action="store_true")
-    parser.add_argument("--overwrite", action="store_true")
     parser.add_argument(
-        "--no-ignore-missing", dest="ignore_missing", action="store_false"
+        "direction",
+        choices=("upper", "lower"),
+        help="'upper' converts to beyond-64k companions; 'lower' converts back",
+    )
+    parser.add_argument("input", metavar="INPUT", help="input font path")
+    parser.add_argument(
+        "tables",
+        metavar="TABLE",
+        nargs="*",
+        help="optional table tags to convert, e.g. GSUB GPOS glyf",
+    )
+    parser.add_argument("-o", "--output", metavar="OUTPUT", help="output font path")
+    parser.add_argument(
+        "--no-validate",
+        action="store_true",
+        help="skip mixed-family and lossy-lowering validation",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="replace destination tables if they already exist",
+    )
+    parser.add_argument(
+        "--no-ignore-missing",
+        dest="ignore_missing",
+        action="store_false",
+        help="raise an error when a requested source table is missing",
     )
     options = parser.parse_args(args)
 
