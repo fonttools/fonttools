@@ -145,6 +145,7 @@ otTables.LookupList.mergeMap = {
     "LookupCount": sum,
     "Lookup": sumLists,
 }
+otTables.LookupList2.mergeMap = otTables.LookupList.mergeMap
 
 otTables.Coverage.mergeMap = {
     "Format": min,

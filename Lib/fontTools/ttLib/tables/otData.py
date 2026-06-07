@@ -227,6 +227,25 @@ otData = [
             ),
         ],
     ),
+    # As of June 2026, the proposed GSUB/GPOS v1.2 spec points LookupList2 to
+    # a LookupList. With feedback, we widen the per-lookup offsets from
+    # Offset16 to Offset32 as well; otherwise, LookupList2 is not suitable for
+    # beyond-64k fonts.
+    (
+        "LookupList2",
+        [
+            FieldSpec(
+                "uint16", "LookupCount", description="Number of lookups in this table"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Lookup",
+                repeat="LookupCount",
+                aux=0,
+                description="Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)",
+            ),
+        ],
+    ),
     (
         "Lookup",
         [
@@ -532,7 +551,7 @@ otData = [
                 description="Offset to FeatureList table-from beginning of GPOS table",
             ),
             FieldSpec(
-                "LOffsetTo(LookupList)",
+                "LOffsetTo(LookupList2)",
                 "LookupList2",
                 aux="Version >= 0x00010002",
                 description="Offset to LookupList table-from beginning of GPOS table",
@@ -1825,7 +1844,7 @@ otData = [
                 description="Offset to FeatureList table-from beginning of GSUB table",
             ),
             FieldSpec(
-                "LOffsetTo(LookupList)",
+                "LOffsetTo(LookupList2)",
                 "LookupList2",
                 aux="Version >= 0x00010002",
                 description="Offset to LookupList table-from beginning of GSUB table",
