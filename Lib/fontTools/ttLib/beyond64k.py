@@ -443,6 +443,8 @@ def _lower_jstf(font, table, overwrite):
 def _upper_layout_header(font, table, overwrite):
     table = table.table
     _move_fields(table, ("ScriptList", "FeatureList", "LookupList"), True, overwrite)
+    if getattr(table, "LookupList2", None) is not None:
+        table.LookupList2 = _convert_table_object(table.LookupList2, otTables.LookupList2)
     table.Version = max(table.Version, 0x00010002)
     _force_layout_formats(table, True)
 
