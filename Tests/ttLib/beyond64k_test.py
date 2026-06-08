@@ -42,6 +42,13 @@ def glyph_paths(font):
     return paths
 
 
+def normalized_uvs_dict(uvs_dict):
+    return {
+        selector: sorted(entries, key=lambda item: (item[1] is not None, item[0]))
+        for selector, entries in uvs_dict.items()
+    }
+
+
 def assert_layout_formats(font, extended):
     coverage_formats = (3, 4) if extended else (1, 2)
     ligature_format = 2 if extended else 1
@@ -597,6 +604,109 @@ def test_upper_tables_replaces_bmp_format4_cmap_with_format12():
     assert font["cmap"].tables[0].platEncID == 10
     assert font["cmap"].tables[0].cmap == {0x41: "highGlyph"}
     font["cmap"].compile(font)
+
+
+def test_upper_tables_converts_high_uvs_format14_to_format15():
+    font = TTFont()
+    font.setGlyphOrder(
+        [".notdef", "lowGlyph"]
+        + [f"glyph{i}" for i in range(2, 0x10000)]
+        + ["highGlyph"]
+    )
+
+    cmap14 = CmapSubtable.newSubtable(14)
+    cmap14.platformID = 0
+    cmap14.platEncID = 5
+    cmap14.language = 0xFF
+    cmap14.cmap = {}
+    cmap14.uvsDict = {0xFE00: [(0x41, "highGlyph"), (0x42, None)]}
+
+    font["cmap"] = newTable("cmap")
+    font["cmap"].tableVersion = 0
+    font["cmap"].tables = [cmap14]
+
+    upper_tables(font)
+
+    assert [subtable.format for subtable in font["cmap"].tables] == [15]
+    assert font["cmap"].tables[0].uvsDict == {
+        0xFE00: [(0x41, "highGlyph"), (0x42, None)]
+    }
+    data = font["cmap"].tables[0].compile(font)
+    cmap15 = CmapSubtable.newSubtable(15)
+    cmap15.decompile(data, font)
+    assert normalized_uvs_dict(cmap15.uvsDict) == normalized_uvs_dict(
+        font["cmap"].tables[0].uvsDict
+    )
+
+
+def test_upper_tables_keeps_low_uvs_format14():
+    font = TTFont()
+    font.setGlyphOrder(
+        [".notdef", "lowGlyph"]
+        + [f"glyph{i}" for i in range(2, 0x10000)]
+        + ["highGlyph"]
+    )
+
+    cmap14 = CmapSubtable.newSubtable(14)
+    cmap14.platformID = 0
+    cmap14.platEncID = 5
+    cmap14.language = 0xFF
+    cmap14.cmap = {}
+    cmap14.uvsDict = {0xFE00: [(0x41, "lowGlyph"), (0x42, None)]}
+
+    font["cmap"] = newTable("cmap")
+    font["cmap"].tableVersion = 0
+    font["cmap"].tables = [cmap14]
+
+    upper_tables(font)
+
+    assert [subtable.format for subtable in font["cmap"].tables] == [14]
+    font["cmap"].tables[0].compile(font)
+
+
+def test_lower_tables_converts_format15_to_format14_when_safe():
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "lowGlyph"])
+
+    cmap15 = CmapSubtable.newSubtable(15)
+    cmap15.platformID = 0
+    cmap15.platEncID = 5
+    cmap15.language = 0xFF
+    cmap15.cmap = {}
+    cmap15.uvsDict = {0xFE00: [(0x41, "lowGlyph"), (0x42, None)]}
+
+    font["cmap"] = newTable("cmap")
+    font["cmap"].tableVersion = 0
+    font["cmap"].tables = [cmap15]
+
+    lower_tables(font, validate=False)
+
+    assert [subtable.format for subtable in font["cmap"].tables] == [14]
+    assert font["cmap"].tables[0].uvsDict == {
+        0xFE00: [(0x41, "lowGlyph"), (0x42, None)]
+    }
+    font["cmap"].tables[0].compile(font)
+
+
+def test_lower_tables_rejects_high_format15_uvs():
+    font = TTFont()
+    font.setGlyphOrder(
+        [".notdef"] + [f"glyph{i}" for i in range(1, 0x10000)] + ["highGlyph"]
+    )
+
+    cmap15 = CmapSubtable.newSubtable(15)
+    cmap15.platformID = 0
+    cmap15.platEncID = 5
+    cmap15.language = 0xFF
+    cmap15.cmap = {}
+    cmap15.uvsDict = {0xFE00: [(0x41, "highGlyph")]}
+
+    font["cmap"] = newTable("cmap")
+    font["cmap"].tableVersion = 0
+    font["cmap"].tables = [cmap15]
+
+    with pytest.raises(ValueError, match="format 15 glyph IDs"):
+        lower_tables(font, validate=False)
 
 
 def test_upper_tables_drops_beyond64k_post_glyph_names():

@@ -529,6 +529,106 @@ def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -
     if "VHEA" in conversions and "VHEA" in font:
         if font["VHEA"].numberOfVMetrics > 0xFFFF:
             raise ValueError("VHEA.numberOfVMetrics does not fit in vhea")
+    _validate_cmap_uvs_lowering(font)
+
+
+def _cmap_subtable_key(subtable) -> tuple[int, int, int]:
+    return subtable.platformID, subtable.platEncID, subtable.language
+
+
+def _merge_uvs_dict(destination, source) -> None:
+    for selector, entries in source.items():
+        merged = dict(destination.get(selector, ()))
+        merged.update(entries)
+        destination[selector] = sorted(merged.items())
+
+
+def _copy_uvs_subtable(format: int, source):
+    from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+
+    subtable = CmapSubtable.newSubtable(format)
+    subtable.platformID = source.platformID
+    subtable.platEncID = source.platEncID
+    subtable.language = source.language
+    subtable.cmap = {}
+    subtable.uvsDict = {
+        selector: list(entries) for selector, entries in source.uvsDict.items()
+    }
+    return subtable
+
+
+def _uvs_has_high_glyph_id(font: TTFont, subtable) -> bool:
+    subtable.ensureDecompiled()
+    for entries in subtable.uvsDict.values():
+        for _, glyph_name in entries:
+            if glyph_name is not None and font.getGlyphID(glyph_name) > 0xFFFF:
+                return True
+    return False
+
+
+def _validate_cmap_uvs_lowering(font: TTFont) -> None:
+    if "cmap" not in font:
+        return
+
+    for subtable in font["cmap"].tables:
+        if subtable.format == 15 and _uvs_has_high_glyph_id(font, subtable):
+            raise ValueError("cmap format 15 glyph IDs do not fit in format 14")
+
+
+def _upper_beyond64k_cmap_uvs(font: TTFont) -> None:
+    if "cmap" not in font:
+        return
+
+    cmap = font["cmap"]
+    format15_by_key = {
+        _cmap_subtable_key(subtable): subtable
+        for subtable in cmap.tables
+        if subtable.format == 15
+    }
+    tables = []
+    for subtable in cmap.tables:
+        if subtable.format == 14 and _uvs_has_high_glyph_id(font, subtable):
+            key = _cmap_subtable_key(subtable)
+            format15 = format15_by_key.get(key)
+            if format15 is None:
+                format15 = _copy_uvs_subtable(15, subtable)
+                format15_by_key[key] = format15
+                tables.append(format15)
+            else:
+                format15.ensureDecompiled()
+                _merge_uvs_dict(format15.uvsDict, subtable.uvsDict)
+            continue
+        tables.append(subtable)
+    cmap.tables = tables
+
+
+def _lower_beyond64k_cmap_uvs(font: TTFont) -> None:
+    if "cmap" not in font:
+        return
+
+    cmap = font["cmap"]
+    format14_by_key = {
+        _cmap_subtable_key(subtable): subtable
+        for subtable in cmap.tables
+        if subtable.format == 14
+    }
+    tables = []
+    for subtable in cmap.tables:
+        if subtable.format == 15:
+            if _uvs_has_high_glyph_id(font, subtable):
+                raise ValueError("cmap format 15 glyph IDs do not fit in format 14")
+            key = _cmap_subtable_key(subtable)
+            format14 = format14_by_key.get(key)
+            if format14 is None:
+                format14 = _copy_uvs_subtable(14, subtable)
+                format14_by_key[key] = format14
+                tables.append(format14)
+            else:
+                format14.ensureDecompiled()
+                _merge_uvs_dict(format14.uvsDict, subtable.uvsDict)
+            continue
+        tables.append(subtable)
+    cmap.tables = tables
 
 
 def _drop_beyond64k_cmap_format4(font: TTFont) -> None:
@@ -682,6 +782,7 @@ def upper_tables(
         overwrite=overwrite,
         ignore_missing=ignore_missing,
     )
+    _upper_beyond64k_cmap_uvs(font)
     _drop_beyond64k_cmap_format4(font)
     _drop_beyond64k_post_glyph_names(font)
 
@@ -710,6 +811,7 @@ def lower_tables(
         ignore_missing=ignore_missing,
         validate_conversion=_validate_lowering,
     )
+    _lower_beyond64k_cmap_uvs(font)
 
 
 def main(args=None):

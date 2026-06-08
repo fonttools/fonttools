@@ -1350,6 +1350,8 @@ def cvtFromUVS(val):
 
 
 class cmap_format_14(CmapSubtable):
+    nonDefaultUVSRecordSize = 5
+
     def decompileHeader(self, data, ttFont):
         format, length, numVarSelectorRecords = struct.unpack(">HLL", data[:10])
         self.data = data[10:]
@@ -1403,9 +1405,10 @@ class cmap_format_14(CmapSubtable):
                 startOffset += 4
                 localUVList = []
                 for r in range(numRecs):
-                    uv, gid = struct.unpack(">3sH", data[startOffset : startOffset + 5])
-                    startOffset += 5
-                    uv = cvtToUVS(uv)
+                    uv, gid = self.decompileNonDefaultUVSRecord(
+                        data[startOffset : startOffset + self.nonDefaultUVSRecordSize]
+                    )
+                    startOffset += self.nonDefaultUVSRecordSize
                     glyphName = self.ttFont.getGlyphName(gid)
                     localUVList.append((uv, glyphName))
                 try:
@@ -1414,6 +1417,10 @@ class cmap_format_14(CmapSubtable):
                     uvsDict[varUVS] = localUVList
 
         self.uvsDict = uvsDict
+
+    def decompileNonDefaultUVSRecord(self, data):
+        uv, gid = struct.unpack(">3sH", data)
+        return cvtToUVS(uv), gid
 
     def toXML(self, writer, ttFont):
         writer.begintag(
@@ -1525,12 +1532,11 @@ class cmap_format_14(CmapSubtable):
                 ndefList.sort()
                 numNonDefRecs = len(ndefList)
                 data.append(struct.pack(">L", numNonDefRecs))
-                offset += 4 + numNonDefRecs * 5
+                offset += 4 + numNonDefRecs * self.nonDefaultUVSRecordSize
 
                 for uv, gname in ndefList:
                     gid = ttFont.getGlyphID(gname)
-                    ndrec = struct.pack(">3sH", cvtFromUVS(uv), gid)
-                    data.append(ndrec)
+                    data.append(self.compileNonDefaultUVSRecord(uv, gid))
             else:
                 nonDefUVSOffset = 0
 
@@ -1544,6 +1550,20 @@ class cmap_format_14(CmapSubtable):
         )
 
         return headerdata + data
+
+    def compileNonDefaultUVSRecord(self, uv, gid):
+        return struct.pack(">3sH", cvtFromUVS(uv), gid)
+
+
+class cmap_format_15(cmap_format_14):
+    nonDefaultUVSRecordSize = 6
+
+    def decompileNonDefaultUVSRecord(self, data):
+        uv, gid = struct.unpack(">3s3s", data)
+        return cvtToUVS(uv), cvtToUVS(gid)
+
+    def compileNonDefaultUVSRecord(self, uv, gid):
+        return struct.pack(">3s3s", cvtFromUVS(uv), cvtFromUVS(gid))
 
 
 class cmap_format_unknown(CmapSubtable):
@@ -1594,4 +1614,5 @@ cmap_classes = {
     12: cmap_format_12,
     13: cmap_format_13,
     14: cmap_format_14,
+    15: cmap_format_15,
 }
