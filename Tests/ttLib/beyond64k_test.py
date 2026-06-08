@@ -14,6 +14,7 @@ from fontTools.ttLib.beyond64k import (
     main,
     upper_tables,
 )
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent, flagCubic
 from fontTools.ttLib.tables.otBase import CountReference, OTTableWriter
@@ -571,6 +572,57 @@ def test_round_trip_companion_tables():
     font = TTFont(data)
     assert font.getGlyphOrder() == list(expected_paths)
     assert glyph_paths(font) == expected_paths
+
+
+def test_upper_tables_replaces_bmp_format4_cmap_with_format12():
+    font = TTFont()
+    font.setGlyphOrder(
+        [".notdef"] + [f"glyph{i}" for i in range(1, 0x10000)] + ["highGlyph"]
+    )
+
+    cmap4 = CmapSubtable.newSubtable(4)
+    cmap4.platformID = 3
+    cmap4.platEncID = 1
+    cmap4.language = 0
+    cmap4.cmap = {0x41: "highGlyph"}
+
+    font["cmap"] = newTable("cmap")
+    font["cmap"].tableVersion = 0
+    font["cmap"].tables = [cmap4]
+
+    upper_tables(font)
+
+    assert [subtable.format for subtable in font["cmap"].tables] == [12]
+    assert font["cmap"].tables[0].platformID == 3
+    assert font["cmap"].tables[0].platEncID == 10
+    assert font["cmap"].tables[0].cmap == {0x41: "highGlyph"}
+    font["cmap"].compile(font)
+
+
+def test_upper_tables_drops_beyond64k_post_glyph_names():
+    font = TTFont()
+    font.setGlyphOrder(
+        [".notdef"] + [f"glyph{i}" for i in range(1, 0x10000)] + ["highGlyph"]
+    )
+    post = font["post"] = newTable("post")
+    post.formatType = 2.0
+    post.italicAngle = 0
+    post.underlinePosition = 0
+    post.underlineThickness = 0
+    post.isFixedPitch = 0
+    post.minMemType42 = 0
+    post.maxMemType42 = 0
+    post.minMemType1 = 0
+    post.maxMemType1 = 0
+    post.extraNames = ["highGlyph"]
+    post.mapping = {"highGlyph": "highGlyph"}
+
+    upper_tables(font)
+
+    assert post.formatType == 3.0
+    assert post.extraNames == []
+    assert post.mapping == {}
+    post.compile(font)
 
 
 @pytest.mark.parametrize("tag", ["glyf", "GLYF"])
