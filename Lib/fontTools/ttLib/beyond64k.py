@@ -531,6 +531,42 @@ def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -
             raise ValueError("VHEA.numberOfVMetrics does not fit in vhea")
 
 
+def _drop_beyond64k_cmap_format4(font: TTFont) -> None:
+    if "cmap" not in font or len(font.getGlyphOrder()) <= 0x10000:
+        return
+
+    cmap = font["cmap"]
+    if not any(subtable.format == 12 for subtable in cmap.tables):
+        cmap12 = {}
+        for subtable in cmap.tables:
+            if subtable.format == 4 and subtable.isUnicode():
+                cmap12.update(subtable.cmap)
+        if cmap12:
+            from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+
+            subtable = CmapSubtable.newSubtable(12)
+            subtable.platformID = 3
+            subtable.platEncID = 10
+            subtable.language = 0
+            subtable.cmap = cmap12
+            cmap.tables.append(subtable)
+
+    font["cmap"].tables = [
+        subtable for subtable in font["cmap"].tables if subtable.format != 4
+    ]
+
+
+def _drop_beyond64k_post_glyph_names(font: TTFont) -> None:
+    if "post" not in font or len(font.getGlyphOrder()) <= 0x10000:
+        return
+
+    post = font["post"]
+    if post.formatType == 2.0:
+        post.formatType = 3.0
+        post.extraNames = []
+        post.mapping = {}
+
+
 def _convert_table(
     font: TTFont,
     source,
@@ -646,6 +682,8 @@ def upper_tables(
         overwrite=overwrite,
         ignore_missing=ignore_missing,
     )
+    _drop_beyond64k_cmap_format4(font)
+    _drop_beyond64k_post_glyph_names(font)
 
 
 def lower_tables(
