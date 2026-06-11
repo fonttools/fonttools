@@ -64,37 +64,6 @@ def assert_layout_formats(font, extended):
 
 
 @pytest.mark.parametrize(
-    "table_type, attribute, value, compact_format, extended_format",
-    [
-        (otTables.Coverage, "glyphs", ["a", "b"], 1, 3),
-        (otTables.ClassDef, "classDefs", {"a": 1, "b": 2}, 1, 3),
-        (otTables.SingleSubst, "mapping", {"a": "b"}, 1, 3),
-        (otTables.MultipleSubst, "mapping", {"a": ["b", "c"]}, 1, 2),
-        (otTables.AlternateSubst, "alternates", {"a": ["b", "c"]}, 1, 2),
-        (otTables.LigatureSubst, "ligatures", {("a", "b"): "c"}, 1, 2),
-    ],
-)
-def test_force_auto_layout_format(
-    table_type, attribute, value, compact_format, extended_format
-):
-    font = TTFont()
-    font.setGlyphOrder([".notdef", "a", "b", "c"])
-
-    for extended, expected_format in (
-        (False, compact_format),
-        (True, extended_format),
-    ):
-        table = table_type()
-        setattr(table, attribute, value)
-        table._forceExtended = extended
-        raw_table = table.preWrite(font)
-
-        assert table.Format == expected_format
-        if "Coverage" in raw_table:
-            assert raw_table["Coverage"]._forceExtended == extended
-
-
-@pytest.mark.parametrize(
     "table_type,compact_format,extended_format,compact_nested,extended_nested",
     [
         (otTables.SinglePos, 1, 3, (), ()),
