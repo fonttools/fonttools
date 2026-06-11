@@ -60,16 +60,6 @@ class _TableConversion:
     transform: Callable | None = None
 
 
-_AUTO_FORMAT_TABLES = (
-    otTables.Coverage,
-    otTables.ClassDef,
-    otTables.SingleSubst,
-    otTables.MultipleSubst,
-    otTables.AlternateSubst,
-    otTables.LigatureSubst,
-)
-
-
 _EXPLICIT_LAYOUT_FORMATS = {
     (otTables.BaseCoord, 2): (4, {}),
     (otTables.SinglePos, 1): (3, {}),
@@ -309,13 +299,9 @@ def _convert_explicit_layout_formats(table, extended):
         _replace_layout_classes(subtable, replacements)
 
 
-def _force_layout_formats(table, extended):
+def _convert_layout_formats(table, extended):
     _convert_contextual_layout_formats(table, extended)
     _convert_explicit_layout_formats(table, extended)
-    for path in dfs_base_table(table):
-        subtable = path[-1].value
-        if isinstance(subtable, _AUTO_FORMAT_TABLES):
-            subtable._forceExtended = extended
 
 
 def _convert_table_object(table, table_type):
@@ -362,7 +348,7 @@ def _upper_gdef(font, table, overwrite):
             table.LigCaretList2, otTables.LigCaretList2
         )
     table.Version = max(table.Version, 0x00010004)
-    _force_layout_formats(table, True)
+    _convert_layout_formats(table, True)
 
 
 def _lower_gdef(font, table, overwrite):
@@ -389,15 +375,15 @@ def _lower_gdef(font, table, overwrite):
         table.Version = 0x00010002
     else:
         table.Version = 0x00010000
-    _force_layout_formats(table, False)
+    _convert_layout_formats(table, False)
 
 
 def _upper_layout_formats(font, table, overwrite):
-    _force_layout_formats(table.table, True)
+    _convert_layout_formats(table.table, True)
 
 
 def _lower_layout_formats(font, table, overwrite):
-    _force_layout_formats(table.table, False)
+    _convert_layout_formats(table.table, False)
 
 
 def _upper_jstf(font, table, overwrite):
@@ -448,7 +434,7 @@ def _upper_layout_header(font, table, overwrite):
             table.LookupList2, otTables.LookupList2
         )
     table.Version = max(table.Version, 0x00010002)
-    _force_layout_formats(table, True)
+    _convert_layout_formats(table, True)
 
 
 def _lower_layout_header(font, table, overwrite):
@@ -459,7 +445,7 @@ def _lower_layout_header(font, table, overwrite):
     table.Version = (
         0x00010001 if getattr(table, "FeatureVariations", None) else 0x00010000
     )
-    _force_layout_formats(table, False)
+    _convert_layout_formats(table, False)
 
 
 _UPPER_TABLES = {
