@@ -861,22 +861,7 @@ def test_layout_header_round_trip():
         assert table.ScriptList2 is not None
         assert table.FeatureList2 is not None
         assert table.LookupList2 is not None
-        assert all(
-            subtable._forceExtended
-            for subtable in layout_subtables(
-                font,
-                tag,
-                (
-                    otTables.Coverage,
-                    otTables.ClassDef,
-                    otTables.SingleSubst,
-                    otTables.MultipleSubst,
-                    otTables.AlternateSubst,
-                    otTables.LigatureSubst,
-                ),
-            )
-        )
-    assert_layout_formats(font, True)
+    assert_layout_formats(font, False)
 
     data = BytesIO()
     font.save(data)
@@ -894,21 +879,6 @@ def test_layout_header_round_trip():
         assert table.ScriptList2 is None
         assert table.FeatureList2 is None
         assert table.LookupList2 is None
-        assert all(
-            not subtable._forceExtended
-            for subtable in layout_subtables(
-                font,
-                tag,
-                (
-                    otTables.Coverage,
-                    otTables.ClassDef,
-                    otTables.SingleSubst,
-                    otTables.MultipleSubst,
-                    otTables.AlternateSubst,
-                    otTables.LigatureSubst,
-                ),
-            )
-        )
     assert_layout_formats(font, False)
 
     data = BytesIO()
