@@ -652,7 +652,10 @@ def _add_VHVAR(font, axisTags, tableFields, getAdvanceMetrics):
         )
 
     directStore = None
-    if singleModel:
+    # The direct (no-map) store indexes a single VarData by glyph id, but
+    # VarData.ItemCount is uint16, so it cannot represent > 0xFFFF glyphs. Skip it
+    # past the boundary and rely on the indirect (mapped) store.
+    if singleModel and len(glyphOrder) <= 0xFFFF:
         # Build direct mapping
         supports = next(iter(vhAdvanceDeltasAndSupports.values()))[1][1:]
         varTupleList = builder.buildVarRegionList(supports, axisTags)

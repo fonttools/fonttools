@@ -4304,10 +4304,26 @@ otData = [
     ),
     # Variation helpers
     (
-        "VarIdxMap",
+        "VarIdxMapFormat0",
         [
-            FieldSpec("uint16", "EntryFormat"),  # Automatically computed
+            FieldSpec("uint8", "Format", description="Format of the VarIdxMap = 0"),
+            FieldSpec("uint8", "EntryFormat"),  # Automatically computed
             FieldSpec("uint16", "MappingCount"),  # Automatically computed
+            FieldSpec(
+                "VarIdxMapValue",
+                "mapping",
+                repeat="",
+                aux=0,
+                description="Array of compressed data",
+            ),
+        ],
+    ),
+    (
+        "VarIdxMapFormat1",
+        [
+            FieldSpec("uint8", "Format", description="Format of the VarIdxMap = 1"),
+            FieldSpec("uint8", "EntryFormat"),  # Automatically computed
+            FieldSpec("uint32", "MappingCount"),  # Automatically computed
             FieldSpec(
                 "VarIdxMapValue",
                 "mapping",
