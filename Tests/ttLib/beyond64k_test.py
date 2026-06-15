@@ -550,6 +550,62 @@ def test_round_trip_companion_tables():
     assert glyph_paths(font) == expected_paths
 
 
+def test_head_written_after_LOCA_with_long_loca():
+    # A beyond-64k font with long loca must write 'head' after the uppercase 'LOCA'
+    # companion (head.dependencies), otherwise head freezes a stale indexToLocFormat
+    # before LOCA is compiled and the saved font is corrupt. Build a font whose glyf
+    # exceeds the short-loca limit, uppercase it, and round-trip.
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+
+    def big_glyph():
+        # large coordinate deltas -> 2-byte coords, so a few glyphs exceed the
+        # short-loca limit (0x1FFFE) without a huge point count
+        pen = TTGlyphPen(None)
+        pen.moveTo((0, 0))
+        for i in range(1, 12000):  # < 65535 points/contour
+            # % 20000 wraps coords into a bounded box so the int16 glyph bbox
+            # (xMin/xMax/yMin/yMax) doesn't overflow
+            pen.lineTo(((i * 977) % 20000, (i * 1013) % 20000))
+        pen.closePath()
+        return pen.glyph()
+
+    order = [".notdef", "A", "B", "C", "D"]
+    glyphs = {g: Glyph() for g in order}
+    for g in ("A", "B", "C"):
+        glyphs[g] = big_glyph()
+
+    fb = FontBuilder(unitsPerEm=1000)
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap({0x41: "A"})
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics({g: (500, 0) for g in order})
+    fb.setupHorizontalHeader(ascent=800, descent=-200)
+    fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    fb.setupMaxp()
+    font = fb.font
+
+    assert len(font["glyf"].compile(font)) > 0x1FFFE, "test font must need long loca"
+    expected_coords = list(font["glyf"]["A"].coordinates)
+
+    upper_tables(font, validate=False)
+    assert "LOCA" in font
+
+    data = BytesIO()
+    font.save(data)
+    data.seek(0)
+    font = TTFont(data)
+
+    # Without the head.dependencies fix this is 0 (stale), making the reloaded loca
+    # offsets garbage.
+    assert font["head"].indexToLocFormat == 1
+    # 'A' is the second glyph; names are kept (< 64k glyphs). Its outline must
+    # survive the round-trip intact.
+    assert list(font["GLYF"]["A"].coordinates) == expected_coords
+
+
 def test_upper_tables_replaces_bmp_format4_cmap_with_format12():
     font = TTFont()
     font.setGlyphOrder(
