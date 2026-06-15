@@ -1108,7 +1108,14 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
         return self.mapping[i] if i < len(self.mapping) else NO_VARIATION_INDEX
 
 
-class VarIdxMap(BaseTable):
+class VarIdxMap(DeltaSetIndexMap):
+    """Glyph-id-indexed delta-set index map (HVAR/VVAR).
+
+    Shares DeltaSetIndexMap's format-switching wire format (Format 0 / Format 1)
+    but exposes a name-keyed ``.mapping`` dict, since here the map index is the
+    glyph id.
+    """
+
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "mapping"):
             self.mapping = {}
@@ -1119,6 +1126,10 @@ class VarIdxMap(BaseTable):
         mapList = rawTable["mapping"]
         mapList.extend([mapList[-1]] * (len(glyphOrder) - len(mapList)))
         self.mapping = dict(zip(glyphOrder, mapList))
+        # Format is derived from the mapping size in preWrite; don't keep it around
+        # so it isn't emitted to TTX (matching Coverage/ClassDef, and keeping the
+        # pre-format-switching VarIdxMap TTX output unchanged).
+        del self.Format
 
     def preWrite(self, font):
         mapping = getattr(self, "mapping", None)
@@ -1130,6 +1141,7 @@ class VarIdxMap(BaseTable):
         while len(mapping) > 1 and mapping[-2] == mapping[-1]:
             del mapping[-1]
 
+        self.Format = 1 if len(mapping) > 0xFFFF else 0
         rawTable = {"mapping": mapping}
         rawTable["MappingCount"] = len(mapping)
         rawTable["EntryFormat"] = DeltaSetIndexMap.getEntryFormat(mapping)
