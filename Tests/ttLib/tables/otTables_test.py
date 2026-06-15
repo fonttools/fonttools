@@ -154,6 +154,38 @@ class ClassDefTest(unittest.TestCase):
         )
 
 
+def test_VarIdxMap_format0_roundtrip():
+    # VarIdxMap is the HVAR/VVAR glyph-indexed delta-set index map; it shares the
+    # format-switching DeltaSetIndexMap wire format (Format 0 here).
+    font = FakeFont([".notdef", "a", "b", "c"])
+    table = otTables.VarIdxMap()
+    table.mapping = {".notdef": 0, "a": 1, "b": 0, "c": 0}
+    data = compileTable(table, font)
+    assert data[:2] == "00"  # Format 0 (uint8)
+    table2 = decompileTable(otTables.VarIdxMap(), data, font)
+    assert table2.mapping == {".notdef": 0, "a": 1, "b": 0, "c": 0}
+    # Format is derived in preWrite; it is not retained after decompile, so it is
+    # not emitted to TTX (matching Coverage/ClassDef).
+    assert not hasattr(table2, "Format")
+
+
+def test_VarIdxMap_format1_beyond_64k():
+    # 65537 glyphs; only the highest (gid 0x10000 > 0xFFFF) varies, so the map
+    # cannot be trimmed below 65536 entries and must use Format 1.
+    glyphs = [".notdef"] + ["g%05d" % i for i in range(1, 0x10001)]
+    font = FakeFont(glyphs)
+    table = otTables.VarIdxMap()
+    table.mapping = {g: 0 for g in glyphs}
+    table.mapping[glyphs[-1]] = 1
+    data = compileTable(table, font)
+    assert data[:2] == "01"  # Format 1 (uint8)
+    assert data[4:12] == "00010001"  # uint32 MappingCount = 0x10001
+    table2 = decompileTable(otTables.VarIdxMap(), data, font)
+    assert table2.mapping[glyphs[-1]] == 1
+    assert table2.mapping[glyphs[0]] == 0
+    assert not hasattr(table2, "Format")
+
+
 class SingleSubstTest(unittest.TestCase):
     def setUp(self):
         self.glyphs = ".notdef A B C D E a b c d e".split()

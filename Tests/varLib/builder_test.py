@@ -241,6 +241,56 @@ def test_empty_vhvar_size():
         assert len(vf[table].compile(vf)) <= optimal_size
 
 
+def test_vhvar_beyond_64k():
+    """varLib can build HVAR/VVAR for fonts with more than 0xFFFF glyphs.
+
+    The advance store uses the indirect mapping (the direct/no-map store can't
+    index more than 0xFFFF glyphs, since VarData.ItemCount is uint16), and the
+    advance index map escalates to DeltaSetIndexMap Format 1 (uint32 MappingCount)
+    when a glyph beyond gid 0xFFFF varies.
+    """
+    from fontTools.ttLib.tables._g_l_y_f import Glyph
+    from fontTools.ttLib.tables.otBase import OTTableWriter
+
+    n = 0x10001  # 65537 glyphs -> highest gid is 0x10000
+    glyph_order = [".notdef"] + ["g%05d" % i for i in range(1, n)]
+    high = glyph_order[-1]
+
+    doc = DesignSpaceDocument()
+    doc.addAxis(
+        AxisDescriptor(tag="wght", name="Weight", minimum=0, default=0, maximum=1000)
+    )
+    # the two advances just need to differ so the high glyph actually varies
+    for wght, adv in ((0, 480), (1000, 520)):
+        fb = FontBuilder(unitsPerEm=1000)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupGlyf({g: Glyph() for g in glyph_order})
+        # Only the highest glyph's advances vary, so the map cannot be trimmed
+        # below 65536 entries and must use Format 1.
+        hmetrics = {g: (500, 0) for g in glyph_order}
+        vmetrics = {g: (500, 0) for g in glyph_order}
+        hmetrics[high] = vmetrics[high] = (adv, 0)
+        fb.setupHorizontalMetrics(hmetrics)
+        fb.setupHorizontalHeader(ascent=1000, descent=0)
+        fb.setupVerticalMetrics(vmetrics)
+        fb.setupVerticalHeader(ascent=1000, descent=0)
+        fb.setupNameTable({"familyName": "TestBeyond64k", "styleName": "Regular"})
+        fb.setupPost(keepGlyphNames=False)
+        doc.addSource(SourceDescriptor(font=fb.font, location={"Weight": wght}))
+
+    vf, *_ = build(doc)
+
+    for tableTag, mapName in (("HVAR", "AdvWidthMap"), ("VVAR", "AdvHeightMap")):
+        assert tableTag in vf
+        advMap = getattr(vf[tableTag].table, mapName)
+        assert advMap is not None
+        writer = OTTableWriter()
+        advMap.compile(writer, vf)
+        assert (
+            writer.getAllData()[0] == 1
+        ), f"{tableTag}.{mapName} should use DeltaSetIndexMap Format 1"
+
+
 if __name__ == "__main__":
     import sys
 
