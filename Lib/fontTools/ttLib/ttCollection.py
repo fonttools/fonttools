@@ -1,8 +1,8 @@
 from fontTools.ttLib.ttFont import TTFont
-from fontTools.ttLib.sfnt import readTTCHeader, writeTTCHeader
 from io import BytesIO
 import struct
 import logging
+from fontTools.ttLib.sfnt import TTC_V1, TTC_V2, readTTCHeader, writeTTCHeader
 from fontTools.ttLib.tables.D_S_I_G_ import table_D_S_I_G_
 
 log = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class TTCollection(object):
         for font in self.fonts:
             font.close()
 
-    def save(self, file, shareTables=True, version=0x00010000):
+    def save(self, file, shareTables=True, version=TTC_V1):
         """Save the font to disk. Similarly to the constructor,
         the 'file' argument can be either a pathname or a writable
         file object.
@@ -88,7 +88,7 @@ class TTCollection(object):
         file.seek(offsets_offset)
         file.write(struct.pack(">%dL" % len(self.fonts), *offsets))
 
-        if version == 0x00020000 and hasattr(self, "dsig"):
+        if version == TTC_V2 and hasattr(self, "dsig"):
             dsig_header_fields_offset = file.tell()
             file.seek(0, 2)
             dsig_offset = file.tell()
