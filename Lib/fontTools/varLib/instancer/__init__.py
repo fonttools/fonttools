@@ -961,10 +961,14 @@ def _instantiateGvarGlyph(
 def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
     """Remove?
     https://github.com/fonttools/fonttools/pull/2266"""
-    gvar = varfont["gvar"]
-    glyf = varfont["glyf"]
-    hMetrics = varfont["hmtx"].metrics
-    vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    glyfTag = "GLYF" if gvarTag == "GVAR" else "glyf"
+    hmtxTag = "HMTX" if gvarTag == "GVAR" else "hmtx"
+    vmtxTag = "VMTX" if gvarTag == "GVAR" else "vmtx"
+    gvar = varfont[gvarTag]
+    glyf = varfont[glyfTag]
+    hMetrics = varfont[hmtxTag].metrics
+    vMetrics = getattr(varfont.get(vmtxTag), "metrics", None)
     _instantiateGvarGlyph(
         glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize
     )
@@ -973,10 +977,14 @@ def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
 def instantiateGvar(varfont, axisLimits, optimize=True):
     log.info("Instantiating glyf/gvar tables")
 
-    gvar = varfont["gvar"]
-    glyf = varfont["glyf"]
-    hMetrics = varfont["hmtx"].metrics
-    vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    glyfTag = "GLYF" if gvarTag == "GVAR" else "glyf"
+    hmtxTag = "HMTX" if gvarTag == "GVAR" else "hmtx"
+    vmtxTag = "VMTX" if gvarTag == "GVAR" else "vmtx"
+    gvar = varfont[gvarTag]
+    glyf = varfont[glyfTag]
+    hMetrics = varfont[hmtxTag].metrics
+    vMetrics = getattr(varfont.get(vmtxTag), "metrics", None)
     # Get list of glyph names sorted by component depth.
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the
@@ -998,7 +1006,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         )
 
     if not gvar.variations:
-        del varfont["gvar"]
+        del varfont[gvarTag]
 
 
 def setCvarDeltas(cvt, deltas):
@@ -1053,12 +1061,13 @@ def verticalMetricsKeptInSync(varfont):
     https://googlefonts.github.io/gf-guide/metrics.html#7-hhea-and-typo-metrics-should-be-equal
     https://github.com/fonttools/fonttools/issues/3297
     """
+    hheaTag = "HHEA" if "HHEA" in varfont else "hhea"
     current_os2_vmetrics = [
         getattr(varfont["OS/2"], attr)
         for attr in ("sTypoAscender", "sTypoDescender", "sTypoLineGap")
     ]
     metrics_are_synced = current_os2_vmetrics == [
-        getattr(varfont["hhea"], attr) for attr in ("ascender", "descender", "lineGap")
+        getattr(varfont[hheaTag], attr) for attr in ("ascender", "descender", "lineGap")
     ]
 
     yield metrics_are_synced
@@ -1072,7 +1081,7 @@ def verticalMetricsKeptInSync(varfont):
             for attr, value in zip(
                 ("ascender", "descender", "lineGap"), new_os2_vmetrics
             ):
-                setattr(varfont["hhea"], attr, value)
+                setattr(varfont[hheaTag], attr, value)
 
 
 def instantiateMVAR(varfont, axisLimits):
@@ -1110,7 +1119,9 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
     vhvar = varfont[tableTag].table
     varStore = vhvar.VarStore
 
-    if "glyf" in varfont:
+    glyfTag = "GLYF" if "GLYF" in varfont else "glyf"
+
+    if glyfTag in varfont:
         # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
         # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
         if set(location).issuperset(axis.axisTag for axis in fvarAxes):
@@ -1120,14 +1131,17 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
 
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
 
-    if "glyf" not in varfont:
+    if glyfTag not in varfont:
         # CFF2 fonts need hmtx/vmtx updated here. For glyf fonts, the instantiateGvar
         # function already updated the hmtx/vmtx from phantom points. Maybe remove
         # that and do it here for both CFF2 and glyf fonts?
         #
         # Specially, if a font has glyf but not gvar, the hmtx/vmtx will not have been
         # updated by instantiateGvar. Though one can call that a faulty font.
-        metricsTag = "vmtx" if tableTag == "VVAR" else "hmtx"
+        if tableTag == "VVAR":
+            metricsTag = "VMTX" if "VMTX" in varfont else "vmtx"
+        else:
+            metricsTag = "HMTX" if "HMTX" in varfont else "hmtx"
         if metricsTag in varfont:
             advMapping = getattr(vhvar, tableFields.advMapping)
             metricsTable = varfont[metricsTag]
@@ -1359,6 +1373,19 @@ def instantiateOTL(varfont, axisLimits):
         gdef.remap_device_varidxes(varIndexMapping)
         if "GPOS" in varfont:
             varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
+    elif any(
+        getattr(gdef, name, None) is not None
+        for name in (
+            "GlyphClassDef2",
+            "AttachList2",
+            "LigCaretList2",
+            "MarkAttachClassDef2",
+            "MarkGlyphSetsDef2",
+        )
+    ):
+        # beyond-64k GDEF: keep v1.4 and NULL the VarStore, don't drop the *2 fields
+        gdef.VarStore = None
+        gdef.Version = 0x00010004
     else:
         # Downgrade GDEF.
         del gdef.VarStore
@@ -1648,8 +1675,10 @@ def normalize(value, triple, avarMapping):
 def sanityCheckVariableTables(varfont):
     if "fvar" not in varfont:
         raise ValueError("Missing required table fvar")
-    if "gvar" in varfont:
-        if "glyf" not in varfont:
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    if gvarTag in varfont:
+        glyfTag = "GLYF" if gvarTag == "GVAR" else "glyf"
+        if glyfTag not in varfont:
             raise ValueError("Can't have gvar without glyf")
 
 
@@ -1749,7 +1778,7 @@ def instantiateVariableFont(
             varfont, normalizedLimits, downgrade=downgradeCFF2
         )
 
-    if "gvar" in varfont:
+    if "gvar" in varfont or "GVAR" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)
 
     if "cvar" in varfont:
@@ -1797,8 +1826,9 @@ def instantiateVariableFont(
 
     if "fvar" not in varfont:
         if overlap == OverlapMode.KEEP_AND_SET_FLAGS:
-            if "glyf" in varfont:
-                setMacOverlapFlags(varfont["glyf"])
+            glyfTag = "GLYF" if "GLYF" in varfont else "glyf"
+            if glyfTag in varfont:
+                setMacOverlapFlags(varfont[glyfTag])
         elif overlap in (OverlapMode.REMOVE, OverlapMode.REMOVE_AND_IGNORE_ERRORS):
             from fontTools.ttLib.removeOverlaps import removeOverlaps
 

@@ -1115,6 +1115,148 @@ class InstantiateOTLTest(object):
         assert not hasattr(valueRec1, "XAdvDevice")
         assert valueRec1.XAdvance == -25
 
+    def test_full_instance_save_beyond64k(self):
+        """A fully-instanced beyond-64k VF can be saved and reloaded.
+
+        The variation tables use the uppercase companion spelling (GVAR, GLYF,
+        HMTX, ...). Full instancing must instance and drop GVAR/HVAR -- which it
+        only does once it resolves their uppercase tags -- and keep the extended
+        GDEF at v1.4, NULLing its VarStore once the instance consumes it rather
+        than downgrading the table and dropping the extended *2 fields like
+        GlyphClassDef2.
+        """
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.pens.ttGlyphPen import TTGlyphPen
+        from fontTools.ttLib.beyond64k import upper_tables
+
+        order = [".notdef"] + ["g%05d" % i for i in range(1, 0x10001)]  # 65537
+        HI = "g65536"  # glyph id > 0xFFFF, the point of beyond-64k
+        ACUTE = "g65530"
+
+        def make_hi(scale):
+            # a triangle that scales with the master, so gvar carries a real
+            # delta for this beyond-64k glyph id
+            pen = TTGlyphPen(None)
+            pen.moveTo((100 * scale, 0))
+            pen.lineTo((100 * scale, 100 * scale))
+            pen.lineTo((0, 100 * scale))
+            pen.closePath()
+            return pen.glyph()
+
+        def make_master(scale):
+            fb = FontBuilder(unitsPerEm=1000)
+            fb.setupGlyphOrder(order)
+            glyphs = {g: _g_l_y_f.Glyph() for g in order}
+            glyphs[HI] = make_hi(scale)
+            fb.setupGlyf(glyphs)
+            fb.setupHorizontalMetrics({g: (500, 0) for g in order})
+            fb.setupHorizontalHeader(ascent=800, descent=-200)
+            fb.setupNameTable({"familyName": "TestBeyond64k", "styleName": "R"})
+            fb.setupPost(keepGlyphNames=False)
+            addOpenTypeFeaturesFromString(
+                fb.font,
+                "markClass %(ACUTE)s <anchor %(a)d %(a)d> @TOP;\n"
+                "feature mark { pos base %(HI)s <anchor %(a)d %(a)d> mark @TOP; } mark;\n"
+                "table GDEF { GlyphClassDef ,,[%(ACUTE)s],; } GDEF;\n"
+                % dict(ACUTE=ACUTE, HI=HI, a=10 * scale),
+            )
+            return fb.font
+
+        doc = designspaceLib.DesignSpaceDocument()
+        doc.addAxis(
+            designspaceLib.AxisDescriptor(
+                tag="wght", name="Weight", minimum=0, default=0, maximum=1000
+            )
+        )
+        for loc, scale in [(0, 1), (1000, 2)]:
+            doc.addSource(
+                designspaceLib.SourceDescriptor(
+                    font=make_master(scale), location={"Weight": loc}
+                )
+            )
+        vf, _, _ = varLib.build(doc)
+        assert vf.hasExtendedGlyphIDs()
+        # ufo2ft uppercases the companion tables on the final VF, not the masters
+        upper_tables(vf)
+        assert "GVAR" in vf and "gvar" not in vf
+        assert vf["GVAR"].variations[HI]  # the beyond-64k glyph carries a delta
+        assert vf["GDEF"].table.Version == 0x00010004
+        assert vf["GDEF"].table.VarStore is not None  # consumed by the full instance
+
+        # the single axis -> pinning it is a full instance
+        instancer.instantiateVariableFont(vf, {"wght": 500}, inplace=True)
+
+        # GVAR/HVAR instanced then dropped; GDEF stays extended (v1.4)
+        assert "GVAR" not in vf and "gvar" not in vf
+        assert "HVAR" not in vf
+        assert vf["GDEF"].table.Version == 0x00010004
+
+        # the step that used to crash: save the fully-instanced font
+        data = BytesIO()
+        vf.save(data)
+        data.seek(0)
+        reloaded = ttLib.TTFont(data)
+        reloaded.ensureDecompiled()
+
+        assert reloaded.getGlyphCount() == 65537
+        assert "GLYF" in reloaded and "LOCA" in reloaded
+        assert reloaded["GDEF"].table.Version == 0x00010004
+        assert reloaded["GDEF"].table.VarStore is None  # NULLed, not removed
+        assert reloaded["GDEF"].table.GlyphClassDef2 is not None  # extended field kept
+        # the beyond-64k mark-class value (3) survives at v1.4; resolve the acute
+        # glyph by id since keepGlyphNames=False drops the names on reload
+        acuteName = reloaded.getGlyphName(65530)
+        assert reloaded["GDEF"].table.GlyphClassDef2.classDefs[acuteName] == 3
+
+        # the gvar delta for the beyond-64k glyph was applied to its outline at
+        # the pinned location: each master triangle scales 1x <-> 2x, so 500
+        # (normalized 0.5) interpolates the coordinates halfway
+        glyf = reloaded["GLYF"]
+        hiGlyph = glyf[reloaded.getGlyphName(65536)]
+        assert [tuple(pt) for pt in hiGlyph.coordinates] == [
+            (150, 0),
+            (150, 150),
+            (0, 150),
+        ]
+
+        # the GPOS mark anchor interpolated at the pinned location: 10 <-> 20 -> 15
+        gpos = reloaded["GPOS"].table
+        markBasePos = gpos.LookupList2.Lookup[0].SubTable[0]
+        assert markBasePos.Format == 2  # extended MarkBasePos
+        anchor = markBasePos.BaseArray.BaseRecord[0].BaseAnchor[0]
+        assert (anchor.XCoordinate, anchor.YCoordinate) == (15, 15)
+
+    def test_partial_instance_save_beyond64k(self):
+        """Partially instancing a beyond-64k VF retains and rewrites GVAR.
+
+        Pinning one of two axes leaves residual variations, so the uppercase
+        GVAR (and the companion metric tables) must be instanced in place and
+        the font must still save and reload.
+        """
+        from fontTools.ttLib.beyond64k import upper_tables
+
+        vf = ttLib.TTFont()
+        vf.importXML(os.path.join(TESTDATA, "PartialInstancerTest-VF.ttx"))
+        upper_tables(vf)
+        assert "GVAR" in vf and "GLYF" in vf and "HMTX" in vf
+
+        axes = {a.axisTag: a for a in vf["fvar"].axes}
+        instancer.instantiateVariableFont(
+            vf, {"wght": axes["wght"].defaultValue}, inplace=True
+        )
+
+        # the wdth axis survives, so GVAR keeps residual variations
+        assert [a.axisTag for a in vf["fvar"].axes] == ["wdth"]
+        assert "GVAR" in vf
+
+        data = BytesIO()
+        vf.save(data)
+        data.seek(0)
+        reloaded = ttLib.TTFont(data)
+        reloaded.ensureDecompiled()
+        assert "GVAR" in reloaded and "GLYF" in reloaded
+        assert reloaded.getGlyphOrder() == vf.getGlyphOrder()
+
 
 class InstantiateAvarTest(object):
     @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
