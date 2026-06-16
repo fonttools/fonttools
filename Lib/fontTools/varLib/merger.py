@@ -13,6 +13,7 @@ from fontTools.misc.roundTools import otRound
 from fontTools.misc.treeTools import build_n_ary_tree
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
+from fontTools.ttLib.beyond64k import _convert_layout_formats
 from fontTools.ttLib.tables.otConverters import BaseFixedValue
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
@@ -946,6 +947,32 @@ def merge(merger, self, lst):
     merger.mergeObjects(self, lst)
 
 
+# GPOS subtable types whose mergers (above) dispatch on the format 1/2 layouts.
+# For fonts with more than 65535 glyphs, feaLib promotes these to the beyond-64k
+# extended layouts (PairPos/SinglePos format 3/4, mark/cursive format 2) based on
+# glyph count, so we demote them back to format 1/2 before merging and promote
+# the merged result afterwards.
+# The conversion is lossless (Coverage and ClassDef pick their own wire format at
+# compile time; only the records that embed glyph ids, counts or offsets are
+# reclassed). Contextual positioning, mark-to-ligature and all of GSUB merge
+# through the generic object walker, which edits the output subtable in place
+# (leaving its extended format intact) and still reaches the per-record mergers,
+# so they don't need this treatment.
+_BEYOND64K_GPOS_TYPES = (
+    ot.SinglePos,
+    ot.PairPos,
+    ot.CursivePos,
+    ot.MarkBasePos,
+    ot.MarkMarkPos,
+)
+
+
+def _convert_beyond64k_GPOS(subtables, extended):
+    for st in subtables or []:
+        if isinstance(st, _BEYOND64K_GPOS_TYPES):
+            _convert_layout_formats(st, extended)
+
+
 @AligningMerger.merger(ot.Lookup)
 def merge(merger, self, lst):
     subtables = merger.lookup_subtables = [l.SubTable for l in lst]
@@ -967,6 +994,14 @@ def merge(merger, self, lst):
             new_sts = [st.ExtSubTable for st in sts]
             del sts[:]
             sts.extend(new_sts)
+
+    # Beyond-64k: demote extended GPOS subtables to format 1/2 so the mergers
+    # can handle them; the merged output is promoted back at the end.
+    extended = merger.font.hasExtendedGlyphIDs()
+    if extended:
+        _convert_beyond64k_GPOS(self.SubTable, False)
+        for sts in subtables:
+            _convert_beyond64k_GPOS(sts, False)
 
     isPairPos = self.SubTable and isinstance(self.SubTable[0], ot.PairPos)
 
@@ -1043,6 +1078,12 @@ def merge(merger, self, lst):
             singlePosMapping, merger.font.getReverseGlyphMap()
         )
     merger.mergeObjects(self, lst, exclude=["SubTable", "SubTableCount"])
+
+    # Beyond-64k: promote the merged output back to the extended formats
+    # (idempotent; some subtables were already rebuilt extended). The demoted
+    # masters are left as-is -- merge scratch, like the Extension unwrapping above.
+    if extended:
+        _convert_beyond64k_GPOS(self.SubTable, True)
 
     del merger.lookup_subtables
 
