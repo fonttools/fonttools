@@ -109,3 +109,27 @@ def test_save_ttc_v2_dsig(lazy):
         assert collection.dsig.ulVersion == 1
         assert collection.dsig.usNumSigs == 0
         assert collection.dsig.usFlag == 0
+
+
+def test_roundtrip_ttc_v2_dsig(lazy):
+    # Check if the DSIG persists when not explicitly decompiling it
+    ttc_path = TTX_DATA_DIR / "TestTTCv2.ttc"
+    with TTCollection(ttc_path, lazy=lazy) as collection:
+        assert len(collection) == 2
+        assert collection[0]["maxp"].numGlyphs == 6
+        assert collection[1]["maxp"].numGlyphs == 6
+        assert hasattr(collection, "dsig")
+        buf = BytesIO()
+        collection.save(buf, version=0x00020000)
+    buf.seek(0)
+    data = buf.read(32)
+    assert data == deHexStr(
+        "74 74 63 66"  # ttfc
+        "00 02 00 00"  # ttc version 2
+        "00 00 00 02"  # number of fonts
+        "00 00 00 20"  # font 0 offset
+        "00 00 09 3C"  # font 1 offset
+        "44 53 49 47"  # ulDsigTag
+        "00 00 00 08"  # ulDsigLength
+        "00 00 0A 38"  # ulDsigOffset
+    )

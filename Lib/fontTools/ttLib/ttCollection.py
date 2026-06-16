@@ -92,12 +92,16 @@ class TTCollection(object):
             dsig_header_fields_offset = file.tell()
             file.seek(0, 2)
             dsig_offset = file.tell()
-            try:
-                data = self.dsig.compile(None)
-                write_dsig = True
-            except KeyError:
-                # Incomplete DSIG
-                write_dsig = False
+            write_dsig = True
+            if hasattr(self.dsig, "data"):
+                data = self.dsig.data
+            else:
+                try:
+                    data = self.dsig.compile(None)
+
+                except KeyError:
+                    # Incomplete DSIG
+                    write_dsig = False
 
             if write_dsig:
                 file.write(data)
