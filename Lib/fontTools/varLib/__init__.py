@@ -888,7 +888,9 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         return
     try:
         GDEF = font["GDEF"].table
-        assert GDEF.Version <= 0x00010002
+        # v1.4 is the beyond-64k GDEF version; bump to >= v1.3 to carry the VarStore
+        assert GDEF.Version <= 0x00010004
+        GDEF.Version = max(GDEF.Version, 0x00010003)
     except KeyError:
         GDEFTable = font["GDEF"] = newTable("GDEF")
         GDEF = GDEFTable.table = ot.GDEF()
@@ -897,8 +899,8 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         GDEF.LigCaretList = None
         GDEF.MarkAttachClassDef = None
         GDEF.MarkGlyphSetsDef = None
+        GDEF.Version = 0x00010003
 
-    GDEF.Version = 0x00010003
     GDEF.VarStore = store
 
     # Optimize
