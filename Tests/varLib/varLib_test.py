@@ -1491,5 +1491,50 @@ def test_varlib_merge_PairPos_beyond64k_disjoint_masters():
     assert _interpolated_xadvance(varfont, records[HI2].Value1, {"wght": 0.5}) == -35
 
 
+def test_varlib_merge_GDEF_GlyphClassDef_beyond64k_divergent_masters():
+    """Beyond-64k GDEF merge with divergent (non-conflicting) glyph classes.
+
+    feaLib promotes a >65535-glyph master's GDEF to v1.4, which stores the
+    glyph class definition in GlyphClassDef2 (the LOffset field) rather than
+    the v1.2 uint16 GlyphClassDef. The lenient GDEF merger unions per-master
+    class assignments (and only rejects genuinely conflicting ones), but it was
+    keyed on the GlyphClassDef attribute name only, so a v1.4 master's
+    GlyphClassDef2 fell through to the strict generic merge and raised
+    ShouldBeConstant on any cross-master divergence. Register the merger for
+    both names so v1.4 fonts get the same union semantics v1.2 fonts always had.
+    """
+    HI = "g65536"  # gid 0x10000: classified the same way in both masters
+
+    def master(base_glyph):
+        # each master classifies a *different* base glyph (divergent but not
+        # conflicting) plus the same high mark glyph (constant across masters)
+        fea = (
+            f"table GDEF {{ GlyphClassDef [{base_glyph}], [], [{HI}], []; }} GDEF;\n"
+        )
+        return _make_beyond64k_master(fea)
+
+    # Before the fix this build raised ShouldBeConstant on GlyphClassDef2.
+    varfont = _build_beyond64k_vf((0, master("g00001")), (1000, master("g00002")))
+
+    # GDEF is v1.4 and the class def lives in the extended GlyphClassDef2 field.
+    gdef = varfont["GDEF"].table
+    assert gdef.Version == 0x00010004
+    assert gdef.GlyphClassDef is None
+    assert gdef.GlyphClassDef2 is not None
+
+    # The merged class def unions both masters' divergent base glyphs and keeps
+    # the constant high (>0xFFFF) mark glyph: 1 == base, 3 == mark.
+    assert gdef.GlyphClassDef2.classDefs == {"g00001": 1, "g00002": 1, HI: 3}
+    assert varfont.getGlyphID(HI) == 0x10000
+
+    # The unioned v1.4 GlyphClassDef2 (with its >0xFFFF key) round-trips through
+    # binary (GDEF in isolation, so no whole-font save / upper_tables needed).
+    data = varfont["GDEF"].compile(varfont)
+    table = newTable("GDEF")
+    table.decompile(data, varfont)
+    assert table.table.Version == 0x00010004
+    assert table.table.GlyphClassDef2.classDefs == {"g00001": 1, "g00002": 1, HI: 3}
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())

@@ -168,7 +168,7 @@ class AligningMerger(Merger):
     pass
 
 
-@AligningMerger.merger(ot.GDEF, "GlyphClassDef")
+@AligningMerger.merger(ot.GDEF, ("GlyphClassDef", "GlyphClassDef2"))
 def merge(merger, self, lst):
     if self is None:
         if not allNone(lst):
