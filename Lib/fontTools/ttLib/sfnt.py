@@ -433,6 +433,15 @@ ttcHeaderFormat = """
 
 ttcHeaderSize = sstruct.calcsize(ttcHeaderFormat)
 
+ttcHeaderFormat2 = """
+		> # big endian
+		ulDsigTag:               L  # version 2.0 only
+		ulDsigLength:            L  # version 2.0 only
+		ulDsigOffset:            L  # version 2.0 only
+"""
+
+ttcHeaderSize2 = sstruct.calcsize(ttcHeaderFormat2)
+
 sfntDirectoryFormat = """
 		> # big endian
 		sfntVersion:    4s
@@ -641,19 +650,26 @@ def readTTCHeader(file):
         ">%dL" % self.numFonts, file.read(self.numFonts * 4)
     )
     if self.Version == 0x00020000:
-        pass  # ignoring version 2.0 signatures
+        # Unpack additional DSIG fields
+        data = file.read(ttcHeaderSize2)
+        if len(data) != ttcHeaderSize2:
+            raise TTLibError("Not a Font Collection (not enough data)")
+        sstruct.unpack(ttcHeaderFormat2, data, self)
     return self
 
 
-def writeTTCHeader(file, numFonts):
+def writeTTCHeader(file, numFonts, version=0x00010000):
     self = SimpleNamespace()
     self.TTCTag = "ttcf"
-    self.Version = 0x00010000
+    self.Version = version
     self.numFonts = numFonts
     file.seek(0)
     file.write(sstruct.pack(ttcHeaderFormat, self))
     offset = file.tell()
     file.write(struct.pack(">%dL" % self.numFonts, *([0] * self.numFonts)))
+    if version == 0x00020000:
+        # write empty ulDsigTag, ulDsigLength, ulDsigOffset
+        file.write(struct.pack(">3L", 0, 0, 0))
     return offset
 
 

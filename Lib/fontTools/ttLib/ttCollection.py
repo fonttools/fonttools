@@ -3,6 +3,7 @@ from fontTools.ttLib.sfnt import readTTCHeader, writeTTCHeader
 from io import BytesIO
 import struct
 import logging
+from fontTools.ttLib.tables.D_S_I_G_ import table_D_S_I_G_
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +38,12 @@ class TTCollection(object):
             font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
             fonts.append(font)
 
+        if header.Version == 0x00020000:
+            if header.ulDsigOffset != 0:
+                self.dsig = table_D_S_I_G_("DSIG")
+                file.seek(header.ulDsigOffset, 0)
+                self.dsig.data = file.read(header.ulDsigLength)
+
         # don't close file if lazy=True, as the TTFont hold a reference to the original
         # file; the file will be closed once the TTFonts are closed in the
         # TTCollection.close(). We still want to close the file if lazy is None or
@@ -55,7 +62,7 @@ class TTCollection(object):
         for font in self.fonts:
             font.close()
 
-    def save(self, file, shareTables=True):
+    def save(self, file, shareTables=True, version=0x00010000):
         """Save the font to disk. Similarly to the constructor,
         the 'file' argument can be either a pathname or a writable
         file object.
@@ -71,7 +78,7 @@ class TTCollection(object):
 
         tableCache = {} if shareTables else None
 
-        offsets_offset = writeTTCHeader(file, len(self.fonts))
+        offsets_offset = writeTTCHeader(file, len(self.fonts), version=version)
         offsets = []
         for font in self.fonts:
             offsets.append(file.tell())
@@ -80,6 +87,23 @@ class TTCollection(object):
 
         file.seek(offsets_offset)
         file.write(struct.pack(">%dL" % len(self.fonts), *offsets))
+
+        if version == 0x00020000 and hasattr(self, "dsig"):
+            dsig_header_fields_offset = file.tell()
+            file.seek(0, 2)
+            dsig_offset = file.tell()
+            try:
+                data = self.dsig.compile(None)
+                write_dsig = True
+            except KeyError:
+                # Incomplete DSIG
+                write_dsig = False
+
+            if write_dsig:
+                file.write(data)
+                file.seek(dsig_header_fields_offset)
+                file.write(b"DSIG")
+                file.write(struct.pack(">2L", len(data), dsig_offset))
 
         if final:
             final.write(file.getvalue())
