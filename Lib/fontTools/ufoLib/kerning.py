@@ -32,7 +32,7 @@ def lookupKerningValue(
       kerning:
           A dictionary of kerning pairs.
       groups:
-          A set of kerning groups.
+          A dictionary mapping each group name to its glyph names.
       fallback:
           The fallback value to return if no kern is found between
           the elements in ``pair``. Defaults to 0.
@@ -137,7 +137,7 @@ def glyphsToGroups(groups: KerningGroups) -> tuple[StrDict, StrDict]:
 
     Args:
       groups:
-          A dictionary of kerning groups.
+          A dictionary mapping each group name to its glyph names.
 
     Returns:
       A tuple of two dictionaries, respectively mapping glyph names to
