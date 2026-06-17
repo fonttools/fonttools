@@ -61,6 +61,8 @@ def test_save_ttc_v2_empty_dsig(lazy):
     buf.seek(0)
     with TTCollection(buf, lazy=lazy) as collection:
         assert len(collection) == 2
+        assert collection[0]["maxp"].numGlyphs == 6
+        assert collection[1]["maxp"].numGlyphs == 6
         # The DSIG fields were empty, the attribute should not exist
         assert not hasattr(collection, "dsig")
 
@@ -104,6 +106,8 @@ def test_save_ttc_v2_dsig(lazy):
     buf.seek(0)
     with TTCollection(buf, lazy=lazy) as collection:
         assert len(collection) == 2
+        assert collection[0]["maxp"].numGlyphs == 6
+        assert collection[1]["maxp"].numGlyphs == 6
         assert isinstance(collection.dsig, table_D_S_I_G_)
         collection.dsig.decompile(collection.dsig.data, None)
         assert collection.dsig.ulVersion == 1
