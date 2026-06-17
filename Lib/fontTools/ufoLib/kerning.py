@@ -134,6 +134,9 @@ def glyphsToGroups(groups: KerningGroups) -> tuple[StrDict, StrDict]:
     """Build dictionaries mapping glyph names to their kerning groups.
 
     This is a reverse-mapping of the UFO kerning groups data structure.
+    Groups are assumed to be compliant with the UFO specification; with
+    the current implementation, if glyphs appear in more than one group
+    anyway, the last group wins.
 
     Args:
       groups:
