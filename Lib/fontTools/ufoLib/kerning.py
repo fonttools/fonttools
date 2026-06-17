@@ -20,6 +20,9 @@ def lookupKerningValue(
     The elments can be either individual glyphs (by name) or kerning
     groups (by name), or any combination of the two.
 
+    Providing the two glyph-to-group mappings accelerates group-lookups.
+    These can be built manually, or with :py:func:`glyphsToGroups`.
+
     Args:
       pair:
           A tuple, in logical order (first, second) with respect
@@ -92,19 +95,8 @@ def lookupKerningValue(
             "Must provide both 'glyphToFirstGroup' and 'glyphToSecondGroup', or neither."
         )
     # create glyph to group mapping
-    if glyphToFirstGroup is None:
-        glyphToFirstGroup = {}
-        glyphToSecondGroup = {}
-        for group, groupMembers in groups.items():
-            if group.startswith("public.kern1."):
-                for glyph in groupMembers:
-                    glyphToFirstGroup[glyph] = group
-            elif group.startswith("public.kern2."):
-                for glyph in groupMembers:
-                    glyphToSecondGroup[glyph] = group
-    # ensure type safety for mappings
-    assert glyphToFirstGroup is not None
-    assert glyphToSecondGroup is not None
+    if glyphToFirstGroup is None or glyphToSecondGroup is None:
+        glyphToFirstGroup, glyphToSecondGroup = glyphsToGroups(groups)
     # get group names and make sure first and second are glyph names
     first, second = pair
     firstGroup = secondGroup = None
@@ -133,6 +125,40 @@ def lookupKerningValue(
             return kerning[pair]
     # use the fallback value
     return fallback
+
+
+def glyphsToGroups(groups: KerningGroups) -> tuple[StrDict, StrDict]:
+    """Build dictionaries mapping glyph names to their kerning groups.
+
+    This is a reverse-mapping of the UFO kerning groups data structure.
+
+    Args:
+      groups:
+          A set of kerning groups.
+
+    Returns:
+      A tuple of two dictionaries, respectively mapping glyph names to
+      the first- and second-glyph kerning groups to which they belong.
+
+    Examples::
+
+      >>> groups = {
+      ...     "public.kern1.O" : ["O", "D", "Q"],
+      ...     "public.kern2.E" : ["E", "F"]
+      ... }
+      >>> glyphsToGroups(groups)
+      ({'O': 'public.kern1.O', 'D': 'public.kern1.O', 'Q': 'public.kern1.O'}, {'E': 'public.kern2.E', 'F': 'public.kern2.E'})
+    """
+    glyphToFirstGroup = {}
+    glyphToSecondGroup = {}
+    for group, groupMembers in groups.items():
+        if group.startswith("public.kern1."):
+            for glyph in groupMembers:
+                glyphToFirstGroup[glyph] = group
+        elif group.startswith("public.kern2."):
+            for glyph in groupMembers:
+                glyphToSecondGroup[glyph] = group
+    return (glyphToFirstGroup, glyphToSecondGroup)
 
 
 if __name__ == "__main__":
