@@ -419,6 +419,59 @@ class GlyfTableTest(unittest.TestCase):
         del glyf["b"]
         assert glyf.getGlyphID("c") == 2
 
+    # __setitem__ uses the reverse glyph map for O(1) membership; the tests below
+    # check it keeps glyphOrder and the reverse map consistent across the
+    # supported paths.
+
+    def test_setitem_prepopulated_glyphOrder_no_duplicate(self):
+        # with glyphOrder already populated, assigning a glyph by an
+        # already-listed name must not re-append it to glyphOrder.
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in list(glyf.glyphOrder):
+            glyf[name] = Glyph()
+        assert glyf.glyphOrder == [".notdef", "a", "b"]
+        assert glyf.getGlyphID("b") == 2
+
+    def test_setitem_appends_new_glyph(self):
+        # assigning a name that isn't in glyphOrder appends it and resolves
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a"]
+        for name in list(glyf.glyphOrder):
+            glyf[name] = Glyph()
+        glyf["b"] = Glyph()
+        assert glyf.glyphOrder == [".notdef", "a", "b"]
+        assert glyf.getGlyphID("b") == 2
+
+    def test_setitem_after_setGlyphOrder_reorder(self):
+        # reordering through the public setGlyphOrder clears the reverse map, so
+        # re-assigning an already-listed glyph afterwards must not duplicate it
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in list(glyf.glyphOrder):
+            glyf[name] = Glyph()
+        glyf.setGlyphOrder(["b", "a", ".notdef"])
+        glyf["a"] = Glyph()
+        assert glyf.glyphOrder == ["b", "a", ".notdef"]
+        assert glyf.getGlyphID("a") == 1
+
+    def test_setitem_after_delitem(self):
+        # deletion invalidates the reverse map and shifts later ids; a following
+        # assignment must still keep glyphOrder and the map consistent
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in list(glyf.glyphOrder):
+            glyf[name] = Glyph()
+        del glyf["a"]
+        assert glyf.glyphOrder == [".notdef", "b"]
+        glyf["c"] = Glyph()
+        assert glyf.glyphOrder == [".notdef", "b", "c"]
+        assert glyf.getGlyphID("c") == 2
+
 
 class GlyphTest:
     def test_getCoordinates(self):
