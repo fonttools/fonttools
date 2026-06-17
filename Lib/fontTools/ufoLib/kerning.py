@@ -85,6 +85,9 @@ def lookupKerningValue(
       -100
       >>> lookupKerningValue(("public.kern1.X", "public.kern2.X"), kerning, groups)
       0
+      >>> glyphToFirstGroup, glyphToSecondGroup = glyphsToGroups(groups)
+      >>> lookupKerningValue(("O", "E"), kerning, groups, glyphToFirstGroup=glyphToFirstGroup, glyphToSecondGroup=glyphToSecondGroup)
+      -100
     """
     # quickly check to see if the pair is in the kerning dictionary
     if pair in kerning:
