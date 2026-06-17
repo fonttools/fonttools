@@ -17,8 +17,11 @@ def lookupKerningValue(
 ) -> IntFloat:
     """Retrieve the kerning value (if any) between a pair of elements.
 
-    The elments can be either individual glyphs (by name) or kerning
+    The elements can be either individual glyphs (by name) or kerning
     groups (by name), or any combination of the two.
+
+    Providing the two glyph-to-group mappings accelerates group-lookups.
+    These can be built manually, or with :py:func:`glyphsToGroups`.
 
     Args:
       pair:
@@ -29,7 +32,7 @@ def lookupKerningValue(
       kerning:
           A dictionary of kerning pairs.
       groups:
-          A set of kerning groups.
+          A dictionary mapping each group name to its glyph names.
       fallback:
           The fallback value to return if no kern is found between
           the elements in ``pair``. Defaults to 0.
@@ -82,6 +85,9 @@ def lookupKerningValue(
       -100
       >>> lookupKerningValue(("public.kern1.X", "public.kern2.X"), kerning, groups)
       0
+      >>> glyphToFirstGroup, glyphToSecondGroup = glyphsToGroups(groups)
+      >>> lookupKerningValue(("O", "E"), kerning, groups, glyphToFirstGroup=glyphToFirstGroup, glyphToSecondGroup=glyphToSecondGroup)
+      -100
     """
     # quickly check to see if the pair is in the kerning dictionary
     if pair in kerning:
@@ -92,19 +98,8 @@ def lookupKerningValue(
             "Must provide both 'glyphToFirstGroup' and 'glyphToSecondGroup', or neither."
         )
     # create glyph to group mapping
-    if glyphToFirstGroup is None:
-        glyphToFirstGroup = {}
-        glyphToSecondGroup = {}
-        for group, groupMembers in groups.items():
-            if group.startswith("public.kern1."):
-                for glyph in groupMembers:
-                    glyphToFirstGroup[glyph] = group
-            elif group.startswith("public.kern2."):
-                for glyph in groupMembers:
-                    glyphToSecondGroup[glyph] = group
-    # ensure type safety for mappings
-    assert glyphToFirstGroup is not None
-    assert glyphToSecondGroup is not None
+    if glyphToFirstGroup is None or glyphToSecondGroup is None:
+        glyphToFirstGroup, glyphToSecondGroup = glyphsToGroups(groups)
     # get group names and make sure first and second are glyph names
     first, second = pair
     firstGroup = secondGroup = None
@@ -133,6 +128,43 @@ def lookupKerningValue(
             return kerning[pair]
     # use the fallback value
     return fallback
+
+
+def glyphsToGroups(groups: KerningGroups) -> tuple[StrDict, StrDict]:
+    """Build dictionaries mapping glyph names to their kerning groups.
+
+    This is a reverse-mapping of the UFO kerning groups data structure.
+    Groups are assumed to be compliant with the UFO specification; with
+    the current implementation, if glyphs appear in more than one group
+    anyway, the last group wins.
+
+    Args:
+      groups:
+          A dictionary mapping each group name to its glyph names.
+
+    Returns:
+      A tuple of two dictionaries, respectively mapping glyph names to
+      the first- and second-glyph kerning groups to which they belong.
+
+    Examples::
+
+      >>> groups = {
+      ...     "public.kern1.O" : ["O", "D", "Q"],
+      ...     "public.kern2.E" : ["E", "F"]
+      ... }
+      >>> glyphsToGroups(groups)
+      ({'O': 'public.kern1.O', 'D': 'public.kern1.O', 'Q': 'public.kern1.O'}, {'E': 'public.kern2.E', 'F': 'public.kern2.E'})
+    """
+    glyphToFirstGroup = {}
+    glyphToSecondGroup = {}
+    for group, groupMembers in groups.items():
+        if group.startswith("public.kern1."):
+            for glyph in groupMembers:
+                glyphToFirstGroup[glyph] = group
+        elif group.startswith("public.kern2."):
+            for glyph in groupMembers:
+                glyphToSecondGroup[glyph] = group
+    return (glyphToFirstGroup, glyphToSecondGroup)
 
 
 if __name__ == "__main__":
