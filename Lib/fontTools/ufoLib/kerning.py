@@ -134,7 +134,7 @@ def glyphsToGroups(groups: KerningGroups) -> tuple[StrDict, StrDict]:
 
     Args:
       groups:
-          A set of kerning groups.
+          A dictionary of kerning groups.
 
     Returns:
       A tuple of two dictionaries, respectively mapping glyph names to
