@@ -1508,9 +1508,7 @@ def test_varlib_merge_GDEF_GlyphClassDef_beyond64k_divergent_masters():
     def master(base_glyph):
         # each master classifies a *different* base glyph (divergent but not
         # conflicting) plus the same high mark glyph (constant across masters)
-        fea = (
-            f"table GDEF {{ GlyphClassDef [{base_glyph}], [], [{HI}], []; }} GDEF;\n"
-        )
+        fea = f"table GDEF {{ GlyphClassDef [{base_glyph}], [], [{HI}], []; }} GDEF;\n"
         return _make_beyond64k_master(fea)
 
     # Before the fix this build raised ShouldBeConstant on GlyphClassDef2.
