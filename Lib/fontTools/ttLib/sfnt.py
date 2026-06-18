@@ -646,7 +646,7 @@ def readTTCHeader(file):
     sstruct.unpack(ttcHeaderFormat, data, self)
     if self.TTCTag != "ttcf":
         raise TTLibError("Not a Font Collection")
-    assert self.Version == TTC_V1 or self.Version == TTC_V2, (
+    assert self.Version in (TTC_V1, TTC_V2), (
         "unrecognized TTC version 0x%08x" % self.Version
     )
     self.offsetTable = struct.unpack(
@@ -665,6 +665,9 @@ def writeTTCHeader(file, numFonts, version=TTC_V1):
     self = SimpleNamespace()
     self.TTCTag = "ttcf"
     self.Version = version
+    assert self.Version in (TTC_V1, TTC_V2), (
+        "unrecognized TTC version 0x%08x" % self.Version
+    )
     self.numFonts = numFonts
     file.seek(0)
     file.write(sstruct.pack(ttcHeaderFormat, self))
