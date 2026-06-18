@@ -38,7 +38,8 @@ class TTCollection(object):
             font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
             fonts.append(font)
 
-        if header.Version == 0x00020000:
+        if header.Version == TTC_V2:
+            self.dsig: table_D_S_I_G_ | None = None
             if header.ulDsigOffset != 0:
                 self.dsig = table_D_S_I_G_("DSIG")
                 file.seek(header.ulDsigOffset, 0)
@@ -62,7 +63,7 @@ class TTCollection(object):
         for font in self.fonts:
             font.close()
 
-    def save(self, file, shareTables=True, version=TTC_V1):
+    def save(self, file, shareTables=True):
         """Save the font to disk. Similarly to the constructor,
         the 'file' argument can be either a pathname or a writable
         file object.
@@ -78,6 +79,9 @@ class TTCollection(object):
 
         tableCache = {} if shareTables else None
 
+        # A V2 TTC will be saved if self.dsig is present, even if it is None
+        version = TTC_V2 if hasattr(self, "dsig") else TTC_V1
+
         offsets_offset = writeTTCHeader(file, len(self.fonts), version=version)
         offsets = []
         for font in self.fonts:
@@ -88,26 +92,26 @@ class TTCollection(object):
         file.seek(offsets_offset)
         file.write(struct.pack(">%dL" % len(self.fonts), *offsets))
 
-        if version == TTC_V2 and hasattr(self, "dsig"):
-            dsig_header_fields_offset = file.tell()
-            file.seek(0, 2)
-            dsig_offset = file.tell()
-            write_dsig = True
+        if version == TTC_V2 and self.dsig is not None:
+            # Compile the DSIG if necessary
             if hasattr(self.dsig, "data"):
                 data = self.dsig.data
             else:
-                try:
-                    data = self.dsig.compile(None)
-
-                except KeyError:
-                    # Incomplete DSIG
-                    write_dsig = False
-
-            if write_dsig:
-                file.write(data)
-                file.seek(dsig_header_fields_offset)
-                file.write(b"DSIG")
-                file.write(struct.pack(">2L", len(data), dsig_offset))
+                data = self.dsig.compile(None)
+            # Write the DSIG tag, length, and offset
+            # We are at the offset where the DSIG header starts
+            dsig_header_fields_offset = file.tell()
+            # The DSIG data will be written to the end of the file, go there
+            file.seek(0, 2)
+            dsig_offset = file.tell()
+            # Write the actual data
+            file.write(data)
+            # Go back to the DSIG header
+            file.seek(dsig_header_fields_offset)
+            # Write the tag
+            file.write(b"DSIG")
+            # Write the length and offset
+            file.write(struct.pack(">2L", len(data), dsig_offset))
 
         if final:
             final.write(file.getvalue())
