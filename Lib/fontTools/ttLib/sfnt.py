@@ -433,14 +433,14 @@ ttcHeaderFormat = """
 
 ttcHeaderSize = sstruct.calcsize(ttcHeaderFormat)
 
-ttcHeaderFormat2 = """
+ttcTailFormatV2 = """
 		> # big endian
 		ulDsigTag:               L  # version 2.0 only
 		ulDsigLength:            L  # version 2.0 only
 		ulDsigOffset:            L  # version 2.0 only
 """
 
-ttcHeaderSize2 = sstruct.calcsize(ttcHeaderFormat2)
+ttcTailSizeV2 = sstruct.calcsize(ttcTailFormatV2)
 
 TTC_V1 = 0x00010000
 TTC_V2 = 0x00020000
@@ -654,10 +654,10 @@ def readTTCHeader(file):
     )
     if self.Version == TTC_V2:
         # Unpack additional DSIG fields
-        data = file.read(ttcHeaderSize2)
-        if len(data) != ttcHeaderSize2:
+        data = file.read(ttcTailSizeV2)
+        if len(data) != ttcTailSizeV2:
             raise TTLibError("Not a Font Collection (not enough data)")
-        sstruct.unpack(ttcHeaderFormat2, data, self)
+        sstruct.unpack(ttcTailFormatV2, data, self)
     return self
 
 
