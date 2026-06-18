@@ -97,7 +97,8 @@ class Merger(object):
         fonts = self._openFonts(fontfiles)
         glyphOrders = [list(font.getGlyphOrder()) for font in fonts]
         computeMegaGlyphOrder(self, glyphOrders)
-        self.beyond64k = len(self.glyphOrder) > 0x10000 or any(
+        # maxp.numGlyphs is uint16: needs upper tables above 0xFFFF, not 0x10000.
+        self.beyond64k = len(self.glyphOrder) > 0xFFFF or any(
             _fontHasUpperTables(font) for font in fonts
         )
 
