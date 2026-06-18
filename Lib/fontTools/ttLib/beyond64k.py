@@ -643,7 +643,8 @@ def _drop_beyond64k_cmap_format4(font: TTFont) -> None:
 
 
 def _drop_beyond64k_post_glyph_names(font: TTFont) -> None:
-    if "post" not in font or len(font.getGlyphOrder()) <= 0x10000:
+    # post 2.0 numberOfGlyphs is uint16: drop above 0xFFFF, not 0x10000.
+    if "post" not in font or len(font.getGlyphOrder()) <= 0xFFFF:
         return
 
     post = font["post"]

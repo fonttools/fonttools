@@ -760,6 +760,37 @@ def test_upper_tables_drops_beyond64k_post_glyph_names():
     post.compile(font)
 
 
+@pytest.mark.parametrize(
+    "num_glyphs, dropped",
+    [(0xFFFF, False), (0x10000, True), (0x10001, True)],
+)
+def test_upper_tables_drops_post_glyph_names_at_glyph_count_boundary(
+    num_glyphs, dropped
+):
+    # post 2.0 numberOfGlyphs is uint16, so a font with 0x10000 (65536) glyphs
+    # cannot keep version 2.0 even though every glyph id (0..0xFFFF) still fits:
+    # the count overflows. The drop must trigger at > 0xFFFF, not > 0x10000.
+    font = TTFont()
+    font.setGlyphOrder([".notdef"] + [f"glyph{i}" for i in range(1, num_glyphs)])
+    assert len(font.getGlyphOrder()) == num_glyphs
+    post = font["post"] = newTable("post")
+    post.formatType = 2.0
+    post.italicAngle = 0
+    post.underlinePosition = 0
+    post.underlineThickness = 0
+    post.isFixedPitch = 0
+    post.minMemType42 = 0
+    post.maxMemType42 = 0
+    post.minMemType1 = 0
+    post.maxMemType1 = 0
+    post.extraNames = []
+    post.mapping = {}
+
+    upper_tables(font)
+
+    assert post.formatType == (3.0 if dropped else 2.0)
+
+
 @pytest.mark.parametrize("tag", ["glyf", "GLYF"])
 def test_accepts_either_table_spelling(tag):
     font = TTFont()
