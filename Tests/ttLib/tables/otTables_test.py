@@ -4,6 +4,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 from io import StringIO
+from types import SimpleNamespace
 from textwrap import dedent
 import unittest
 
@@ -595,6 +596,47 @@ class SplitMultipleSubstTest:
         oldMapping, newMapping = self.overflow("Sequence", 4)
         assert oldMapping == {"a": 2, "b": 3, "c": 4}
         assert newMapping == {"d": 5, "e": 1}
+
+
+def test_fixLookupOverFlows_promotes_lookup_to_extension():
+    from fontTools.ttLib.tables.otBase import OverflowErrorRecord
+
+    font = FakeFont([".notdef"])
+    gsub = font["GSUB"] = SimpleNamespace(table=otTables.GSUB())
+    gsub.table.LookupList = otTables.LookupList()
+    lookup = otTables.Lookup()
+    lookup.LookupType = otTables.SingleSubst.LookupType
+    subTable = otTables.SingleSubst()
+    lookup.SubTable = [subTable]
+    gsub.table.LookupList.Lookup = [lookup]
+
+    ok = otTables.fixLookupOverFlows(
+        font, OverflowErrorRecord(("GSUB", 0, 0, None, None))
+    )
+
+    assert ok
+    assert lookup.LookupType == otTables.ExtensionSubst.LookupType
+    assert isinstance(lookup.SubTable[0], otTables.ExtensionSubst)
+    assert lookup.SubTable[0].ExtSubTable is subTable
+
+
+def test_fixLookupOverFlows_returns_false_without_progress():
+    from fontTools.ttLib.tables.otBase import OverflowErrorRecord
+
+    font = FakeFont([".notdef"])
+    gsub = font["GSUB"] = SimpleNamespace(table=otTables.GSUB())
+    gsub.table.LookupList = otTables.LookupList()
+    lookup = otTables.Lookup()
+    lookup.LookupType = otTables.ExtensionSubst.LookupType
+    lookup.SubTable = [otTables.SingleSubst()]
+    gsub.table.LookupList.Lookup = [lookup]
+
+    ok = otTables.fixLookupOverFlows(
+        font, OverflowErrorRecord(("GSUB", 0, 0, None, None))
+    )
+
+    assert not ok
+    assert lookup.SubTable[0].__class__ is otTables.SingleSubst
 
 
 def test_splitMarkBasePos():
