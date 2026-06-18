@@ -2283,7 +2283,7 @@ def fixLookupOverFlows(ttf, overflowRecord):
                 extSubTable.Format = 1
                 extSubTable.ExtSubTable = subTable
                 lookup.SubTable[si] = extSubTable
-    ok = 1
+                ok = 1
     return ok
 
 
