@@ -749,6 +749,42 @@ def test_splitMarkBasePos():
     ]
 
 
+def test_splitSinglePos():
+    from fontTools.otlLib.builder import buildSinglePosSubtable, buildValue
+
+    mapping = {
+        "a": buildValue({"XPlacement": -10}),
+        "b": buildValue({"XPlacement": -20}),
+        "c": buildValue({"XPlacement": -30}),
+    }
+    glyphMap = {g: i for i, g in enumerate(["a", "b", "c"])}
+
+    oldSubTable = buildSinglePosSubtable(mapping, glyphMap)
+    assert oldSubTable.Format == 2
+    newSubTable = otTables.SinglePos()
+
+    ok = otTables.splitSinglePos(oldSubTable, newSubTable, overflowRecord=None)
+    assert ok
+
+    assert oldSubTable.Coverage.glyphs == ["a"]
+    assert [v.XPlacement for v in oldSubTable.Value] == [-10]
+    assert oldSubTable.ValueCount == 1
+
+    assert newSubTable.Format == 2
+    assert newSubTable.Coverage.glyphs == ["b", "c"]
+    assert [v.XPlacement for v in newSubTable.Value] == [-20, -30]
+    assert newSubTable.ValueCount == 2
+
+
+def test_splitSinglePos_format1():
+    # Format 1 has a single shared Value with nothing to split.
+    subTable = otTables.SinglePos()
+    subTable.Format = 1
+    subTable.Coverage = otTables.Coverage()
+    subTable.Coverage.glyphs = ["a", "b"]
+    assert not otTables.splitSinglePos(subTable, otTables.SinglePos(), None)
+
+
 class ColrV1Test(unittest.TestCase):
     def setUp(self):
         self.font = FakeFont([".notdef", "meh"])

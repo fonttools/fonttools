@@ -2368,6 +2368,33 @@ def splitLigatureSubst(oldSubTable, newSubTable, overflowRecord):
     return ok
 
 
+def splitSinglePos(oldSubTable, newSubTable, overflowRecord):
+    # Only Format 2 (one Value per covered glyph) is worth splitting; a Format 1
+    # subtable shares a single Value across its whole Coverage, so there is
+    # nothing worth splitting.
+    if oldSubTable.Format != 2 or len(oldSubTable.Coverage.glyphs) <= 1:
+        return False
+
+    newSubTable.Format = oldSubTable.Format
+    newSubTable.ValueFormat = oldSubTable.ValueFormat
+
+    coverage = oldSubTable.Coverage.glyphs
+    values = oldSubTable.Value
+    oldCount = len(coverage) // 2
+
+    newSubTable.Coverage = oldSubTable.Coverage.__class__()
+    newSubTable.Coverage.glyphs = coverage[oldCount:]
+    newSubTable.Value = values[oldCount:]
+
+    oldSubTable.Coverage.glyphs = coverage[:oldCount]
+    oldSubTable.Value = values[:oldCount]
+
+    oldSubTable.ValueCount = len(oldSubTable.Value)
+    newSubTable.ValueCount = len(newSubTable.Value)
+
+    return True
+
+
 def splitPairPos(oldSubTable, newSubTable, overflowRecord):
     st = oldSubTable
     ok = False
@@ -2511,7 +2538,7 @@ splitTable = {
         # 					8: splitReverseChainSingleSubst,
     },
     "GPOS": {
-        # 					1: splitSinglePos,
+        1: splitSinglePos,
         2: splitPairPos,
         # 					3: splitCursivePos,
         4: splitMarkBasePos,
