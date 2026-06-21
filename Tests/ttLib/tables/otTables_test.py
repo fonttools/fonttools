@@ -8,6 +8,8 @@ from types import SimpleNamespace
 from textwrap import dedent
 import unittest
 
+import pytest
+
 
 def makeCoverage(glyphs):
     coverage = otTables.Coverage()
@@ -637,6 +639,70 @@ def test_fixLookupOverFlows_returns_false_without_progress():
 
     assert not ok
     assert lookup.SubTable[0].__class__ is otTables.SingleSubst
+
+
+def _allExtensionGPOS(numLookups=2):
+    font = FakeFont([".notdef"])
+    gpos = font["GPOS"] = SimpleNamespace(table=otTables.GPOS())
+    gpos.table.LookupList = otTables.LookupList()
+    lookups = []
+    for _ in range(numLookups):
+        ext = otTables.ExtensionPos()
+        ext.Format = 1
+        ext.ExtSubTable = otTables.SinglePos()
+        lookup = otTables.Lookup()
+        lookup.LookupType = otTables.ExtensionPos.LookupType
+        lookup.SubTable = [ext]
+        lookups.append(lookup)
+    gpos.table.LookupList.Lookup = lookups
+    return font
+
+
+@pytest.mark.parametrize("have_uharfbuzz", [False, True])
+def test_fixLookupOverFlows_all_extension_logs_error(
+    caplog, monkeypatch, have_uharfbuzz
+):
+    import logging
+
+    from fontTools.ttLib.tables.otBase import OverflowErrorRecord
+
+    # A LookupList -> Lookup offset overflow (SubTableIndex is None) where every
+    # lookup is already an Extension lookup: there is nothing left to promote, so
+    # recovery must fail with an actionable error rather than silently giving up.
+    # The "install uharfbuzz" hint only makes sense when it isn't installed.
+    font = _allExtensionGPOS()
+    monkeypatch.setattr(otTables, "have_uharfbuzz", have_uharfbuzz)
+
+    with caplog.at_level(logging.ERROR, logger="fontTools.ttLib.tables.otTables"):
+        ok = otTables.fixLookupOverFlows(
+            font, OverflowErrorRecord(("GPOS", 1, None, None, None))
+        )
+
+    assert not ok
+    [message] = [record.message for record in caplog.records]
+    assert "already Extension" in message
+    assert ("install uharfbuzz" in message) is not have_uharfbuzz
+
+
+def test_fixLookupOverFlows_subtable_overflow_does_not_log_lookuplist_message(caplog):
+    import logging
+
+    from fontTools.ttLib.tables.otBase import OverflowErrorRecord
+
+    # fixLookupOverFlows is also the fallback for subtable offset overflows
+    # (SubTableIndex is not None); the "LookupList offset overflowed" message
+    # would be misleading there, so it must not be emitted.
+    font = _allExtensionGPOS()
+
+    with caplog.at_level(logging.ERROR, logger="fontTools.ttLib.tables.otTables"):
+        ok = otTables.fixLookupOverFlows(
+            font, OverflowErrorRecord(("GPOS", 1, 0, None, None))
+        )
+
+    assert not ok
+    assert not any(
+        "LookupList offset overflowed" in record.message for record in caplog.records
+    )
 
 
 def test_splitMarkBasePos():
