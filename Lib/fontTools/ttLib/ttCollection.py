@@ -2,10 +2,49 @@ from fontTools.ttLib.ttFont import TTFont
 from io import BytesIO
 import struct
 import logging
+from contextlib import contextmanager
 from fontTools.ttLib.sfnt import TTC_V1, TTC_V2, readTTCHeader, writeTTCHeader
 from fontTools.ttLib.tables.D_S_I_G_ import table_D_S_I_G_
+from fontTools.misc.timeTools import timestampNow
 
 log = logging.getLogger(__name__)
+
+
+@contextmanager
+def _sharedModifiedTimestamp(fonts):
+    """Pin a single ``head.modified`` timestamp across an iterable of TTFonts.
+
+    When several fonts are saved together with ``recalcTimestamp=True``, each
+    one restamps its own ``head`` table via ``timestampNow()``, whose
+    granularity is one second. If the wall clock ticks between two fonts'
+    ``head.compile()`` calls they get different ``modified`` values, which
+    defeats byte-identical table sharing (``shareTables=True``) and makes the
+    saved size non-deterministic.
+
+    This reads ``timestampNow()`` once (so ``SOURCE_DATE_EPOCH`` is still
+    honored) and applies it to every font that would have recalculated its own
+    timestamp, suppressing the per-font restamp for the duration. Each font's
+    ``recalcTimestamp`` flag is restored on exit, even if the body raises; the
+    pinned ``modified`` value is left in place, matching a normal recalc save.
+    Fonts with ``recalcTimestamp`` falsy, or without a ``head`` table, are left
+    untouched (their ``head`` is not even loaded).
+
+    See https://github.com/fonttools/fonttools/issues/4110.
+    """
+    now = timestampNow()
+    restore = []
+    try:
+        for font in fonts:
+            if font.recalcTimestamp and "head" in font:
+                # record the original flag *before* mutating, so the finally
+                # block restores it even if loading 'head' below raises
+                restore.append((font, font.recalcTimestamp))
+                font["head"].modified = now
+                font.recalcTimestamp = False
+        yield now
+    finally:
+        for font, recalcTimestamp in restore:
+            font.recalcTimestamp = recalcTimestamp
 
 
 class TTCollection(object):
@@ -82,12 +121,14 @@ class TTCollection(object):
         # A V2 TTC will be saved if self.dsig is present, even if it is None
         version = TTC_V2 if hasattr(self, "dsig") else TTC_V1
 
-        offsets_offset = writeTTCHeader(file, len(self.fonts), version=version)
-        offsets = []
-        for font in self.fonts:
-            offsets.append(file.tell())
-            font._save(file, tableCache=tableCache)
-            file.seek(0, 2)
+        # Pin one 'modified' timestamp so the fonts' 'head' tables can be shared.
+        with _sharedModifiedTimestamp(self.fonts):
+            offsets_offset = writeTTCHeader(file, len(self.fonts), version=version)
+            offsets = []
+            for font in self.fonts:
+                offsets.append(file.tell())
+                font._save(file, tableCache=tableCache)
+                file.seek(0, 2)
 
         file.seek(offsets_offset)
         file.write(struct.pack(">%dL" % len(self.fonts), *offsets))

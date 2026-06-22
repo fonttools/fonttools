@@ -1,5 +1,6 @@
 import os
 from io import BytesIO
+from itertools import count
 from pathlib import Path
 
 import pytest
@@ -159,6 +160,36 @@ def test_roundtrip_ttc_dsig(lazy):
         "00 00 00 01"  # DSIG table version
         "00 00 00 00"  # numSignatures, flags
     )
+
+
+def test_save_ttc_deterministic_across_clock_tick(monkeypatch):
+    # With recalcTimestamp on (the default), each font restamps its 'head' from
+    # timestampNow(); save() must pin a single timestamp across the collection so
+    # the 'head' tables stay byte-identical and shared. Otherwise a wall-clock
+    # tick between the two fonts' head.compile() calls gives them different
+    # 'modified' values, defeating table sharing and adding a whole head table
+    # (a non-deterministic, flaky file size). See
+    # https://github.com/fonttools/fonttools/issues/4110
+    import fontTools.ttLib.tables._h_e_a_d as head_mod
+
+    ttc_path = TTX_DATA_DIR / "TestTTCv2.ttc"
+
+    def save_bytes(clock):
+        monkeypatch.setattr(head_mod, "timestampNow", clock)
+        ttc = TTCollection(ttc_path, lazy=False)
+        buf = BytesIO()
+        ttc.save(buf)
+        ttc.close()
+        return buf.getvalue()
+
+    steady = save_bytes(lambda: 1000)  # clock never advances
+    ticks = count(1)
+    ticking = save_bytes(lambda: next(ticks) * 86400)  # advances on every call
+
+    # A clock tick must not change the output: the shared 'head' is written once.
+    assert len(ticking) == len(steady)
+    with TTCollection(BytesIO(ticking), lazy=False) as ttc:
+        assert ttc[0]["head"].modified == ttc[1]["head"].modified
 
 
 def test_roundtrip_ttc_dsig_decompile(lazy):
