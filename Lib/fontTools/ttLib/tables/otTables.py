@@ -28,6 +28,7 @@ from .otBase import (
     ValueRecord,
     CountReference,
     getFormatSwitchingBaseTableClass,
+    have_uharfbuzz,
 )
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
@@ -2270,6 +2271,27 @@ def fixLookupOverFlows(ttf, overflowRecord):
     while lookup.SubTable[0].__class__.LookupType == extType:
         lookupIndex = lookupIndex - 1
         if lookupIndex < 0:
+            # Every lookup before the overflow is already an Extension lookup, so
+            # there is nothing left to promote. When this is a LookupList->Lookup
+            # offset overflow (SubTableIndex is None), the LookupList's uint16
+            # offsets simply can't address all the lookups and fontTools' packer
+            # can't recover; warn with actionable advice. (For a subtable offset
+            # overflow that fell back here, SubTableIndex is set and this message
+            # would be misleading, so it's skipped.)
+            if overflowRecord.SubTableIndex is None:
+                log.error(
+                    "%s LookupList offset overflowed and all lookups are already "
+                    "Extension lookups, so the overflow can't be resolved by "
+                    "promotion; %s.",
+                    overflowRecord.tableType,
+                    (
+                        "reduce the number of lookups"
+                        if have_uharfbuzz
+                        else "install uharfbuzz to enable the HarfBuzz repacker "
+                        "(it can often pack such tables by sharing/duplicating "
+                        "subtables), or reduce the number of lookups"
+                    ),
+                )
             return ok
         lookup = lookups[lookupIndex]
 
