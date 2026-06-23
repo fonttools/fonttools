@@ -1,3 +1,17 @@
+4.63.1.dev0
+-----------
+
+- [feaLib] Fix name-table parsing for multibyte Mac encodings (#1196) (#4092)
+- [subset] keep East Asian spacing palt by default (#4094)
+- [subset] bug fix for MATH table in which constructions for glyphs that are only added
+  during MATH closure were kept (#4096)
+- [ttLib] Add support for TrueType Collection version 2 (#4100)
+- [ufoLib] Make glyph-to-group construction accessible outside of lookup function
+  (#4102)
+- [glyf] Use reverse glyph map for O(1) `__setitem__` membership (#4103)
+- [ttLib] Give an actionable error when LookupList overflow is unrecoverable (#4109)
+- [ttLib] Pin a single head.modified timestamp across TTCollection.save (#4111)
+
 4.63.0 (released 2026-05-14)
 ----------------------------
 
