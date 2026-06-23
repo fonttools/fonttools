@@ -16,6 +16,10 @@ from functools import reduce
 __all__ = ["optimizeWidths", "main"]
 
 
+def _get_hmtx(font):
+    return font["HMTX"] if "HMTX" in font else font["hmtx"]
+
+
 class missingdict(dict):
     def __init__(self, missing_func):
         self.missing_func = missing_func
@@ -188,7 +192,7 @@ def main(args=None):
 
     for fontfile in args.inputs:
         font = TTFont(fontfile)
-        hmtx = font["hmtx"]
+        hmtx = _get_hmtx(font)
         widths = [m[0] for m in hmtx.metrics.values()]
         if args.brute:
             default, nominal = optimizeWidthsBruteforce(widths)

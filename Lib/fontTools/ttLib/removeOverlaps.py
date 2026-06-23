@@ -191,8 +191,10 @@ def _remove_glyf_overlaps(
     removeHinting: bool,
     ignoreErrors: bool,
 ) -> None:
-    glyfTable = font["glyf"]
-    hmtxTable = font["hmtx"]
+    glyfTag = "GLYF" if "GLYF" in font else "glyf"
+    hmtxTag = "HMTX" if glyfTag == "GLYF" else "hmtx"
+    glyfTable = font[glyfTag]
+    hmtxTable = font[hmtxTag]
 
     # process all simple glyphs first, then composites with increasing component depth,
     # so that by the time we test for component intersections the respective base glyphs
@@ -293,8 +295,8 @@ def removeOverlaps(
 
     Overlapping components are first decomposed to simple contours, then merged.
 
-    Currently this only works for fonts with 'glyf' or 'CFF ' tables.
-    Raises NotImplementedError if 'glyf' or 'CFF ' tables are absent.
+    Currently this only works for fonts with 'glyf'/'GLYF' or 'CFF ' tables.
+    Raises NotImplementedError if 'glyf'/'GLYF' or 'CFF ' tables are absent.
 
     Note that removing overlaps invalidates the hinting. By default we drop hinting
     from all glyphs whether or not overlaps are removed from a given one, as it would
@@ -312,9 +314,14 @@ def removeOverlaps(
             any glyphs are modified.
     """
 
-    if "glyf" not in font and "CFF " not in font and "CFF2" not in font:
+    if (
+        "glyf" not in font
+        and "GLYF" not in font
+        and "CFF " not in font
+        and "CFF2" not in font
+    ):
         raise NotImplementedError(
-            "No outline data found in the font: missing 'glyf', 'CFF ', or 'CFF2' table"
+            "No outline data found in the font: missing 'glyf', 'GLYF', 'CFF ', or 'CFF2' table"
         )
 
     if glyphNames is None:
@@ -323,7 +330,7 @@ def removeOverlaps(
     # Wraps the underlying glyphs, takes care of interfacing with drawing pens
     glyphSet = font.getGlyphSet()
 
-    if "glyf" in font:
+    if "glyf" in font or "GLYF" in font:
         _remove_glyf_overlaps(
             font=font,
             glyphNames=glyphNames,

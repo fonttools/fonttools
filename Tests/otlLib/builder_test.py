@@ -8,6 +8,11 @@ from fontTools.ttLib.tables import otTables
 import pytest
 
 
+class ExtendedGlyphMap(dict):
+    def __len__(self):
+        return 0x10001
+
+
 class BuilderTest(object):
     GLYPHS = (
         ".notdef space zero one two three four five six "
@@ -258,6 +263,14 @@ class BuilderTest(object):
             "</CursivePos>",
         ]
 
+    def test_buildCursivePos_format2(self):
+        pos = builder.buildCursivePosSubtable(
+            {"two": (self.ANCHOR1, self.ANCHOR2)},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert pos.Format == 2
+        assert isinstance(pos.EntryExitRecord[0], otTables.EntryExit2)
+
     def test_buildDevice_format1(self):
         device = builder.buildDevice({1: 1, 0: 0})
         assert getXML(device.toXML) == [
@@ -440,6 +453,12 @@ class BuilderTest(object):
             "  </LigGlyph>",
             "</LigCaretList>",
         ]
+
+    def test_buildLigCaretList_extended(self):
+        carets = builder.buildLigCaretList(
+            {"f_f_i": [300]}, {}, ExtendedGlyphMap(self.GLYPHMAP)
+        )
+        assert isinstance(carets, otTables.LigCaretList2)
 
     def test_buildLigCaretList_empty(self):
         assert builder.buildLigCaretList({}, {}, self.GLYPHMAP) is None
@@ -668,6 +687,16 @@ class BuilderTest(object):
             "</MarkBasePos>",
         ]
 
+    def test_buildMarkBasePosSubtable_format2(self):
+        table = builder.buildMarkBasePosSubtable(
+            {"acute": (0, self.ANCHOR1)},
+            {"A": {0: self.ANCHOR2}},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert table.Format == 2
+        assert isinstance(table.MarkArray, otTables.MarkArray2)
+        assert isinstance(table.BaseArray, otTables.BaseArray2)
+
     def test_buildMarkGlyphSetsDef(self):
         marksets = builder.buildMarkGlyphSetsDef(
             [{"acute", "grave"}, {"cedilla", "grave"}], self.GLYPHMAP
@@ -806,6 +835,27 @@ class BuilderTest(object):
             "</MarkLigPos>",
         ]
 
+    def test_buildMarkLigPosSubtable_format2(self):
+        table = builder.buildMarkLigPosSubtable(
+            {"acute": (0, self.ANCHOR1)},
+            {"f_i": [{0: self.ANCHOR2}]},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert table.Format == 2
+        assert isinstance(table.MarkArray, otTables.MarkArray2)
+        assert isinstance(table.LigatureArray, otTables.LigatureArray2)
+
+    def test_MarkMarkPosBuilder_format2(self):
+        font = ttLib.TTFont()
+        font.getReverseGlyphMap = lambda: ExtendedGlyphMap(self.GLYPHMAP)
+        lookupBuilder = builder.MarkMarkPosBuilder(font, None)
+        lookupBuilder.marks = {"acute": ("top", self.ANCHOR1)}
+        lookupBuilder.baseMarks = {"grave": {"top": self.ANCHOR2}}
+        [subtable] = lookupBuilder.build().SubTable
+        assert subtable.Format == 2
+        assert isinstance(subtable.Mark1Array, otTables.MarkArray2)
+        assert isinstance(subtable.Mark2Array, otTables.Mark2Array2)
+
     def test_buildMarkRecord(self):
         rec = builder.buildMarkRecord(17, builder.buildAnchor(500, -20))
         assert getXML(rec.toXML) == [
@@ -898,6 +948,13 @@ class BuilderTest(object):
             "</PairPos>",
         ]
 
+    def test_buildPairPosClassesSubtable_format4(self):
+        subtable = builder.buildPairPosClassesSubtable(
+            {(("one",), ("two",)): (builder.buildValue({}), None)},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 4
+
     def test_buildPairPosGlyphs(self):
         d50 = builder.buildValue({"XPlacement": -50})
         d8020 = builder.buildValue({"XPlacement": -80, "YPlacement": -20})
@@ -984,6 +1041,15 @@ class BuilderTest(object):
             "  </PairSet>",
             "</PairPos>",
         ]
+
+    def test_buildPairPosGlyphsSubtable_format3(self):
+        subtable = builder.buildPairPosGlyphsSubtable(
+            {("one", "two"): (builder.buildValue({}), None)},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 3
+        assert isinstance(subtable.PairSet[0], otTables.PairSet2)
+        assert isinstance(subtable.PairSet[0].PairValueRecord[0], otTables.PairValue2)
 
     def test_buildSinglePos(self):
         subtables = builder.buildSinglePos(
@@ -1075,6 +1141,23 @@ class BuilderTest(object):
             '  <Value index="1" XPlacement="0" YPlacement="-888"/>',
             "</SinglePos>",
         ]
+
+    def test_buildSinglePosSubtable_format3(self):
+        subtable = builder.buildSinglePosSubtable(
+            {"one": builder.buildValue({"XPlacement": 777})},
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 3
+
+    def test_buildSinglePosSubtable_format4(self):
+        subtable = builder.buildSinglePosSubtable(
+            {
+                "one": builder.buildValue({"XPlacement": 777}),
+                "two": builder.buildValue({"YPlacement": -888}),
+            },
+            ExtendedGlyphMap(self.GLYPHMAP),
+        )
+        assert subtable.Format == 4
 
     def test_buildValue(self):
         value = builder.buildValue({"XPlacement": 7, "YPlacement": 23})
@@ -1884,6 +1967,58 @@ def test_buildMathTable_horizAssembly():
 
 
 class ChainContextualRulesetTest(object):
+    @pytest.mark.parametrize(
+        "builderClass",
+        [builder.ChainContextSubstBuilder, builder.ChainContextPosBuilder],
+    )
+    @pytest.mark.parametrize("chaining", [False, True])
+    def test_buildExtendedFormats(self, builderClass, chaining):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b", "c", "d"])
+        lookupBuilder = builderClass(font, None)
+        lookupBuilder.glyphMap = ExtendedGlyphMap(font.getReverseGlyphMap())
+
+        prefix = [["a"]] if chaining else []
+        suffix = [["d"]] if chaining else []
+        lookup = builder.SingleSubstBuilder(font, None)
+        lookup.lookup_index = 3
+        rule = builder.ChainContextualRule(
+            prefix, [["b"], ["c"]], suffix, [[lookup], None]
+        )
+        ruleset = builder.ChainContextualRuleset()
+        ruleset.addRule(rule)
+
+        format1 = lookupBuilder.buildFormat1Subtable(ruleset, chaining)
+        assert format1.Format == 4
+        ruleSetAttr = "ChainedSeqRuleSet" if chaining else "SeqRuleSet"
+        ruleAttr = "ChainedSeqRule" if chaining else "SeqRule"
+        format1Rule = getattr(getattr(format1, ruleSetAttr)[0], ruleAttr)[0]
+        assert format1Rule.InputSequence == ["c"]
+        assert format1Rule.SeqLookupCount == 1
+        assert format1Rule.SeqLookupRecord[0].LookupListIndex == 3
+        if chaining:
+            assert format1Rule.BacktrackSequence == ["a"]
+            assert format1Rule.LookAheadSequence == ["d"]
+
+        classdefs = ruleset.format2ClassDefs()
+        format2 = lookupBuilder.buildFormat2Subtable(ruleset, classdefs, chaining)
+        assert format2.Format == 5
+        ruleSetAttr = "ChainedClassSeqRuleSet" if chaining else "ClassSeqRuleSet"
+        ruleAttr = "ChainedClassSeqRule" if chaining else "ClassSeqRule"
+        format2Rule = next(
+            getattr(ruleSet, ruleAttr)[0]
+            for ruleSet in getattr(format2, ruleSetAttr)
+            if ruleSet is not None
+        )
+        assert len(format2Rule.InputSequence) == 1
+        assert format2Rule.SeqLookupCount == 1
+
+        if not chaining:
+            format3 = lookupBuilder.buildFormat3Subtable(rule, chaining)
+            assert format3.Format == 6
+            assert format3.SeqLookupCount == 1
+            assert format3.SeqLookupRecord[0].LookupListIndex == 3
+
     def test_makeRulesets(self):
         font = ttLib.TTFont()
         font.setGlyphOrder(["a", "b", "c", "d", "A", "B", "C", "D", "E"])
@@ -1932,6 +2067,22 @@ class ChainContextualRulesetTest(object):
         assert set(cd[0].classes()[1:]) == set()
         assert set(cd[1].classes()[1:]) == set([("C", "D"), ("E",)])
         assert set(cd[2].classes()[1:]) == set()
+
+
+def test_buildExtendedReverseChainSingleSubst():
+    font = ttLib.TTFont()
+    font.setGlyphOrder([".notdef", "a", "b", "c", "d"])
+    lookupBuilder = builder.ReverseChainSingleSubstBuilder(font, None)
+    lookupBuilder.glyphMap = ExtendedGlyphMap(font.getReverseGlyphMap())
+    lookupBuilder.rules.append(([["a"]], [["d"]], {"c": "b"}))
+
+    lookup = lookupBuilder.build()
+    subtable = lookup.SubTable[0]
+    assert subtable.Format == 2
+    assert subtable.BacktrackCoverage[0].glyphs == ["a"]
+    assert subtable.LookAheadCoverage[0].glyphs == ["d"]
+    assert subtable.Coverage.glyphs == ["c"]
+    assert subtable.Substitute == ["b"]
 
 
 if __name__ == "__main__":

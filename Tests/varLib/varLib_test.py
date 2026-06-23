@@ -1,5 +1,6 @@
 from fontTools.colorLib.builder import buildCOLR
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import (
     build,
@@ -11,15 +12,19 @@ from fontTools.varLib import (
 from fontTools.varLib.errors import VarLibValidationError
 import fontTools.varLib.errors as varLibErrors
 from fontTools.varLib.models import VariationModel
+from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
 from fontTools.varLib import set_default_weight_width_slant
 from fontTools.designspaceLib import (
     DesignSpaceDocumentError,
     DesignSpaceDocument,
+    AxisDescriptor,
     SourceDescriptor,
 )
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.fontBuilder import FontBuilder
+from fontTools.ttLib.tables._g_l_y_f import Glyph
 import difflib
 from copy import deepcopy
 from io import BytesIO
@@ -174,6 +179,49 @@ class BuildTest(unittest.TestCase):
             tables=["GDEF", "HVAR", "MVAR", "fvar", "gvar"],
             expected_ttx_name="Build",
         )
+
+    def test_varlib_build_ttf_beyond64k(self):
+        """Designspace file contains uppercase beyond-64k companion masters."""
+
+        def upper_master(font, savepath):
+            upper_tables(font)
+            font.save(savepath, reorderTables=None)
+
+        ds_path = self.get_test_input("Build.designspace")
+        ufo_dir = self.get_test_input("master_ufo")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily-")
+        for path in ttx_paths:
+            font, savepath = self.compile_font(path, ".ttf", self.tempdir)
+            upper_master(font, savepath)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace(".ufo", ".ttf")
+        varfont, _, _ = build(ds_path, finder)
+
+        assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX", "GVAR"} <= set(varfont.keys())
+        assert not {"glyf", "loca", "maxp", "hhea", "hmtx", "gvar"} & set(
+            varfont.keys()
+        )
+
+    def test_varlib_build_ttf_mixed_beyond64k_masters(self):
+        """Designspace masters must not mix compact and uppercase glyf families."""
+        ds_path = self.get_test_input("Build.designspace")
+        ufo_dir = self.get_test_input("master_ufo")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily-")
+        for i, path in enumerate(ttx_paths):
+            font, savepath = self.compile_font(path, ".ttf", self.tempdir)
+            if i == 0:
+                upper_tables(font)
+                font.save(savepath, reorderTables=None)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace(".ufo", ".ttf")
+        with pytest.raises(VarLibValidationError, match="same glyf/GLYF table family"):
+            build(ds_path, finder)
 
     def test_varlib_build_ttf_reuse_nameid_2(self):
         """Instances at the default location can reuse name ID 2 or 17."""
@@ -1270,6 +1318,220 @@ def test_variable_COLR_without_VarIndexMap():
     assert colr.VarStore.VarData[0].Item[0] == [-16384]
 
     assert colr.VarIndexMap is None
+
+
+def _make_beyond64k_master(features, *, upper=False):
+    """A FontBuilder TTFont with 65537 glyphs (g00001..g65536, so the highest
+    gid is 0x10000) and the given FEA. With upper=True the tables are converted
+    to their uppercase beyond-64k companions so the font is savable."""
+    order = [".notdef"] + [f"g{i:05d}" for i in range(1, 0x10001)]
+    fb = FontBuilder(unitsPerEm=1000)
+    fb.setupGlyphOrder(order)
+    fb.setupGlyf({g: Glyph() for g in order})
+    fb.setupHorizontalMetrics({g: (500, 0) for g in order})
+    fb.setupHorizontalHeader(ascent=800, descent=-200)
+    fb.setupNameTable({"familyName": "TestBeyond64k", "styleName": "Regular"})
+    fb.setupPost(keepGlyphNames=False)
+    addOpenTypeFeaturesFromString(fb.font, features)
+    if upper:
+        upper_tables(fb.font)
+    return fb.font
+
+
+def _build_beyond64k_vf(*masters):
+    """Build a wght-variable font from (location, master font) pairs."""
+    doc = DesignSpaceDocument()
+    doc.addAxis(
+        AxisDescriptor(tag="wght", name="Weight", minimum=0, default=0, maximum=1000)
+    )
+    for loc, font in masters:
+        doc.addSource(SourceDescriptor(font=font, location={"Weight": loc}))
+    return build(doc)[0]
+
+
+def _interpolated_xadvance(varfont, valueRecord, location):
+    """XAdvance of a ValueRecord at `location`, resolving its VariationIndex
+    against the font's (GDEF) VarStore."""
+    dev = valueRecord.XAdvDevice
+    assert dev.DeltaFormat == 0x8000  # VariationIndex
+    inst = VarStoreInstancer(
+        varfont["GDEF"].table.VarStore, varfont["fvar"].axes, location
+    )
+    return valueRecord.XAdvance + inst[(dev.StartSize << 16) + dev.EndSize]
+
+
+def test_varlib_build_GPOS_GDEF_beyond64k():
+    """varLib can merge the per-master OTL fallback path for beyond-64k fonts.
+
+    feaLib promotes a >65535-glyph master's GPOS/GDEF to the extended layouts
+    (PairPos/SinglePos format 3/4, mark/cursive format 2, GDEF v1.4). The
+    variation merger must handle those, emit extended output (so a glyph id
+    above 0xFFFF in a pair doesn't truncate), and attach the VarStore to the
+    GDEF without downgrading its version. The whole font is round-tripped
+    through binary to confirm the merged GPOS coexists with the uppercase
+    beyond-64k tables.
+    """
+    HI = "g65536"  # gid 0x10000, must survive as a pair's second glyph
+    ACUTE = "g65530"
+
+    def master(scale):
+        a, k = 10 * scale, -50 * scale  # anchor coord / kern value for this master
+        fea = (
+            f"markClass {ACUTE} <anchor {a} {a}> @TOP;\n"
+            f"feature kern {{\n"
+            f"  pos g00001 {HI} {k};\n"  # PairPos format 3 (glyph pair)
+            f"  pos [g00002 g00003] [g65535 {HI}] {k};\n"  # PairPos format 4
+            f"}} kern;\n"
+            f"feature cpsp {{ pos {HI} <{k} 0 {k} 0>; }} cpsp;\n"  # SinglePos
+            f"feature mark {{ pos base {HI} <anchor {a} {a}> mark @TOP; }} mark;\n"
+            f"feature mkmk {{ pos mark {ACUTE} <anchor {a} {a}> mark @TOP; }} mkmk;\n"
+            f"feature curs {{ pos cursive {HI} <anchor {a} {a}> <anchor {a} {a}>; }} curs;\n"
+        )
+        # uppercase tables so the resulting (>65535 glyph) font is savable
+        return _make_beyond64k_master(fea, upper=True)
+
+    varfont = _build_beyond64k_vf((0, master(1)), (1000, master(2)))
+    # Round-trip the whole font through binary (validates the merged GPOS
+    # coexists with the uppercase MAXP/GLYF/... beyond-64k tables).
+    varfont = reload_font(varfont)
+    assert {"GPOS", "GDEF", "GLYF", "MAXP"} <= set(varfont.keys())
+
+    # GDEF carries the VarStore and keeps its beyond-64k v1.4 version.
+    gdef = varfont["GDEF"].table
+    assert gdef.Version == 0x00010004
+    assert gdef.VarStore is not None
+
+    gpos = varfont["GPOS"].table
+    lookups = (getattr(gpos, "LookupList2", None) or gpos.LookupList).Lookup
+    # Every GPOS subtable must use a beyond-64k extended format.
+    extended_formats = {
+        1: {3, 4},  # SinglePos
+        2: {3, 4},  # PairPos
+        3: {2},  # CursivePos
+        4: {2},  # MarkBasePos
+        6: {2},  # MarkMarkPos
+    }
+    present = set()
+    for lookup in lookups:
+        present.add(lookup.LookupType)
+        for st in lookup.SubTable:
+            assert st.Format in extended_formats[lookup.LookupType], (
+                lookup.LookupType,
+                st.Format,
+            )
+    assert present == {1, 2, 3, 4, 6}
+
+    # The glyph id above 0xFFFF in the glyph-pair rule must not have truncated.
+    # (Glyph names are synthesized on reload since beyond-64k drops post names,
+    # so assert by glyph id.)
+    first_glyph = varfont.getGlyphName(1)  # g00001
+    pairpos = next(
+        st
+        for lk in lookups
+        if lk.LookupType == 2
+        for st in lk.SubTable
+        if st.Format == 3 and first_glyph in st.Coverage.glyphs
+    )
+    pairset = pairpos.PairSet[pairpos.Coverage.glyphs.index(first_glyph)]
+    record = next(
+        r
+        for r in pairset.PairValueRecord
+        if varfont.getGlyphID(r.SecondGlyph) == 0x10000
+    )
+    assert record.Value1.XAdvance == -50  # default master value
+    # and it interpolates: the merge attached a VariationIndex (preserved by the
+    # extended-format round-trip) that resolves against the VarStore. At the
+    # normalized midpoint the value goes -50 -> -100, i.e. -75.
+    assert _interpolated_xadvance(varfont, record.Value1, {"wght": 0.5}) == -75
+
+
+def test_varlib_merge_PairPos_beyond64k_disjoint_masters():
+    """Beyond-64k PairPos merge with differing per-master structure.
+
+    The masters kern g00001 against *different* high second glyphs, so the
+    merger has to align the coverages and backfill the missing pairs, then
+    promote the result to the extended format without truncating either high
+    glyph id.
+    """
+    HI = "g65536"  # gid 0x10000
+    HI2 = "g65535"  # gid 0xFFFF
+
+    def master(second_glyph, value):
+        return _make_beyond64k_master(
+            f"feature kern {{ pos g00001 {second_glyph} {value}; }} kern;"
+        )
+
+    varfont = _build_beyond64k_vf((0, master(HI, -50)), (1000, master(HI2, -70)))
+
+    # round-trip GPOS on its own (no whole-font save, so no upper_tables needed:
+    # extended format selection keys off the glyph order), index pairs by 2nd glyph
+    data = varfont["GPOS"].compile(varfont)
+    table = newTable("GPOS")
+    table.decompile(data, varfont)
+    gpos = table.table
+    st = (getattr(gpos, "LookupList2", None) or gpos.LookupList).Lookup[0].SubTable[0]
+    assert st.Format == 3  # extended pair-based
+    records = {
+        r.SecondGlyph: r
+        for r in st.PairSet[st.Coverage.glyphs.index("g00001")].PairValueRecord
+    }
+
+    # Both high second glyphs survive (no truncation) and the missing pair in
+    # each master is backfilled (default master is the first source).
+    assert set(records) == {HI, HI2}
+    assert varfont.getGlyphID(HI) == 0x10000
+    assert varfont.getGlyphID(HI2) == 0xFFFF
+    assert records[HI].Value1.XAdvance == -50  # from master A
+    assert records[HI2].Value1.XAdvance == 0  # backfilled (master A lacks it)
+
+    # Both pairs interpolate via the VarStore, the backfilled g65535 included:
+    # at the normalized midpoint g65536 goes -50 -> 0 (=> -25) and g65535 goes
+    # 0 -> -70 (=> -35).
+    assert _interpolated_xadvance(varfont, records[HI].Value1, {"wght": 0.5}) == -25
+    assert _interpolated_xadvance(varfont, records[HI2].Value1, {"wght": 0.5}) == -35
+
+
+def test_varlib_merge_GDEF_GlyphClassDef_beyond64k_divergent_masters():
+    """Beyond-64k GDEF merge with divergent (non-conflicting) glyph classes.
+
+    feaLib promotes a >65535-glyph master's GDEF to v1.4, which stores the
+    glyph class definition in GlyphClassDef2 (the LOffset field) rather than
+    the v1.2 uint16 GlyphClassDef. The lenient GDEF merger unions per-master
+    class assignments (and only rejects genuinely conflicting ones), but it was
+    keyed on the GlyphClassDef attribute name only, so a v1.4 master's
+    GlyphClassDef2 fell through to the strict generic merge and raised
+    ShouldBeConstant on any cross-master divergence. Register the merger for
+    both names so v1.4 fonts get the same union semantics v1.2 fonts always had.
+    """
+    HI = "g65536"  # gid 0x10000: classified the same way in both masters
+
+    def master(base_glyph):
+        # each master classifies a *different* base glyph (divergent but not
+        # conflicting) plus the same high mark glyph (constant across masters)
+        fea = f"table GDEF {{ GlyphClassDef [{base_glyph}], [], [{HI}], []; }} GDEF;\n"
+        return _make_beyond64k_master(fea)
+
+    # Before the fix this build raised ShouldBeConstant on GlyphClassDef2.
+    varfont = _build_beyond64k_vf((0, master("g00001")), (1000, master("g00002")))
+
+    # GDEF is v1.4 and the class def lives in the extended GlyphClassDef2 field.
+    gdef = varfont["GDEF"].table
+    assert gdef.Version == 0x00010004
+    assert gdef.GlyphClassDef is None
+    assert gdef.GlyphClassDef2 is not None
+
+    # The merged class def unions both masters' divergent base glyphs and keeps
+    # the constant high (>0xFFFF) mark glyph: 1 == base, 3 == mark.
+    assert gdef.GlyphClassDef2.classDefs == {"g00001": 1, "g00002": 1, HI: 3}
+    assert varfont.getGlyphID(HI) == 0x10000
+
+    # The unioned v1.4 GlyphClassDef2 (with its >0xFFFF key) round-trips through
+    # binary (GDEF in isolation, so no whole-font save / upper_tables needed).
+    data = varfont["GDEF"].compile(varfont)
+    table = newTable("GDEF")
+    table.decompile(data, varfont)
+    assert table.table.Version == 0x00010004
+    assert table.table.GlyphClassDef2.classDefs == {"g00001": 1, "g00002": 1, HI: 3}
 
 
 if __name__ == "__main__":

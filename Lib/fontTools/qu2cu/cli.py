@@ -3,6 +3,7 @@ import argparse
 import logging
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.pens.qu2cuPen import Qu2CuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 import fontTools
@@ -22,11 +23,12 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         "all_cubic": kwargs["all_cubic"],
     }
 
-    if "gvar" in font:
+    if "gvar" in font or "GVAR" in font:
         raise ValueError("Cannot convert variable font")
+    upper_tables(font)
     glyphSet = font.getGlyphSet()
     glyphOrder = font.getGlyphOrder()
-    glyf = font["glyf"]
+    glyf = font["GLYF"]
     for glyphName in glyphOrder:
         glyph = glyphSet[glyphName]
         ttpen = TTGlyphPen(glyphSet)

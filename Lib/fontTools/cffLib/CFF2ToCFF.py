@@ -13,7 +13,7 @@ from fontTools.cffLib import (
 )
 from .transforms import desubroutinizeCharString
 from .specializer import specializeProgram
-from .width import optimizeWidths
+from .width import _get_hmtx, optimizeWidths
 from collections import defaultdict
 import logging
 
@@ -90,7 +90,7 @@ def _convertCFF2ToCFF(cff, otFont):
 
     # Add (optimal) width to CharStrings that need it.
     widths = defaultdict(list)
-    metrics = otFont["hmtx"].metrics
+    metrics = _get_hmtx(otFont).metrics
     for glyphName in charStrings.keys():
         cs, fdIndex = charStrings.getItemAndSelector(glyphName)
         if fdIndex == None:

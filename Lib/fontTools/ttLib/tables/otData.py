@@ -227,6 +227,25 @@ otData = [
             ),
         ],
     ),
+    # As of June 2026, the proposed GSUB/GPOS v1.2 spec points LookupList2 to
+    # a LookupList. With feedback, we widen the per-lookup offsets from
+    # Offset16 to Offset32 as well; otherwise, LookupList2 is not suitable for
+    # beyond-64k fonts.
+    (
+        "LookupList2",
+        [
+            FieldSpec(
+                "uint16", "LookupCount", description="Number of lookups in this table"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Lookup",
+                repeat="LookupCount",
+                aux=0,
+                description="Array of offsets to Lookup tables-from beginning of LookupList -zero based (first lookup is Lookup index = 0)",
+            ),
+        ],
+    ),
     (
         "Lookup",
         [
@@ -253,6 +272,21 @@ otData = [
                 "MarkFilteringSet",
                 aux="LookupFlag & 0x0010",
                 description="If set, indicates that the lookup table structure is followed by a MarkFilteringSet field. The layout engine skips over all mark glyphs not in the mark filtering set indicated.",
+            ),
+        ],
+    ),
+    (
+        "SeqLookup",
+        [
+            FieldSpec(
+                "uint16",
+                "SequenceIndex",
+                description="Index into current glyph sequence-first glyph = 0",
+            ),
+            FieldSpec(
+                "uint16",
+                "LookupListIndex",
+                description="Lookup to apply to that position-zero-based",
             ),
         ],
     ),
@@ -291,12 +325,58 @@ otData = [
         ],
     ),
     (
+        "CoverageFormat3",
+        [
+            FieldSpec(
+                "uint16", "CoverageFormat", description="Format identifier-format = 3"
+            ),
+            FieldSpec(
+                "uint24", "GlyphCount", description="Number of glyphs in the GlyphArray"
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "GlyphArray",
+                repeat="GlyphCount",
+                aux=0,
+                description="Array of GlyphIDs-in numerical order",
+            ),
+        ],
+    ),
+    (
+        "CoverageFormat4",
+        [
+            FieldSpec(
+                "uint16", "CoverageFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec("uint24", "RangeCount", description="Number of RangeRecord2s"),
+            FieldSpec(
+                "RangeRecord2",
+                "RangeRecord",
+                repeat="RangeCount",
+                aux=0,
+                description="Array of glyph ranges-ordered by Start GlyphID",
+            ),
+        ],
+    ),
+    (
         "RangeRecord",
         [
             FieldSpec("GlyphID", "Start", description="First GlyphID in the range"),
             FieldSpec("GlyphID", "End", description="Last GlyphID in the range"),
             FieldSpec(
                 "uint16",
+                "StartCoverageIndex",
+                description="Coverage Index of first GlyphID in range",
+            ),
+        ],
+    ),
+    (
+        "RangeRecord2",
+        [
+            FieldSpec("GlyphID24", "Start", description="First GlyphID in the range"),
+            FieldSpec("GlyphID24", "End", description="Last GlyphID in the range"),
+            FieldSpec(
+                "uint24",
                 "StartCoverageIndex",
                 description="Coverage Index of first GlyphID in range",
             ),
@@ -344,10 +424,61 @@ otData = [
         ],
     ),
     (
+        "ClassDefFormat3",
+        [
+            FieldSpec(
+                "uint16", "ClassFormat", description="Format identifier-format = 3"
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "StartGlyph",
+                description="First GlyphID of the ClassValueArray",
+            ),
+            FieldSpec(
+                "uint24", "GlyphCount", description="Size of the ClassValueArray"
+            ),
+            FieldSpec(
+                "uint16",
+                "ClassValueArray",
+                repeat="GlyphCount",
+                aux=0,
+                description="Array of Class Values-one per GlyphID",
+            ),
+        ],
+    ),
+    (
+        "ClassDefFormat4",
+        [
+            FieldSpec(
+                "uint16", "ClassFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec(
+                "uint24", "ClassRangeCount", description="Number of ClassRangeRecord2s"
+            ),
+            FieldSpec(
+                "ClassRangeRecord2",
+                "ClassRangeRecord",
+                repeat="ClassRangeCount",
+                aux=0,
+                description="Array of ClassRangeRecord2s-ordered by Start GlyphID",
+            ),
+        ],
+    ),
+    (
         "ClassRangeRecord",
         [
             FieldSpec("GlyphID", "Start", description="First GlyphID in the range"),
             FieldSpec("GlyphID", "End", description="Last GlyphID in the range"),
+            FieldSpec(
+                "uint16", "Class", description="Applied to all glyphs in the range"
+            ),
+        ],
+    ),
+    (
+        "ClassRangeRecord2",
+        [
+            FieldSpec("GlyphID24", "Start", description="First GlyphID in the range"),
+            FieldSpec("GlyphID24", "End", description="Last GlyphID in the range"),
             FieldSpec(
                 "uint16", "Class", description="Applied to all glyphs in the range"
             ),
@@ -406,6 +537,24 @@ otData = [
                 "FeatureVariations",
                 aux="Version >= 0x00010001",
                 description="Offset to FeatureVariations table-from beginning of GPOS table",
+            ),
+            FieldSpec(
+                "LOffsetTo(ScriptList)",
+                "ScriptList2",
+                aux="Version >= 0x00010002",
+                description="Offset to ScriptList table-from beginning of GPOS table",
+            ),
+            FieldSpec(
+                "LOffsetTo(FeatureList)",
+                "FeatureList2",
+                aux="Version >= 0x00010002",
+                description="Offset to FeatureList table-from beginning of GPOS table",
+            ),
+            FieldSpec(
+                "LOffsetTo(LookupList2)",
+                "LookupList2",
+                aux="Version >= 0x00010002",
+                description="Offset to LookupList table-from beginning of GPOS table",
             ),
         ],
     ),
@@ -1005,6 +1154,56 @@ otData = [
         ],
     ),
     (
+        "ContextPosFormat4",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("uint24", "SeqRuleSetCount"),
+            FieldSpec(
+                "Offset24To(SeqRuleSet2)",
+                "SeqRuleSet",
+                repeat="SeqRuleSetCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "ContextPosFormat5",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 5"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("LOffset", "ClassDef"),
+            FieldSpec("uint24", "ClassSeqRuleSetCount"),
+            FieldSpec(
+                "Offset24To(ClassSeqRuleSet2)",
+                "ClassSeqRuleSet",
+                repeat="ClassSeqRuleSetCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "ContextPosFormat6",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 6"
+            ),
+            FieldSpec("uint16", "GlyphCount"),
+            FieldSpec("uint16", "SeqLookupCount"),
+            FieldSpec("Offset24", "Coverage", repeat="GlyphCount", aux=0),
+            FieldSpec(
+                "SeqLookup",
+                "SeqLookupRecord",
+                repeat="SeqLookupCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
         "ChainContextPosFormat1",
         [
             FieldSpec(
@@ -1254,6 +1453,41 @@ otData = [
         ],
     ),
     (
+        "ChainContextPosFormat4",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("uint24", "ChainedSeqRuleSetCount"),
+            FieldSpec(
+                "Offset24To(ChainedSeqRuleSet2)",
+                "ChainedSeqRuleSet",
+                repeat="ChainedSeqRuleSetCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "ChainContextPosFormat5",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 5"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("LOffset", "BacktrackClassDef"),
+            FieldSpec("LOffset", "InputClassDef"),
+            FieldSpec("LOffset", "LookAheadClassDef"),
+            FieldSpec("uint16", "ChainedClassSeqRuleSetCount"),
+            FieldSpec(
+                "Offset24To(ChainedClassSeqRuleSet2)",
+                "ChainedClassSeqRuleSet",
+                repeat="ChainedClassSeqRuleSetCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
         "ExtensionPosFormat1",
         [
             FieldSpec(
@@ -1356,6 +1590,215 @@ otData = [
             ),
         ],
     ),
+    (
+        "SinglePosFormat3",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 3"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("uint16", "ValueFormat"),
+            FieldSpec("ValueRecord", "Value"),
+        ],
+    ),
+    (
+        "SinglePosFormat4",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("uint16", "ValueFormat"),
+            FieldSpec("uint24", "ValueCount"),
+            FieldSpec("ValueRecord", "Value", repeat="ValueCount", aux=0),
+        ],
+    ),
+    (
+        "PairPosFormat3",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 3"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("uint16", "ValueFormat1"),
+            FieldSpec("uint16", "ValueFormat2"),
+            FieldSpec("uint24", "PairSetCount"),
+            FieldSpec("Offset24To(PairSet2)", "PairSet", repeat="PairSetCount", aux=0),
+        ],
+    ),
+    (
+        "PairSet2",
+        [
+            FieldSpec("uint24", "PairValueCount"),
+            FieldSpec("PairValue2", "PairValueRecord", repeat="PairValueCount", aux=0),
+        ],
+    ),
+    (
+        "PairValue2",
+        [
+            FieldSpec("GlyphID24", "SecondGlyph"),
+            FieldSpec("ValueRecord", "Value1"),
+            FieldSpec("ValueRecord", "Value2"),
+        ],
+    ),
+    (
+        "PairPosFormat4",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("uint16", "ValueFormat1"),
+            FieldSpec("uint16", "ValueFormat2"),
+            FieldSpec("LOffset", "ClassDef1"),
+            FieldSpec("LOffset", "ClassDef2"),
+            FieldSpec("uint16", "Class1Count"),
+            FieldSpec("uint16", "Class2Count"),
+            FieldSpec("Class1Record", "Class1Record", repeat="Class1Count", aux=0),
+        ],
+    ),
+    (
+        "CursivePosFormat2",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec("LOffset", "Coverage"),
+            FieldSpec("uint24", "EntryExitCount"),
+            FieldSpec("EntryExit2", "EntryExitRecord", repeat="EntryExitCount", aux=0),
+        ],
+    ),
+    (
+        "EntryExit2",
+        [
+            FieldSpec("Offset24To(Anchor)", "EntryAnchor"),
+            FieldSpec("Offset24To(Anchor)", "ExitAnchor"),
+        ],
+    ),
+    (
+        "MarkBasePosFormat2",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec("LOffset", "MarkCoverage"),
+            FieldSpec("LOffset", "BaseCoverage"),
+            FieldSpec("uint16", "ClassCount"),
+            FieldSpec("LOffsetTo(MarkArray2)", "MarkArray"),
+            FieldSpec("LOffsetTo(BaseArray2)", "BaseArray"),
+        ],
+    ),
+    (
+        "BaseArray2",
+        [
+            FieldSpec("uint24", "BaseCount"),
+            FieldSpec("BaseRecord2", "BaseRecord", repeat="BaseCount", aux=0),
+        ],
+    ),
+    (
+        "BaseRecord2",
+        [
+            FieldSpec(
+                "Offset24To(Anchor)",
+                "BaseAnchor",
+                repeat="ClassCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "MarkLigPosFormat2",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec("LOffset", "MarkCoverage"),
+            FieldSpec("LOffset", "LigatureCoverage"),
+            FieldSpec("uint16", "ClassCount"),
+            FieldSpec("LOffsetTo(MarkArray2)", "MarkArray"),
+            FieldSpec("LOffsetTo(LigatureArray2)", "LigatureArray"),
+        ],
+    ),
+    (
+        "LigatureArray2",
+        [
+            FieldSpec("uint24", "LigatureCount"),
+            FieldSpec(
+                "Offset24To(LigatureAttach2)",
+                "LigatureAttach",
+                repeat="LigatureCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "LigatureAttach2",
+        [
+            FieldSpec("uint16", "ComponentCount"),
+            FieldSpec(
+                "ComponentRecord2",
+                "ComponentRecord",
+                repeat="ComponentCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "ComponentRecord2",
+        [
+            FieldSpec(
+                "Offset24To(Anchor)",
+                "LigatureAnchor",
+                repeat="ClassCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "MarkMarkPosFormat2",
+        [
+            FieldSpec(
+                "uint16", "PosFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec("LOffset", "Mark1Coverage"),
+            FieldSpec("LOffset", "Mark2Coverage"),
+            FieldSpec("uint16", "ClassCount"),
+            FieldSpec("LOffsetTo(MarkArray2)", "Mark1Array"),
+            FieldSpec("LOffsetTo(Mark2Array2)", "Mark2Array"),
+        ],
+    ),
+    (
+        "Mark2Array2",
+        [
+            FieldSpec("uint16", "Mark2Count"),
+            FieldSpec("Mark2Record2", "Mark2Record", repeat="Mark2Count", aux=0),
+        ],
+    ),
+    (
+        "Mark2Record2",
+        [
+            FieldSpec(
+                "Offset24To(Anchor)",
+                "Mark2Anchor",
+                repeat="ClassCount",
+                aux=0,
+            ),
+        ],
+    ),
+    (
+        "MarkArray2",
+        [
+            FieldSpec("uint24", "MarkCount"),
+            FieldSpec("MarkRecord2", "MarkRecord", repeat="MarkCount", aux=0),
+        ],
+    ),
+    (
+        "MarkRecord2",
+        [
+            FieldSpec("uint16", "Class"),
+            FieldSpec("Offset24To(Anchor)", "MarkAnchor"),
+        ],
+    ),
     #
     # gsub
     #
@@ -1387,6 +1830,24 @@ otData = [
                 "FeatureVariations",
                 aux="Version >= 0x00010001",
                 description="Offset to FeatureVariations table-from beginning of GSUB table",
+            ),
+            FieldSpec(
+                "LOffsetTo(ScriptList)",
+                "ScriptList2",
+                aux="Version >= 0x00010002",
+                description="Offset to ScriptList table-from beginning of GSUB table",
+            ),
+            FieldSpec(
+                "LOffsetTo(FeatureList)",
+                "FeatureList2",
+                aux="Version >= 0x00010002",
+                description="Offset to FeatureList table-from beginning of GSUB table",
+            ),
+            FieldSpec(
+                "LOffsetTo(LookupList2)",
+                "LookupList2",
+                aux="Version >= 0x00010002",
+                description="Offset to LookupList table-from beginning of GSUB table",
             ),
         ],
     ),
@@ -1426,6 +1887,49 @@ otData = [
             ),
             FieldSpec(
                 "GlyphID",
+                "Substitute",
+                repeat="GlyphCount",
+                aux=0,
+                description="Array of substitute GlyphIDs-ordered by Coverage Index",
+            ),
+        ],
+    ),
+    (
+        "SingleSubstFormat3",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 3"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "int24",
+                "DeltaGlyphID",
+                description="Add to original GlyphID modulo 16777216 to get substitute GlyphID",
+            ),
+        ],
+    ),
+    (
+        "SingleSubstFormat4",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "uint24",
+                "GlyphCount",
+                description="Number of GlyphIDs in the Substitute array",
+            ),
+            FieldSpec(
+                "GlyphID24",
                 "Substitute",
                 repeat="GlyphCount",
                 aux=0,
@@ -1476,6 +1980,48 @@ otData = [
         ],
     ),
     (
+        "MultipleSubstFormat2",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "uint24",
+                "SequenceCount",
+                description="Number of Sequence2 table offsets in the Sequence array",
+            ),
+            FieldSpec(
+                "Offset24To(Sequence2)",
+                "Sequence",
+                repeat="SequenceCount",
+                aux=0,
+                description="Array of offsets to Sequence2 tables-from beginning of Substitution table-ordered by Coverage Index",
+            ),
+        ],
+    ),
+    (
+        "Sequence2",
+        [
+            FieldSpec(
+                "uint16",
+                "GlyphCount",
+                description="Number of GlyphIDs in the Substitute array. This should always be greater than 0.",
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "Substitute",
+                repeat="GlyphCount",
+                aux=0,
+                description="String of GlyphIDs to substitute",
+            ),
+        ],
+    ),
+    (
         "AlternateSubstFormat1",
         [
             FieldSpec(
@@ -1510,6 +2056,48 @@ otData = [
             ),
             FieldSpec(
                 "GlyphID",
+                "Alternate",
+                repeat="GlyphCount",
+                aux=0,
+                description="Array of alternate GlyphIDs-in arbitrary order",
+            ),
+        ],
+    ),
+    (
+        "AlternateSubstFormat2",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "uint24",
+                "AlternateSetCount",
+                description="Number of AlternateSet2 tables",
+            ),
+            FieldSpec(
+                "Offset24To(AlternateSet2)",
+                "AlternateSet",
+                repeat="AlternateSetCount",
+                aux=0,
+                description="Array of offsets to AlternateSet2 tables-from beginning of Substitution table-ordered by Coverage Index",
+            ),
+        ],
+    ),
+    (
+        "AlternateSet2",
+        [
+            FieldSpec(
+                "uint16",
+                "GlyphCount",
+                description="Number of GlyphIDs in the Alternate array",
+            ),
+            FieldSpec(
+                "GlyphID24",
                 "Alternate",
                 repeat="GlyphCount",
                 aux=0,
@@ -1568,6 +2156,64 @@ otData = [
             ),
             FieldSpec(
                 "GlyphID",
+                "Component",
+                repeat="CompCount",
+                aux=-1,
+                description="Array of component GlyphIDs-start with the second component-ordered in writing direction",
+            ),
+        ],
+    ),
+    (
+        "LigatureSubstFormat2",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "uint24", "LigSetCount", description="Number of LigatureSet2 tables"
+            ),
+            FieldSpec(
+                "Offset24To(LigatureSet2)",
+                "LigatureSet",
+                repeat="LigSetCount",
+                aux=0,
+                description="Array of offsets to LigatureSet2 tables-from beginning of Substitution table-ordered by Coverage Index",
+            ),
+        ],
+    ),
+    (
+        "LigatureSet2",
+        [
+            FieldSpec(
+                "uint16", "LigatureCount", description="Number of Ligature2 tables"
+            ),
+            FieldSpec(
+                "Offset24To(Ligature2)",
+                "Ligature",
+                repeat="LigatureCount",
+                aux=0,
+                description="Array of offsets to Ligature2 tables-from beginning of LigatureSet2 table-ordered by preference",
+            ),
+        ],
+    ),
+    (
+        "Ligature2",
+        [
+            FieldSpec(
+                "GlyphID24", "LigGlyph", description="GlyphID of ligature to substitute"
+            ),
+            FieldSpec(
+                "uint16",
+                "CompCount",
+                description="Number of components in the ligature",
+            ),
+            FieldSpec(
+                "GlyphID24",
                 "Component",
                 repeat="CompCount",
                 aux=-1,
@@ -1754,6 +2400,177 @@ otData = [
                 repeat="SubstCount",
                 aux=0,
                 description="Array of SubstLookupRecords-in design order",
+            ),
+        ],
+    ),
+    (
+        "ContextSubstFormat4",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "uint24",
+                "SeqRuleSetCount",
+                description="Number of SeqRuleSet2 tables",
+            ),
+            FieldSpec(
+                "Offset24To(SeqRuleSet2)",
+                "SeqRuleSet",
+                repeat="SeqRuleSetCount",
+                aux=0,
+                description="Array of offsets to SeqRuleSet2 tables-ordered by Coverage Index",
+            ),
+        ],
+    ),
+    (
+        "SeqRuleSet2",
+        [
+            FieldSpec(
+                "uint16", "SeqRuleCount", description="Number of SeqRule2 tables"
+            ),
+            FieldSpec(
+                "OffsetTo(SeqRule2)",
+                "SeqRule",
+                repeat="SeqRuleCount",
+                aux=0,
+                description="Array of offsets to SeqRule2 tables-ordered by preference",
+            ),
+        ],
+    ),
+    (
+        "SeqRule2",
+        [
+            FieldSpec(
+                "uint16",
+                "GlyphCount",
+                description="Total number of glyphs in input glyph sequence-includes the first glyph",
+            ),
+            FieldSpec(
+                "uint16", "SeqLookupCount", description="Number of SeqLookup records"
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "InputSequence",
+                repeat="GlyphCount",
+                aux=-1,
+                description="Array of input GlyphIDs-start with second glyph",
+            ),
+            FieldSpec(
+                "SeqLookup",
+                "SeqLookupRecord",
+                repeat="SeqLookupCount",
+                aux=0,
+                description="Array of SeqLookup records-in design order",
+            ),
+        ],
+    ),
+    (
+        "ContextSubstFormat5",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 5"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "LOffset",
+                "ClassDef",
+                description="Offset to glyph ClassDef table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "uint24",
+                "ClassSeqRuleSetCount",
+                description="Number of ClassSeqRuleSet2 tables",
+            ),
+            FieldSpec(
+                "Offset24To(ClassSeqRuleSet2)",
+                "ClassSeqRuleSet",
+                repeat="ClassSeqRuleSetCount",
+                aux=0,
+                description="Array of offsets to ClassSeqRuleSet2 tables-ordered by class-may be NULL",
+            ),
+        ],
+    ),
+    (
+        "ClassSeqRuleSet2",
+        [
+            FieldSpec(
+                "uint16",
+                "ClassSeqRuleCount",
+                description="Number of ClassSeqRule tables",
+            ),
+            FieldSpec(
+                "Offset24To(ClassSeqRule)",
+                "ClassSeqRule",
+                repeat="ClassSeqRuleCount",
+                aux=0,
+                description="Array of offsets to ClassSeqRule tables-ordered by preference",
+            ),
+        ],
+    ),
+    (
+        "ClassSeqRule",
+        [
+            FieldSpec(
+                "uint16",
+                "GlyphCount",
+                description="Total number of classes specified for the context-includes the first class",
+            ),
+            FieldSpec(
+                "uint16", "SeqLookupCount", description="Number of SeqLookup records"
+            ),
+            FieldSpec(
+                "uint16",
+                "InputSequence",
+                repeat="GlyphCount",
+                aux=-1,
+                description="Array of classes-beginning with the second class",
+            ),
+            FieldSpec(
+                "SeqLookup",
+                "SeqLookupRecord",
+                repeat="SeqLookupCount",
+                aux=0,
+                description="Array of SeqLookup records-in design order",
+            ),
+        ],
+    ),
+    (
+        "ContextSubstFormat6",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 6"
+            ),
+            FieldSpec(
+                "uint16",
+                "GlyphCount",
+                description="Number of glyphs in the input glyph sequence",
+            ),
+            FieldSpec(
+                "uint16", "SeqLookupCount", description="Number of SeqLookup records"
+            ),
+            FieldSpec(
+                "Offset24",
+                "Coverage",
+                repeat="GlyphCount",
+                aux=0,
+                description="Array of offsets to Coverage table-in glyph sequence order",
+            ),
+            FieldSpec(
+                "SeqLookup",
+                "SeqLookupRecord",
+                repeat="SeqLookupCount",
+                aux=0,
+                description="Array of SeqLookup records-in design order",
             ),
         ],
     ),
@@ -2013,6 +2830,173 @@ otData = [
         ],
     ),
     (
+        "ChainContextSubstFormat4",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec(
+                "uint24",
+                "ChainedSeqRuleSetCount",
+                description="Number of ChainedSeqRuleSet2 tables",
+            ),
+            FieldSpec(
+                "Offset24To(ChainedSeqRuleSet2)",
+                "ChainedSeqRuleSet",
+                repeat="ChainedSeqRuleSetCount",
+                aux=0,
+                description="Array of offsets to ChainedSeqRuleSet2 tables-ordered by Coverage Index",
+            ),
+        ],
+    ),
+    (
+        "ChainedSeqRuleSet2",
+        [
+            FieldSpec(
+                "uint16",
+                "ChainedSeqRuleCount",
+                description="Number of ChainedSeqRule2 tables",
+            ),
+            FieldSpec(
+                "OffsetTo(ChainedSeqRule2)",
+                "ChainedSeqRule",
+                repeat="ChainedSeqRuleCount",
+                aux=0,
+                description="Array of offsets to ChainedSeqRule2 tables-ordered by preference",
+            ),
+        ],
+    ),
+    (
+        "ChainedSeqRule2",
+        [
+            # Unlike the surrounding extended structures, the sequence counts
+            # remain 16-bit.
+            FieldSpec(
+                "uint16",
+                "BacktrackGlyphCount",
+                description="Total number of glyphs in the backtrack sequence",
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "BacktrackSequence",
+                repeat="BacktrackGlyphCount",
+                aux=0,
+                description="Array of backtracking GlyphIDs",
+            ),
+            FieldSpec(
+                "uint16",
+                "InputGlyphCount",
+                description="Total number of glyphs in the input sequence",
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "InputSequence",
+                repeat="InputGlyphCount",
+                aux=-1,
+                description="Array of input GlyphIDs-start with second glyph",
+            ),
+            FieldSpec(
+                "uint16",
+                "LookAheadGlyphCount",
+                description="Total number of glyphs in the lookahead sequence",
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "LookAheadSequence",
+                repeat="LookAheadGlyphCount",
+                aux=0,
+                description="Array of lookahead GlyphIDs",
+            ),
+            FieldSpec(
+                "uint16", "SeqLookupCount", description="Number of SeqLookup records"
+            ),
+            FieldSpec(
+                "SeqLookup",
+                "SeqLookupRecord",
+                repeat="SeqLookupCount",
+                aux=0,
+                description="Array of SeqLookup records-in design order",
+            ),
+        ],
+    ),
+    (
+        "ChainContextSubstFormat5",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 5"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            FieldSpec("LOffset", "BacktrackClassDef"),
+            FieldSpec("LOffset", "InputClassDef"),
+            FieldSpec("LOffset", "LookAheadClassDef"),
+            FieldSpec(
+                "uint16",
+                "ChainedClassSeqRuleSetCount",
+                description="Number of ChainedClassSeqRuleSet2 tables",
+            ),
+            FieldSpec(
+                "Offset24To(ChainedClassSeqRuleSet2)",
+                "ChainedClassSeqRuleSet",
+                repeat="ChainedClassSeqRuleSetCount",
+                aux=0,
+                description="Array of offsets to ChainedClassSeqRuleSet2 tables-may be NULL",
+            ),
+        ],
+    ),
+    # The beyond-64k spec adds sequence-context format 6, but no
+    # corresponding chained-context coverage format.
+    (
+        "ChainedClassSeqRuleSet2",
+        [
+            FieldSpec(
+                "uint16",
+                "ChainedClassSeqRuleCount",
+                description="Number of ChainedClassSeqRule tables",
+            ),
+            FieldSpec(
+                "Offset24To(ChainedClassSeqRule)",
+                "ChainedClassSeqRule",
+                repeat="ChainedClassSeqRuleCount",
+                aux=0,
+                description="Array of offsets to ChainedClassSeqRule tables-ordered by preference",
+            ),
+        ],
+    ),
+    (
+        "ChainedClassSeqRule",
+        [
+            FieldSpec("uint16", "BacktrackGlyphCount"),
+            FieldSpec(
+                "uint16", "BacktrackSequence", repeat="BacktrackGlyphCount", aux=0
+            ),
+            FieldSpec("uint16", "InputGlyphCount"),
+            FieldSpec("uint16", "InputSequence", repeat="InputGlyphCount", aux=-1),
+            FieldSpec("uint16", "LookAheadGlyphCount"),
+            FieldSpec(
+                "uint16", "LookAheadSequence", repeat="LookAheadGlyphCount", aux=0
+            ),
+            FieldSpec(
+                "uint16", "SeqLookupCount", description="Number of SeqLookup records"
+            ),
+            FieldSpec(
+                "SeqLookup",
+                "SeqLookupRecord",
+                repeat="SeqLookupCount",
+                aux=0,
+                description="Array of SeqLookup records-in design order",
+            ),
+        ],
+    ),
+    (
         "ExtensionSubstFormat1",
         [
             FieldSpec(
@@ -2080,6 +3064,58 @@ otData = [
             ),
         ],
     ),
+    (
+        "ReverseChainSingleSubstFormat2",
+        [
+            FieldSpec(
+                "uint16", "SubstFormat", description="Format identifier-format = 2"
+            ),
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                aux=0,
+                description="Offset to Coverage table-from beginning of Substitution table",
+            ),
+            # The published spec says uint24. Keep this uint16 to match the
+            # corrected chained-coverage count model implemented by HarfBuzz.
+            FieldSpec(
+                "uint16",
+                "BacktrackGlyphCount",
+                description="Number of glyphs in the backtracking sequence",
+            ),
+            FieldSpec(
+                "Offset24",
+                "BacktrackCoverage",
+                repeat="BacktrackGlyphCount",
+                aux=0,
+                description="Array of offsets to coverage tables in backtracking sequence",
+            ),
+            FieldSpec(
+                "uint16",
+                "LookAheadGlyphCount",
+                description="Number of glyphs in lookahead sequence",
+            ),
+            FieldSpec(
+                "Offset24",
+                "LookAheadCoverage",
+                repeat="LookAheadGlyphCount",
+                aux=0,
+                description="Array of offsets to coverage tables in lookahead sequence",
+            ),
+            FieldSpec(
+                "uint24",
+                "GlyphCount",
+                description="Number of GlyphIDs in the Substitute array",
+            ),
+            FieldSpec(
+                "GlyphID24",
+                "Substitute",
+                repeat="GlyphCount",
+                aux=0,
+                description="Array of substitute GlyphIDs-ordered by Coverage index",
+            ),
+        ],
+    ),
     #
     # gdef
     #
@@ -2122,6 +3158,36 @@ otData = [
                 "VarStore",
                 aux="Version >= 0x00010003",
                 description="Offset to variation store (may be NULL)",
+            ),
+            FieldSpec(
+                "LOffsetTo(ClassDef)",
+                "GlyphClassDef2",
+                aux="Version >= 0x00010004",
+                description="Offset to class definition table for glyph type-from beginning of GDEF header (may be NULL)",
+            ),
+            FieldSpec(
+                "LOffsetTo(AttachList)",
+                "AttachList2",
+                aux="Version >= 0x00010004",
+                description="Offset to attachment point list table-from beginning of GDEF header (may be NULL)",
+            ),
+            FieldSpec(
+                "LOffsetTo(LigCaretList2)",
+                "LigCaretList2",
+                aux="Version >= 0x00010004",
+                description="Offset to LigCaretList2 table-from beginning of GDEF header (may be NULL)",
+            ),
+            FieldSpec(
+                "LOffsetTo(ClassDef)",
+                "MarkAttachClassDef2",
+                aux="Version >= 0x00010004",
+                description="Offset to class definition table for mark attachment type-from beginning of GDEF header (may be NULL)",
+            ),
+            FieldSpec(
+                "LOffsetTo(MarkGlyphSetsDef)",
+                "MarkGlyphSetsDef2",
+                aux="Version >= 0x00010004",
+                description="Offset to mark glyph set definitions-from beginning of GDEF header (may be NULL)",
             ),
         ],
     ),
@@ -2181,6 +3247,26 @@ otData = [
                 repeat="LigGlyphCount",
                 aux=0,
                 description="Array of offsets to LigGlyph tables-from beginning of LigCaretList table-in Coverage Index order",
+            ),
+        ],
+    ),
+    (
+        "LigCaretList2",
+        [
+            FieldSpec(
+                "LOffset",
+                "Coverage",
+                description="Offset to Coverage table - from beginning of LigCaretList2 table",
+            ),
+            FieldSpec(
+                "uint24", "LigGlyphCount", description="Number of ligature glyphs"
+            ),
+            FieldSpec(
+                "LOffsetTo(LigGlyph)",
+                "LigGlyph",
+                repeat="LigGlyphCount",
+                aux=0,
+                description="Array of offsets to LigGlyph tables-from beginning of LigCaretList2 table-in Coverage Index order",
             ),
         ],
     ),
@@ -2505,6 +3591,25 @@ otData = [
             ),
         ],
     ),
+    (
+        "BaseCoordFormat4",
+        [
+            FieldSpec(
+                "uint16", "BaseCoordFormat", description="Format identifier-format = 4"
+            ),
+            FieldSpec(
+                "int16", "Coordinate", description="X or Y value, in design units"
+            ),
+            FieldSpec(
+                "GlyphID24", "ReferenceGlyph", description="GlyphID of control glyph"
+            ),
+            FieldSpec(
+                "uint16",
+                "BaseCoordPoint",
+                description="Index of contour point on the ReferenceGlyph",
+            ),
+        ],
+    ),
     #
     # jstf
     #
@@ -2528,6 +3633,20 @@ otData = [
                 aux=0,
                 description="Array of JstfScriptRecords-in alphabetical order, by JstfScriptTag",
             ),
+            FieldSpec(
+                "uint16",
+                "JstfScriptCount2",
+                aux="Version >= 0x00010001",
+                description="Number of JstfScriptRecord2 records in this table",
+            ),
+            FieldSpec(
+                "JstfScriptRecord2",
+                "JstfScriptRecord2",
+                repeat="JstfScriptCount2",
+                aux=0,
+                condition="Version >= 0x00010001",
+                description="Array of JstfScriptRecord2 records-in alphabetical order, by JstfScriptTag",
+            ),
         ],
     ),
     (
@@ -2540,6 +3659,19 @@ otData = [
                 "Offset",
                 "JstfScript",
                 description="Offset to JstfScript table-from beginning of JSTF Header",
+            ),
+        ],
+    ),
+    (
+        "JstfScriptRecord2",
+        [
+            FieldSpec(
+                "Tag", "JstfScriptTag", description="4-byte JstfScript identification"
+            ),
+            FieldSpec(
+                "LOffsetTo(JstfScript2)",
+                "JstfScript",
+                description="Offset to JstfScript2 table-from beginning of JSTF Header",
             ),
         ],
     ),
@@ -2560,6 +3692,33 @@ otData = [
                 "uint16",
                 "JstfLangSysCount",
                 description="Number of JstfLangSysRecords in this table- may be zero (0)",
+            ),
+            FieldSpec(
+                "struct",
+                "JstfLangSysRecord",
+                repeat="JstfLangSysCount",
+                aux=0,
+                description="Array of JstfLangSysRecords-in alphabetical order, by JstfLangSysTag",
+            ),
+        ],
+    ),
+    (
+        "JstfScript2",
+        [
+            FieldSpec(
+                "LOffsetTo(ExtenderGlyph2)",
+                "ExtenderGlyph",
+                description="Offset to ExtenderGlyph2 table-from beginning of JstfScript2 table-may be NULL",
+            ),
+            FieldSpec(
+                "LOffsetTo(JstfLangSys)",
+                "DefJstfLangSys",
+                description="Offset to Default JstfLangSys table-from beginning of JstfScript2 table-may be NULL",
+            ),
+            FieldSpec(
+                "uint16",
+                "JstfLangSysCount",
+                description="Number of JstfLangSysRecords in this table-may be zero",
             ),
             FieldSpec(
                 "struct",
@@ -2593,6 +3752,23 @@ otData = [
             ),
             FieldSpec(
                 "GlyphID",
+                "ExtenderGlyph",
+                repeat="GlyphCount",
+                aux=0,
+                description="GlyphIDs-in increasing numerical order",
+            ),
+        ],
+    ),
+    (
+        "ExtenderGlyph2",
+        [
+            FieldSpec(
+                "uint16",
+                "GlyphCount",
+                description="Number of Extender Glyphs in this script",
+            ),
+            FieldSpec(
+                "GlyphID24",
                 "ExtenderGlyph",
                 repeat="GlyphCount",
                 aux=0,
@@ -3128,10 +4304,26 @@ otData = [
     ),
     # Variation helpers
     (
-        "VarIdxMap",
+        "VarIdxMapFormat0",
         [
-            FieldSpec("uint16", "EntryFormat"),  # Automatically computed
+            FieldSpec("uint8", "Format", description="Format of the VarIdxMap = 0"),
+            FieldSpec("uint8", "EntryFormat"),  # Automatically computed
             FieldSpec("uint16", "MappingCount"),  # Automatically computed
+            FieldSpec(
+                "VarIdxMapValue",
+                "mapping",
+                repeat="",
+                aux=0,
+                description="Array of compressed data",
+            ),
+        ],
+    ),
+    (
+        "VarIdxMapFormat1",
+        [
+            FieldSpec("uint8", "Format", description="Format of the VarIdxMap = 1"),
+            FieldSpec("uint8", "EntryFormat"),  # Automatically computed
+            FieldSpec("uint32", "MappingCount"),  # Automatically computed
             FieldSpec(
                 "VarIdxMapValue",
                 "mapping",
@@ -5268,7 +6460,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 5"
             ),
             FieldSpec(
-                "LOffset24To(VarColorLine)",
+                "Offset24To(VarColorLine)",
                 "ColorLine",
                 description="Offset (from beginning of PaintVarLinearGradient table) to VarColorLine subtable.",
             ),
@@ -5313,7 +6505,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 7"
             ),
             FieldSpec(
-                "LOffset24To(VarColorLine)",
+                "Offset24To(VarColorLine)",
                 "ColorLine",
                 description="Offset (from beginning of PaintVarRadialGradient table) to VarColorLine subtable.",
             ),
@@ -5364,7 +6556,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 9"
             ),
             FieldSpec(
-                "LOffset24To(VarColorLine)",
+                "Offset24To(VarColorLine)",
                 "ColorLine",
                 description="Offset (from beginning of PaintVarSweepGradient table) to VarColorLine subtable.",
             ),
@@ -5435,7 +6627,7 @@ otData = [
                 description="Offset (from beginning of PaintTransform table) to Paint subtable.",
             ),
             FieldSpec(
-                "LOffset24To(Affine2x3)",
+                "Offset24To(Affine2x3)",
                 "Transform",
                 description="2x3 matrix for 2D affine transformations.",
             ),
@@ -5454,7 +6646,7 @@ otData = [
                 description="Offset (from beginning of PaintVarTransform table) to Paint subtable.",
             ),
             FieldSpec(
-                "LOffset24To(VarAffine2x3)",
+                "Offset24To(VarAffine2x3)",
                 "Transform",
                 description="2x3 matrix for 2D affine transformations.",
             ),
@@ -5817,7 +7009,7 @@ otData = [
                 "uint8", "PaintFormat", description="Format identifier-format = 32"
             ),
             FieldSpec(
-                "LOffset24To(Paint)",
+                "Offset24To(Paint)",
                 "SourcePaint",
                 description="Offset (from beginning of PaintComposite table) to source Paint subtable.",
             ),
@@ -5827,7 +7019,7 @@ otData = [
                 description="A CompositeMode enumeration value.",
             ),
             FieldSpec(
-                "LOffset24To(Paint)",
+                "Offset24To(Paint)",
                 "BackdropPaint",
                 description="Offset (from beginning of PaintComposite table) to backdrop Paint subtable.",
             ),

@@ -29,6 +29,10 @@ import copy
 log = logging.getLogger(__name__)
 
 
+def _glyphMapHasExtendedGlyphIDs(glyphMap):
+    return len(glyphMap) > 0x10000
+
+
 def buildCoverage(glyphs, glyphMap):
     """Builds a coverage table.
 
@@ -430,11 +434,15 @@ class ChainContextualBuilder(LookupBuilder):
             # the subtables in each format for this ruleset (including a dummy
             # "format 0" to make the addressing match the format numbers).
 
-            # We can always build a format 3 lookup by accumulating each of
-            # the rules into a list, so start with that.
+            extended = _glyphMapHasExtendedGlyphIDs(self.glyphMap)
+
+            # We can build a format 3 lookup by accumulating each of the rules
+            # into a list. The extended chained-context formats do not include
+            # a coverage-based equivalent.
             candidates = [None, None, None, []]
-            for rule in ruleset.rules:
-                candidates[3].append(self.buildFormat3Subtable(rule, chaining))
+            if not (extended and chaining):
+                for rule in ruleset.rules:
+                    candidates[3].append(self.buildFormat3Subtable(rule, chaining))
 
             # Can we express the whole ruleset as a format 2 subtable?
             classdefs = ruleset.format2ClassDefs()
@@ -471,7 +479,7 @@ class ChainContextualBuilder(LookupBuilder):
 
     def buildFormat1Subtable(self, ruleset, chaining=True):
         st = self.newSubtable_(chaining=chaining)
-        st.Format = 1
+        st.Format = self.subtableFormat_(format=1, chaining=chaining)
         st.populateDefaults()
         coverage = set()
         rulesetsByFirstGlyph = {}
@@ -483,14 +491,26 @@ class ChainContextualBuilder(LookupBuilder):
             if chaining:
                 ruleAsSubtable.BacktrackGlyphCount = len(rule.prefix)
                 ruleAsSubtable.LookAheadGlyphCount = len(rule.suffix)
-                ruleAsSubtable.Backtrack = [list(x)[0] for x in reversed(rule.prefix)]
-                ruleAsSubtable.LookAhead = [list(x)[0] for x in rule.suffix]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Backtrack"),
+                    [list(x)[0] for x in reversed(rule.prefix)],
+                )
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("LookAhead"),
+                    [list(x)[0] for x in rule.suffix],
+                )
 
                 ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
             else:
                 ruleAsSubtable.GlyphCount = len(rule.glyphs)
 
-            ruleAsSubtable.Input = [list(x)[0] for x in rule.glyphs[1:]]
+            setattr(
+                ruleAsSubtable,
+                self.sequenceAttr_("Input"),
+                [list(x)[0] for x in rule.glyphs[1:]],
+            )
 
             self.buildLookupList(rule, ruleAsSubtable)
 
@@ -517,7 +537,7 @@ class ChainContextualBuilder(LookupBuilder):
 
     def buildFormat2Subtable(self, ruleset, classdefs, chaining=True):
         st = self.newSubtable_(chaining=chaining)
-        st.Format = 2
+        st.Format = self.subtableFormat_(format=2, chaining=chaining)
         st.populateDefaults()
 
         if chaining:
@@ -547,26 +567,36 @@ class ChainContextualBuilder(LookupBuilder):
                 # The glyphs in the rule may be list, tuple, odict_keys...
                 # Order is not important anyway because they are guaranteed
                 # to be members of the same class.
-                ruleAsSubtable.Backtrack = [
-                    st.BacktrackClassDef.classDefs[list(x)[0]]
-                    for x in reversed(rule.prefix)
-                ]
-                ruleAsSubtable.LookAhead = [
-                    st.LookAheadClassDef.classDefs[list(x)[0]] for x in rule.suffix
-                ]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Backtrack"),
+                    [
+                        st.BacktrackClassDef.classDefs[list(x)[0]]
+                        for x in reversed(rule.prefix)
+                    ],
+                )
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("LookAhead"),
+                    [st.LookAheadClassDef.classDefs[list(x)[0]] for x in rule.suffix],
+                )
 
                 ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
-                ruleAsSubtable.Input = [
-                    st.InputClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
-                ]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Input"),
+                    [st.InputClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]],
+                )
                 setForThisRule = classSets[
                     st.InputClassDef.classDefs[list(rule.glyphs[0])[0]]
                 ]
             else:
                 ruleAsSubtable.GlyphCount = len(rule.glyphs)
-                ruleAsSubtable.Class = [  # The spec calls this InputSequence
-                    st.ClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
-                ]
+                setattr(
+                    ruleAsSubtable,
+                    self.sequenceAttr_("Class"),
+                    [st.ClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]],
+                )
                 setForThisRule = classSets[
                     st.ClassDef.classDefs[list(rule.glyphs[0])[0]]
                 ]
@@ -593,7 +623,7 @@ class ChainContextualBuilder(LookupBuilder):
 
     def buildFormat3Subtable(self, rule, chaining=True):
         st = self.newSubtable_(chaining=chaining)
-        st.Format = 3
+        st.Format = self.subtableFormat_(format=3, chaining=chaining)
         if chaining:
             self.setBacktrackCoverage_(rule.prefix, st)
             self.setLookAheadCoverage_(rule.suffix, st)
@@ -639,9 +669,36 @@ class ChainContextualBuilder(LookupBuilder):
         if chaining:
             subtablename = "Chain" + subtablename
         st = getattr(ot, subtablename)()  # ot.ChainContextPos()/ot.ChainSubst()/etc.
-        setattr(st, f"{self.subtable_type}Count", 0)
-        setattr(st, f"{self.subtable_type}LookupRecord", [])
+        setattr(st, self.lookupCountAttr_(), 0)
+        setattr(st, self.lookupRecordAttr_(), [])
         return st
+
+    def isExtended_(self):
+        return _glyphMapHasExtendedGlyphIDs(self.glyphMap)
+
+    def subtableFormat_(self, format, chaining=True):
+        if not self.isExtended_():
+            return format
+        if chaining:
+            assert format in (1, 2)
+        return format + 3
+
+    def sequenceAttr_(self, attr):
+        if not self.isExtended_():
+            return attr
+        if attr == "Class":
+            attr = "Input"
+        return attr + "Sequence"
+
+    def lookupRecordAttr_(self):
+        if self.isExtended_():
+            return "SeqLookupRecord"
+        return self.subtable_type + "LookupRecord"
+
+    def lookupCountAttr_(self):
+        if self.isExtended_():
+            return "SeqLookupCount"
+        return self.subtable_type + "Count"
 
     # Format 1 and format 2 GSUB5/GSUB6/GPOS7/GPOS8 rulesets and rules form a family:
     #
@@ -654,6 +711,9 @@ class ChainContextualBuilder(LookupBuilder):
     # The following functions generate the attribute names and subtables according
     # to this naming convention.
     def ruleSetAttr_(self, format=1, chaining=True):
+        if self.isExtended_():
+            formatType = "SeqRuleSet" if format == 1 else "ClassSeqRuleSet"
+            return ("Chained" if chaining else "") + formatType
         if format == 1:
             formatType = "Rule"
         elif format == 2:
@@ -666,6 +726,9 @@ class ChainContextualBuilder(LookupBuilder):
         return subtablename
 
     def ruleAttr_(self, format=1, chaining=True):
+        if self.isExtended_():
+            formatType = "SeqRule" if format == 1 else "ClassSeqRule"
+            return ("Chained" if chaining else "") + formatType
         if format == 1:
             formatType = ""
         elif format == 2:
@@ -678,16 +741,18 @@ class ChainContextualBuilder(LookupBuilder):
         return subtablename
 
     def newRuleSet_(self, format=1, chaining=True):
-        st = getattr(
-            ot, self.ruleSetAttr_(format, chaining)
-        )()  # ot.ChainPosRuleSet()/ot.SubRuleSet()/etc.
+        name = self.ruleSetAttr_(format, chaining)
+        if self.isExtended_():
+            name += "2"
+        st = getattr(ot, name)()  # ot.ChainPosRuleSet()/ot.SubRuleSet()/etc.
         st.populateDefaults()
         return st
 
     def newRule_(self, format=1, chaining=True):
-        st = getattr(
-            ot, self.ruleAttr_(format, chaining)
-        )()  # ot.ChainPosClassRule()/ot.SubClassRule()/etc.
+        name = self.ruleAttr_(format, chaining)
+        if self.isExtended_() and format == 1:
+            name += "2"
+        st = getattr(ot, name)()  # ot.ChainPosClassRule()/ot.SubClassRule()/etc.
         st.populateDefaults()
         return st
 
@@ -720,8 +785,9 @@ class ChainContextualBuilder(LookupBuilder):
     def newLookupRecord_(self, st):
         return self.attachSubtableWithCount_(
             st,
-            f"{self.subtable_type}LookupRecord",
-            f"{self.subtable_type}Count",
+            self.lookupRecordAttr_(),
+            self.lookupCountAttr_(),
+            existing=ot.SeqLookup() if self.isExtended_() else None,
             chaining=False,
         )  # Oddly, it isn't ChainSubstLookupRecord
 
@@ -1270,17 +1336,18 @@ class MarkMarkPosBuilder(LookupBuilder):
             }
 
             st = ot.MarkMarkPos()
-            st.Format = 1
+            extended = _glyphMapHasExtendedGlyphIDs(self.glyphMap)
+            st.Format = 2 if extended else 1
             st.ClassCount = len(markClasses)
             st.Mark1Coverage = buildCoverage(marks, self.glyphMap)
             st.Mark2Coverage = buildCoverage(subtable[1], self.glyphMap)
             st.Mark1Array = buildMarkArray(marks, self.glyphMap)
-            st.Mark2Array = ot.Mark2Array()
+            st.Mark2Array = ot.Mark2Array2() if extended else ot.Mark2Array()
             st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
             st.Mark2Array.Mark2Record = []
             for base in st.Mark2Coverage.glyphs:
                 anchors = [subtable[1][base].get(mc) for mc in markClassList]
-                st.Mark2Array.Mark2Record.append(buildMark2Record(anchors))
+                st.Mark2Array.Mark2Record.append(buildMark2Record(anchors, extended))
             subtables.append(st)
         return self.buildLookup_(subtables)
 
@@ -1333,7 +1400,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
         subtables = []
         for prefix, suffix, mapping in self.rules:
             st = ot.ReverseChainSingleSubst()
-            st.Format = 1
+            st.Format = 2 if _glyphMapHasExtendedGlyphIDs(self.glyphMap) else 1
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             st.Coverage = buildCoverage(mapping.keys(), self.glyphMap)
@@ -1992,24 +2059,25 @@ def buildBaseArray(bases, numMarkClasses, glyphMap):
     Returns:
         An ``otTables.BaseArray`` object.
     """
-    self = ot.BaseArray()
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self = ot.BaseArray2() if extended else ot.BaseArray()
     self.BaseRecord = []
     for base in sorted(bases, key=glyphMap.__getitem__):
         b = bases[base]
         anchors = [b.get(markClass) for markClass in range(numMarkClasses)]
-        self.BaseRecord.append(buildBaseRecord(anchors))
+        self.BaseRecord.append(buildBaseRecord(anchors, extended))
     self.BaseCount = len(self.BaseRecord)
     return self
 
 
-def buildBaseRecord(anchors):
+def buildBaseRecord(anchors, extended=False):
     # [otTables.Anchor, otTables.Anchor, ...] --> otTables.BaseRecord
-    self = ot.BaseRecord()
+    self = ot.BaseRecord2() if extended else ot.BaseRecord()
     self.BaseAnchor = anchors
     return self
 
 
-def buildComponentRecord(anchors):
+def buildComponentRecord(anchors, extended=False):
     """Builds a component record.
 
     As part of building mark-to-ligature positioning rules, you will need to
@@ -2026,7 +2094,7 @@ def buildComponentRecord(anchors):
     """
     if not anchors:
         return None
-    self = ot.ComponentRecord()
+    self = ot.ComponentRecord2() if extended else ot.ComponentRecord()
     self.LigatureAnchor = anchors
     return self
 
@@ -2059,12 +2127,13 @@ def buildCursivePosSubtable(attach, glyphMap):
     if not attach:
         return None
     self = ot.CursivePos()
-    self.Format = 1
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self.Format = 2 if extended else 1
     self.Coverage = buildCoverage(attach.keys(), glyphMap)
     self.EntryExitRecord = []
     for glyph in self.Coverage.glyphs:
         entryAnchor, exitAnchor = attach[glyph]
-        rec = ot.EntryExitRecord()
+        rec = ot.EntryExit2() if extended else ot.EntryExitRecord()
         rec.EntryAnchor = entryAnchor
         rec.ExitAnchor = exitAnchor
         self.EntryExitRecord.append(rec)
@@ -2142,21 +2211,22 @@ def buildLigatureArray(ligs, numMarkClasses, glyphMap):
     Returns:
         An ``otTables.LigatureArray`` object if deltas were supplied.
     """
-    self = ot.LigatureArray()
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self = ot.LigatureArray2() if extended else ot.LigatureArray()
     self.LigatureAttach = []
     for lig in sorted(ligs, key=glyphMap.__getitem__):
         anchors = []
         for component in ligs[lig]:
             anchors.append([component.get(mc) for mc in range(numMarkClasses)])
-        self.LigatureAttach.append(buildLigatureAttach(anchors))
+        self.LigatureAttach.append(buildLigatureAttach(anchors, extended))
     self.LigatureCount = len(self.LigatureAttach)
     return self
 
 
-def buildLigatureAttach(components):
+def buildLigatureAttach(components, extended=False):
     # [[Anchor, Anchor], [Anchor, Anchor, Anchor]] --> LigatureAttach
-    self = ot.LigatureAttach()
-    self.ComponentRecord = [buildComponentRecord(c) for c in components]
+    self = ot.LigatureAttach2() if extended else ot.LigatureAttach()
+    self.ComponentRecord = [buildComponentRecord(c, extended) for c in components]
     self.ComponentCount = len(self.ComponentRecord)
     return self
 
@@ -2187,11 +2257,12 @@ def buildMarkArray(marks, glyphMap):
     Returns:
         An ``otTables.MarkArray`` object.
     """
-    self = ot.MarkArray()
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self = ot.MarkArray2() if extended else ot.MarkArray()
     self.MarkRecord = []
     for mark in sorted(marks.keys(), key=glyphMap.__getitem__):
         markClass, anchor = marks[mark]
-        markrec = buildMarkRecord(markClass, anchor)
+        markrec = buildMarkRecord(markClass, anchor, extended)
         self.MarkRecord.append(markrec)
     self.MarkCount = len(self.MarkRecord)
     return self
@@ -2239,7 +2310,7 @@ def buildMarkBasePosSubtable(marks, bases, glyphMap):
         A ``otTables.MarkBasePos`` object.
     """
     self = ot.MarkBasePos()
-    self.Format = 1
+    self.Format = 2 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 1
     self.MarkCoverage = buildCoverage(marks, glyphMap)
     self.MarkArray = buildMarkArray(marks, glyphMap)
     self.ClassCount = max([mc for mc, _ in marks.values()]) + 1
@@ -2301,7 +2372,7 @@ def buildMarkLigPosSubtable(marks, ligs, glyphMap):
         A ``otTables.MarkLigPos`` object.
     """
     self = ot.MarkLigPos()
-    self.Format = 1
+    self.Format = 2 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 1
     self.MarkCoverage = buildCoverage(marks, glyphMap)
     self.MarkArray = buildMarkArray(marks, glyphMap)
     self.ClassCount = max([mc for mc, _ in marks.values()]) + 1
@@ -2310,18 +2381,18 @@ def buildMarkLigPosSubtable(marks, ligs, glyphMap):
     return self
 
 
-def buildMarkRecord(classID, anchor):
+def buildMarkRecord(classID, anchor, extended=False):
     assert isinstance(classID, int)
     assert isinstance(anchor, ot.Anchor)
-    self = ot.MarkRecord()
+    self = ot.MarkRecord2() if extended else ot.MarkRecord()
     self.Class = classID
     self.MarkAnchor = anchor
     return self
 
 
-def buildMark2Record(anchors):
+def buildMark2Record(anchors, extended=False):
     # [otTables.Anchor, otTables.Anchor, ...] --> otTables.Mark2Record
-    self = ot.Mark2Record()
+    self = ot.Mark2Record2() if extended else ot.Mark2Record()
     self.Mark2Anchor = anchors
     return self
 
@@ -2384,7 +2455,7 @@ def buildPairPosClassesSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2
         classDef1.add(gc1)
         classDef2.add(gc2)
     self = ot.PairPos()
-    self.Format = 2
+    self.Format = 4 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 2
     valueFormat1 = self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
     valueFormat2 = self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
     self.Coverage = buildCoverage(coverage, glyphMap)
@@ -2493,7 +2564,8 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
         A ``otTables.PairPos`` object.
     """
     self = ot.PairPos()
-    self.Format = 1
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
+    self.Format = 3 if extended else 1
     valueFormat1 = self.ValueFormat1 = _getValueFormat(valueFormat1, pairs.values(), 0)
     valueFormat2 = self.ValueFormat2 = _getValueFormat(valueFormat2, pairs.values(), 1)
     p = {}
@@ -2502,11 +2574,11 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap, valueFormat1=None, valueFormat2=
     self.Coverage = buildCoverage({g for g, _ in pairs.keys()}, glyphMap)
     self.PairSet = []
     for glyph in self.Coverage.glyphs:
-        ps = ot.PairSet()
+        ps = ot.PairSet2() if extended else ot.PairSet()
         ps.PairValueRecord = []
         self.PairSet.append(ps)
         for glyph2, val1, val2 in sorted(p[glyph], key=lambda x: glyphMap[x[0]]):
-            pvr = ot.PairValueRecord()
+            pvr = ot.PairValue2() if extended else ot.PairValueRecord()
             pvr.SecondGlyph = glyph2
             pvr.Value1 = (
                 ValueRecord(src=val1, valueFormat=valueFormat1)
@@ -2645,14 +2717,15 @@ def buildSinglePosSubtable(values, glyphMap):
         ValueRecord(src=values[g], valueFormat=valueFormat)
         for g in self.Coverage.glyphs
     ]
+    formatOffset = 2 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 0
     if all(v == valueRecords[0] for v in valueRecords):
-        self.Format = 1
+        self.Format = 1 + formatOffset
         if self.ValueFormat != 0:
             self.Value = valueRecords[0]
         else:
             self.Value = None
     else:
-        self.Format = 2
+        self.Format = 2 + formatOffset
         self.Value = valueRecords
         self.ValueCount = len(self.Value)
     return self
@@ -2829,7 +2902,10 @@ def buildLigCaretList(coords, points, glyphMap):
     carets = {g: c for g, c in carets.items() if c is not None}
     if not carets:
         return None
-    self = ot.LigCaretList()
+    if _glyphMapHasExtendedGlyphIDs(glyphMap):
+        self = ot.LigCaretList2()
+    else:
+        self = ot.LigCaretList()
     self.Coverage = buildCoverage(carets.keys(), glyphMap)
     self.LigGlyph = [carets[g] for g in self.Coverage.glyphs]
     self.LigGlyphCount = len(self.LigGlyph)

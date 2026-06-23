@@ -61,6 +61,7 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
             converterClass = {
                 "uint8": ComputedUInt8,
                 "uint16": ComputedUShort,
+                "uint24": ComputedUInt24,
                 "uint32": ComputedULong,
             }[spec.type]
         elif spec.name == "SubTable":
@@ -83,6 +84,8 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
         conv = converterClass(
             spec.name, spec.repeat, spec.aux, description=spec.description
         )
+        if spec.condition:
+            conv.condition = compile(spec.condition, "<string>", "eval")
 
         if conv.tableClass:
             # A "template" such as OffsetTo(AType) knows the table class already
@@ -155,6 +158,10 @@ class BaseConverter(object):
             "NumEntries",
         ]
         self.description = description
+        self.condition = None
+
+    def isEnabled(self, table):
+        return self.condition is None or eval(self.condition, None, table)
 
     def readArray(self, reader, font, tableDict, count):
         """Read an array of values from the reader."""
@@ -369,6 +376,17 @@ class UInt8(IntValue):
         writer.writeUInt8Array(values)
 
 
+class Int24(IntValue):
+    staticSize = 3
+
+    def read(self, reader, font, tableDict):
+        return reader.readInt24()
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        assert -(1 << 23) <= value < (1 << 23), value
+        writer.writeUInt24(value & 0xFFFFFF)
+
+
 class UInt24(IntValue):
     staticSize = 3
 
@@ -391,6 +409,10 @@ class ComputedUInt8(ComputedInt, UInt8):
 
 
 class ComputedUShort(ComputedInt, UShort):
+    pass
+
+
+class ComputedUInt24(ComputedInt, UInt24):
     pass
 
 
@@ -425,6 +447,22 @@ class GlyphID(SimpleValue):
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
         writer.writeValue(self.typecode, font.getGlyphID(value))
+
+
+class GlyphID24(GlyphID):
+    staticSize = 3
+
+    def readArray(self, reader, font, tableDict, count):
+        return font.getGlyphNameMany(reader.readUInt24Array(count))
+
+    def read(self, reader, font, tableDict):
+        return font.getGlyphName(reader.readUInt24())
+
+    def writeArray(self, writer, font, tableDict, values):
+        writer.writeUInt24Array(font.getGlyphIDMany(values))
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        writer.writeUInt24(font.getGlyphID(value))
 
 
 class GlyphID32(GlyphID):
@@ -2284,6 +2322,7 @@ converterMapping = {
     # type		class
     "int8": Int8,
     "int16": Short,
+    "int24": Int24,
     "int32": Long,
     "uint8": UInt8,
     "uint16": UShort,
@@ -2295,6 +2334,7 @@ converterMapping = {
     "Version": Version,
     "Tag": Tag,
     "GlyphID": GlyphID,
+    "GlyphID24": GlyphID24,
     "GlyphID32": GlyphID32,
     "NameID": NameID,
     "DeciPoints": DeciPoints,
@@ -2330,5 +2370,5 @@ converterMapping = {
     "STXHeader": lambda C: partial(STXHeader, tableClass=C),
     "OffsetTo": lambda C: partial(Table, tableClass=C),
     "LOffsetTo": lambda C: partial(LTable, tableClass=C),
-    "LOffset24To": lambda C: partial(Table24, tableClass=C),
+    "Offset24To": lambda C: partial(Table24, tableClass=C),
 }

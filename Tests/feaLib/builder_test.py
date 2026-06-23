@@ -57,6 +57,19 @@ def makeTTFont():
     return font
 
 
+class ExtendedGlyphMap(dict):
+    def __len__(self):
+        return 0x10001
+
+
+def makeExtendedTTFont():
+    font = makeTTFont()
+    glyphMap = ExtendedGlyphMap(font.getReverseGlyphMap())
+    font.getReverseGlyphMap = lambda rebuild=False: glyphMap
+    font.hasExtendedGlyphIDs = lambda: True
+    return font
+
+
 class BuilderTest(unittest.TestCase):
     # Feature files in data/*.fea; output gets compared to data/*.ttx.
     TEST_FEATURE_FILES = """
@@ -182,6 +195,76 @@ class BuilderTest(unittest.TestCase):
         font = makeTTFont()
         addOpenTypeFeaturesFromString(font, featureFile, tables=tables)
         return font
+
+    def test_extended_layout_table_headers(self):
+        font = makeExtendedTTFont()
+        addOpenTypeFeaturesFromString(
+            font,
+            """
+            feature kern { pos A B -20; } kern;
+            feature liga { sub f i by f_i; } liga;
+            """,
+        )
+
+        for tag in ("GPOS", "GSUB"):
+            table = font[tag].table
+            self.assertEqual(table.Version, 0x00010002)
+            self.assertIsNone(table.ScriptList)
+            self.assertIsNone(table.FeatureList)
+            self.assertIsNone(table.LookupList)
+            self.assertIsNotNone(table.ScriptList2)
+            self.assertIsNotNone(table.FeatureList2)
+            self.assertIsNotNone(table.LookupList2)
+
+            data = font[tag].compile(font)
+            font[tag].decompile(data, font)
+            table = font[tag].table
+            self.assertEqual(table.Version, 0x00010002)
+            self.assertIsNotNone(table.ScriptList2)
+            self.assertIsNotNone(table.FeatureList2)
+            self.assertIsNotNone(table.LookupList2)
+
+    def test_extended_gdef_header(self):
+        font = makeExtendedTTFont()
+        addOpenTypeFeaturesFromString(
+            font,
+            """
+            @TOP = [acute grave];
+            table GDEF {
+                GlyphClassDef [A], [f_i], [acute], [grave];
+                Attach A 3;
+                LigatureCaretByPos f_i 300;
+            } GDEF;
+            feature mark {
+                lookupflag MarkAttachmentType @TOP;
+                pos A 20;
+                lookupflag UseMarkFilteringSet @TOP;
+                pos A 30;
+            } mark;
+            """,
+        )
+
+        table = font["GDEF"].table
+        self.assertEqual(table.Version, 0x00010004)
+        for name in (
+            "GlyphClassDef",
+            "AttachList",
+            "LigCaretList",
+            "MarkAttachClassDef",
+            "MarkGlyphSetsDef",
+        ):
+            self.assertIsNone(getattr(table, name))
+            self.assertIsNotNone(getattr(table, name + "2"))
+
+        data = font["GDEF"].compile(font)
+        font["GDEF"].decompile(data, font)
+        table = font["GDEF"].table
+        self.assertEqual(table.Version, 0x00010004)
+        self.assertIsNotNone(table.GlyphClassDef2)
+        self.assertIsNotNone(table.AttachList2)
+        self.assertIsNotNone(table.LigCaretList2)
+        self.assertIsNotNone(table.MarkAttachClassDef2)
+        self.assertIsNotNone(table.MarkGlyphSetsDef2)
 
     def check_feature_file(self, name):
         font = makeTTFont()

@@ -41,7 +41,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.merger import VariationMerger, COLRVariationMerger
-from fontTools.varLib.mvar import MVAR_ENTRIES
+from fontTools.varLib.mvar import MVAR_ENTRIES, getMVARTableTag
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, InstanceDescriptor
@@ -322,19 +322,55 @@ def _add_stat(font):
 _MasterData = namedtuple("_MasterData", ["glyf", "hMetrics", "vMetrics"])
 
 
+_TT_COMPANION_TABLES = {
+    "glyf": "GLYF",
+    "gvar": "GVAR",
+    "hmtx": "HMTX",
+    "maxp": "MAXP",
+    "vmtx": "VMTX",
+}
+
+
+def _get_TT_table_family(font):
+    if "GLYF" in font:
+        return "upper"
+    if "glyf" in font:
+        return "lower"
+    return None
+
+
+def _get_TT_tag(font, tag):
+    companionTag = _TT_COMPANION_TABLES[tag]
+    if _get_TT_table_family(font) == "upper":
+        return companionTag
+    return tag
+
+
+def _check_matching_TT_table_families(master_fonts):
+    families = [_get_TT_table_family(master) for master in master_fonts]
+    if not models.allEqual(families):
+        raise VarLibValidationError(
+            "Masters must all use the same glyf/GLYF table family."
+        )
+
+
 def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
     if tolerance < 0:
         raise ValueError("`tolerance` must be a positive number.")
 
-    log.info("Generating gvar")
-    assert "gvar" not in font
-    gvar = font["gvar"] = newTable("gvar")
-    glyf = font["glyf"]
+    gvarTag = _get_TT_tag(font, "gvar")
+    glyfTag = _get_TT_tag(font, "glyf")
+    hmtxTag = _get_TT_tag(font, "hmtx")
+    vmtxTag = _get_TT_tag(font, "vmtx")
+    log.info("Generating " + gvarTag)
+    assert gvarTag not in font
+    gvar = font[gvarTag] = newTable(gvarTag)
+    glyf = font[glyfTag]
     defaultMasterIndex = masterModel.reverseMapping[0]
 
     master_datas = [
         _MasterData(
-            m["glyf"], m["hmtx"].metrics, getattr(m.get("vmtx"), "metrics", None)
+            m[glyfTag], m[hmtxTag].metrics, getattr(m.get(vmtxTag), "metrics", None)
         )
         for m in master_ttfs
     ]
@@ -390,7 +426,7 @@ def _remove_TTHinting(font):
     for tag in ("cvar", "cvt ", "fpgm", "prep"):
         if tag in font:
             del font[tag]
-    maxp = font["maxp"]
+    maxp = font[_get_TT_tag(font, "maxp")]
     for attr in (
         "maxTwilightPoints",
         "maxStorage",
@@ -401,7 +437,7 @@ def _remove_TTHinting(font):
     ):
         setattr(maxp, attr, 0)
     maxp.maxZones = 1
-    font["glyf"].removeHinting()
+    font[_get_TT_tag(font, "glyf")].removeHinting()
     # TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
 
@@ -427,8 +463,9 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 
     # glyf table
 
-    font_glyf = font["glyf"]
-    master_glyfs = [m["glyf"] for m in master_ttfs]
+    glyfTag = _get_TT_tag(font, "glyf")
+    font_glyf = font[glyfTag]
+    master_glyfs = [m[glyfTag] for m in master_ttfs]
     for name, glyph in font_glyf.glyphs.items():
         all_pgms = [getattr(glyf.get(name), "program", None) for glyf in master_glyfs]
         if not any(all_pgms):
@@ -502,8 +539,9 @@ def _unset_inconsistent_use_my_metrics_flags(vf, master_fonts):
     the masters, the flag is removed from the variable font's glyf table so that
     advance widths are not determined by that single component's phantom points.
     """
-    glyf = vf["glyf"]
-    master_glyfs = [m["glyf"] for m in master_fonts if "glyf" in m]
+    glyfTag = _get_TT_tag(vf, "glyf")
+    glyf = vf[glyfTag]
+    master_glyfs = [m[glyfTag] for m in master_fonts if glyfTag in m]
     if not master_glyfs:
         # Should not happen: at least the base master (as copied into vf) has glyf
         return
@@ -614,7 +652,10 @@ def _add_VHVAR(font, axisTags, tableFields, getAdvanceMetrics):
         )
 
     directStore = None
-    if singleModel:
+    # The direct (no-map) store indexes a single VarData by glyph id, but
+    # VarData.ItemCount is uint16, so it cannot represent > 0xFFFF glyphs. Skip it
+    # past the boundary and rely on the indirect (mapped) store.
+    if singleModel and len(glyphOrder) <= 0xFFFF:
         # Build direct mapping
         supports = next(iter(vhAdvanceDeltasAndSupports.values()))[1][1:]
         varTupleList = builder.buildVarRegionList(supports, axisTags)
@@ -690,7 +731,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs, axisTags, tableFields):
     glyphOrder = font.getGlyphOrder()
 
     # Build list of source font advance widths for each glyph
-    metricsTag = tableFields.metricsTag
+    metricsTag = _get_TT_tag(font, tableFields.metricsTag)
     advMetricses = [m[metricsTag].metrics for m in master_ttfs]
 
     # Build list of source font vertical origin coords for each glyph
@@ -756,25 +797,28 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
     specialTags = {"unds": -0x8000, "undo": -0x8000}
 
     for tag, (tableTag, itemName) in sorted(MVAR_ENTRIES.items(), key=lambda kv: kv[1]):
+        fontTableTag = getMVARTableTag(font, tableTag)
         # For each tag, fetch the associated table from all fonts (or not when we are
         # still looking at a tag from the same tables) and set up the variation model
         # for them.
-        if tableTag != lastTableTag:
+        if fontTableTag != lastTableTag:
             tables = fontTable = None
-            if tableTag in font:
-                fontTable = font[tableTag]
+            if fontTableTag in font:
+                fontTable = font[fontTableTag]
                 tables = []
                 for master in master_ttfs:
-                    if tableTag not in master or (
+                    masterTableTag = getMVARTableTag(master, tableTag)
+                    if masterTableTag not in master or (
                         tag in specialTags
-                        and getattr(master[tableTag], itemName) == specialTags[tag]
+                        and getattr(master[masterTableTag], itemName)
+                        == specialTags[tag]
                     ):
                         tables.append(None)
                     else:
-                        tables.append(master[tableTag])
+                        tables.append(master[masterTableTag])
                 model, tables = masterModel.getSubModel(tables)
                 store_builder.setModel(model)
-            lastTableTag = tableTag
+            lastTableTag = fontTableTag
 
         if tables is None:  # Tag not applicable to the master font.
             continue
@@ -790,7 +834,7 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 
         if varIdx is None:
             continue
-        log.info("	%s: %s.%s	%s", tag, tableTag, itemName, master_values)
+        log.info("	%s: %s.%s	%s", tag, fontTableTag, itemName, master_values)
         rec = ot.MetricsValueRecord()
         rec.ValueTag = tag
         rec.VarIdx = varIdx
@@ -844,7 +888,9 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         return
     try:
         GDEF = font["GDEF"].table
-        assert GDEF.Version <= 0x00010002
+        # v1.4 is the beyond-64k GDEF version; bump to >= v1.3 to carry the VarStore
+        assert GDEF.Version <= 0x00010004
+        GDEF.Version = max(GDEF.Version, 0x00010003)
     except KeyError:
         GDEFTable = font["GDEF"] = newTable("GDEF")
         GDEF = GDEFTable.table = ot.GDEF()
@@ -853,8 +899,8 @@ def _merge_OTL(font, model, master_fonts, axisTags):
         GDEF.LigCaretList = None
         GDEF.MarkAttachClassDef = None
         GDEF.MarkGlyphSetsDef = None
+        GDEF.Version = 0x00010003
 
-    GDEF.Version = 0x00010003
     GDEF.VarStore = store
 
     # Optimize
@@ -1139,7 +1185,7 @@ def drop_implied_oncurve_points(*masters: TTFont) -> int:
     # multiple DS source may point to the same TTFont object and we want to
     # avoid processing the same glyph twice as they are modified in-place
     for font in {id(m): m for m in masters}.values():
-        glyf = font["glyf"]
+        glyf = font[_get_TT_tag(font, "glyf")]
         for glyphName in glyf.keys():
             glyph_masters[glyphName].append(glyf[glyphName])
     count = 0
@@ -1238,6 +1284,7 @@ def build(
 
     log.info("Loading master fonts")
     master_fonts = load_masters(designspace, master_finder)
+    _check_matching_TT_table_families(master_fonts)
 
     # TODO: 'master_ttfs' is unused except for return value, remove later
     master_ttfs = []
@@ -1247,11 +1294,13 @@ def build(
         except AttributeError:
             master_ttfs.append(None)  # in-memory fonts have no path
 
-    if drop_implied_oncurves and "glyf" in master_fonts[ds.base_idx]:
+    glyfTag = _get_TT_tag(master_fonts[ds.base_idx], "glyf")
+    if drop_implied_oncurves and glyfTag in master_fonts[ds.base_idx]:
         drop_count = drop_implied_oncurve_points(*master_fonts)
         log.info(
-            "Dropped %s on-curve points from simple glyphs in the 'glyf' table",
+            "Dropped %s on-curve points from simple glyphs in the '%s' table",
             drop_count,
+            glyfTag,
         )
 
     # Copy the base master to work from it
@@ -1261,7 +1310,7 @@ def build(
         del vf["DSIG"]
 
     # Clear USE_MY_METRICS composite flags if set inconsistently across masters.
-    if "glyf" in vf:
+    if glyfTag in vf:
         _unset_inconsistent_use_my_metrics_flags(vf, master_fonts)
 
     # TODO append masters as named-instances as well; needs .designspace change.
@@ -1289,13 +1338,14 @@ def build(
         _add_MVAR(vf, model, master_fonts, axisTags)
     if "HVAR" not in exclude:
         _add_HVAR(vf, model, master_fonts, axisTags)
-    if "VVAR" not in exclude and "vmtx" in vf:
+    if "VVAR" not in exclude and _get_TT_tag(vf, "vmtx") in vf:
         _add_VVAR(vf, model, master_fonts, axisTags)
     if "GDEF" not in exclude or "GPOS" not in exclude:
         _merge_OTL(vf, model, master_fonts, axisTags)
-    if "gvar" not in exclude and "glyf" in vf:
+    gvarTag = _get_TT_tag(vf, "gvar")
+    if "gvar" not in exclude and "GVAR" not in exclude and glyfTag in vf:
         _add_gvar(vf, model, master_fonts, optimize=optimize)
-    if "cvar" not in exclude and "glyf" in vf:
+    if "cvar" not in exclude and glyfTag in vf:
         _merge_TTHinting(vf, model, master_fonts)
     if "GSUB" not in exclude and ds.rules:
         featureTags = _feature_variations_tags(ds)

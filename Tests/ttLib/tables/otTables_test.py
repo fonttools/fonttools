@@ -1,7 +1,7 @@
 from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
+from fontTools.ttLib.tables.otBase import CountReference, OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 from io import StringIO
 from types import SimpleNamespace
@@ -15,6 +15,177 @@ def makeCoverage(glyphs):
     coverage = otTables.Coverage()
     coverage.glyphs = glyphs
     return coverage
+
+
+def compileTable(table, font):
+    localState = None
+    if hasattr(table.__class__, "LookupType"):
+        lookupType = {"LookupType": None}
+        localState = {
+            "LookupType": CountReference(lookupType, "LookupType"),
+        }
+    writer = OTTableWriter(localState=localState)
+    table.compile(writer, font)
+    return hexStr(writer.getAllData())
+
+
+def decompileTable(table, data, font):
+    table.decompile(OTTableReader(deHexStr(data)), font)
+    return table
+
+
+class SparseFakeFont:
+    def __init__(self, glyphMap):
+        self.glyphMap = glyphMap
+        self.reverseGlyphMap = {glyphID: name for name, glyphID in glyphMap.items()}
+        self.lazy = False
+
+    def getGlyphID(self, name):
+        return self.glyphMap[name]
+
+    def getGlyphIDMany(self, names):
+        return [self.getGlyphID(name) for name in names]
+
+    def getGlyphName(self, glyphID):
+        return self.reverseGlyphMap[glyphID]
+
+    def getGlyphNameMany(self, glyphIDs):
+        return [self.getGlyphName(glyphID) for glyphID in glyphIDs]
+
+    def hasExtendedGlyphIDs(self):
+        return True
+
+
+class CoverageTest(unittest.TestCase):
+    def setUp(self):
+        self.font = SparseFakeFont(
+            {"a": 0x10000, "b": 0x10001, "c": 0x10002, "d": 0x10003}
+        )
+
+    def test_postRead_format3(self):
+        table = otTables.Coverage()
+        table.Format = 3
+        table.postRead({"GlyphArray": ["a", "c"]}, self.font)
+        self.assertEqual(table.glyphs, ["a", "c"])
+
+    def test_postRead_format4(self):
+        record = otTables.RangeRecord2()
+        record.Start = "a"
+        record.End = "d"
+        record.StartCoverageIndex = 0
+        table = otTables.Coverage()
+        table.Format = 4
+        table.postRead({"RangeRecord": [record]}, self.font)
+        self.assertEqual(table.glyphs, ["a", "b", "c", "d"])
+
+    def test_decompile_format4(self):
+        table = decompileTable(
+            otTables.Coverage(),
+            "0004000001010000010003000000",
+            self.font,
+        )
+        self.assertEqual(table.glyphs, ["a", "b", "c", "d"])
+
+    def test_preWrite_format3(self):
+        table = makeCoverage(["a", "c"])
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 3)
+        self.assertEqual(rawTable["GlyphArray"], ["a", "c"])
+        self.assertEqual(compileTable(table, self.font), "0003000002010000010002")
+
+    def test_preWrite_format4(self):
+        table = makeCoverage(["a", "b", "c", "d"])
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 4)
+        self.assertIsInstance(rawTable["RangeRecord"][0], otTables.RangeRecord2)
+        self.assertEqual(compileTable(table, self.font), "0004000001010000010003000000")
+
+
+class ClassDefTest(unittest.TestCase):
+    def setUp(self):
+        self.font = SparseFakeFont(
+            {"a": 0x10000, "b": 0x10001, "c": 0x20000, "d": 0x20001}
+        )
+
+    def test_postRead_format3(self):
+        table = otTables.ClassDef()
+        table.Format = 3
+        table.postRead(
+            {"StartGlyph": "a", "ClassValueArray": [1, 2]},
+            self.font,
+        )
+        self.assertEqual(table.classDefs, {"a": 1, "b": 2})
+
+    def test_postRead_format4(self):
+        record = otTables.ClassRangeRecord2()
+        record.Start = "c"
+        record.End = "d"
+        record.Class = 3
+        table = otTables.ClassDef()
+        table.Format = 4
+        table.postRead({"ClassRangeRecord": [record]}, self.font)
+        self.assertEqual(table.classDefs, {"c": 3, "d": 3})
+
+    def test_decompile_format4(self):
+        table = decompileTable(
+            otTables.ClassDef(),
+            "000400000201000001000000010200000200000002",
+            self.font,
+        )
+        self.assertEqual(table.classDefs, {"a": 1, "c": 2})
+
+    def test_preWrite_format3(self):
+        table = otTables.ClassDef()
+        table.classDefs = {"a": 1, "b": 2}
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 3)
+        self.assertEqual(rawTable["ClassValueArray"], [1, 2])
+        self.assertEqual(compileTable(table, self.font), "000301000000000200010002")
+
+    def test_preWrite_format4(self):
+        table = otTables.ClassDef()
+        table.classDefs = {"a": 1, "c": 2}
+        rawTable = table.preWrite(self.font)
+        self.assertEqual(table.Format, 4)
+        self.assertIsInstance(
+            rawTable["ClassRangeRecord"][0], otTables.ClassRangeRecord2
+        )
+        self.assertEqual(
+            compileTable(table, self.font),
+            "000400000201000001000000010200000200000002",
+        )
+
+
+def test_VarIdxMap_format0_roundtrip():
+    # VarIdxMap is the HVAR/VVAR glyph-indexed delta-set index map; it shares the
+    # format-switching DeltaSetIndexMap wire format (Format 0 here).
+    font = FakeFont([".notdef", "a", "b", "c"])
+    table = otTables.VarIdxMap()
+    table.mapping = {".notdef": 0, "a": 1, "b": 0, "c": 0}
+    data = compileTable(table, font)
+    assert data[:2] == "00"  # Format 0 (uint8)
+    table2 = decompileTable(otTables.VarIdxMap(), data, font)
+    assert table2.mapping == {".notdef": 0, "a": 1, "b": 0, "c": 0}
+    # Format is derived in preWrite; it is not retained after decompile, so it is
+    # not emitted to TTX (matching Coverage/ClassDef).
+    assert not hasattr(table2, "Format")
+
+
+def test_VarIdxMap_format1_beyond_64k():
+    # 65537 glyphs; only the highest (gid 0x10000 > 0xFFFF) varies, so the map
+    # cannot be trimmed below 65536 entries and must use Format 1.
+    glyphs = [".notdef"] + ["g%05d" % i for i in range(1, 0x10001)]
+    font = FakeFont(glyphs)
+    table = otTables.VarIdxMap()
+    table.mapping = {g: 0 for g in glyphs}
+    table.mapping[glyphs[-1]] = 1
+    data = compileTable(table, font)
+    assert data[:2] == "01"  # Format 1 (uint8)
+    assert data[4:12] == "00010001"  # uint32 MappingCount = 0x10001
+    table2 = decompileTable(otTables.VarIdxMap(), data, font)
+    assert table2.mapping[glyphs[-1]] == 1
+    assert table2.mapping[glyphs[0]] == 0
+    assert not hasattr(table2, "Format")
 
 
 class SingleSubstTest(unittest.TestCase):
@@ -40,6 +211,30 @@ class SingleSubstTest(unittest.TestCase):
         table.postRead(rawTable, self.font)
         self.assertEqual(table.mapping, {"A": "c", "B": "b", "C": "a"})
 
+    def test_postRead_format3(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x10002})
+        table = otTables.SingleSubst()
+        table.Format = 3
+        table.postRead(
+            {"Coverage": makeCoverage(["a", "b"]), "DeltaGlyphID": 1},
+            font,
+        )
+        self.assertEqual(table.mapping, {"a": "b", "b": "c"})
+
+    def test_postRead_format4(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.SingleSubst()
+        table.Format = 4
+        table.postRead(
+            {
+                "Coverage": makeCoverage(["a", "b"]),
+                "GlyphCount": 2,
+                "Substitute": ["c", "a"],
+            },
+            font,
+        )
+        self.assertEqual(table.mapping, {"a": "c", "b": "a"})
+
     def test_postRead_formatUnknown(self):
         table = otTables.SingleSubst()
         table.Format = 987
@@ -61,6 +256,30 @@ class SingleSubstTest(unittest.TestCase):
         self.assertEqual(table.Format, 2)
         self.assertEqual(rawTable["Coverage"].glyphs, ["A", "B", "C"])
         self.assertEqual(rawTable["Substitute"], ["c", "b", "a"])
+
+    def test_preWrite_format3(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x10002})
+        table = otTables.SingleSubst()
+        table.mapping = {"a": "b", "b": "c"}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 3)
+        self.assertEqual(rawTable["DeltaGlyphID"], 1)
+        self.assertEqual(
+            compileTable(table, font),
+            "0003000000090000010003000002010000010001",
+        )
+
+    def test_preWrite_format4(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.SingleSubst()
+        table.mapping = {"a": "c", "b": "a"}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 4)
+        self.assertEqual(rawTable["Substitute"], ["c", "a"])
+        self.assertEqual(
+            compileTable(table, font),
+            "00040000000f0000020200000100000003000002010000010001",
+        )
 
     def test_preWrite_emptyMapping(self):
         table = otTables.SingleSubst()
@@ -111,6 +330,26 @@ class MultipleSubstTest(unittest.TestCase):
         table.postRead(rawTable, self.font)
         self.assertEqual(table.mapping, {"c_t": ["c", "t"], "f_f_i": ["f", "f", "i"]})
 
+    def test_postRead_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.MultipleSubst()
+        table.Format = 2
+        rawTable = {
+            "Coverage": makeCoverage(["a"]),
+            "Sequence": [table.makeSequence_(["b", "c"], extended=True)],
+        }
+        table.postRead(rawTable, font)
+        self.assertEqual(table.mapping, {"a": ["b", "c"]})
+
+    def test_decompile_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = decompileTable(
+            otTables.MultipleSubst(),
+            "00020000000c00000100001400030000010100000002010001020000",
+            font,
+        )
+        self.assertEqual(table.mapping, {"a": ["b", "c"]})
+
     def test_postRead_formatUnknown(self):
         table = otTables.MultipleSubst()
         table.Format = 987
@@ -122,6 +361,19 @@ class MultipleSubstTest(unittest.TestCase):
         rawTable = table.preWrite(self.font)
         self.assertEqual(table.Format, 1)
         self.assertEqual(rawTable["Coverage"].glyphs, ["c_t", "f_f_i"])
+
+    def test_preWrite_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.MultipleSubst()
+        table.mapping = {"a": ["b", "c"]}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["Sequence"][0], otTables.Sequence2)
+        self.assertEqual(rawTable["Sequence"][0].Substitute, ["b", "c"])
+        self.assertEqual(
+            compileTable(table, font),
+            "00020000000c00000100001400030000010100000002010001020000",
+        )
 
     def test_toXML2(self):
         writer = XMLWriter(StringIO())
@@ -227,6 +479,35 @@ class LigatureSubstTest(unittest.TestCase):
         self.assertEqual(table.ligatures["f"][2].LigGlyph, "f_i")
         self.assertEqual(table.ligatures["f"][2].Component, ["f", "i"])
 
+    def test_postRead_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        ligature = otTables.Ligature2()
+        ligature.LigGlyph = "c"
+        ligature.Component = ["b"]
+        ligatureSet = otTables.LigatureSet2()
+        ligatureSet.Ligature = [ligature]
+        table = otTables.LigatureSubst()
+        table.Format = 2
+        table.postRead(
+            {
+                "Coverage": makeCoverage(["a"]),
+                "LigatureSet": [ligatureSet],
+            },
+            font,
+        )
+        self.assertEqual(table.ligatures["a"][0].LigGlyph, "c")
+        self.assertEqual(table.ligatures["a"][0].Component, ["b"])
+
+    def test_decompile_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = decompileTable(
+            otTables.LigatureSubst(),
+            "00020000001900000100000c000100000502000000020100010003000001010000",
+            font,
+        )
+        self.assertEqual(table.ligatures["a"][0].LigGlyph, "c")
+        self.assertEqual(table.ligatures["a"][0].Component, ["b"])
+
     def test_postRead_formatUnknown(self):
         table = otTables.LigatureSubst()
         table.Format = 987
@@ -259,6 +540,37 @@ class LigatureSubstTest(unittest.TestCase):
         self.assertIsInstance(fi, otTables.Ligature)
         self.assertEqual(fi.LigGlyph, "f_i")
         self.assertEqual(fi.Component, ["f", "i"])
+
+    def test_preWrite_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        ligature = otTables.Ligature()
+        ligature.LigGlyph = "c"
+        ligature.Component = ["b"]
+        table = otTables.LigatureSubst()
+        table.ligatures = {"a": [ligature]}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["LigatureSet"][0], otTables.LigatureSet2)
+        self.assertIsInstance(
+            rawTable["LigatureSet"][0].Ligature[0],
+            otTables.Ligature2,
+        )
+        self.assertEqual(
+            compileTable(table, font),
+            "00020000001900000100000c000100000502000000020100010003000001010000",
+        )
+
+    def test_preWrite_format2_highLevel(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.LigatureSubst()
+        table.ligatures = {("a", "b"): "c"}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["LigatureSet"][0], otTables.LigatureSet2)
+        self.assertIsInstance(
+            rawTable["LigatureSet"][0].Ligature[0],
+            otTables.Ligature2,
+        )
 
     def test_toXML2(self):
         writer = XMLWriter(StringIO())
@@ -322,6 +634,30 @@ class AlternateSubstTest(unittest.TestCase):
         table.postRead(rawTable, self.font)
         self.assertEqual(table.alternates, {"G": ["G.alt2", "G.alt1"], "Z": ["Z.fina"]})
 
+    def test_postRead_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        alternateSet = otTables.AlternateSet2()
+        alternateSet.Alternate = ["b", "c"]
+        table = otTables.AlternateSubst()
+        table.Format = 2
+        table.postRead(
+            {
+                "Coverage": makeCoverage(["a"]),
+                "AlternateSet": [alternateSet],
+            },
+            font,
+        )
+        self.assertEqual(table.alternates, {"a": ["b", "c"]})
+
+    def test_decompile_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = decompileTable(
+            otTables.AlternateSubst(),
+            "00020000001400000100000c00020100010200000003000001010000",
+            font,
+        )
+        self.assertEqual(table.alternates, {"a": ["b", "c"]})
+
     def test_postRead_formatUnknown(self):
         table = otTables.AlternateSubst()
         table.Format = 987
@@ -338,6 +674,19 @@ class AlternateSubstTest(unittest.TestCase):
         self.assertEqual(g.Alternate, ["G.alt2", "G.alt1"])
         self.assertIsInstance(z, otTables.AlternateSet)
         self.assertEqual(z.Alternate, ["Z.fina"])
+
+    def test_preWrite_format2(self):
+        font = SparseFakeFont({"a": 0x10000, "b": 0x10001, "c": 0x20000})
+        table = otTables.AlternateSubst()
+        table.alternates = {"a": ["b", "c"]}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 2)
+        self.assertIsInstance(rawTable["AlternateSet"][0], otTables.AlternateSet2)
+        self.assertEqual(rawTable["AlternateSet"][0].Alternate, ["b", "c"])
+        self.assertEqual(
+            compileTable(table, font),
+            "00020000001400000100000c00020100010200000003000001010000",
+        )
 
     def test_toXML2(self):
         writer = XMLWriter(StringIO())

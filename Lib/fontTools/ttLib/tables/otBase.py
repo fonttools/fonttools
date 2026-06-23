@@ -119,6 +119,11 @@ class BaseTTXConverter(DefaultTable):
         # or it errors out; False, don't use it, even if you can.
         use_hb_repack = font.cfg[USE_HARFBUZZ_REPACKER]
         if self.tableTag in ("GSUB", "GPOS"):
+            if (
+                use_hb_repack is None
+                and getattr(self.table, "Version", 0) >= 0x00010002
+            ):
+                use_hb_repack = False
             if use_hb_repack is False:
                 log.debug(
                     "hb.repack disabled, compiling '%s' with pure-python serializer",
@@ -801,7 +806,7 @@ class OTTableWriter(object):
 
     def getOverflowErrorRecord(self, item):
         LookupListIndex = SubTableIndex = itemName = itemIndex = None
-        if self.name == "LookupList":
+        if self.name in ("LookupList", "LookupList2"):
             LookupListIndex = item.repeatIndex
         elif self.name == "Lookup":
             LookupListIndex = self.repeatIndex
@@ -860,7 +865,7 @@ class CountReference(object):
         v = self.table[self.name]
         if v is None:
             v = 0
-        return {1: packUInt8, 2: packUShort, 4: packULong}[self.size](v)
+        return {1: packUInt8, 2: packUShort, 3: packUInt24, 4: packULong}[self.size](v)
 
 
 def packUInt8(value):
@@ -919,6 +924,8 @@ class BaseTable(object):
     def getRecordSize(cls, reader):
         totalSize = 0
         for conv in cls.converters:
+            if not conv.isEnabled(reader):
+                continue
             size = conv.getRecordSize(reader)
             if size is NotImplemented:
                 return NotImplemented
@@ -939,6 +946,8 @@ class BaseTable(object):
 
     def populateDefaults(self, propagator=None):
         for conv in self.getConverters():
+            if not conv.isEnabled(self.__dict__):
+                continue
             if conv.repeat:
                 if not hasattr(self, conv.name):
                     setattr(self, conv.name, [])
@@ -978,6 +987,8 @@ class BaseTable(object):
             if conv.name == "SubStruct":
                 conv = conv.getConverter(reader.tableTag, table["MorphType"])
             try:
+                if not conv.isEnabled(table):
+                    continue
                 if conv.repeat:
                     if isinstance(conv.repeat, int):
                         countValue = conv.repeat
@@ -1040,6 +1051,8 @@ class BaseTable(object):
 
         self.writeFormat(writer)
         for conv in self.getConverters():
+            if not conv.isEnabled(table):
+                continue
             value = table.get(
                 conv.name
             )  # TODO Handle defaults instead of defaulting to None!
@@ -1130,6 +1143,8 @@ class BaseTable(object):
         # This is because in TTX our parent writes our main tag, and in otBase.py we
         # do it ourselves. I think I'm getting schizophrenic...
         for conv in self.getConverters():
+            if not conv.isEnabled(vars(self)):
+                continue
             if conv.repeat:
                 value = getattr(self, conv.name, [])
                 for i, item in enumerate(value):
@@ -1192,6 +1207,8 @@ class BaseTable(object):
         This method can be useful to traverse trees of otTables.
         """
         for conv in self.getConverters():
+            if not conv.isEnabled(vars(self)):
+                continue
             name = conv.name
             value = getattr(self, name, None)
             if value is None:

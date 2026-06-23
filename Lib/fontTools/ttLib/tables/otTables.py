@@ -945,9 +945,9 @@ class Coverage(FormatSwitchingBaseTable):
             self.glyphs = []
 
     def postRead(self, rawTable, font):
-        if self.Format == 1:
+        if self.Format in (1, 3):
             self.glyphs = rawTable["GlyphArray"]
-        elif self.Format == 2:
+        elif self.Format in (2, 4):
             glyphs = self.glyphs = []
             ranges = rawTable["RangeRecord"]
             # Some SIL fonts have coverage entries that don't have sorted
@@ -989,11 +989,14 @@ class Coverage(FormatSwitchingBaseTable):
                 last = glyphID
             ranges[-1].append(last)
 
-            if brokenOrder or len(ranges) * 3 < len(glyphs):  # 3 words vs. 1 word
-                # Format 2 is more compact
+            extended = font.hasExtendedGlyphIDs() and (
+                max(glyphIDs) > 0xFFFF or len(glyphs) > 0xFFFF
+            )
+            if brokenOrder or len(ranges) * 3 < len(glyphs):
+                # Range format is more compact.
                 index = 0
                 for i, (start, end) in enumerate(ranges):
-                    r = RangeRecord()
+                    r = RangeRecord2() if extended else RangeRecord()
                     r.StartID = start
                     r.Start = font.getGlyphName(start)
                     r.End = font.getGlyphName(end)
@@ -1005,10 +1008,10 @@ class Coverage(FormatSwitchingBaseTable):
                     ranges.sort(key=lambda a: a.StartID)
                 for r in ranges:
                     del r.StartID
-                format = 2
+                format = 4 if extended else 2
                 rawTable = {"RangeRecord": ranges}
-            # else:
-            # 	fallthrough; Format 1 is more compact
+            elif extended:
+                format = 3
         self.Format = format
         return rawTable
 
@@ -1106,7 +1109,14 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
         return self.mapping[i] if i < len(self.mapping) else NO_VARIATION_INDEX
 
 
-class VarIdxMap(BaseTable):
+class VarIdxMap(DeltaSetIndexMap):
+    """Glyph-id-indexed delta-set index map (HVAR/VVAR).
+
+    Shares DeltaSetIndexMap's format-switching wire format (Format 0 / Format 1)
+    but exposes a name-keyed ``.mapping`` dict, since here the map index is the
+    glyph id.
+    """
+
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "mapping"):
             self.mapping = {}
@@ -1117,6 +1127,10 @@ class VarIdxMap(BaseTable):
         mapList = rawTable["mapping"]
         mapList.extend([mapList[-1]] * (len(glyphOrder) - len(mapList)))
         self.mapping = dict(zip(glyphOrder, mapList))
+        # Format is derived from the mapping size in preWrite; don't keep it around
+        # so it isn't emitted to TTX (matching Coverage/ClassDef, and keeping the
+        # pre-format-switching VarIdxMap TTX output unchanged).
+        del self.Format
 
     def preWrite(self, font):
         mapping = getattr(self, "mapping", None)
@@ -1128,6 +1142,7 @@ class VarIdxMap(BaseTable):
         while len(mapping) > 1 and mapping[-2] == mapping[-1]:
             del mapping[-1]
 
+        self.Format = 1 if len(mapping) > 0xFFFF else 0
         rawTable = {"mapping": mapping}
         rawTable["MappingCount"] = len(mapping)
         rawTable["EntryFormat"] = DeltaSetIndexMap.getEntryFormat(mapping)
@@ -1187,17 +1202,16 @@ class SingleSubst(FormatSwitchingBaseTable):
     def postRead(self, rawTable, font):
         mapping = {}
         input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
-        if self.Format == 1:
+        if self.Format in (1, 3):
             delta = rawTable["DeltaGlyphID"]
             inputGIDS = font.getGlyphIDMany(input)
-            outGIDS = [(glyphID + delta) % 65536 for glyphID in inputGIDS]
+            modulus = 0x1000000 if self.Format == 3 else 0x10000
+            outGIDS = [(glyphID + delta) % modulus for glyphID in inputGIDS]
             outNames = font.getGlyphNameMany(outGIDS)
             for inp, out in zip(input, outNames):
                 mapping[inp] = out
-        elif self.Format == 2:
-            assert (
-                len(input) == rawTable["GlyphCount"]
-            ), "invalid SingleSubstFormat2 table"
+        elif self.Format in (2, 4):
+            assert len(input) == rawTable["GlyphCount"], "invalid SingleSubst table"
             subst = rawTable["Substitute"]
             for inp, sub in zip(input, subst):
                 mapping[inp] = sub
@@ -1215,21 +1229,27 @@ class SingleSubst(FormatSwitchingBaseTable):
         gidItems = [(getGlyphID(a), getGlyphID(b)) for a, b in items]
         sortableItems = sorted(zip(gidItems, items))
 
+        extended = font.hasExtendedGlyphIDs() and (
+            len(items) > 0xFFFF
+            or any(inID > 0xFFFF or outID > 0xFFFF for inID, outID in gidItems)
+        )
+        modulus = 0x1000000 if extended else 0x10000
+
         # figure out format
-        format = 2
+        format = 4 if extended else 2
         delta = None
         for inID, outID in gidItems:
             if delta is None:
-                delta = (outID - inID) % 65536
+                delta = (outID - inID) % modulus
 
-            if (inID + delta) % 65536 != outID:
+            if (inID + delta) % modulus != outID:
                 break
         else:
             if delta is None:
                 # the mapping is empty, better use format 2
-                format = 2
+                format = 4 if extended else 2
             else:
-                format = 1
+                format = 3 if extended else 1
 
         rawTable = {}
         self.Format = format
@@ -1238,8 +1258,10 @@ class SingleSubst(FormatSwitchingBaseTable):
         subst = [item[1][1] for item in sortableItems]
         cov.glyphs = input
         rawTable["Coverage"] = cov
-        if format == 1:
+        if format in (1, 3):
             assert delta is not None
+            if format == 3 and delta >= 0x800000:
+                delta -= 0x1000000
             rawTable["DeltaGlyphID"] = delta
         else:
             rawTable["Substitute"] = subst
@@ -1266,7 +1288,7 @@ class MultipleSubst(FormatSwitchingBaseTable):
 
     def postRead(self, rawTable, font):
         mapping = {}
-        if self.Format == 1:
+        if self.Format in (1, 2):
             glyphs = _getGlyphsFromCoverageTable(rawTable["Coverage"])
             subst = [s.Substitute for s in rawTable["Sequence"]]
             mapping = dict(zip(glyphs, subst))
@@ -1281,10 +1303,20 @@ class MultipleSubst(FormatSwitchingBaseTable):
             mapping = self.mapping = {}
         cov = Coverage()
         cov.glyphs = sorted(list(mapping.keys()), key=font.getGlyphID)
-        self.Format = 1
+        extended = font.hasExtendedGlyphIDs() and (
+            len(mapping) > 0xFFFF
+            or any(
+                font.getGlyphID(glyph) > 0xFFFF
+                for inputGlyph, substitutes in mapping.items()
+                for glyph in (inputGlyph, *substitutes)
+            )
+        )
+        self.Format = 2 if extended else 1
         rawTable = {
             "Coverage": cov,
-            "Sequence": [self.makeSequence_(mapping[glyph]) for glyph in cov.glyphs],
+            "Sequence": [
+                self.makeSequence_(mapping[glyph], extended) for glyph in cov.glyphs
+            ],
         }
         return rawTable
 
@@ -1328,8 +1360,8 @@ class MultipleSubst(FormatSwitchingBaseTable):
         mapping[attrs["in"]] = [g.strip() for g in outGlyphs]
 
     @staticmethod
-    def makeSequence_(g):
-        seq = Sequence()
+    def makeSequence_(g, extended=False):
+        seq = Sequence2() if extended else Sequence()
         seq.Substitute = g
         return seq
 
@@ -1342,7 +1374,7 @@ class ClassDef(FormatSwitchingBaseTable):
     def postRead(self, rawTable, font):
         classDefs = {}
 
-        if self.Format == 1:
+        if self.Format in (1, 3):
             start = rawTable["StartGlyph"]
             classList = rawTable["ClassValueArray"]
             startID = font.getGlyphID(start)
@@ -1352,7 +1384,7 @@ class ClassDef(FormatSwitchingBaseTable):
                 if cls:
                     classDefs[glyphName] = cls
 
-        elif self.Format == 2:
+        elif self.Format in (2, 4):
             records = rawTable["ClassRangeRecord"]
             for rec in records:
                 cls = rec.Class
@@ -1403,24 +1435,32 @@ class ClassDef(FormatSwitchingBaseTable):
             startGlyph = ranges[0][1]
             endGlyph = ranges[-1][3]
             glyphCount = endGlyph - startGlyph + 1
-            if len(ranges) * 3 < glyphCount + 1:
-                # Format 2 is more compact
+            extended = font.hasExtendedGlyphIDs() and (
+                startGlyph > 0xFFFF
+                or endGlyph > 0xFFFF
+                or glyphCount > 0xFFFF
+                or len(ranges) > 0xFFFF
+            )
+            rangeSize = (5 + len(ranges) * 8) if extended else (4 + len(ranges) * 6)
+            arraySize = (8 + glyphCount * 2) if extended else (6 + glyphCount * 2)
+            if rangeSize < arraySize:
+                # Range format is more compact.
                 for i, (cls, start, startName, end, endName) in enumerate(ranges):
-                    rec = ClassRangeRecord()
+                    rec = ClassRangeRecord2() if extended else ClassRangeRecord()
                     rec.Start = startName
                     rec.End = endName
                     rec.Class = cls
                     ranges[i] = rec
-                format = 2
+                format = 4 if extended else 2
                 rawTable = {"ClassRangeRecord": ranges}
             else:
-                # Format 1 is more compact
+                # Array format is more compact.
                 startGlyphName = ranges[0][2]
                 classes = [0] * glyphCount
                 for cls, start, startName, end, endName in ranges:
                     for g in range(start - startGlyph, end - startGlyph + 1):
                         classes[g] = cls
-                format = 1
+                format = 3 if extended else 1
                 rawTable = {"StartGlyph": startGlyphName, "ClassValueArray": classes}
         self.Format = format
         return rawTable
@@ -1446,7 +1486,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 
     def postRead(self, rawTable, font):
         alternates = {}
-        if self.Format == 1:
+        if self.Format in (1, 2):
             input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
             alts = rawTable["AlternateSet"]
             assert len(input) == len(alts)
@@ -1458,10 +1498,18 @@ class AlternateSubst(FormatSwitchingBaseTable):
         del self.Format  # Don't need this anymore
 
     def preWrite(self, font):
-        self.Format = 1
         alternates = getattr(self, "alternates", None)
         if alternates is None:
             alternates = self.alternates = {}
+        extended = font.hasExtendedGlyphIDs() and (
+            len(alternates) > 0xFFFF
+            or any(
+                font.getGlyphID(glyph) > 0xFFFF
+                for inputGlyph, alternateSet in alternates.items()
+                for glyph in (inputGlyph, *alternateSet)
+            )
+        )
+        self.Format = 2 if extended else 1
         items = list(alternates.items())
         for i, (glyphName, set) in enumerate(items):
             items[i] = font.getGlyphID(glyphName), glyphName, set
@@ -1471,7 +1519,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
         alternates = []
         setList = [item[-1] for item in items]
         for set in setList:
-            alts = AlternateSet()
+            alts = AlternateSet2() if extended else AlternateSet()
             alts.Alternate = set
             alternates.append(alts)
         # a special case to deal with the fact that several hundred Adobe Japan1-5
@@ -1515,7 +1563,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 
     def postRead(self, rawTable, font):
         ligatures = {}
-        if self.Format == 1:
+        if self.Format in (1, 2):
             input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
             ligSets = rawTable["LigatureSet"]
             assert len(input) == len(ligSets)
@@ -1556,7 +1604,6 @@ class LigatureSubst(FormatSwitchingBaseTable):
         return -len(components)
 
     def preWrite(self, font):
-        self.Format = 1
         ligatures = getattr(self, "ligatures", None)
         if ligatures is None:
             ligatures = self.ligatures = {}
@@ -1575,6 +1622,21 @@ class LigatureSubst(FormatSwitchingBaseTable):
                 newLigatures.setdefault(comps[0], []).append(ligature)
             ligatures = newLigatures
 
+        extended = font.hasExtendedGlyphIDs() and (
+            len(ligatures) > 0xFFFF
+            or any(
+                font.getGlyphID(glyph) > 0xFFFF
+                for firstComponent, ligatureSet in ligatures.items()
+                for ligature in ligatureSet
+                for glyph in (
+                    firstComponent,
+                    ligature.LigGlyph,
+                    *ligature.Component,
+                )
+            )
+        )
+        self.Format = 2 if extended else 1
+
         items = list(ligatures.items())
         for i, (glyphName, set) in enumerate(items):
             items[i] = font.getGlyphID(glyphName), glyphName, set
@@ -1585,10 +1647,17 @@ class LigatureSubst(FormatSwitchingBaseTable):
         ligSets = []
         setList = [item[-1] for item in items]
         for set in setList:
-            ligSet = LigatureSet()
+            ligSet = LigatureSet2() if extended else LigatureSet()
             ligs = ligSet.Ligature = []
             for lig in set:
-                ligs.append(lig)
+                ligatureClass = Ligature2 if extended else Ligature
+                if isinstance(lig, ligatureClass):
+                    out = lig
+                else:
+                    out = ligatureClass()
+                    out.LigGlyph = lig.LigGlyph
+                    out.Component = lig.Component
+                ligs.append(out)
             ligSets.append(ligSet)
         # Useful in that when splitting a sub-table because of an offset overflow
         # I don't need to calculate the change in subtabl offset due to the coverage table size.
@@ -2226,6 +2295,12 @@ _equivalents = {
 #
 
 
+def _getLookupList(table):
+    if getattr(table, "Version", 0) >= 0x00010002:
+        return getattr(table, "LookupList2", None) or getattr(table, "LookupList", None)
+    return getattr(table, "LookupList", None) or getattr(table, "LookupList2", None)
+
+
 def fixLookupOverFlows(ttf, overflowRecord):
     """Either the offset from the LookupList to a lookup overflowed, or
     an offset from a lookup to a subtable overflowed.
@@ -2265,7 +2340,7 @@ def fixLookupOverFlows(ttf, overflowRecord):
     elif overflowRecord.tableType == "GPOS":
         extType = 9
 
-    lookups = ttf[overflowRecord.tableType].table.LookupList.Lookup
+    lookups = _getLookupList(ttf[overflowRecord.tableType].table).Lookup
     lookup = lookups[lookupIndex]
     # If the previous lookup is an extType, look further back. Very unlikely, but possible.
     while lookup.SubTable[0].__class__.LookupType == extType:
@@ -2551,7 +2626,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
     An offset has overflowed within a sub-table. We need to divide this subtable into smaller parts.
     """
     table = ttf[overflowRecord.tableType].table
-    lookup = table.LookupList.Lookup[overflowRecord.LookupListIndex]
+    lookup = _getLookupList(table).Lookup[overflowRecord.LookupListIndex]
     subIndex = overflowRecord.SubTableIndex
     subtable = lookup.SubTable[subIndex]
 

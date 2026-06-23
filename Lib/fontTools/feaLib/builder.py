@@ -220,10 +220,19 @@ class Builder(object):
             table = self.makeTable(tag)
             if self.feature_variations_:
                 self.makeFeatureVariations(table, tag)
+            if self.font.hasExtendedGlyphIDs():
+                self.promoteLayoutTable_(table)
+                scriptList = table.ScriptList2
+                featureList = table.FeatureList2
+                lookupList = table.LookupList2
+            else:
+                scriptList = table.ScriptList
+                featureList = table.FeatureList
+                lookupList = table.LookupList
             if (
-                table.ScriptList.ScriptCount > 0
-                or table.FeatureList.FeatureCount > 0
-                or table.LookupList.LookupCount > 0
+                scriptList.ScriptCount > 0
+                or featureList.FeatureCount > 0
+                or lookupList.LookupCount > 0
             ):
                 fontTable = self.font[tag] = newTable(tag)
                 fontTable.table = table
@@ -808,7 +817,7 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if "GPOS" in self.font:
                     self.font["GPOS"].table.remap_device_varidxes(varidx_map)
-        if any(
+        has_data = any(
             (
                 gdef.GlyphClassDef,
                 gdef.AttachList,
@@ -816,12 +825,26 @@ class Builder(object):
                 gdef.MarkAttachClassDef,
                 gdef.MarkGlyphSetsDef,
             )
-        ) or hasattr(gdef, "VarStore"):
+        ) or hasattr(gdef, "VarStore")
+        if self.font.hasExtendedGlyphIDs():
+            self.promoteGDEF_(gdef)
+        if has_data:
             result = newTable("GDEF")
             result.table = gdef
             return result
         else:
             return None
+
+    def promoteGDEF_(self, gdef):
+        gdef.Version = 0x00010004
+        gdef.GlyphClassDef2, gdef.GlyphClassDef = gdef.GlyphClassDef, None
+        gdef.AttachList2, gdef.AttachList = gdef.AttachList, None
+        gdef.LigCaretList2, gdef.LigCaretList = gdef.LigCaretList, None
+        gdef.MarkAttachClassDef2, gdef.MarkAttachClassDef = (
+            gdef.MarkAttachClassDef,
+            None,
+        )
+        gdef.MarkGlyphSetsDef2, gdef.MarkGlyphSetsDef = gdef.MarkGlyphSetsDef, None
 
     def buildGDEFGlyphClassDef_(self):
         if self.glyphClassDefs_:
@@ -1002,6 +1025,14 @@ class Builder(object):
         table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
         table.LookupList.LookupCount = len(table.LookupList.Lookup)
         return table
+
+    def promoteLayoutTable_(self, table):
+        table.Version = 0x00010002
+        table.ScriptList2, table.ScriptList = table.ScriptList, None
+        table.FeatureList2, table.FeatureList = table.FeatureList, None
+        table.LookupList2 = otTables.LookupList2()
+        table.LookupList2.__dict__.update(table.LookupList.__dict__)
+        table.LookupList = None
 
     def makeFeatureVariations(self, table, table_tag):
         feature_vars = {}

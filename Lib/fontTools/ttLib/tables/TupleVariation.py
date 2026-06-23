@@ -276,7 +276,7 @@ class TupleVariation(object):
     @staticmethod
     def decompilePoints_(numPoints, data, offset, tableTag):
         """(numPoints, data, offset, tableTag) --> ([point1, point2, ...], newOffset)"""
-        assert tableTag in ("cvar", "gvar")
+        assert tableTag in ("cvar", "gvar", "GVAR")
         pos = offset
         numPointsInData = data[pos]
         pos += 1
@@ -825,7 +825,7 @@ def decompileTupleVariationStore(
 def decompileTupleVariation_(
     pointCount, sharedTuples, sharedPoints, tableTag, axisTags, data, tupleData
 ):
-    assert tableTag in ("cvar", "gvar"), tableTag
+    assert tableTag in ("cvar", "gvar", "GVAR"), tableTag
     flags = struct.unpack(">H", data[2:4])[0]
     pos = 4
     if (flags & EMBEDDED_PEAK_TUPLE) == 0:
@@ -858,7 +858,7 @@ def decompileTupleVariation_(
             if 0 <= p < pointCount:
                 deltas[p] = delta
 
-    elif tableTag == "gvar":
+    elif tableTag in ("gvar", "GVAR"):
         deltas_x, pos = TupleVariation.decompileDeltas_(len(points), tupleData, pos)
         deltas_y, pos = TupleVariation.decompileDeltas_(len(points), tupleData, pos)
         for p, x, y in zip(points, deltas_x, deltas_y):

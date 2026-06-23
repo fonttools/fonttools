@@ -7,6 +7,7 @@ import py
 import fontTools.qu2cu.cli as qu2cu_cli
 from fontTools.qu2cu.cli import _main as main
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.beyond64k import upper_tables
 
 
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
@@ -39,6 +40,8 @@ class MainTest(object):
         output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
         font = TTFont(output_path)
         assert font["head"].glyphDataFormat == 1
+        assert "GLYF" in font
+        assert "glyf" not in font
         assert os.stat(ttf_path).st_size > os.stat(output_path).st_size
 
     def test_output_file(self, test_paths):
@@ -49,6 +52,8 @@ class MainTest(object):
 
         font = TTFont(output_path)
         assert font["head"].glyphDataFormat == 1
+        assert "GLYF" in font
+        assert "glyf" not in font
 
     def test_stats(self, test_paths):
         ttf_path = test_paths[0]
@@ -62,12 +67,46 @@ class MainTest(object):
         output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
         font = TTFont(output_path)
         assert font["head"].glyphDataFormat == 1
+        assert "GLYF" in font
+        assert "glyf" not in font
+
+    def test_beyond64k_glyf(self, test_paths):
+        ttf_path = test_paths[0]
+        font = TTFont(str(ttf_path))
+        upper_tables(font)
+        font.save(str(ttf_path))
+
+        self.run_main(ttf_path)
+
+        output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
+        font = TTFont(output_path)
+        assert font["head"].glyphDataFormat == 1
+        assert "GLYF" in font
+        assert "glyf" not in font
 
     def test_rejects_variable_fonts(self, monkeypatch):
         class FakeTTFont(dict):
             def __init__(self, path):
                 super().__init__(
                     {"gvar": object(), "head": SimpleNamespace(unitsPerEm=1000)}
+                )
+
+        monkeypatch.setattr(qu2cu_cli, "TTFont", FakeTTFont)
+
+        with pytest.raises(ValueError, match="Cannot convert variable font"):
+            qu2cu_cli._font_to_cubic(
+                "dummy.ttf",
+                "dummy.cubic.ttf",
+                dump_stats=False,
+                max_err_em=0.001,
+                all_cubic=False,
+            )
+
+    def test_rejects_beyond64k_variable_fonts(self, monkeypatch):
+        class FakeTTFont(dict):
+            def __init__(self, path):
+                super().__init__(
+                    {"GVAR": object(), "head": SimpleNamespace(unitsPerEm=1000)}
                 )
 
         monkeypatch.setattr(qu2cu_cli, "TTFont", FakeTTFont)

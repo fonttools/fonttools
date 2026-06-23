@@ -13,6 +13,22 @@ import logging
 log = logging.getLogger("fontTools.merge")
 
 
+def _get_layout_lists(table):
+    table = table.table
+    return (
+        getattr(table, "ScriptList2", None) or getattr(table, "ScriptList", None),
+        getattr(table, "FeatureList2", None) or getattr(table, "FeatureList", None),
+        getattr(table, "LookupList2", None) or getattr(table, "LookupList", None),
+    )
+
+
+def _get_mark_glyph_sets_def(table):
+    table = table.table
+    return getattr(table, "MarkGlyphSetsDef2", None) or getattr(
+        table, "MarkGlyphSetsDef", None
+    )
+
+
 def mergeLookupLists(lst):
     # TODO Do smarter merge.
     return sumLists(lst)
@@ -129,6 +145,7 @@ otTables.LookupList.mergeMap = {
     "LookupCount": sum,
     "Lookup": sumLists,
 }
+otTables.LookupList2.mergeMap = otTables.LookupList.mergeMap
 
 otTables.Coverage.mergeMap = {
     "Format": min,
@@ -204,7 +221,8 @@ def merge(self, m, tables):
 
         synthFeature = None
         synthLookup = None
-        for script in table.table.ScriptList.ScriptRecord:
+        scriptList, featureList, lookupList = _get_layout_lists(table)
+        for script in scriptList.ScriptRecord:
             if script.ScriptTag == "DFLT":
                 continue  # XXX
             for langsys in [script.Script.DefaultLangSys] + [
@@ -224,8 +242,8 @@ def merge(self, m, tables):
                         f.FeatureParams = None
                         f.LookupCount = 0
                         f.LookupListIndex = []
-                        table.table.FeatureList.FeatureRecord.append(synthFeature)
-                        table.table.FeatureList.FeatureCount += 1
+                        featureList.FeatureRecord.append(synthFeature)
+                        featureList.FeatureCount += 1
                     feature = synthFeature
                     langsys.FeatureIndex.append(feature)
                     langsys.FeatureIndex.sort(key=lambda v: v.FeatureTag)
@@ -238,15 +256,19 @@ def merge(self, m, tables):
                     synthLookup.LookupType = 1
                     synthLookup.SubTableCount = 1
                     synthLookup.SubTable = [subtable]
-                    if table.table.LookupList is None:
+                    if lookupList is None:
                         # mtiLib uses None as default value for LookupList,
                         # while feaLib points to an empty array with count 0
                         # TODO: make them do the same
-                        table.table.LookupList = otTables.LookupList()
-                        table.table.LookupList.Lookup = []
-                        table.table.LookupList.LookupCount = 0
-                    table.table.LookupList.Lookup.append(synthLookup)
-                    table.table.LookupList.LookupCount += 1
+                        lookupList = otTables.LookupList()
+                        lookupList.Lookup = []
+                        lookupList.LookupCount = 0
+                        if hasattr(table.table, "LookupList2"):
+                            table.table.LookupList2 = lookupList
+                        else:
+                            table.table.LookupList = lookupList
+                    lookupList.Lookup.append(synthLookup)
+                    lookupList.LookupCount += 1
 
                 if feature.Feature.LookupListIndex[:1] != [synthLookup]:
                     feature.Feature.LookupListIndex[:0] = [synthLookup]
@@ -435,24 +457,23 @@ def layoutPreMerge(font):
         if not t:
             continue
 
-        if t.table.LookupList:
-            lookupMap = {i: v for i, v in enumerate(t.table.LookupList.Lookup)}
-            t.table.LookupList.mapLookups(lookupMap)
-            t.table.FeatureList.mapLookups(lookupMap)
+        scriptList, featureList, lookupList = _get_layout_lists(t)
 
-            if (
-                GDEF
-                and GDEF.table.Version >= 0x00010002
-                and GDEF.table.MarkGlyphSetsDef
-            ):
+        if lookupList:
+            lookupMap = {i: v for i, v in enumerate(lookupList.Lookup)}
+            lookupList.mapLookups(lookupMap)
+            featureList.mapLookups(lookupMap)
+
+            markGlyphSetsDef = _get_mark_glyph_sets_def(GDEF) if GDEF else None
+            if GDEF and GDEF.table.Version >= 0x00010002 and markGlyphSetsDef:
                 markFilteringSetMap = {
-                    i: v for i, v in enumerate(GDEF.table.MarkGlyphSetsDef.Coverage)
+                    i: v for i, v in enumerate(markGlyphSetsDef.Coverage)
                 }
-                t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
+                lookupList.mapMarkFilteringSets(markFilteringSetMap)
 
-        if t.table.FeatureList and t.table.ScriptList:
-            featureMap = {i: v for i, v in enumerate(t.table.FeatureList.FeatureRecord)}
-            t.table.ScriptList.mapFeatures(featureMap)
+        if featureList and scriptList:
+            featureMap = {i: v for i, v in enumerate(featureList.FeatureRecord)}
+            scriptList.mapFeatures(featureMap)
 
     # TODO FeatureParams nameIDs
 
@@ -468,59 +489,57 @@ def layoutPostMerge(font):
         if not t:
             continue
 
-        if t.table.FeatureList and t.table.ScriptList:
+        scriptList, featureList, lookupList = _get_layout_lists(t)
+
+        if featureList and scriptList:
             # Collect unregistered (new) features.
-            featureMap = GregariousIdentityDict(t.table.FeatureList.FeatureRecord)
-            t.table.ScriptList.mapFeatures(featureMap)
+            featureMap = GregariousIdentityDict(featureList.FeatureRecord)
+            scriptList.mapFeatures(featureMap)
 
             # Record used features.
-            featureMap = AttendanceRecordingIdentityDict(
-                t.table.FeatureList.FeatureRecord
-            )
-            t.table.ScriptList.mapFeatures(featureMap)
+            featureMap = AttendanceRecordingIdentityDict(featureList.FeatureRecord)
+            scriptList.mapFeatures(featureMap)
             usedIndices = featureMap.s
 
             # Remove unused features
-            t.table.FeatureList.FeatureRecord = [
-                f
-                for i, f in enumerate(t.table.FeatureList.FeatureRecord)
-                if i in usedIndices
+            featureList.FeatureRecord = [
+                f for i, f in enumerate(featureList.FeatureRecord) if i in usedIndices
             ]
 
             # Map back to indices.
-            featureMap = NonhashableDict(t.table.FeatureList.FeatureRecord)
-            t.table.ScriptList.mapFeatures(featureMap)
+            featureMap = NonhashableDict(featureList.FeatureRecord)
+            scriptList.mapFeatures(featureMap)
 
-            t.table.FeatureList.FeatureCount = len(t.table.FeatureList.FeatureRecord)
+            featureList.FeatureCount = len(featureList.FeatureRecord)
 
-        if t.table.LookupList:
+        if lookupList:
             # Collect unregistered (new) lookups.
-            lookupMap = GregariousIdentityDict(t.table.LookupList.Lookup)
-            t.table.FeatureList.mapLookups(lookupMap)
-            t.table.LookupList.mapLookups(lookupMap)
+            lookupMap = GregariousIdentityDict(lookupList.Lookup)
+            featureList.mapLookups(lookupMap)
+            lookupList.mapLookups(lookupMap)
 
             # Record used lookups.
-            lookupMap = AttendanceRecordingIdentityDict(t.table.LookupList.Lookup)
-            t.table.FeatureList.mapLookups(lookupMap)
-            t.table.LookupList.mapLookups(lookupMap)
+            lookupMap = AttendanceRecordingIdentityDict(lookupList.Lookup)
+            featureList.mapLookups(lookupMap)
+            lookupList.mapLookups(lookupMap)
             usedIndices = lookupMap.s
 
             # Remove unused lookups
-            t.table.LookupList.Lookup = [
-                l for i, l in enumerate(t.table.LookupList.Lookup) if i in usedIndices
+            lookupList.Lookup = [
+                l for i, l in enumerate(lookupList.Lookup) if i in usedIndices
             ]
 
             # Map back to indices.
-            lookupMap = NonhashableDict(t.table.LookupList.Lookup)
-            t.table.FeatureList.mapLookups(lookupMap)
-            t.table.LookupList.mapLookups(lookupMap)
+            lookupMap = NonhashableDict(lookupList.Lookup)
+            featureList.mapLookups(lookupMap)
+            lookupList.mapLookups(lookupMap)
 
-            t.table.LookupList.LookupCount = len(t.table.LookupList.Lookup)
+            lookupList.LookupCount = len(lookupList.Lookup)
 
             if GDEF and GDEF.table.Version >= 0x00010002:
-                markFilteringSetMap = NonhashableDict(
-                    GDEF.table.MarkGlyphSetsDef.Coverage
-                )
-                t.table.LookupList.mapMarkFilteringSets(markFilteringSetMap)
+                markGlyphSetsDef = _get_mark_glyph_sets_def(GDEF)
+                if markGlyphSetsDef:
+                    markFilteringSetMap = NonhashableDict(markGlyphSetsDef.Coverage)
+                    lookupList.mapMarkFilteringSets(markFilteringSetMap)
 
     # TODO FeatureParams nameIDs
