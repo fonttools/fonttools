@@ -1,6 +1,3 @@
-4.63.1.dev0
------------
-
 - [feaLib] Fix name-table parsing for multibyte Mac encodings (#1196) (#4092)
 - [subset] keep East Asian spacing palt by default (#4094)
 - [subset] bug fix for MATH table in which constructions for glyphs that are only added
