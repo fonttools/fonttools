@@ -785,6 +785,78 @@ def test_splitSinglePos_format1():
     assert not otTables.splitSinglePos(subTable, otTables.SinglePos(), None)
 
 
+def test_splitSinglePos_overflow_end_to_end():
+    # A SinglePos Format 2 whose ValueArray pushes its own Coverage offset past
+    # uint16 must be split when packing. With ValueFormat=1 (2 bytes per Value)
+    # the Coverage offset is ~8 + 2*N bytes, so it overflows above ~32763 glyphs.
+    # https://github.com/fonttools/fonttools/issues/4091
+    from fontTools.ttLib import TTFont, getTableClass
+
+    N = 40000
+    glyphs = [f"g{i}" for i in range(N)]
+    font = TTFont()
+    font.setGlyphOrder([".notdef"] + glyphs)
+    # exercise the pure-fontTools overflow recovery, not the harfbuzz repacker
+    font.cfg["fontTools.ttLib.tables.otBase:USE_HARFBUZZ_REPACKER"] = False
+
+    subTable = otTables.SinglePos()
+    subTable.Format = 2
+    subTable.Coverage = otTables.Coverage()
+    subTable.Coverage.glyphs = list(glyphs)
+    subTable.ValueFormat = 0x0001  # XPlacement
+    subTable.Value = []
+    for i in range(N):
+        value = otTables.ValueRecord()
+        value.XPlacement = -(i % 100 + 1)
+        subTable.Value.append(value)
+
+    lookup = otTables.Lookup()
+    lookup.LookupType = 1
+    lookup.LookupFlag = 0
+    lookup.SubTable = [subTable]
+
+    feature = otTables.Feature()
+    feature.FeatureParams = None
+    feature.LookupListIndex = [0]
+    featureRecord = otTables.FeatureRecord()
+    featureRecord.FeatureTag = "kern"
+    featureRecord.Feature = feature
+    langSys = otTables.DefaultLangSys()
+    langSys.LookupOrder = None
+    langSys.ReqFeatureIndex = 0xFFFF
+    langSys.FeatureIndex = [0]
+    script = otTables.Script()
+    script.DefaultLangSys = langSys
+    script.LangSysRecord = []
+    scriptRecord = otTables.ScriptRecord()
+    scriptRecord.ScriptTag = "DFLT"
+    scriptRecord.Script = script
+
+    gpos = otTables.GPOS()
+    gpos.Version = 0x00010000
+    gpos.ScriptList = otTables.ScriptList()
+    gpos.ScriptList.ScriptRecord = [scriptRecord]
+    gpos.FeatureList = otTables.FeatureList()
+    gpos.FeatureList.FeatureRecord = [featureRecord]
+    gpos.LookupList = otTables.LookupList()
+    gpos.LookupList.Lookup = [lookup]
+
+    table = getTableClass("GPOS")()
+    table.table = gpos
+    font["GPOS"] = table
+
+    data = table.compile(font)
+
+    rebuilt = getTableClass("GPOS")()
+    rebuilt.decompile(data, font)
+    subTables = rebuilt.table.LookupList.Lookup[0].SubTable
+    assert len(subTables) > 1  # the oversized subtable was split
+    coverage = [g for st in subTables for g in st.Coverage.glyphs]
+    values = [v.XPlacement for st in subTables for v in st.Value]
+    assert coverage == glyphs
+    assert values == [-(i % 100 + 1) for i in range(N)]
+
+
 class ColrV1Test(unittest.TestCase):
     def setUp(self):
         self.font = FakeFont([".notdef", "meh"])
