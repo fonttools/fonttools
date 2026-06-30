@@ -79,7 +79,10 @@ if TYPE_CHECKING:
         S__i_l_l,
         _a_n_k_r,
         _a_v_a_r,
+        _b_d_a_t,
         _b_g_c_l,
+        _b_h_e_d,
+        _b_l_o_c,
         _b_s_l_n,
         _c_i_d_g,
         _c_m_a_p,
@@ -724,7 +727,13 @@ class TTFont(object):
     @overload
     def __getitem__(self, tag: Literal["bsln"]) -> _b_s_l_n.table__b_s_l_n: ...
     @overload
+    def __getitem__(self, tag: Literal["bdat"]) -> _b_d_a_t.table__b_d_a_t: ...
+    @overload
+    def __getitem__(self, tag: Literal["bhed"]) -> _b_h_e_d.table__b_h_e_d: ...
+    @overload
     def __getitem__(self, tag: Literal["bgcl"]) -> _b_g_c_l.table__b_g_c_l: ...
+    @overload
+    def __getitem__(self, tag: Literal["bloc"]) -> _b_l_o_c.table__b_l_o_c: ...
     @overload
     def __getitem__(self, tag: Literal["cidg"]) -> _c_i_d_g.table__c_i_d_g: ...
     @overload
