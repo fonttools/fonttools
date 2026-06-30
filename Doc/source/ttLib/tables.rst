@@ -133,7 +133,10 @@ Tables currently supported
    tables/_a_n_k_r
    tables/_a_v_a_r
    tables/B_A_S_E_
+   tables/_b_d_a_t
+   tables/_b_h_e_d
    tables/_b_g_c_l
+   tables/_b_l_o_c
    tables/_b_s_l_n
    tables/C_B_D_T_
    tables/C_B_L_C_
