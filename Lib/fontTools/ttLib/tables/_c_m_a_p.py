@@ -450,6 +450,10 @@ class SubHeader(object):
 class cmap_format_2(CmapSubtable):
     def setIDDelta(self, subHeader):
         subHeader.idDelta = 0
+        # An empty subheader (an all-notdef two-byte range) has no glyphs to
+        # adjust, so leave idDelta at 0 and bail before indexing the array.
+        if not subHeader.glyphIndexArray:
+            return
         # find the minGI which is not zero.
         minGI = subHeader.glyphIndexArray[0]
         for gid in subHeader.glyphIndexArray:
@@ -645,8 +649,9 @@ class cmap_format_2(CmapSubtable):
         # We force this subheader entry 0 to exist in the subHeaderList in the case where some one comes up
         # with a cmap where all the one byte char codes map to notdef,
         # with the result that the subhead 0 would not get created just by processing the item list.
-        charCode = charCodes[0]
-        if charCode > 255:
+        # The same is true for an entirely empty (all-notdef) cmap, where there
+        # are no char codes to process at all.
+        if not charCodes or charCodes[0] > 255:
             subHeader = SubHeader()
             subHeader.firstCode = 0
             subHeader.entryCount = 0
