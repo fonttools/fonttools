@@ -328,6 +328,37 @@ class SubsetTest:
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_math_partial.ttx"), ["MATH"])
 
+    def test_subset_math_closure_drops_added_glyph_constructions(self):
+        # Regression test for https://github.com/fonttools/fonttools/pull/4096
+        # The test font has glyphs ".notdef, A, A.size1, A.size2"; only "A" is
+        # reachable via cmap. "A.size1" is both a vertical variant of "A" and a
+        # construction base of its own that grows into "A.size2". Subsetting to
+        # "A" pulls in "A.size1" via closure but must not retain "A.size1"'s
+        # construction, which would dangle a reference to the never-closed-over
+        # "A.size2".
+        fontpath = self.compile_font(self.getpath("test_math_closure.ttx"), ".ttf")
+        font = TTFont(fontpath)
+
+        subsetter = subset.Subsetter()
+        subsetter.populate(text="A")
+        subsetter.subset(font)
+
+        glyph_set = set(font.getGlyphOrder())
+        # "A.size1" survives: it is a legitimate variant of the requested "A".
+        assert "A.size1" in glyph_set
+        # "A.size2" was never closed over, so it is not in the subset.
+        assert "A.size2" not in glyph_set
+
+        math_variants = font["MATH"].table.MathVariants
+        # Only "A" keeps a construction; "A.size1"'s construction is dropped
+        # because "A.size1" entered the subset solely through closure.
+        assert list(math_variants.VertGlyphCoverage.glyphs) == ["A"]
+        assert math_variants.VertGlyphCount == 1
+        # No surviving construction references a glyph outside the subset.
+        for cons in math_variants.VertGlyphConstruction:
+            for rec in cons.MathGlyphVariantRecord:
+                assert rec.VariantGlyph in glyph_set
+
     def test_subset_opbd_remove(self):
         # In the test font, only the glyphs 'A' and 'zero' have an entry in
         # the Optical Bounds table. When subsetting, we do not request any

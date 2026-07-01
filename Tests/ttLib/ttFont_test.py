@@ -336,3 +336,36 @@ def test_duplicate_glyph_names(file_name):
     if "CFF " not in font:
         post = font["post"]
         assert post.mapping == {"A.2": "A"}
+
+
+def test_saveXML_default_dumps_all_tables():
+    """tables=None (default) should dump all tables (regression test for #4025)."""
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+    out = io.StringIO()
+    font.saveXML(out)
+    xml = out.getvalue()
+    assert "<head>" in xml
+    assert "<hhea>" in xml
+
+
+def test_saveXML_specific_tables():
+    """Passing tables=['head'] should dump only head."""
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+    out = io.StringIO()
+    font.saveXML(out, tables=["head"])
+    xml = out.getvalue()
+    assert "<head>" in xml
+    assert "<hhea>" not in xml
+
+
+def test_saveXML_skipTables():
+    """skipTables should exclude specified tables when tables is None."""
+    font = TTFont()
+    font.importXML(os.path.join(DATA_DIR, "TestTTF-Regular.ttx"))
+    out = io.StringIO()
+    font.saveXML(out, skipTables=["head"])
+    xml = out.getvalue()
+    assert "<head>" not in xml
+    assert "<hhea>" in xml

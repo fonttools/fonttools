@@ -147,8 +147,8 @@
       PUSHB[ ]	/* 1 value pushed */
       145
       IDEF[ ]	/* InstructionDefinition */
-      NPUSHW[ ]	/* 3 values pushed */
-      2 -8192 8192
+        NPUSHW[ ]	/* 3 values pushed */
+        2 -8192 8192
       ENDF[ ]	/* EndFunctionDefinition */
     </assembly>
   </fpgm>

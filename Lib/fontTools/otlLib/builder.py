@@ -834,6 +834,19 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                     res = sub
         return res
 
+    def find_chainable_alternate_subst(self, glyph):
+        """Helper for add_alternate_subst()"""
+        res = None
+        for rule in self.rules[::-1]:
+            if rule.is_subtable_break:
+                return res
+            for sub in rule.lookups:
+                if isinstance(sub, AlternateSubstBuilder) and (
+                    glyph not in sub.alternates
+                ):
+                    res = sub
+        return res
+
     def find_chainable_ligature_subst(self, glyphs, replacement):
         """Helper for add_ligature_subst_chained_()"""
         res = None

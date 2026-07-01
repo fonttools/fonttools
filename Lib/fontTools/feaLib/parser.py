@@ -2,7 +2,7 @@ from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
 from fontTools.feaLib.variableScalar import VariableScalar
 from fontTools.misc.encodingTools import getEncoding
-from fontTools.misc.textTools import bytechr, tobytes, tostr
+from fontTools.misc.textTools import tobytes, tostr
 import fontTools.feaLib.ast as ast
 import logging
 import os
@@ -1273,8 +1273,18 @@ class Parser(object):
         if encoding == "utf_16_be":
             s = re.sub(r"\\[0-9a-fA-F]{4}", self.unescape_unichr_, string)
         else:
-            unescape = lambda m: self.unescape_byte_(m, encoding)
-            s = re.sub(r"\\[0-9a-fA-F]{2}", unescape, string)
+            # Build the full byte sequence from literal characters plus
+            # \XX escapes, then decode in one go. This is required for
+            # multibyte encodings (e.g. x_mac_japanese_ttx) where bytes
+            # belonging to a single character may straddle literal/escape
+            # boundaries — e.g. "\95F" is one Shift-JIS char (0x95 0x46).
+            out = bytearray()
+            for token in re.split(r"(\\[0-9a-fA-F]{2})", string):
+                if len(token) == 3 and token[0] == "\\":
+                    out.append(int(token[1:], 16))
+                elif token:
+                    out.extend(token.encode(encoding))
+            s = out.decode(encoding)
         # We now have a Unicode string, but it might contain surrogate pairs.
         # We convert surrogates to actual Unicode by round-tripping through
         # Python's UTF-16 codec in a special mode.
@@ -1285,11 +1295,6 @@ class Parser(object):
     def unescape_unichr_(match):
         n = match.group(0)[1:]
         return chr(int(n, 16))
-
-    @staticmethod
-    def unescape_byte_(match, encoding):
-        n = match.group(0)[1:]
-        return bytechr(int(n, 16)).decode(encoding)
 
     def find_previous(self, statements, class_):
         for previous in reversed(statements):
@@ -1953,6 +1958,7 @@ class Parser(object):
         return self.ast.FontRevisionStatement(version, location=location)
 
     def parse_conditionset_(self):
+        location = self.cur_token_location_
         name = self.expect_name_()
 
         conditions = {}
@@ -1987,7 +1993,7 @@ class Parser(object):
         finalname = self.expect_name_()
         if finalname != name:
             raise FeatureLibError('Expected "%s"' % name, self.cur_token_location_)
-        return self.ast.ConditionsetStatement(name, conditions)
+        return self.ast.ConditionsetStatement(name, conditions, location=location)
 
     def parse_block_(
         self, block, vertical, stylisticset=None, size_feature=False, cv_feature=None

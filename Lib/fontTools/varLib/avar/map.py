@@ -16,6 +16,9 @@ def map(
 
     fvar = font["fvar"]
     axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in fvar.axes}
+    unknownAxes = sorted(tag for tag in location if tag not in axes)
+    if unknownAxes:
+        raise ValueError(f"Unknown axis tag(s): {', '.join(unknownAxes)}")
 
     if not inputNormalized:
         location = {
@@ -83,17 +86,30 @@ def main(args=None):
         if "fvar" not in font:
             parser.error(f"Font '{options.font}' does not contain an 'fvar' table.")
 
-    location = {
-        tag: float(value) for tag, value in (item.split("=") for item in options.coords)
-    }
+    location = {}
+    for item in options.coords:
+        tag, sep, value = item.partition("=")
+        if not sep or not tag or not value:
+            parser.error(
+                f"Invalid coordinate {item!r}. Expected AXIS=value, e.g. wght=500"
+            )
+        try:
+            location[tag] = float(value)
+        except ValueError:
+            parser.error(
+                f"Invalid coordinate value in {item!r}. Expected a number after '='"
+            )
 
-    mapped = map(
-        font,
-        location,
-        inputNormalized=options.i,
-        outputNormalized=options.o,
-        dropZeroes=not options.f,
-    )
+    try:
+        mapped = map(
+            font,
+            location,
+            inputNormalized=options.i,
+            outputNormalized=options.o,
+            dropZeroes=not options.f,
+        )
+    except ValueError as e:
+        parser.error(str(e))
     assert mapped is not None
 
     for tag in mapped:

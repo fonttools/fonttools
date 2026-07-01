@@ -52,6 +52,21 @@ class SVGPathTest(object):
 
         assert pen.value == EXPECTED_PEN_COMMANDS
 
+    def test_xml_comment_ignored(self):
+        svg_with_comment = b"""\
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <!-- a comment -->
+  <path d="M100 100"/>
+</svg>"""
+        pen = RecordingPen()
+        svg = SVGPath.fromstring(svg_with_comment)
+        svg.draw(pen)
+
+        assert pen.value == [
+            ("moveTo", ((100.0, 100.0),)),
+            ("endPath", ()),
+        ]
+
     def test_transform(self):
         pen = RecordingPen()
         svg = SVGPath.fromstring(SVG_DATA, transform=(1.0, 0, 0, -1.0, 0, 1000))

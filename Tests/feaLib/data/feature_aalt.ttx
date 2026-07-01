@@ -102,7 +102,7 @@
       <Lookup index="3">
         <LookupType value="6"/>
         <LookupFlag value="0"/>
-        <!-- SubTableCount=2 -->
+        <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
           <!-- BacktrackGlyphCount=1 -->
           <BacktrackCoverage index="0">
@@ -120,32 +120,8 @@
           <!-- InputGlyphCount=1 -->
           <InputCoverage index="0">
             <Glyph value="A"/>
-            <Glyph value="a"/>
-          </InputCoverage>
-          <!-- LookAheadGlyphCount=0 -->
-          <!-- SubstCount=1 -->
-          <SubstLookupRecord index="0">
-            <SequenceIndex value="0"/>
-            <LookupListIndex value="4"/>
-          </SubstLookupRecord>
-        </ChainContextSubst>
-        <ChainContextSubst index="1" Format="3">
-          <!-- BacktrackGlyphCount=1 -->
-          <BacktrackCoverage index="0">
-            <Glyph value="zero"/>
-            <Glyph value="one"/>
-            <Glyph value="two"/>
-            <Glyph value="three"/>
-            <Glyph value="four"/>
-            <Glyph value="five"/>
-            <Glyph value="six"/>
-            <Glyph value="seven"/>
-            <Glyph value="eight"/>
-            <Glyph value="nine"/>
-          </BacktrackCoverage>
-          <!-- InputGlyphCount=1 -->
-          <InputCoverage index="0">
             <Glyph value="O"/>
+            <Glyph value="a"/>
             <Glyph value="o"/>
           </InputCoverage>
           <!-- LookAheadGlyphCount=0 -->

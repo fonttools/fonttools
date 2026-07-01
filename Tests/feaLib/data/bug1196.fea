@@ -1,0 +1,8 @@
+table name {
+	nameid 0 "Copyright \00a9 2001-2010 Adobe Systems Incorporated. All Rights Reserved.";
+	nameid 0 1 "Copyright \a9 2001-2010 Adobe Systems Incorporated. All Rights Reserved.";
+	nameid 0 1 1 11 "Copyright \fd 2001-2010 Adobe Systems Incorporated. All Rights Reserved.";
+	nameid 9 "Masahiko Kozuka \5c0f\585a\660c\5f66";          # Windows (Unicode)
+	nameid 9 1 "Masahiko Kozuka";                             # Macintosh (Mac Roman)
+	nameid 9 1 1 11 "Masahiko Kozuka \8f\ac\92\cb\8f\b9\95F"; # Macintosh (Japanese)
+} name;

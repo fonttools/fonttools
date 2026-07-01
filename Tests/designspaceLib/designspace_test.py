@@ -1206,3 +1206,115 @@ def test_preserveEmptyConditionSet():
     roundtripped_ds = DesignSpaceDocument.fromstring(ds_str)
     assert len(roundtripped_ds.rules) == 1
     assert len(roundtripped_ds.rules[0].conditionSets) == 1
+
+
+def test_map_backward_many_to_one():
+    """Test that map_backward handles many-to-one (flat segment) axis maps.
+
+    Regression test for https://github.com/googlefonts/ufo2ft/issues/978
+    """
+    ax = AxisDescriptor()
+    ax.name = "Weight"
+    ax.tag = "wght"
+    ax.minimum = 100
+    ax.default = 100
+    ax.maximum = 1000
+    # Many-to-one: both user=900 and user=1000 map to design=1000
+    ax.map = [
+        (100, 100),
+        (800, 780),
+        (900, 1000),
+        (1000, 1000),
+    ]
+
+    # map_backward(800) should interpolate between (780, 800) and (1000, 900),
+    # NOT between (780, 800) and (1000, 1000).
+    result = ax.map_backward(800)
+    expected = 800 + (800 - 780) / (1000 - 780) * (900 - 800)  # ~809.09
+    assert result == pytest.approx(expected)
+
+
+def test_map_backward_many_to_one_mid_range():
+    """Test map_backward with a flat segment in the middle of the axis range."""
+    ax = AxisDescriptor()
+    ax.name = "Weight"
+    ax.tag = "wght"
+    ax.minimum = 100
+    ax.default = 100
+    ax.maximum = 1000
+    # Many-to-one in the middle: both user=400 and user=500 map to design=50
+    ax.map = [
+        (100, 10),
+        (400, 50),
+        (500, 50),
+        (700, 80),
+        (900, 100),
+    ]
+
+    # Before the flat segment: interpolate between (10, 100) and (50, 400)
+    result = ax.map_backward(45)
+    expected = 100 + (45 - 10) / (50 - 10) * (400 - 100)  # 362.5
+    assert result == pytest.approx(expected)
+
+    # After the flat segment: interpolate between (50, 500) and (80, 700)
+    result = ax.map_backward(65)
+    expected = 500 + (65 - 50) / (80 - 50) * (700 - 500)  # 600
+    assert result == pytest.approx(expected)
+
+
+def test_map_backward_many_to_one_at_flat_value():
+    """Test map_backward queried exactly at the flat design value."""
+    ax = AxisDescriptor()
+    ax.name = "Weight"
+    ax.tag = "wght"
+    ax.minimum = 100
+    ax.default = 100
+    ax.maximum = 1000
+    ax.map = [
+        (100, 100),
+        (800, 780),
+        (900, 1000),
+        (1000, 1000),
+    ]
+
+    # map_backward(1000) should return 900 (first user value reaching design=1000)
+    assert ax.map_backward(1000) == 900
+
+    # map_backward(780) should still return 800
+    assert ax.map_backward(780) == 800
+
+
+def test_map_backward_many_to_one_unsorted_input():
+    """Test map_backward with map entries not in user-value order."""
+    ax = AxisDescriptor()
+    ax.name = "Weight"
+    ax.tag = "wght"
+    ax.minimum = 100
+    ax.default = 100
+    ax.maximum = 1000
+    # Same map as the extreme case, but entries shuffled
+    ax.map = [
+        (1000, 1000),
+        (100, 100),
+        (900, 1000),
+        (800, 780),
+    ]
+
+    result = ax.map_backward(800)
+    expected = 800 + (800 - 780) / (1000 - 780) * (900 - 800)  # ~809.09
+    assert result == pytest.approx(expected)
+
+
+def test_map_backward_single_entry():
+    """Test map_backward with a single map entry."""
+    ax = AxisDescriptor()
+    ax.name = "Weight"
+    ax.tag = "wght"
+    ax.minimum = 100
+    ax.default = 100
+    ax.maximum = 1000
+    ax.map = [(100, 200)]
+
+    assert ax.map_backward(200) == 100
+    assert ax.map_backward(300) == 200
+    assert ax.map_backward(100) == 0

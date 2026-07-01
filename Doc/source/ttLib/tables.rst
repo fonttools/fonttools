@@ -133,6 +133,10 @@ Tables currently supported
    tables/_a_n_k_r
    tables/_a_v_a_r
    tables/B_A_S_E_
+   tables/_b_d_a_t
+   tables/_b_h_e_d
+   tables/_b_g_c_l
+   tables/_b_l_o_c
    tables/_b_s_l_n
    tables/C_B_D_T_
    tables/C_B_L_C_
@@ -144,6 +148,7 @@ Tables currently supported
    tables/C_P_A_L_
    tables/_c_v_a_r
    tables/_c_v_t
+   tables/D__e_b_g
    tables/D_S_I_G_
    tables/E_B_D_T_
    tables/E_B_L_C_
@@ -158,16 +163,17 @@ Tables currently supported
    tables/G__l_a_t
    tables/G__l_o_c
    tables/_g_l_y_f
-   tables/G_M_A_P_
-   tables/G_P_K_G_
    tables/G_P_O_S_
    tables/G_S_U_B_
+   tables/G_V_A_R_
    tables/_g_v_a_r
    tables/_h_d_m_x
    tables/_h_e_a_d
    tables/_h_h_e_a
    tables/_h_m_t_x
    tables/H_V_A_R_
+   tables/I_F_T_
+   tables/I_F_T_X_
    tables/J_S_T_F_
    tables/_k_e_r_n
    tables/_l_c_a_r
@@ -176,7 +182,6 @@ Tables currently supported
    tables/L_T_S_H_
    tables/M_A_T_H_
    tables/_m_a_x_p
-   tables/M_E_T_A_
    tables/_m_e_t_a
    tables/_m_o_r_t
    tables/_m_o_r_x
@@ -190,11 +195,11 @@ Tables currently supported
    tables/_s_b_i_x
    tables/S__i_l_f
    tables/S__i_l_l
-   tables/S_I_N_G_
    tables/S_T_A_T_
    tables/S_V_G_
    tables/_t_r_a_k
    tables/T_T_F_A_
+   tables/V_A_R_C_
    tables/V_D_M_X_
    tables/_v_h_e_a
    tables/_v_m_t_x

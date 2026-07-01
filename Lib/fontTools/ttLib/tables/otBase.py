@@ -341,6 +341,15 @@ class OTTableReader(object):
         self.pos = newpos
         return value
 
+    def readInt24(self):
+        pos = self.pos
+        newpos = pos + 3
+        b = self.data[pos:newpos]
+        pad = b"\xff" if b[0] & 0x80 else b"\0"
+        (value,) = struct.unpack(">l", pad + b)
+        self.pos = newpos
+        return value
+
     def readUInt24Array(self, count):
         return [self.readUInt24() for _ in range(count)]
 

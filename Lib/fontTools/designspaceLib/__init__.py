@@ -878,16 +878,19 @@ def tagForAxisName(name):
 
 
 class AbstractAxisDescriptor(SimpleDescriptor):
+    name: str | None
+    map: list[tuple[float, float]]
+
     flavor = "axis"
 
     def __init__(
         self,
         *,
         tag=None,
-        name=None,
+        name: str | None = None,
         labelNames=None,
         hidden=False,
-        map=None,
+        map: list[tuple[float, float]] | None = None,
         axisOrdering=None,
         axisLabels=None,
     ):
@@ -977,13 +980,13 @@ class AxisDescriptor(AbstractAxisDescriptor):
         self,
         *,
         tag=None,
-        name=None,
+        name: str | None = None,
         labelNames=None,
         minimum=None,
         default=None,
         maximum=None,
         hidden=False,
-        map=None,
+        map: list[tuple[float, float]] | None = None,
         axisOrdering=None,
         axisLabels=None,
     ):
@@ -1038,13 +1041,25 @@ class AxisDescriptor(AbstractAxisDescriptor):
 
     def map_backward(self, v):
         """Maps value from axis mapping's output (design) to input (user)."""
-        from fontTools.varLib.models import piecewiseLinearMap
-
         if isinstance(v, tuple):
             v = v[0]
         if not self.map:
             return v
-        return piecewiseLinearMap(v, {v: k for k, v in self.map})
+        # Build (design, user) pairs sorted by design then user, keeping
+        # both endpoints of any many-to-one (flat) segments so we can
+        # invert them and interpolation is correct on both sides.
+        # https://github.com/googlefonts/ufo2ft/issues/978
+        backward = sorted((design, user) for user, design in self.map)
+        design0, user0 = backward[0]
+        if v <= design0:
+            return v + user0 - design0
+        for (design1, user1), (design2, user2) in zip(backward, backward[1:]):
+            if design1 <= v <= design2:
+                if design1 == design2:
+                    return user1
+                return user1 + (user2 - user1) * (v - design1) / (design2 - design1)
+        designN, userN = backward[-1]
+        return v + userN - designN
 
 
 class DiscreteAxisDescriptor(AbstractAxisDescriptor):
@@ -1084,12 +1099,12 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
         self,
         *,
         tag=None,
-        name=None,
+        name: str | None = None,
         labelNames=None,
         values=None,
         default=None,
         hidden=False,
-        map=None,
+        map: list[tuple[float, float]] | None = None,
         axisOrdering=None,
         axisLabels=None,
     ):

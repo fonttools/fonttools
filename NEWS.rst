@@ -1,3 +1,92 @@
+- [feaLib] Fix name-table parsing for multibyte Mac encodings (#1196) (#4092)
+- [subset] keep East Asian spacing palt by default (#4094)
+- [subset] bug fix for MATH table in which constructions for glyphs that are only added
+  during MATH closure were kept (#4096)
+- [ttLib] Add support for TrueType Collection version 2 (#4100)
+- [ufoLib] Make glyph-to-group construction accessible outside of lookup function
+  (#4102)
+- [glyf] Use reverse glyph map for O(1) `__setitem__` membership (#4103)
+- [ttLib] Give an actionable error when LookupList overflow is unrecoverable (#4109)
+- [ttLib] Pin a single head.modified timestamp across TTCollection.save (#4111)
+
+4.63.0 (released 2026-05-14)
+----------------------------
+
+- [ttLib] Add support for Apple Color Emoji ``bgcl`` table (#4065).
+- [ttLib] Add support for ``IFT`` and ``IFTX`` tables (Incremental Font Transfer,
+  PatchMapFormat2) (#4070, #4072).
+- [otData] Introduce ``FieldSpec`` dataclass for OpenType table schema definitions,
+  replacing raw tuples in ``otData.py`` (#4076).
+- [Feat] Show ``name`` table strings as comments next to label IDs in TTX output,
+  matching the convention used by ``fvar``, ``STAT``, ``trak`` (#4089).
+- [cu2qu] Fix Cython complex-division rounding difference in
+  ``split_cubic_into_three`` that could cause ±1 off-curve coordinate shifts
+  (#3928, #4083).
+- [designspaceLib] Fix ``map_backward`` for many-to-one (flat-segment) axis maps
+  that silently dropped entries via dict comprehension
+  (googlefonts/ufo2ft#978, #4085).
+- [OS/2] Fix ``setUnicodeRanges`` to accept reserved bits 123-127, restoring
+  round-trip with ``getUnicodeRanges`` and fixing ``recalcUnicodeRanges`` crash
+  in the subsetter (#4087, #4088).
+- [cython] Declare Cython extensions as free-threading compatible on Python 3.13+,
+  so that importing them on free-threaded Python no longer re-enables the GIL
+  (#4073, #4090).
+
+4.62.1 (released 2026-03-13)
+----------------------------
+
+- [feaLib] Extend contextual rule merging to all rule types: single subst, GSUB/GPOS
+  named lookups, ignore rules, and chained alternate subst (#4061).
+
+4.62.0 (released 2026-03-09)
+----------------------------
+
+- [diff] Add new ``fonttools diff`` command for comparing font files, imported from the
+  ``fdiff`` project and heavily reworked (#1190, #4007, #4009, #4011, #4013, #4019).
+- [feaLib] Fix ``VariableScalar`` interpolation bug with non-linear avar mappings. Also
+  decouple ``VariableScalar`` from compiled fonts, allowing it to work with designspace data
+  before compilation (#3938, #4054).
+- [feaLib] Fix ``VariableScalar`` axis ordering and iterative delta rounding to match fontc
+  behavior (#4053).
+- [feaLib] Merge chained multi subst rules with same context into a single subtable instead of
+  emitting one subtable per glyph (#4016, #4058).
+- [feaLib] Pass location to ``ConditionsetStatement`` to fix glyphsLib round-tripping
+  (fontra/fontra-glyphs#130, #4057).
+- [feaLib] Write ``0xFFFF`` instead of ``0`` for missing nameIDs in ``cv`` feature params
+  (#4010, #4012).
+- [cmap] Fix ``CmapSubtable.__lt__()`` ``TypeError`` on Python 3 when subtables share the
+  same encoding record, and add compile-time validation for unique encoding records (#4035,
+  #4055).
+- [svgLib] Skip non-element XML nodes (comments, processing instructions) when drawing SVG
+  paths (#4042, #4043).
+- [glifLib] Fix regression reading glyph outlines when ``glyphObject=None`` (#4030, #4031).
+- [pointPen] Fix ``SegmentToPointPen`` edge case: only remove a duplicate final point on
+  ``closePath()`` if it is an on-curve point (#4014, #4015).
+- [cffLib] **SECURITY** Replace ``eval()`` with ``safeEval()`` in ``parseBlendList()`` to
+  prevent arbitrary code execution from crafted TTX files (#4039, #4040).
+- [ttLib] Remove defunct Adobe SING Glyphlet tables (``META``, ``SING``, ``GMAP``, ``GPKG``)
+  (#4044).
+- [varLib.interpolatable] Various bugfixes: fix swapped nodeTypes assignment, duplicate
+  kink-detector condition, typos, CFF2 vsindex parsing, glyph existence check, and plot
+  helpers (#4046).
+- [varLib.models] Fix ``getSubModel`` not forwarding ``extrapolate``/``axisRanges``; check
+  location uniqueness after stripping zeros (#4047).
+- [varLib] Fix ``--variable-fonts`` filter in ``build_many``; remove dead code and fix
+  comments (#4048).
+- [avar] Preserve existing name table in build; keep ``unbuild`` return types consistent;
+  validate ``map`` CLI coordinates (#4051).
+- [cu2qu/qu2cu] Add input validation: reject non-positive tolerances, validate curve inputs
+  and list lengths (#4052).
+- [colorLib] Raise a clear ``ColorLibError`` when base glyphs are missing from glyphMap,
+  instead of a confusing ``KeyError`` (#4041).
+- [glyf] Remove unnecessary ``fvar`` table dependency (#4017).
+- [fvar/trak] Remove unnecessary ``name`` table dependency (#4018).
+- [ufoLib] Relax guideline validation to follow the updated spec (#3537, #3553).
+- [ttFont] Fix ``saveXML`` regression with empty table lists, clarify docstring (#4025, #4026,
+  #4056).
+- [setup.py] Link ``libm`` for Cython extensions using math functions (#4028, #4029).
+- Add typing annotations for ``DSIG``, ``DefaultTable``, ``ttProgram`` (#4033).
+
 4.61.1 (released 2025-12-12)
 ----------------------------
 

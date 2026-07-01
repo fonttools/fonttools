@@ -175,6 +175,22 @@ def add_implicit_on_curves(p):
 Point = Union[Tuple[float, float], complex]
 
 
+def _raise_incompatible_point(point, previous_point):
+    raise ValueError(
+        f"Quadratic splines must connect end-to-start; got {previous_point!r} then {point!r}"
+    )
+
+
+def _validate_spline_length(spline):
+    if len(spline) < 3:
+        raise ValueError("Quadratic splines must contain at least 3 points")
+
+
+def _validate_positive_tolerance(max_err):
+    if max_err <= 0:
+        raise ValueError("max_err must be greater than zero")
+
+
 @cython.locals(
     cost=cython.int,
     is_complex=cython.int,
@@ -198,6 +214,7 @@ def quadratic_to_curves(
     Returns:
         The output is a list of tuples of points. Points are represented
         in the same format as the input, either as 2-tuples or complex numbers.
+        If ``quads`` is empty, returns an empty list.
 
         Each tuple is either of length three, for a quadratic curve, or four,
         for a cubic curve.  Each curve's last point is the same as the next
@@ -209,7 +226,17 @@ def quadratic_to_curves(
         max_err: absolute error tolerance; defaults to 0.5
 
         all_cubic: if True, only cubic curves are generated; defaults to False
+
+    Raises:
+        ValueError: if an input spline has fewer than 3 points, or if adjacent
+        splines do not connect end-to-start.
     """
+    if not quads:
+        return []
+    _validate_positive_tolerance(max_err)
+    for spline in quads:
+        _validate_spline_length(spline)
+
     is_complex = type(quads[0][0]) is complex
     if not is_complex:
         quads = [[complex(x, y) for (x, y) in p] for p in quads]
@@ -218,7 +245,8 @@ def quadratic_to_curves(
     costs = [1]
     cost = 1
     for p in quads:
-        assert q[-1] == p[0]
+        if q[-1] != p[0]:
+            _raise_incompatible_point(p[0], q[-1])
         for i in range(len(p) - 2):
             cost += 1
             costs.append(cost)

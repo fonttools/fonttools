@@ -476,16 +476,20 @@ class cython_build_ext(_build_ext):
         # optionally enable line tracing for test coverage support
         linetrace = os.environ.get("CYTHON_TRACE") == "1"
 
+        directives = {
+            "linetrace": linetrace,
+            "language_level": 3,
+            "embedsignature": True,
+        }
+        if sys.version_info >= (3, 13):
+            directives["freethreading_compatible"] = True
+
         self.distribution.ext_modules[:] = cythonize(
             self.distribution.ext_modules,
             force=linetrace or self.force,
             annotate=os.environ.get("CYTHON_ANNOTATE") == "1",
             quiet=not self.verbose,
-            compiler_directives={
-                "linetrace": linetrace,
-                "language_level": 3,
-                "embedsignature": True,
-            },
+            compiler_directives=directives,
         )
 
         _build_ext.finalize_options(self)
@@ -519,7 +523,7 @@ if ext_modules:
 
 setup_params = dict(
     name="fonttools",
-    version="4.61.2.dev0",
+    version="4.63.1.dev0",
     description="Tools to manipulate font files",
     author="Just van Rossum",
     author_email="just@letterror.com",

@@ -5,6 +5,7 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
+
 import copy
 from enum import IntEnum
 from functools import reduce
@@ -27,6 +28,7 @@ from .otBase import (
     ValueRecord,
     CountReference,
     getFormatSwitchingBaseTableClass,
+    have_uharfbuzz,
 )
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
@@ -2139,6 +2141,7 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 # subclass for each alternate field name.
 #
 _equivalents = {
+    "PatchMap": ("IFT ", "IFTX"),
     "MarkArray": ("Mark1Array",),
     "LangSys": ("DefaultLangSys",),
     "Coverage": (
@@ -2268,6 +2271,27 @@ def fixLookupOverFlows(ttf, overflowRecord):
     while lookup.SubTable[0].__class__.LookupType == extType:
         lookupIndex = lookupIndex - 1
         if lookupIndex < 0:
+            # Every lookup before the overflow is already an Extension lookup, so
+            # there is nothing left to promote. When this is a LookupList->Lookup
+            # offset overflow (SubTableIndex is None), the LookupList's uint16
+            # offsets simply can't address all the lookups and fontTools' packer
+            # can't recover; warn with actionable advice. (For a subtable offset
+            # overflow that fell back here, SubTableIndex is set and this message
+            # would be misleading, so it's skipped.)
+            if overflowRecord.SubTableIndex is None:
+                log.error(
+                    "%s LookupList offset overflowed and all lookups are already "
+                    "Extension lookups, so the overflow can't be resolved by "
+                    "promotion; %s.",
+                    overflowRecord.tableType,
+                    (
+                        "reduce the number of lookups"
+                        if have_uharfbuzz
+                        else "install uharfbuzz to enable the HarfBuzz repacker "
+                        "(it can often pack such tables by sharing/duplicating "
+                        "subtables), or reduce the number of lookups"
+                    ),
+                )
             return ok
         lookup = lookups[lookupIndex]
 
@@ -2281,7 +2305,7 @@ def fixLookupOverFlows(ttf, overflowRecord):
                 extSubTable.Format = 1
                 extSubTable.ExtSubTable = subTable
                 lookup.SubTable[si] = extSubTable
-    ok = 1
+                ok = 1
     return ok
 
 
@@ -2581,6 +2605,34 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 # End of OverFlow logic
 
 
+# ---------------------------------------------------------------------------
+# IFT - Incremental Font Transfer tables
+# ---------------------------------------------------------------------------
+
+
+class EntryIdStringData(BaseTable):
+    """IFT entry ID string data block (raw bytes pool)."""
+
+    def decompile(self, reader, font):
+        # This subtable is reached via an LOffset, so the reader's data buffer
+        # is already scoped to the bytes starting at the subtable's offset within
+        # the IFT table blob.  Reading to the end of that buffer is correct; the
+        # actual bytes consumed are determined by the entryIdStringLength fields
+        # in the MappingEntries records.
+        self.data = bytes(reader.data[reader.pos :])
+
+    def compile(self, writer, font):
+        writer.writeData(self.data)
+
+    def toXML2(self, xmlWriter, font):
+        xmlWriter.simpletag("data", value=self.data.hex())
+        xmlWriter.newline()
+
+    def fromXML(self, name, attrs, content, font):
+        if name == "data":
+            self.data = bytes.fromhex(attrs["value"])
+
+
 def _buildClasses():
     import re
     from .otData import otData
@@ -2589,7 +2641,7 @@ def _buildClasses():
     namespace = globals()
 
     # populate module with classes
-    for name, table in otData:
+    for name, fields in otData:
         baseClass = BaseTable
         m = formatPat.match(name)
         if m:
@@ -2598,7 +2650,7 @@ def _buildClasses():
             # the first row of a format-switching otData table describes the Format;
             # the first column defines the type of the Format field.
             # Currently this can be either 'uint16' or 'uint8'.
-            formatType = table[0][0]
+            formatType = fields[0].type
             baseClass = getFormatSwitchingBaseTableClass(formatType)
         if name not in namespace:
             # the class doesn't exist yet, so the base implementation is used.
@@ -2672,7 +2724,7 @@ def _buildClasses():
     # add converters to classes
     from .otConverters import buildConverters
 
-    for name, table in otData:
+    for name, fields in otData:
         m = formatPat.match(name)
         if m:
             # XxxFormatN subtable, add converter to "base" table
@@ -2682,13 +2734,13 @@ def _buildClasses():
             if not hasattr(cls, "converters"):
                 cls.converters = {}
                 cls.convertersByName = {}
-            converters, convertersByName = buildConverters(table[1:], namespace)
+            converters, convertersByName = buildConverters(fields[1:], namespace)
             cls.converters[format] = converters
             cls.convertersByName[format] = convertersByName
             # XXX Add staticSize?
         else:
             cls = namespace[name]
-            cls.converters, cls.convertersByName = buildConverters(table, namespace)
+            cls.converters, cls.convertersByName = buildConverters(fields, namespace)
             # XXX Add staticSize?
 
 

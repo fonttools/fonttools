@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import Tag, tostr, binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
@@ -8,7 +10,7 @@ from fontTools.feaLib.lookupDebugInfo import (
 )
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
-from fontTools.feaLib.variableScalar import VariableScalar
+from fontTools.feaLib.variableScalar import VariableScalar, VariableScalarBuilder
 from fontTools.otlLib import builder as otl
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.ttLib import newTable, getTableModule
@@ -124,6 +126,7 @@ class Builder(object):
             self.varstorebuilder = OnlineVarStoreBuilder(
                 [ax.axisTag for ax in self.axes]
             )
+            self.scalar_builder = VariableScalarBuilder.from_ttf(font)
         self.default_language_systems_ = set()
         self.script_ = None
         self.lookupflag_ = 0
@@ -180,10 +183,6 @@ class Builder(object):
         self.stat_ = {}
         # for conditionsets
         self.conditionsets_ = {}
-        # We will often use exactly the same locations (i.e. the font's masters)
-        # for a large number of variable scalars. Instead of creating a model
-        # for each, let's share the models.
-        self.model_cache = {}
 
     def build(self, tables=None, debug=False):
         if self.parseTree is None:
@@ -809,7 +808,6 @@ class Builder(object):
                 gdef.remap_device_varidxes(varidx_map)
                 if "GPOS" in self.font:
                     self.font["GPOS"].table.remap_device_varidxes(varidx_map)
-            self.model_cache.clear()
         if any(
             (
                 gdef.GlyphClassDef,
@@ -1370,8 +1368,10 @@ class Builder(object):
             return
         if prefix or suffix:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
-            lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
-            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [lookup]))
+            lookup = chain.find_chainable_alternate_subst(glyph)
+            if lookup is None:
+                lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
+            self._add_contextual_rule(chain, prefix, [{glyph}], suffix, [lookup])
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
@@ -1403,6 +1403,28 @@ class Builder(object):
             {g: (replacement,) for g in itertools.product(*glyphs)},
         )
 
+    @staticmethod
+    def _add_contextual_rule(chain, prefix, glyphs, suffix, lookups):
+        """Add a contextual rule, merging with the last rule if possible.
+
+        Consecutive rules that share the same prefix, suffix, lookups, and have
+        a single input position can be merged into one rule with broader input
+        coverage. This produces more compact binary tables (often Format 3).
+        """
+        if len(glyphs) == 1 and chain.rules and not chain.rules[-1].is_subtable_break:
+            last = chain.rules[-1]
+            if (
+                len(last.glyphs) == 1
+                and last.prefix == prefix
+                and last.suffix == suffix
+                and last.lookups == lookups
+            ):
+                if not isinstance(last.glyphs[0], set):
+                    last.glyphs[0] = set(last.glyphs[0])
+                last.glyphs[0].update(glyphs[0])
+                return
+        chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, lookups))
+
     # GSUB 5/6
     def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
         if not all(glyphs) or not all(prefix) or not all(suffix):
@@ -1410,11 +1432,8 @@ class Builder(object):
                 "Empty glyph class in contextual substitution", location
             )
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-        lookup.rules.append(
-            ChainContextualRule(
-                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
-            )
-        )
+        resolved = self.find_lookup_builders_(lookups)
+        self._add_contextual_rule(lookup, prefix, glyphs, suffix, resolved)
 
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
         if not mapping or not all(prefix) or not all(suffix):
@@ -1428,9 +1447,8 @@ class Builder(object):
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
-        chain.rules.append(
-            ChainContextualRule(prefix, [list(mapping.keys())], suffix, [sub])
-        )
+        keys = set(mapping.keys())
+        self._add_contextual_rule(chain, prefix, [keys], suffix, [sub])
 
     def add_multi_subst_chained_(self, location, prefix, glyph, suffix, replacements):
         if not all(prefix) or not all(suffix):
@@ -1443,7 +1461,8 @@ class Builder(object):
         if sub is None:
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
         sub.mapping[glyph] = replacements
-        chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
+        # https://github.com/fonttools/fonttools/issues/4016
+        self._add_contextual_rule(chain, prefix, [{glyph}], suffix, [sub])
 
     def add_ligature_subst_chained_(
         self, location, prefix, glyphs, suffix, replacement
@@ -1576,11 +1595,8 @@ class Builder(object):
                 "Empty glyph class in contextual positioning rule", location
             )
         lookup = self.get_lookup_(location, ChainContextPosBuilder)
-        lookup.rules.append(
-            ChainContextualRule(
-                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
-            )
-        )
+        resolved = self.find_lookup_builders_(lookups)
+        self._add_contextual_rule(lookup, prefix, glyphs, suffix, resolved)
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         if not pos or not all(prefix) or not all(suffix):
@@ -1608,9 +1624,8 @@ class Builder(object):
                 sub.add_pos(location, glyph, otValue)
             subs.append(sub)
         assert len(pos) == len(subs), (pos, subs)
-        chain.rules.append(
-            ChainContextualRule(prefix, [g for g, v in pos], suffix, subs)
-        )
+        glyphs = [g for g, v in pos]
+        self._add_contextual_rule(chain, prefix, glyphs, suffix, subs)
 
     def add_marks_(self, location, lookupBuilder, marks):
         """Helper for add_mark_{base,liga,mark}_pos."""
@@ -1729,19 +1744,24 @@ class Builder(object):
 
         self.conditionsets_[key] = value
 
-    def makeVariablePos(self, location, varscalar):
-        if not self.varstorebuilder:
+    def makeVariablePos(
+        self, location, varscalar: VariableScalar
+    ) -> tuple[int, int | None]:
+        """Make a pos statement from a VariableScalar, returning the default
+        value, and optionally the variation index if the scalar genuinely
+        requires variation too."""
+
+        if self.varstorebuilder is None or self.scalar_builder is None:
             raise FeatureLibError(
                 "Can't define a variable scalar in a non-variable font", location
             )
 
-        varscalar.axes = self.axes
         if not varscalar.does_vary:
-            return varscalar.default, None
+            return self.scalar_builder.default_value(varscalar), None
 
         try:
-            default, index = varscalar.add_to_variation_store(
-                self.varstorebuilder, self.model_cache, self.font.get("avar")
+            default, index = self.scalar_builder.add_to_variation_store(
+                varscalar, self.varstorebuilder
             )
         except VarLibError as e:
             raise FeatureLibError(

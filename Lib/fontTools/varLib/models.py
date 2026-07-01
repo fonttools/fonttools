@@ -10,6 +10,7 @@ __all__ = [
     "VariationModel",
 ]
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
@@ -274,6 +275,8 @@ class VariationModel(object):
     def __init__(
         self, locations, axisOrder=None, extrapolate=False, *, axisRanges=None
     ):
+        locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
+
         if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
             raise VariationModelError("Locations must be unique.")
 
@@ -287,8 +290,6 @@ class VariationModel(object):
                 allAxes = {axis for loc in locations for axis in loc.keys()}
                 axisRanges = {axis: (-1, 1) for axis in allAxes}
         self.axisRanges = axisRanges
-
-        locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
         keyFunc = self.getMasterLocationsSortKeyFunc(
             locations, axisOrder=self.axisOrder
         )
@@ -313,7 +314,12 @@ class VariationModel(object):
         key = tuple(v is not None for v in items)
         subModel = self._subModels.get(key)
         if subModel is None:
-            subModel = VariationModel(subList(key, self.origLocations), self.axisOrder)
+            subModel = VariationModel(
+                subList(key, self.origLocations),
+                self.axisOrder,
+                extrapolate=self.extrapolate,
+                axisRanges=self.axisRanges,
+            )
             self._subModels[key] = subModel
         return subModel, subList(key, items)
 
@@ -401,7 +407,7 @@ class VariationModel(object):
             locAxes = set(region.keys())
             # Walk over previous masters now
             for prev_region in regions[:i]:
-                # Master with different axes do not participte
+                # Master with different axes do not participate
                 if set(prev_region.keys()) != locAxes:
                     continue
                 # If it's NOT in the current box, it does not participate
@@ -572,7 +578,7 @@ class VariationModel(object):
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
-def piecewiseLinearMap(v, mapping):
+def piecewiseLinearMap(v: float, mapping: Mapping[float, float]) -> float:
     keys = mapping.keys()
     if not keys:
         return v

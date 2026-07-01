@@ -320,10 +320,10 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
                 ul2 |= 1 << (bit - 32)
             elif 64 <= bit < 96:
                 ul3 |= 1 << (bit - 64)
-            elif 96 <= bit < 123:
+            elif 96 <= bit < 128:
                 ul4 |= 1 << (bit - 96)
             else:
-                raise ValueError("expected 0 <= int <= 122, found: %r" % bit)
+                raise ValueError("expected 0 <= int <= 127, found: %r" % bit)
         self.ulUnicodeRange1, self.ulUnicodeRange2 = ul1, ul2
         self.ulUnicodeRange3, self.ulUnicodeRange4 = ul3, ul4
 

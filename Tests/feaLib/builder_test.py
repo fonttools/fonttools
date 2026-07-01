@@ -72,20 +72,21 @@ class BuilderTest(unittest.TestCase):
         spec9a spec9a2 spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f
         spec9g spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
-        bug512 bug514 bug568 bug633 bug1307 bug1459 bug2276 variable_bug2772
+        bug512 bug514 bug568 bug633 bug1196 bug1307 bug1459 bug2276 variable_bug2772
         name size size2 multiple_feature_blocks omitted_GlyphClassDef
         ZeroValue_SinglePos_horizontal ZeroValue_SinglePos_vertical
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
-        PairPosSubtable ChainSubstSubtable SubstSubtable ChainPosSubtable 
-        LigatureSubtable AlternateSubtable MultipleSubstSubtable 
-        SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
+        PairPosSubtable ChainSubstSubtable SubstSubtable ChainPosSubtable
+        LigatureSubtable AlternateSubtable MultipleSubstSubtable
+        SingleSubstSubtable aalt_chain_contextual_subst AlternateChained
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
         GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
         variable_scalar_valuerecord variable_scalar_anchor variable_conditionset
         variable_mark_anchor duplicate_lookup_reference
         contextual_inline_multi_sub_format_2
         contextual_inline_format_4
+        chain_context_multi_subst_class
         duplicate_language_stmt
         CursivePosSubtable
         MarkBasePosSubtable
@@ -99,6 +100,10 @@ class BuilderTest(unittest.TestCase):
         combo_mult_and_lig_sub
         identical_feature_lookups
         cvparam_null
+        contextual_merge_gsub_named
+        contextual_merge_gpos_named
+        contextual_merge_ignore
+        contextual_merge_alternate
     """.split()
 
     VARFONT_AXES = [
@@ -1334,6 +1339,22 @@ class BuilderTest(unittest.TestCase):
         var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
         assert self.get_region(var_region_axis_wght) == (0.0, 0.90625, 1.0)
         assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
+
+    def test_variable_scalar_duplicate_location(self):
+        features = """
+            languagesystem DFLT dflt;
+
+            feature kern {
+                pos two <0 (wght=200:10 wght=200,wdth=100:20) 0 0>;
+            } kern;
+        """
+
+        font = self.make_mock_vf()
+
+        with self.assertRaisesRegex(
+            FeatureLibError, "Failed to compute deltas for variable scalar"
+        ):
+            addOpenTypeFeaturesFromString(font, features)
 
     def test_ligatureCaretByPos_variable_scalar(self):
         """Test that the `avar` table is consulted when normalizing user-space

@@ -1,0 +1,15 @@
+# GPOS contextual positioning with named lookups:
+# consecutive rules sharing backtrack, lookahead, and lookup
+# but differing in input glyph should merge.
+
+lookup tighten {
+    pos a <-30 0 -30 0>;
+    pos e <-30 0 -30 0>;
+    pos o <-30 0 -30 0>;
+} tighten;
+
+feature kern {
+    pos a' lookup tighten comma;
+    pos e' lookup tighten comma;
+    pos o' lookup tighten comma;
+} kern;

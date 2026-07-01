@@ -207,7 +207,7 @@ _whiteRE = re.compile(r"\s*")
 
 _pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]+).*?\*/")
 
-_indentRE = re.compile(r"^FDEF|IF|ELSE\[ \]\t.+")
+_indentRE = re.compile(r"^FDEF|IDEF|IF|ELSE\[ \]\t.+")
 _unindentRE = re.compile(r"^ELSE|ENDF|EIF\[ \]\t.+")
 
 
