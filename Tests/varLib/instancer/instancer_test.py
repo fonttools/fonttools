@@ -15,6 +15,7 @@ from fontTools.varLib import builder
 from fontTools.varLib import featureVars
 from fontTools.varLib import models
 import collections
+import itertools
 from copy import deepcopy
 from io import BytesIO, StringIO
 import logging
@@ -1809,6 +1810,53 @@ class InstantiateAvar2Test(object):
                     f"axis {tag} at {user_loc}: original final {o} "
                     f"!= partial {p} (diff {o - p})"
                 )
+
+    def test_offset_compensation_exhaustive(self, monkeypatch):
+        # Exhaustive offset-compensation check: every single-axis and pairwise
+        # restriction (with a MOVED default, the hardest case) must reproduce
+        # the original font's final normalized coordinates at interior user
+        # locations for every surviving axis. Region culling is orthogonal to
+        # offset compensation (it only drops dead gvar/HVAR regions; the final
+        # coordinates checked here come from fvar+avar) and is by far the most
+        # expensive step, so disable it to keep this broad sweep fast; culling
+        # is exercised by the other tests above.
+        monkeypatch.setattr(
+            instancer, "_computeReachableRangesForAvar2", lambda *a, **k: None
+        )
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        axes = {
+            a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
+            for a in original["fvar"].axes
+        }
+
+        def moved(tag):
+            lo, d, hi = axes[tag]
+            return (round(lo + (d - lo) * 0.3), round(d + (hi - d) * 0.3), round(hi))
+
+        tags = list(axes)
+        combos = list(itertools.combinations(tags, 1)) + list(
+            itertools.combinations(tags, 2)
+        )
+        for combo in combos:
+            limits = {t: moved(t) for t in combo}
+            partial = instancer.instantiateVariableFont(
+                ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False), dict(limits)
+            )
+            partial_axes = {axis.axisTag for axis in partial["fvar"].axes}
+            for i in range(5):
+                user_loc = {
+                    t: moved(t)[0] + (moved(t)[2] - moved(t)[0]) * i / 4 for t in combo
+                }
+                orig_final = _avar2_final_coords(original, user_loc)
+                part_loc = {k: v for k, v in user_loc.items() if k in partial_axes}
+                part_final = _avar2_final_coords(partial, part_loc)
+                for tag in partial_axes:
+                    o = round(orig_final.get(tag, 0) * 16384)
+                    p = round(part_final.get(tag, 0) * 16384)
+                    assert abs(o - p) <= 2, (
+                        f"{combo} axis {tag} at {user_loc}: "
+                        f"original final {o} != partial {p} (diff {o - p})"
+                    )
 
 
 class InstantiateVariableFontTest(object):
