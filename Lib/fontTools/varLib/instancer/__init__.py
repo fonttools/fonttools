@@ -140,7 +140,6 @@ import io
 from typing import Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
 import warnings
 
-
 log = logging.getLogger("fontTools.varLib.instancer")
 
 
@@ -1709,6 +1708,47 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
             "Self-contained pinned axes (removable): %s",
             {tag: round(v, 6) for tag, v in selfContainedAxes.items()},
         )
+
+    # Step 1.75: Privatize shared varIdx delta rows before adding offset
+    # compensation. avar2's VarIdxMap may map several fvar axes to the SAME
+    # IVS delta row (as the parametric test font does: e.g. GRAD and XOPQ can
+    # share one varIdx). Writing one axis's offset-compensation deltas into a
+    # shared row would corrupt every OTHER axis that reads that row. So give
+    # each offset-receiving axis whose row is shared its own private copy of
+    # the row (identical contents, preserving the rebased delta), then repoint
+    # its VarIdxMap entry. Sharers keep the clean row; offsets land privately.
+    def _axisVarIdx(i):
+        return varIdxMap[i] if varIdxMap is not None else i
+
+    varIdxRefCount = collections.Counter(_axisVarIdx(i) for i in range(len(fvarAxes)))
+    for axisIdx, axis in enumerate(fvarAxes):
+        tag = axis.axisTag
+        # Only axes that will receive offset compensation (restricted or
+        # non-self-contained pinned) can contaminate a shared row.
+        if tag not in axisLimits or tag in selfContainedAxes:
+            continue
+        varIdx = _axisVarIdx(axisIdx)
+        if varIdx == NO_VARIATION_INDEX:
+            continue  # gets a fresh, private VarData in the offset loop below
+        if varIdxRefCount[varIdx] <= 1:
+            continue  # sole owner: safe to write offsets in place
+        # Shared: duplicate this axis's item (row) within its VarData so it has
+        # a private inner index. Copy the value from every TupleVariation so the
+        # rebased delta is preserved; extend defaultDeltaArray in tandem.
+        outer = varIdx >> 16
+        inner = varIdx & 0xFFFF
+        newInner = tupleVarStore.itemCounts[outer]
+        for tv in tupleVarStore.tupleVarData[outer]:
+            tv.coordinates.append(tv.coordinates[inner])
+        tupleVarStore.itemCounts[outer] += 1
+        defaultDeltaArray[outer].append(defaultDeltaArray[outer][inner])
+        newVarIdx = (outer << 16) | newInner
+        # A shared varIdx implies an explicit VarIdxMap (implicit identity maps
+        # every axis to a distinct varIdx, so we could not be here otherwise).
+        assert varIdxMap is not None
+        varIdxMap.mapping[axisIdx] = newVarIdx
+        varIdxRefCount[varIdx] -= 1
+        varIdxRefCount[newVarIdx] += 1
 
     # Step 2: Add offset compensation TupleVariations
     processedVarIdxes = set()
