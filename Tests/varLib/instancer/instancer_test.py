@@ -1811,18 +1811,13 @@ class InstantiateAvar2Test(object):
                     f"!= partial {p} (diff {o - p})"
                 )
 
-    def test_offset_compensation_exhaustive(self, monkeypatch):
+    def test_offset_compensation_exhaustive(self):
         # Exhaustive offset-compensation check: every single-axis and pairwise
         # restriction (with a MOVED default, the hardest case) must reproduce
         # the original font's final normalized coordinates at interior user
-        # locations for every surviving axis. Region culling is orthogonal to
-        # offset compensation (it only drops dead gvar/HVAR regions; the final
-        # coordinates checked here come from fvar+avar) and is by far the most
-        # expensive step, so disable it to keep this broad sweep fast; culling
-        # is exercised by the other tests above.
-        monkeypatch.setattr(
-            instancer, "_computeReachableRangesForAvar2", lambda *a, **k: None
-        )
+        # locations for every surviving axis. Also doubles as an integration
+        # smoke test that the full partial-instancing path (including region
+        # culling / getExtremes) runs cleanly across many axis combinations.
         original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
         axes = {
             a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
