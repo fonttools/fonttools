@@ -705,6 +705,7 @@ def VarStore_getExtremes(
     cache=None,
     _bias=None,
     instancer=None,
+    evalCache=None,
 ):
     if varIdx == NO_VARIATION_INDEX:
         if identityAxisIndex is None:
@@ -727,6 +728,15 @@ def VarStore_getExtremes(
     # supports are cached), instead of building a fresh one per evaluation.
     if instancer is None:
         instancer = VarStoreInstancer(self, fvarAxes)
+
+    # Scoped memo (discarded when this top-level call returns) of the raw delta
+    # at each evaluated location. A location is fully determined by its source
+    # (regionIndex, loc) -- a region is evaluated only when none of its peak
+    # axes are in nullAxes, so all its peaks are set and loc is the sole extra
+    # coordinate -- so key on that pair (cheap, no dict/frozenset). The
+    # recursion re-visits the same locations many times; this collapses them.
+    if evalCache is None:
+        evalCache = {}
 
     # Compute the bias once at the top level. The bias is the constant
     # contribution from empty regions (scalar always 1). VarStoreInstancer
@@ -801,8 +811,13 @@ def VarStore_getExtremes(
                 except KeyError:
                     pass
 
-            instancer.setLocation(location)
-            v = instancer[varIdx] - _bias + (0 if loc is None else round(loc * 16384))
+            ekey = (regionIndex, loc)
+            raw = evalCache.get(ekey)
+            if raw is None:
+                instancer.setLocation(location)
+                raw = instancer[varIdx]
+                evalCache[ekey] = raw
+            v = raw - _bias + (0 if loc is None else round(loc * 16384))
 
             minOther, maxOther = self.getExtremes(
                 varIdx,
@@ -813,6 +828,7 @@ def VarStore_getExtremes(
                 cache,
                 _bias,
                 instancer,
+                evalCache,
             )
 
             minV = min(minV, (v + minOther) * scalar)
