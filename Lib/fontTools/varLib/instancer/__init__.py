@@ -102,7 +102,7 @@ from fontTools.misc.fixedTools import (
     strToFixedToFloat,
     otRound,
 )
-from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap, VariationModel
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
@@ -1798,38 +1798,59 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
             itemCount = tupleVarStore.itemCounts[outer]
             defaultDelta = defaultDeltaArray[outer][inner]
 
-            # Compute offset deltas in 2.14 integer units
-            d_int = otRound(d_i * 16384)
-            a_int = otRound(a_i * 16384)
-            b_int = otRound(b_i * 16384)
-
-            # Empty-region bias: d_i + default_delta_i
-            # (default_delta_i is already in IVS integer units)
-            bias = d_int + otRound(defaultDelta)
-
-            if bias != 0:
-                coords = [0] * itemCount
-                coords[inner] = bias
-                tupleVarStore.tupleVarData[outer].append(TupleVariation({}, coords))
-
+            # Offset compensation encodes, as avar2 deltas on axis `tag`, the
+            # piecewise-linear function offset(z) = inv_renorm(z) - z, where
+            # inv_renorm maps a new intermediate coordinate z back to the old
+            # intermediate coordinate. It is known at these breakpoints in the
+            # new intermediate space:
+            #   z = -1  ->  a_i + 1   (new minimum)
+            #   z =  0  ->  d_i       (new default)
+            #   z = +1  ->  b_i - 1   (new maximum)
+            # If the axis default MOVED, inv_renorm also kinks where the OLD
+            # default lands in the new space (old intermediate crosses 0), at
+            #   z = z_old  ->  -z_old
+            # Omitting that breakpoint (as a plain two-tent encoding does) makes
+            # interior coordinates wrong. Feed all breakpoints to a VariationModel
+            # to synthesize the correct tents; this reduces to the two classic
+            # tents when the default is unchanged (z_old == 0).
+            offsetByZ = {-1.0: a_i + 1.0, 0.0: d_i, 1.0: b_i - 1.0}
             if not isPinned:
-                # Tent (-1, -1, 0): delta = a_i + 1 - d_i
-                negDelta = a_int + (1 << 14) - d_int
-                if negDelta != 0:
-                    coords = [0] * itemCount
-                    coords[inner] = negDelta
-                    tupleVarStore.tupleVarData[outer].append(
-                        TupleVariation({tag: (-1, -1, 0)}, coords)
-                    )
+                newSeg = avar.segments.get(tag)
+                zOldNorm = normalizeValue(
+                    axis.defaultValue,
+                    (
+                        axisLimits[tag].minimum,
+                        axisLimits[tag].default,
+                        axisLimits[tag].maximum,
+                    ),
+                )
+                zOld = piecewiseLinearMap(zOldNorm, newSeg) if newSeg else zOldNorm
+                zOld = floatToFixedToFloat(zOld, 14)
+                if -1.0 < zOld < 1.0 and zOld not in offsetByZ:
+                    offsetByZ[zOld] = -zOld
 
-                # Tent (0, +1, +1): delta = b_i - 1 - d_i
-                posDelta = b_int - (1 << 14) - d_int
-                if posDelta != 0:
+            if isPinned:
+                # Pinned axis has zero range: only the constant bias applies.
+                bias = otRound(d_i * 16384) + otRound(defaultDelta)
+                if bias != 0:
                     coords = [0] * itemCount
-                    coords[inner] = posDelta
-                    tupleVarStore.tupleVarData[outer].append(
-                        TupleVariation({tag: (0, 1, 1)}, coords)
-                    )
+                    coords[inner] = bias
+                    tupleVarStore.tupleVarData[outer].append(TupleVariation({}, coords))
+            else:
+                zs = sorted(offsetByZ)
+                model = VariationModel([{tag: z} for z in zs], axisOrder=[tag])
+                deltas = model.getDeltas([offsetByZ[z] for z in zs])
+                for delta, support in zip(deltas, model.supports):
+                    di = otRound(delta * 16384)
+                    if not support:
+                        # Base (empty) region: fold in the rebased default delta.
+                        di += otRound(defaultDelta)
+                    if di != 0:
+                        coords = [0] * itemCount
+                        coords[inner] = di
+                        tupleVarStore.tupleVarData[outer].append(
+                            TupleVariation(dict(support), coords)
+                        )
         else:
             # Free or private axis — not being restricted.
             # If it has a non-zero default delta (from rebasing restricted axes'

@@ -1765,6 +1765,19 @@ class InstantiateAvar2Test(object):
                 {"XOPQ": (100, 220, 250)},
                 [{"XOPQ": 220, "GRAD": g} for g in (-300, 0, 500)],
             ),
+            # moved default sampled at INTERIOR points (unique varIdx axis):
+            # the inverse renormalization kinks where the old default lands in
+            # the new space, so a plain two-tent offset is wrong between the
+            # anchors even though it is exact at min/default/max.
+            (
+                {"XTRA": (421, 586, 617)},
+                [{"XTRA": x} for x in (450, 470, 519, 560, 600)],
+            ),
+            # moved default on a shared-varIdx axis, sampled at interior points
+            (
+                {"XOPQ": (100, 220, 250)},
+                [{"XOPQ": x, "GRAD": g} for x in (130, 176, 210) for g in (-200, 300)],
+            ),
             # pin one axis of a shared pair (kept hidden as it is not
             # self-contained); its free partner must be unaffected
             (
