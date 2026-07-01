@@ -23,7 +23,6 @@ import re
 from types import SimpleNamespace
 import pytest
 
-
 # see Tests/varLib/instancer/conftest.py for "varfont" fixture definition
 
 TESTDATA = os.path.join(os.path.dirname(__file__), "data")
@@ -1652,6 +1651,29 @@ def _get_expected_instance_ttx(
         return stripVariableItemsFromTTX(fp.read())
 
 
+def _avar2_final_coords(font, user_loc):
+    """Final normalized coordinates per the avar2 spec pipeline.
+
+    Applies fvar normalization then the avar v1 + v2 mapping
+    (table__a_v_a_r.renormalizeLocation), i.e. the exact algorithm a shaping
+    engine runs. Used as an independent oracle: a correctly partial-instanced
+    font must produce the same final coordinates as the original font at the
+    same user-space location, for every axis that survives in the instance.
+    """
+    fvar = font["fvar"]
+    norm = {
+        axis.axisTag: models.normalizeValue(
+            user_loc.get(axis.axisTag, axis.defaultValue),
+            (axis.minValue, axis.defaultValue, axis.maxValue),
+        )
+        for axis in fvar.axes
+    }
+    avar = font.get("avar")
+    if avar is None:
+        return norm
+    return avar.renormalizeLocation(norm, font, dropZeroes=False)
+
+
 class InstantiateAvar2Test(object):
     def test_partial_limit_axis_roundtrip_matches_direct_instance(self, avar2_varfont):
         partial = instancer.instantiateVariableFont(
@@ -1699,6 +1721,81 @@ class InstantiateAvar2Test(object):
         assert "wght" not in partial["avar"].segments
         assert partial["avar"].majorVersion == 2
         assert getattr(partial["avar"].table, "VarStore", None) is not None
+
+    # In Amstelvar-avar2.subset several fvar axes share a single avar2 varIdx
+    # (GRAD & XOPQ, YOPQ & YTLC & YTUC, ...). Offset compensation must not leak
+    # between axes that share a delta row. Each case below restricts/pins one or
+    # more shared-varIdx axes and checks that the final normalized coordinates
+    # of every surviving axis still match the original font at the same user
+    # location (the spec-pipeline oracle above). Before the fix these diverged
+    # by up to ~1.0 (full scale) on the untouched partner axes.
+    @pytest.mark.parametrize(
+        "limits, samples",
+        [
+            # two axes sharing a varIdx, both restricted
+            (
+                {"GRAD": (-100, 0, 300), "XOPQ": (50, 176, 220)},
+                [
+                    {"GRAD": -100, "XOPQ": 220},
+                    {"GRAD": 300, "XOPQ": 50},
+                    {"GRAD": 150, "XOPQ": 176},
+                ],
+            ),
+            # three axes sharing a varIdx, all restricted
+            (
+                {
+                    "YOPQ": (30, 124, 130),
+                    "YTLC": (450, 500, 560),
+                    "YTUC": (600, 750, 900),
+                },
+                [
+                    {"YOPQ": 30, "YTLC": 560, "YTUC": 600},
+                    {"YOPQ": 130, "YTLC": 450, "YTUC": 900},
+                ],
+            ),
+            # restrict one axis of a shared pair; the free partner (GRAD) must
+            # stay uncorrupted even when the restricted axis is off its default
+            (
+                {"XOPQ": (100, 176, 250)},
+                [{"XOPQ": 250, "GRAD": g} for g in (-300, 0, 300, 500)],
+            ),
+            # restricted axis whose default MOVES: exercises the empty-region
+            # bias, which contaminated the free partner unconditionally
+            (
+                {"XOPQ": (100, 220, 250)},
+                [{"XOPQ": 220, "GRAD": g} for g in (-300, 0, 500)],
+            ),
+            # pin one axis of a shared pair (kept hidden as it is not
+            # self-contained); its free partner must be unaffected
+            (
+                {"XOPQ": 200},
+                [{"XOPQ": 200, "GRAD": g} for g in (-300, 0, 500)],
+            ),
+        ],
+    )
+    def test_partial_instance_final_coords_match_original(self, limits, samples):
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        partial = instancer.instantiateVariableFont(
+            ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False), dict(limits)
+        )
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+
+        partial_axes = {axis.axisTag for axis in partial["fvar"].axes}
+        for user_loc in samples:
+            orig_final = _avar2_final_coords(original, user_loc)
+            part_loc = {k: v for k, v in user_loc.items() if k in partial_axes}
+            part_final = _avar2_final_coords(partial, part_loc)
+            for tag in partial_axes:
+                o = round(orig_final.get(tag, 0) * 16384)
+                p = round(part_final.get(tag, 0) * 16384)
+                # tolerance: a couple of F2Dot14 units of rounding noise
+                assert abs(o - p) <= 2, (
+                    f"axis {tag} at {user_loc}: original final {o} "
+                    f"!= partial {p} (diff {o - p})"
+                )
 
 
 class InstantiateVariableFontTest(object):
