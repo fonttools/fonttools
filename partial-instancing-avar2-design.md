@@ -200,11 +200,7 @@ For each restricted axis `i`, the offset is:
 offset_i(x_new) = inv_renorm_i(x_new) - x_new
 ```
 
-This is a piecewise-linear function with a kink at `x_new = 0` (where the
-renormalization changes slope, since the negative and positive sides of the
-axis may have different stretch factors).
-
-Define:
+This is a piecewise-linear function. Define:
 - `a_i` = old intermediate value at the new minimum user value
 - `d_i` = old intermediate value at the new default user value
 - `b_i` = old intermediate value at the new maximum user value
@@ -213,20 +209,57 @@ These are computed as `old_avar1(norm_old(u))` where `u` is the new
 min/default/max in user space. If the old font has no avar v1 segment map for
 this axis (identity), then `a_i = norm_old(new_min)`, etc.
 
-The offset function evaluates to:
+The offset function's value is known at these breakpoints in the new
+intermediate space:
 - At `x_new = -1`: `offset = a_i - (-1) = a_i + 1`
 - At `x_new = 0`: `offset = d_i - 0 = d_i`
 - At `x_new = +1`: `offset = b_i - 1`
 
-When the default doesn't change (`d_i = 0`), the offset at the default is zero
-and the function is a simple two-piece linear function through the origin.
+`inv_renorm` has a slope change (kink) at `x_new = 0`, where the negative and
+positive sides of the renormalization may have different stretch factors. When
+the default doesn't change (`d_i = 0`), the offset at the default is zero and
+the function is a simple two-piece linear function through the origin.
 
-When the default DOES change (`d_i ≠ 0`), the offset at the default is
-non-zero.
+**Moved-default kink.** When a partial instance MOVES the axis default, there
+is an *additional* kink at the new-space coordinate `z_old` where the OLD
+default lands — i.e. where the old intermediate crosses 0, so
+`inv_renorm(z_old) = 0` and `offset(z_old) = -z_old`. `z_old` is obtained by
+normalizing the old default user value through the NEW (min, default, max)
+triple and mapping it through the NEW avar v1 segment map; it is interior
+(`-1 < z_old < +1`) exactly when the default moved. Modeling the offset with a
+single kink at `x_new = 0` (the plain two-tent encoding) is therefore wrong at
+interior coordinates between the old and new default, so `z_old` must be
+included as a breakpoint. (An earlier version of this document claimed
+`inv_renorm` is "always two-piece linear"; that holds only when the default is
+fixed — see §9.2.)
+
+**Exactness condition.** The breakpoints above (`{-1, 0, +1}` plus `z_old`)
+capture every kink of `offset(z)` only when avar v1 is *linear across the
+retained sub-range* (apart from the `z = 0` slope change and the moved-default
+kink). If the retained range spans an interior avar v1 segment breakpoint,
+`inv_renorm` has further kinks that this breakpoint set does not collect, and
+the compensation is approximate there. Collecting all in-range avar v1 segment
+breakpoints would make it exact in general; this is a known limitation, not
+currently implemented.
 
 ### 4.4 Encoding the Offset in the avar2 IVS
 
-The offset function is decomposed into three IVS delta sets per axis:
+Collect the offset function's known breakpoints in the new intermediate space:
+
+```
+offset_by_z = {-1: a_i + 1,  0: d_i,  +1: b_i - 1}
+# plus, when the default moved and z_old is interior:
+offset_by_z[z_old] = -z_old
+```
+
+Feed these `(z, offset)` samples to a 1-D `VariationModel` (master locations at
+the sorted `z` values, on axis `i` only). The model yields a set of supports
+(tents) and per-support deltas that reproduce `offset(z)` exactly at every
+breakpoint. Each non-zero delta becomes one IVS entry on axis `i`'s varIdx: the
+empty support is the constant bias, the others are tents.
+
+When the default is unchanged (`z_old = 0` is already a breakpoint), this
+reduces to exactly the classic three-entry decomposition:
 
 | # | Region | Delta value | At `x=0` |
 |---|--------|-------------|----------|
@@ -238,6 +271,9 @@ Verification at the three key points:
 - `x = -1`: `d_i + (a_i + 1 - d_i)·1 + (b_i - 1 - d_i)·0 = a_i + 1` ✓
 - `x = 0`: `d_i + 0 + 0 = d_i` ✓
 - `x = +1`: `d_i + (a_i + 1 - d_i)·0 + (b_i - 1 - d_i)·1 = b_i - 1` ✓
+
+When the default moved, the model additionally emits tents that kink at `z_old`,
+so interior coordinates between the old and new default are correct.
 
 ### 4.5 The Empty-Region Bias Trick
 
@@ -436,21 +472,25 @@ For each restricted axis `i` that has `NO_VARIATION_INDEX` in VarIdxMap:
 
 #### 5.4.3 Add Offset Compensation
 
-For each restricted axis `i`, add three entries to the IVS at axis `i`'s
-varIdx:
+For each restricted axis `i`, collect the offset breakpoints and synthesize
+tents with a 1-D `VariationModel` (see §4.4):
 
-| Region | Delta |
-|--------|-------|
-| Empty (no axes) | `d_i + default_delta_i` |
-| `(-1, -1, 0)` on axis `i` (new space) | `a_i + 1 - d_i` |
-| `(0, +1, +1)` on axis `i` (new space) | `b_i - 1 - d_i` |
+```
+offset_by_z = {-1: a_i + 1,  0: d_i,  +1: b_i - 1}
+if default moved and -1 < z_old < +1:
+    offset_by_z[z_old] = -z_old
+model = VariationModel([{i: z} for z in sorted(offset_by_z)], axisOrder=[i])
+for delta, support in zip(model.getDeltas(...), model.supports):
+    if support is empty:  delta += default_delta_i   # fold in rebased default
+    add IVS entry (support, delta) on axis i's varIdx
+```
 
-Note: `default_delta_i` is the value returned by
-`instantiateItemVariationStore` for axis `i`'s varIdx. For axes that had
-`NO_VARIATION_INDEX` (no prior avar v2 mapping), `default_delta_i = 0`.
-
-The tent regions are in the **new** intermediate space (post-renormalization),
-because the IVS regions have been rebased to this space.
+`default_delta_i` is the value returned by `instantiateItemVariationStore` for
+axis `i`'s varIdx (0 for axes that had `NO_VARIATION_INDEX`); it is folded into
+the empty-support bias. All tent regions are in the **new** intermediate space
+(post-renormalization), because the IVS regions have been rebased to it. When
+the default is fixed this produces exactly the empty-region bias plus the two
+tents `(-1,-1,0)` and `(0,+1,+1)` from the table above.
 
 For pinned axes (kept as hidden with `min=default=max`):
 
@@ -491,6 +531,25 @@ VarData gets its own set of offset regions and deltas.
 
 The empty region can be shared across VarDatas (it's a single entry in
 VarRegionList). Each VarData references it via its own VarRegionIndex entry.
+
+#### 5.4.5 Privatize Shared Delta Rows (before adding compensation)
+
+avar2's `VarIdxMap` may point several fvar axes at the SAME IVS delta row (a
+legal storage optimization; the parametric Amstelvar test font shares rows,
+e.g. GRAD & XOPQ, and YOPQ/YTLC/YTUC). Offset compensation (§5.4.3) writes
+per-axis deltas (empty-region bias and tents) into that axis's row — so if the
+row is shared, the offsets leak into every other axis reading it, corrupting
+their final coordinates by up to full scale.
+
+Before adding compensation, privatize any shared row that will receive offsets.
+For each offset-receiving axis (restricted, or non-self-contained pinned) whose
+varIdx is referenced by more than one axis, append a *copy* of its delta row
+within the same VarData (identical contents, so the already-rebased delta is
+preserved) and repoint that axis's `VarIdxMap` entry to the copy. Sharers keep
+the clean row; offsets land only on the private copy. `VarStore.optimize()`
+re-merges identical rows afterward, so there is no size regression. Axes with
+`NO_VARIATION_INDEX` are unaffected — they get a fresh private VarData in
+§5.4.1 / §5.4.3.
 
 ### 5.5 Step 4: Skip gvar/HVAR/etc. Instancing for Restricted Axes
 
@@ -684,24 +743,33 @@ offset(z) = renormalize_to_inverse(z) - z
 
 where `z` is the new-space intermediate coordinate (post-avar-v1-renorm).
 
-**The three-entry decomposition is always exact**, regardless of avar v1
-complexity. Here's why: `renormalize_to_inverse(z)` maps new-space
-intermediate back to old-space intermediate. After standard avar v1
-renormalization:
+**The decomposition is exact when avar v1 is linear across the retained
+sub-range.** `renormalize_to_inverse(z)` maps new-space intermediate back to
+old-space intermediate. After standard avar v1 renormalization:
 
 - At `z = -1`: old intermediate = `a_i`
 - At `z = 0`: old intermediate = `d_i`
 - At `z = +1`: old intermediate = `b_i`
 
-`renormalize_to_inverse` is ALWAYS two-piece linear (one linear piece for
-`z ∈ [-1, 0]`, another for `z ∈ [0, +1]`), because the standard
-renormalization maps two linear segments (negative and positive sides) to
-`[-1, 0]` and `[0, +1]` respectively. The inverse of a linear function is
-linear, regardless of how complex the original avar v1 segment map is.
+When the default is FIXED, `renormalize_to_inverse` is two-piece linear (one
+piece for `z ∈ [-1, 0]`, another for `z ∈ [0, +1]`): the standard
+renormalization maps the negative and positive sides linearly onto `[-1, 0]`
+and `[0, +1]`, and the inverse of a linear map is linear. So `offset(z)` has a
+single kink at `z = 0`, and the three-entry decomposition (empty bias + two
+tents) is exact.
 
-Therefore `offset(z) = renormalize_to_inverse(z) - z` is always two-piece
-linear with at most one kink at `z = 0`. This is exactly representable by
-three IVS entries (empty-region bias + two tents).
+When the default MOVES, `renormalize_to_inverse` gains a second kink at the
+new-space image `z_old` of the old default; the encoding must include that
+breakpoint (§4.3, §4.4), giving a four-breakpoint model rather than two tents.
+(This corrects the earlier claim that the inverse is "always two-piece linear":
+that holds only for a fixed default.)
+
+This exactness further assumes avar v1 has no *interior* segment breakpoint
+inside the retained range. A segment breakpoint strictly between the new
+min/default/max introduces a further kink in `renormalize_to_inverse` that the
+`{-1, 0, +1, z_old}` breakpoint set does not capture, so the compensation is
+approximate on that sub-interval. Collecting all in-range avar v1 breakpoints
+would restore exactness in general; this is not currently implemented.
 
 ### 9.3 Multiple Restricted Axes
 
