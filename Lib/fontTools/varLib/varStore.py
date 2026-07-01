@@ -12,7 +12,6 @@ from functools import partial
 from collections import defaultdict
 from heapq import heappush, heappop
 
-
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
 
@@ -197,6 +196,11 @@ class VarStoreInstancer(object):
         assert varstore is None or varstore.Format == 1
         self._varData = varstore.VarData if varstore else []
         self._regions = varstore.VarRegionList.Region if varstore else []
+        # Region supports are location-independent, so cache them for the
+        # lifetime of the instancer (they survive setLocation); only the
+        # per-region scalars, which depend on the location, are recomputed.
+        # This makes reusing one instancer across many locations cheap.
+        self._supports = {}
         self.setLocation(location)
 
     def setLocation(self, location):
@@ -206,11 +210,17 @@ class VarStoreInstancer(object):
     def _clearCaches(self):
         self._scalars = {}
 
+    def _getSupport(self, regionIdx):
+        support = self._supports.get(regionIdx)
+        if support is None:
+            support = self._regions[regionIdx].get_support(self.fvar_axes)
+            self._supports[regionIdx] = support
+        return support
+
     def _getScalar(self, regionIdx):
         scalar = self._scalars.get(regionIdx)
         if scalar is None:
-            support = self._regions[regionIdx].get_support(self.fvar_axes)
-            scalar = supportScalar(self.location, support)
+            scalar = supportScalar(self.location, self._getSupport(regionIdx))
             self._scalars[regionIdx] = scalar
         return scalar
 
@@ -694,6 +704,7 @@ def VarStore_getExtremes(
     nullAxes=set(),
     cache=None,
     _bias=None,
+    instancer=None,
 ):
     if varIdx == NO_VARIATION_INDEX:
         if identityAxisIndex is None:
@@ -712,6 +723,11 @@ def VarStore_getExtremes(
     if cache is None:
         cache = {}
 
+    # One instancer, reused across every location via setLocation (its region
+    # supports are cached), instead of building a fresh one per evaluation.
+    if instancer is None:
+        instancer = VarStoreInstancer(self, fvarAxes)
+
     # Compute the bias once at the top level. The bias is the constant
     # contribution from empty regions (scalar always 1). VarStoreInstancer
     # at {} gives exactly the bias since non-empty regions get scalar=0.
@@ -720,8 +736,8 @@ def VarStore_getExtremes(
     # back once at the end. This avoids double-counting the bias across
     # recursion levels.
     if _bias is None:
-        zeroInstancer = VarStoreInstancer(self, fvarAxes, {})
-        _bias = round(zeroInstancer[varIdx])
+        instancer.setLocation({})
+        _bias = round(instancer[varIdx])
 
     key = frozenset(nullAxes)
     if key in cache:
@@ -785,12 +801,8 @@ def VarStore_getExtremes(
                 except KeyError:
                     pass
 
-            varStoreInstancer = VarStoreInstancer(self, fvarAxes, location)
-            v = (
-                varStoreInstancer[varIdx]
-                - _bias
-                + (0 if loc is None else round(loc * 16384))
-            )
+            instancer.setLocation(location)
+            v = instancer[varIdx] - _bias + (0 if loc is None else round(loc * 16384))
 
             minOther, maxOther = self.getExtremes(
                 varIdx,
@@ -800,6 +812,7 @@ def VarStore_getExtremes(
                 nullAxes | thisAxes,
                 cache,
                 _bias,
+                instancer,
             )
 
             minV = min(minV, (v + minOther) * scalar)
