@@ -12,7 +12,6 @@ from functools import partial
 from collections import defaultdict
 from heapq import heappush, heappop
 
-
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
 
@@ -197,6 +196,11 @@ class VarStoreInstancer(object):
         assert varstore is None or varstore.Format == 1
         self._varData = varstore.VarData if varstore else []
         self._regions = varstore.VarRegionList.Region if varstore else []
+        # Region supports are location-independent, so cache them for the
+        # lifetime of the instancer (they survive setLocation); only the
+        # per-region scalars, which depend on the location, are recomputed.
+        # This makes reusing one instancer across many locations cheap.
+        self._supports = {}
         self.setLocation(location)
 
     def setLocation(self, location):
@@ -206,11 +210,17 @@ class VarStoreInstancer(object):
     def _clearCaches(self):
         self._scalars = {}
 
+    def _getSupport(self, regionIdx):
+        support = self._supports.get(regionIdx)
+        if support is None:
+            support = self._regions[regionIdx].get_support(self.fvar_axes)
+            self._supports[regionIdx] = support
+        return support
+
     def _getScalar(self, regionIdx):
         scalar = self._scalars.get(regionIdx)
         if scalar is None:
-            support = self._regions[regionIdx].get_support(self.fvar_axes)
-            scalar = supportScalar(self.location, support)
+            scalar = supportScalar(self.location, self._getSupport(regionIdx))
             self._scalars[regionIdx] = scalar
         return scalar
 
@@ -683,6 +693,173 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
 
 
 ot.VarStore.optimize = VarStore_optimize
+
+
+def VarStore_getExtremes(
+    self,
+    varIdx,
+    fvarAxes,
+    axisLimits,
+    identityAxisIndex=None,
+    nullAxes=set(),
+    cache=None,
+    _bias=None,
+    instancer=None,
+    evalCache=None,
+):
+    if varIdx == NO_VARIATION_INDEX:
+        if identityAxisIndex is None:
+            return 0, 0
+        else:
+            # Use axis limits to bound the identity range if available
+            axis = fvarAxes[identityAxisIndex]
+            tag = axis.axisTag
+            if tag in axisLimits:
+                lo = axisLimits[tag][0]
+                hi = axisLimits[tag][2]
+                return round(lo * 16384), round(hi * 16384)
+            return -16384, 16384
+
+    isTopLevel = cache is None
+    if cache is None:
+        cache = {}
+
+    # One instancer, reused across every location via setLocation (its region
+    # supports are cached), instead of building a fresh one per evaluation.
+    if instancer is None:
+        instancer = VarStoreInstancer(self, fvarAxes)
+
+    # Scoped memo (discarded when this top-level call returns) of the raw delta
+    # at each evaluated location. A location is fully determined by its source
+    # (regionIndex, loc) -- a region is evaluated only when none of its peak
+    # axes are in nullAxes, so all its peaks are set and loc is the sole extra
+    # coordinate -- so key on that pair (cheap, no dict/frozenset). The
+    # recursion re-visits the same locations many times; this collapses them.
+    if evalCache is None:
+        evalCache = {}
+
+    # Compute the bias once at the top level. The bias is the constant
+    # contribution from empty regions (scalar always 1). VarStoreInstancer
+    # at {} gives exactly the bias since non-empty regions get scalar=0.
+    # We subtract it from every VarStoreInstancer evaluation so that the
+    # recursive decomposition tracks only the varying part, then add it
+    # back once at the end. This avoids double-counting the bias across
+    # recursion levels.
+    if _bias is None:
+        instancer.setLocation({})
+        _bias = round(instancer[varIdx])
+
+    key = frozenset(nullAxes)
+    if key in cache:
+        return cache[key]
+
+    regionList = self.VarRegionList
+
+    major = varIdx >> 16
+    minor = varIdx & 0xFFFF
+    varData = self.VarData[major]
+    regionIndices = varData.VarRegionIndex
+
+    minV = 0
+    maxV = 0
+    for regionIndex in regionIndices:
+        location = {}
+        region = regionList.Region[regionIndex]
+        skip = False
+        thisAxes = set()
+        for i, regionAxis in enumerate(region.VarRegionAxis):
+            peak = regionAxis.PeakCoord
+            if peak == 0:
+                continue
+            if i in nullAxes:
+                skip = True
+                break
+            thisAxes.add(i)
+            location[fvarAxes[i].axisTag] = peak
+        if skip:
+            continue
+        if not thisAxes:
+            # Empty region (all peaks zero): constant contribution (scalar = 1).
+            # Handled via _bias; skip here.
+            continue
+
+        locs = [None]
+        if identityAxisIndex in thisAxes:
+            locs = []
+            locs.append(-1)
+            locs.append(region.VarRegionAxis[identityAxisIndex].StartCoord)
+            locs.append(region.VarRegionAxis[identityAxisIndex].PeakCoord)
+            locs.append(region.VarRegionAxis[identityAxisIndex].EndCoord)
+            locs.append(+1)
+
+        for loc in locs:
+            if loc is not None:
+                location[fvarAxes[identityAxisIndex].axisTag] = loc
+
+            scalar = 1
+            for j, regionAxis in enumerate(region.VarRegionAxis):
+                peak = regionAxis.PeakCoord
+                if peak == 0:
+                    continue
+                axis = fvarAxes[j]
+                try:
+                    limits = axisLimits[axis.axisTag]
+                    if peak > 0:
+                        scalar *= limits[2] - limits[1]
+                    else:
+                        scalar *= limits[1] - limits[0]
+                except KeyError:
+                    pass
+
+            ekey = (regionIndex, loc)
+            raw = evalCache.get(ekey)
+            if raw is None:
+                instancer.setLocation(location)
+                raw = instancer[varIdx]
+                evalCache[ekey] = raw
+            v = raw - _bias + (0 if loc is None else round(loc * 16384))
+
+            minOther, maxOther = self.getExtremes(
+                varIdx,
+                fvarAxes,
+                axisLimits,
+                identityAxisIndex,
+                nullAxes | thisAxes,
+                cache,
+                _bias,
+                instancer,
+                evalCache,
+            )
+
+            minV = min(minV, (v + minOther) * scalar)
+            maxV = max(maxV, (v + maxOther) * scalar)
+
+    # Always account for identity range even if no region involves the
+    # identity axis. When no region peaks on the identity axis, the
+    # varying delta doesn't depend on it, so the identity term alone
+    # (without any varying contribution) bounds the range.
+    if identityAxisIndex is not None and identityAxisIndex not in nullAxes:
+        tag = fvarAxes[identityAxisIndex].axisTag
+        if tag in axisLimits:
+            lo = round(axisLimits[tag][0] * 16384)
+            hi = round(axisLimits[tag][2] * 16384)
+        else:
+            lo = -16384
+            hi = 16384
+        minV = min(minV, lo)
+        maxV = max(maxV, hi)
+
+    # Add bias once at the top level.
+    if isTopLevel:
+        minV += _bias
+        maxV += _bias
+
+    cache[key] = (minV, maxV)
+
+    return minV, maxV
+
+
+ot.VarStore.getExtremes = VarStore_getExtremes
 
 
 def main(args=None):
