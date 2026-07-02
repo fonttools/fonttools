@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 from typing import Callable
+
+from fontTools.annotations import Point, GlyphSetMapping
 from fontTools.pens.basePen import BasePen
 
+FloatToStrFunc = Callable[[float], str]
 
-def pointToString(pt, ntos=str):
+
+def pointToString(pt: Point, ntos: FloatToStrFunc = str) -> str:
     return " ".join(ntos(i) for i in pt)
 
 
@@ -40,15 +46,15 @@ class SVGPathPen(BasePen):
             print(tpen.getCommands())
     """
 
-    def __init__(self, glyphSet, ntos: Callable[[float], str] = str):
+    def __init__(self, glyphSet: GlyphSetMapping, ntos: FloatToStrFunc = str) -> None:
         BasePen.__init__(self, glyphSet)
-        self._commands = []
-        self._lastCommand = None
-        self._lastX = None
-        self._lastY = None
+        self._commands: list[str] = []
+        self._lastCommand: str | None = None
+        self._lastX: float | None = None
+        self._lastY: float | None = None
         self._ntos = ntos
 
-    def _handleAnchor(self):
+    def _handleAnchor(self) -> None:
         """
         >>> pen = SVGPathPen(None)
         >>> pen.moveTo((0, 0))
@@ -59,7 +65,7 @@ class SVGPathPen(BasePen):
         if self._lastCommand == "M":
             self._commands.pop(-1)
 
-    def _moveTo(self, pt):
+    def _moveTo(self, pt: Point) -> None:
         """
         >>> pen = SVGPathPen(None)
         >>> pen.moveTo((0, 0))
@@ -82,7 +88,7 @@ class SVGPathPen(BasePen):
         self._lastCommand = "M"
         self._lastX, self._lastY = pt
 
-    def _lineTo(self, pt):
+    def _lineTo(self, pt: Point) -> None:
         """
         # duplicate point
         >>> pen = SVGPathPen(None)
@@ -148,7 +154,7 @@ class SVGPathPen(BasePen):
         # store for future reference
         self._lastX, self._lastY = pt
 
-    def _curveToOne(self, pt1, pt2, pt3):
+    def _curveToOne(self, pt1: Point, pt2: Point, pt3: Point) -> None:
         """
         >>> pen = SVGPathPen(None)
         >>> pen.curveTo((10, 20), (30, 40), (50, 60))
@@ -163,7 +169,7 @@ class SVGPathPen(BasePen):
         self._lastCommand = "C"
         self._lastX, self._lastY = pt3
 
-    def _qCurveToOne(self, pt1, pt2):
+    def _qCurveToOne(self, pt1: Point, pt2: Point) -> None:
         """
         >>> pen = SVGPathPen(None)
         >>> pen.qCurveTo((10, 20), (30, 40))
@@ -183,7 +189,7 @@ class SVGPathPen(BasePen):
         self._lastCommand = "Q"
         self._lastX, self._lastY = pt2
 
-    def _closePath(self):
+    def _closePath(self) -> None:
         """
         >>> pen = SVGPathPen(None)
         >>> pen.closePath()
@@ -194,7 +200,7 @@ class SVGPathPen(BasePen):
         self._lastCommand = "Z"
         self._lastX = self._lastY = None
 
-    def _endPath(self):
+    def _endPath(self) -> None:
         """
         >>> pen = SVGPathPen(None)
         >>> pen.endPath()
@@ -204,11 +210,11 @@ class SVGPathPen(BasePen):
         self._lastCommand = None
         self._lastX = self._lastY = None
 
-    def getCommands(self):
+    def getCommands(self) -> str:
         return "".join(self._commands)
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Generate per-character SVG from font and text"""
 
     if args is None:
@@ -307,4 +313,4 @@ if __name__ == "__main__":
 
         sys.exit(doctest.testmod().failed)
 
-    sys.exit(main())
+    main()

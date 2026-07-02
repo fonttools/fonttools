@@ -13,10 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fontTools.qu2cu import quadratic_to_curves
+from __future__ import annotations
+
+import math
+from collections.abc import Iterator
+
+from fontTools.annotations import Point
+from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.cu2quPen import Stats
 from fontTools.pens.filterPen import ContourFilterPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
-import math
+from fontTools.qu2cu import quadratic_to_curves
+
+OpName = str
+Quadratic = tuple[Point | None, ...]
+Contour = list[tuple[OpName, Quadratic]]
 
 
 class Qu2CuPen(ContourFilterPen):
@@ -35,12 +46,12 @@ class Qu2CuPen(ContourFilterPen):
 
     def __init__(
         self,
-        other_pen,
-        max_err,
-        all_cubic=False,
-        reverse_direction=False,
-        stats=None,
-    ):
+        other_pen: AbstractPen,
+        max_err: float,
+        all_cubic: bool = False,
+        reverse_direction: bool = False,
+        stats: Stats = None,
+    ) -> None:
         if reverse_direction:
             other_pen = ReverseContourPen(other_pen)
         super().__init__(other_pen)
@@ -48,7 +59,9 @@ class Qu2CuPen(ContourFilterPen):
         self.max_err = max_err
         self.stats = stats
 
-    def _quadratics_to_curve(self, q):
+    def _quadratics_to_curve(
+        self, q: list[Quadratic]
+    ) -> Iterator[tuple[str, tuple[Point | None, ...]]]:
         curves = quadratic_to_curves(q, self.max_err, all_cubic=self.all_cubic)
         if self.stats is not None:
             for curve in curves:
@@ -60,10 +73,10 @@ class Qu2CuPen(ContourFilterPen):
             else:
                 yield ("qCurveTo", curve[1:])
 
-    def filterContour(self, contour):
+    def filterContour(self, contour: Contour) -> Contour:
         quadratics = []
         currentPt = None
-        newContour = []
+        newContour: Contour = []
         for op, args in contour:
             if op == "qCurveTo" and (
                 self.all_cubic or (len(args) > 2 and args[-1] is not None)
@@ -92,7 +105,9 @@ class Qu2CuPen(ContourFilterPen):
                     pt1 = newContour[-1][1][-1]
                     pt2 = args[0]
                     if (
-                        pt1 is not None
+                        pt0 is not None
+                        and pt1 is not None
+                        and pt2 is not None
                         and math.isclose(pt2[0] - pt1[0], pt1[0] - pt0[0])
                         and math.isclose(pt2[1] - pt1[1], pt1[1] - pt0[1])
                     ):
