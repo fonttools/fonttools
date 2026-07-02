@@ -1,6 +1,7 @@
 import io
 import os
 import re
+import struct
 from fontTools import ttLib
 from fontTools.fontBuilder import FontBuilder
 import unittest
@@ -97,6 +98,42 @@ class CmapSubtableTest(unittest.TestCase):
         data = subtable.compile(font)
         subtable2 = CmapSubtable.newSubtable(4)
         subtable2.decompile(data, font)
+        self.assertEqual(subtable2.cmap, {})
+
+    def test_compile_decompile_2_empty(self):
+        # An all-.notdef (empty) Macintosh format 2 cmap must round-trip
+        # instead of crashing on compile, just like format 4 above.
+        # https://github.com/fonttools/fonttools/issues/3663
+        subtable = self.makeSubtable(2, 1, 3, 0)
+        subtable.cmap = {}
+        font = ttLib.TTFont()
+        font.setGlyphOrder([])
+        data = subtable.compile(font)
+        subtable2 = CmapSubtable.newSubtable(2)
+        subtable2.decompile(data, font)
+        self.assertEqual(subtable2.cmap, {})
+
+    def test_decompile_compile_2_all_notdef(self):
+        # A binary format 2 subtable whose only subheader maps its whole range
+        # to .notdef (entryCount 0, the spec's way of encoding a notdef range)
+        # decompiles to an empty cmap; recompiling it must not raise.
+        # https://github.com/fonttools/fonttools/issues/3663
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "A", "B"])
+        subHeaderKeys = b"\x00\x00" * 256  # every first byte -> subHeader 0
+        # subHeader 0: firstCode, entryCount, idDelta, idRangeOffset all zero
+        subHeader0 = struct.pack(">HHhH", 0, 0, 0, 0)
+        body = subHeaderKeys + subHeader0
+        data = struct.pack(">HHH", 2, 6 + len(body), 0) + body
+
+        subtable = CmapSubtable.newSubtable(2)
+        subtable.platformID, subtable.platEncID = 1, 3
+        subtable.decompile(data, font)
+        self.assertEqual(subtable.cmap, {})
+
+        # recompiling and decompiling again must still give the empty cmap
+        subtable2 = CmapSubtable.newSubtable(2)
+        subtable2.decompile(subtable.compile(font), font)
         self.assertEqual(subtable2.cmap, {})
 
     def test_decompile_4(self):
