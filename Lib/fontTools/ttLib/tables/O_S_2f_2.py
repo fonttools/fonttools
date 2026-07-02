@@ -122,7 +122,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/os2
     """
 
-    dependencies = ["head"]
+    dependencies = ["head", "bhed"]
 
     def decompile(self, data, ttFont):
         dummy, data = sstruct.unpack2(OS2_format_0, data, self)
@@ -149,17 +149,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
     def compile(self, ttFont):
         self.updateFirstAndLastCharIndex(ttFont)
         panose = self.panose
-        head = ttFont["head"]
-        if (self.fsSelection & 1) and not (head.macStyle & 1 << 1):
-            log.warning(
-                "fsSelection bit 0 (italic) and "
-                "head table macStyle bit 1 (italic) should match"
-            )
-        if (self.fsSelection & 1 << 5) and not (head.macStyle & 1):
-            log.warning(
-                "fsSelection bit 5 (bold) and "
-                "head table macStyle bit 0 (bold) should match"
-            )
+        self._checkHeadMacStyle("head", ttFont)
+        self._checkHeadMacStyle("bhed", ttFont)
         if (self.fsSelection & 1 << 6) and (self.fsSelection & 1 + (1 << 5)):
             log.warning(
                 "fsSelection bit 6 (regular) is set, "
@@ -267,6 +258,22 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
             # USHORT cannot hold codepoints greater than 0xFFFF
             self.usFirstCharIndex = min(0xFFFF, minCode)
             self.usLastCharIndex = min(0xFFFF, maxCode)
+
+    def _checkHeadMacStyle(self, tag, ttFont):
+        if tag in ttFont:
+            head = ttFont[tag]
+            if (self.fsSelection & 1) and not (head.macStyle & 1 << 1):
+                log.warning(
+                    "fsSelection bit 0 (italic) and "
+                    "%s table macStyle bit 1 (italic) should match",
+                    tag,
+                )
+            if (self.fsSelection & 1 << 5) and not (head.macStyle & 1):
+                log.warning(
+                    "fsSelection bit 5 (bold) and "
+                    "%s table macStyle bit 0 (bold) should match",
+                    tag,
+                )
 
     # misspelled attributes kept for legacy reasons
 
