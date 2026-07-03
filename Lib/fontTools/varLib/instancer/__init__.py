@@ -1628,6 +1628,38 @@ def _computeOldIntermediates(varfont, axisLimits):
     return result
 
 
+# Threshold, in F2Dot14 units, above which a restricted avar2 axis's residual
+# offset-compensation error triggers a warning. The quantization floor is ~2;
+# anything clearly above it means the retained avar v1 map could not be
+# reproduced bit-exactly (see _estimateAvar2OffsetError).
+_AVAR2_OFFSET_WARN_THRESHOLD = 4
+
+
+def _estimateAvar2OffsetError(oldSeg, newSeg, oldFvarTriple, newTriple, offsetByZ):
+    """Estimate the residual offset-compensation error for one restricted axis.
+
+    Returns the max |old-avar1-final - (new-avar1 + offset)| over the retained
+    user range, in F2Dot14 units. offset(z) is the piecewise-linear function
+    through the offsetByZ knots (what the 1-D VariationModel reproduces). The
+    residual is dominated by F2Dot14 requantization of a steep retained avar v1
+    segment (e.g. a moved default compressing part of the axis into a narrow z
+    band); offset compensation cannot remove it. Used only to decide whether to
+    warn, so a coarse uniform sample suffices.
+    """
+    lo, _, hi = newTriple
+    maxErr = 0
+    samples = 257
+    for i in range(samples):
+        u = lo + (hi - lo) * i / (samples - 1)
+        nOld = normalizeValue(u, oldFvarTriple)
+        oldFinal = piecewiseLinearMap(nOld, oldSeg) if oldSeg else nOld
+        nNew = normalizeValue(u, newTriple)
+        z = piecewiseLinearMap(nNew, newSeg) if newSeg else nNew
+        newFinal = z + piecewiseLinearMap(z, offsetByZ)
+        maxErr = max(maxErr, abs(otRound(oldFinal * 16384) - otRound(newFinal * 16384)))
+    return maxErr
+
+
 def _instantiateAvarV2(
     varfont, axisLimits, normalizedLimits, oldIntermediates, oldSegments=None
 ):
@@ -1760,6 +1792,7 @@ def _instantiateAvarV2(
 
     # Step 2: Add offset compensation TupleVariations
     processedVarIdxes = set()
+    approxWarn = {}  # {axisTag: residual F2Dot14 error} for axes we can't make exact
     for axisIdx, axis in enumerate(fvarAxes):
         tag = axis.axisTag
 
@@ -1863,6 +1896,14 @@ def _instantiateAvarV2(
                         xOld = piecewiseLinearMap(nOld, oldSeg)
                         offsetByZ[z] = floatToFixedToFloat(xOld, 14) - z
 
+                # Warn if a residual (retained-map requantization) remains.
+                oldFvarTriple = (axis.minValue, axis.defaultValue, axis.maxValue)
+                approxErr = _estimateAvar2OffsetError(
+                    oldSegments.get(tag), newSeg, oldFvarTriple, newTriple, offsetByZ
+                )
+                if approxErr > _AVAR2_OFFSET_WARN_THRESHOLD:
+                    approxWarn[tag] = approxErr
+
             if isPinned:
                 # Pinned axis has zero range: only the constant bias applies.
                 bias = otRound(d_i * 16384) + otRound(defaultDelta)
@@ -1907,6 +1948,17 @@ def _instantiateAvarV2(
                 coords = [0] * itemCount
                 coords[inner] = otRound(defaultDelta)
                 tupleVarStore.tupleVarData[outer].append(TupleVariation({}, coords))
+
+    if approxWarn:
+        log.warning(
+            "avar2 partial instancing is approximate (not bit-exact) for "
+            "axes %s: the avar v1 segment map has interior breakpoint(s) in the "
+            "retained range that, after a moved/edge default, require a steep "
+            "F2Dot14 segment the offset compensation cannot fully reproduce. "
+            "Max residual: %s F2Dot14 units.",
+            ", ".join(sorted(approxWarn)),
+            {tag: approxWarn[tag] for tag in sorted(approxWarn)},
+        )
 
     # Step 3: Remove self-contained axes from axis order.
     # The VarRegionList must match the post-removal fvar axis count.
