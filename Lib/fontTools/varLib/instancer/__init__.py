@@ -1482,6 +1482,11 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates=None
 
     segments = avar.segments
 
+    # Capture the OLD avar v1 segment maps before the renormalization below
+    # overwrites avar.segments; _instantiateAvarV2 needs them to collect the
+    # interior breakpoints used for exact offset compensation.
+    oldSegments = {tag: dict(mapping) for tag, mapping in segments.items()}
+
     # drop table if we instantiate all the axes
     pinnedAxes = set(axisLimits.pinnedLocation())
     if pinnedAxes.issuperset(segments):
@@ -1561,7 +1566,7 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates=None
 
     if hasAvar2VarStore:
         return _instantiateAvarV2(
-            varfont, axisLimits, normalizedLimits, oldIntermediates
+            varfont, axisLimits, normalizedLimits, oldIntermediates, oldSegments
         )
 
     return {}
@@ -1623,7 +1628,9 @@ def _computeOldIntermediates(varfont, axisLimits):
     return result
 
 
-def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
+def _instantiateAvarV2(
+    varfont, axisLimits, normalizedLimits, oldIntermediates, oldSegments=None
+):
     """Instance avar v2 IVS: rebase regions + add offset compensation.
 
     This implements the offset compensation approach from the design doc:
@@ -1642,6 +1649,7 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
     fvarAxes = varfont["fvar"].axes
     varStore = avar.table.VarStore
     varIdxMap = getattr(avar.table, "VarIdxMap", None)
+    oldSegments = oldSegments or {}
 
     NO_VARIATION_INDEX = 0xFFFFFFFF
 
@@ -1816,18 +1824,44 @@ def _instantiateAvarV2(varfont, axisLimits, normalizedLimits, oldIntermediates):
             offsetByZ = {-1.0: a_i + 1.0, 0.0: d_i, 1.0: b_i - 1.0}
             if not isPinned:
                 newSeg = avar.segments.get(tag)
-                zOldNorm = normalizeValue(
-                    axis.defaultValue,
-                    (
-                        axisLimits[tag].minimum,
-                        axisLimits[tag].default,
-                        axisLimits[tag].maximum,
-                    ),
+                newTriple = (
+                    axisLimits[tag].minimum,
+                    axisLimits[tag].default,
+                    axisLimits[tag].maximum,
                 )
+                # Moved-default kink: where the OLD default lands in new space.
+                zOldNorm = normalizeValue(axis.defaultValue, newTriple)
                 zOld = piecewiseLinearMap(zOldNorm, newSeg) if newSeg else zOldNorm
                 zOld = floatToFixedToFloat(zOld, 14)
                 if -1.0 < zOld < 1.0 and zOld not in offsetByZ:
                     offsetByZ[zOld] = -zOld
+
+                # Interior avar v1 breakpoints inside the retained range each put
+                # a kink in offset(z) at their new-intermediate image z. Sampling
+                # only {-1, 0, +1, z_old} would linearly interpolate across those
+                # kinks (approximate, worst under a moved default on an asymmetric
+                # axis). Add each in-range old breakpoint's (z, old-intermediate)
+                # so the VariationModel reproduces offset(z) at every kink. This
+                # is additive: with no avar v1 map (or none in range) offsetByZ is
+                # unchanged and the classic {bias + two tents} encoding results.
+                oldSeg = oldSegments.get(tag)
+                if oldSeg and newSeg:
+                    oldFvarTriple = (axis.minValue, axis.defaultValue, axis.maxValue)
+                    denormNew = {
+                        -1.0: newTriple[0],
+                        0.0: newTriple[1],
+                        1.0: newTriple[2],
+                    }
+                    for fromCoordNew, z in newSeg.items():
+                        if fromCoordNew in (-1.0, 0.0, 1.0):
+                            continue  # anchors already seeded
+                        z = floatToFixedToFloat(z, 14)
+                        if not (-1.0 < z < 1.0) or z in offsetByZ:
+                            continue
+                        user = piecewiseLinearMap(fromCoordNew, denormNew)
+                        nOld = normalizeValue(user, oldFvarTriple)
+                        xOld = piecewiseLinearMap(nOld, oldSeg)
+                        offsetByZ[z] = floatToFixedToFloat(xOld, 14) - z
 
             if isPinned:
                 # Pinned axis has zero range: only the constant bias applies.

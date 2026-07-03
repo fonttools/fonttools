@@ -233,14 +233,26 @@ included as a breakpoint. (An earlier version of this document claimed
 `inv_renorm` is "always two-piece linear"; that holds only when the default is
 fixed — see §9.2.)
 
-**Exactness condition.** The breakpoints above (`{-1, 0, +1}` plus `z_old`)
-capture every kink of `offset(z)` only when avar v1 is *linear across the
-retained sub-range* (apart from the `z = 0` slope change and the moved-default
-kink). If the retained range spans an interior avar v1 segment breakpoint,
-`inv_renorm` has further kinks that this breakpoint set does not collect, and
-the compensation is approximate there. Collecting all in-range avar v1 segment
-breakpoints would make it exact in general; this is a known limitation, not
-currently implemented.
+**Exactness condition.** The anchors `{-1, 0, +1}` plus `z_old` capture every
+kink of `offset(z)` only when avar v1 is *linear across the retained sub-range*
+(apart from the `z = 0` slope change and the moved-default kink). An interior
+avar v1 segment breakpoint inside the retained range adds a further kink to
+`offset(z)` at its new-intermediate image `z`. The implementation collects
+these: it iterates the retained (renormalized) avar v1 segment map — which by
+construction keeps exactly the in-range old breakpoints — and adds each
+breakpoint's `(z, old-intermediate)` as an offset sample (§4.4), so the model
+reproduces `offset(z)` at every kink. Iterating the *retained* map (rather than
+recomputing `z` from the old map) lands each sample exactly on the
+F2Dot14-quantized kink location. This removes the **structural** approximation.
+
+A separate, usually smaller residual remains from storing the retained avar v1
+map in F2Dot14: when a moved default compresses part of the axis into a narrow
+`z` band, the retained segment becomes steep and its quantized breakpoints
+introduce a slope-amplified error that offset compensation cannot remove — it is
+a property of avar v1 partial instancing (visible even with the avar2 VarStore
+zeroed), not of the avar2 offset math. This residual grows with `|z_old|` and is
+worst when the default is moved near an fvar edge; for typical maps it is only a
+few F2Dot14 units.
 
 ### 4.4 Encoding the Offset in the avar2 IVS
 
@@ -250,6 +262,8 @@ Collect the offset function's known breakpoints in the new intermediate space:
 offset_by_z = {-1: a_i + 1,  0: d_i,  +1: b_i - 1}
 # plus, when the default moved and z_old is interior:
 offset_by_z[z_old] = -z_old
+# plus, for each retained avar v1 breakpoint (z, x_old) with -1 < z < +1:
+offset_by_z[z] = x_old - z
 ```
 
 Feed these `(z, offset)` samples to a 1-D `VariationModel` (master locations at
@@ -764,12 +778,16 @@ breakpoint (§4.3, §4.4), giving a four-breakpoint model rather than two tents.
 (This corrects the earlier claim that the inverse is "always two-piece linear":
 that holds only for a fixed default.)
 
-This exactness further assumes avar v1 has no *interior* segment breakpoint
-inside the retained range. A segment breakpoint strictly between the new
-min/default/max introduces a further kink in `renormalize_to_inverse` that the
-`{-1, 0, +1, z_old}` breakpoint set does not capture, so the compensation is
-approximate on that sub-interval. Collecting all in-range avar v1 breakpoints
-would restore exactness in general; this is not currently implemented.
+An interior avar v1 segment breakpoint inside the retained range introduces a
+further kink in `renormalize_to_inverse` at its new-space image `z`. The
+`{-1, 0, +1, z_old}` anchors alone do not capture it, so early versions were
+approximate on that sub-interval — worst under a moved default, where the
+compensation could drift by tens of F2Dot14 units. The instancer now also
+collects each retained (renormalized) avar v1 breakpoint as an offset sample
+(§4.3), restoring exactness up to F2Dot14 quantization. The remaining residual
+is the requantization of a steep retained segment (a moved default near an fvar
+edge compresses part of the axis into a narrow `z` band); this is inherent to
+avar v1 partial instancing and independent of the avar2 offset compensation.
 
 ### 9.3 Multiple Restricted Axes
 

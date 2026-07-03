@@ -1853,6 +1853,49 @@ class InstantiateAvar2Test(object):
                         f"original final {o} != partial {p} (diff {o - p})"
                     )
 
+    def test_offset_compensation_interior_avar1_breakpoints(self):
+        # An avar v1 map with a breakpoint strictly inside the retained range
+        # adds a kink to the offset function that the {-1, 0, +1, z_old} anchors
+        # alone miss, so partial instancing was approximate there (worst under a
+        # moved default). _instantiateAvarV2 now also collects each retained
+        # avar v1 breakpoint, removing that structural error. A smaller residual
+        # from F2Dot14 requantization of the retained (steep, near-edge) segment
+        # map can remain, so tolerances are per-case rather than the 2-unit
+        # quantization floor used elsewhere. Every case below FAILS without the
+        # breakpoint collection (worst 4 and 14 respectively).
+        cases = [
+            # gentle map, moderate moved default: structural error fully removed.
+            ({"opsz": {-1: -1, -0.5: -0.35, 0: 0, 0.5: 0.65, 1: 1}},
+             {"opsz": (8, 40, 120)}, 2),
+            # moved default near the fvar edge + interior breakpoint: the regime
+            # that exposed the bug. Structural error removed (was 14); the ~3
+            # residual is retained-map requantization, not the offset math.
+            ({"opsz": {-1: -1, 0: 0, 1: 1, -0.45: -0.27}},
+             {"opsz": (8, 89.6, 144)}, 6),
+        ]
+        for segments, limits, tol in cases:
+            def make():
+                f = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+                for tag, seg in segments.items():
+                    f["avar"].segments[tag] = dict(seg)
+                return f
+
+            original = make()
+            partial = instancer.instantiateVariableFont(make(), dict(limits))
+            partial_axes = {axis.axisTag for axis in partial["fvar"].axes}
+            tag = next(iter(limits))
+            assert tag in partial_axes
+            lo, _, hi = limits[tag]
+            worst = 0
+            for i in range(401):
+                u = lo + (hi - lo) * i / 400
+                o = round(_avar2_final_coords(original, {tag: u}).get(tag, 0) * 16384)
+                p = round(_avar2_final_coords(partial, {tag: u}).get(tag, 0) * 16384)
+                worst = max(worst, abs(o - p))
+            assert worst <= tol, (
+                f"{segments} {limits}: worst {worst} > tolerance {tol}"
+            )
+
 
 class InstantiateVariableFontTest(object):
     @pytest.mark.parametrize(
