@@ -1629,10 +1629,11 @@ def _computeOldIntermediates(varfont, axisLimits):
 
 
 # Threshold, in F2Dot14 units, above which a restricted avar2 axis's residual
-# offset-compensation error triggers a warning. The quantization floor is ~2;
-# anything clearly above it means the retained avar v1 map could not be
-# reproduced bit-exactly (see _estimateAvar2OffsetError).
-_AVAR2_OFFSET_WARN_THRESHOLD = 4
+# offset-compensation error triggers a warning. The quantization floor is ~2 and
+# small residuals (a few units) are common and imperceptible for real avar v1
+# maps; only a clearly larger residual — a steep retained segment that cannot be
+# reproduced bit-exactly — is worth flagging (see _estimateAvar2OffsetError).
+_AVAR2_OFFSET_WARN_THRESHOLD = 8
 
 
 def _estimateAvar2OffsetError(oldSeg, newSeg, oldFvarTriple, newTriple, offsetByZ):
@@ -1870,16 +1871,18 @@ def _instantiateAvarV2(
                     offsetByZ[zOld] = -zOld
 
                 # Interior avar v1 breakpoints inside the retained range each put
-                # a kink in offset(z) at their new-intermediate image z. Sampling
-                # only {-1, 0, +1, z_old} would linearly interpolate across those
-                # kinks (approximate, worst under a moved default on an asymmetric
-                # axis). Add each in-range old breakpoint's (z, old-intermediate)
-                # so the VariationModel reproduces offset(z) at every kink. This
-                # is additive: with no avar v1 map (or none in range) offsetByZ is
-                # unchanged and the classic {bias + two tents} encoding results.
+                # a kink in offset(z). Sampling only {-1, 0, +1, z_old} would
+                # linearly interpolate across those kinks (approximate, worst
+                # under a moved default on an asymmetric axis). The retained
+                # (renormalized) avar v1 map keeps exactly the in-range old
+                # breakpoints, and z(u) kinks at each retained breakpoint's
+                # output coordinate; add that z with its old intermediate value
+                # so the model reproduces offset(z) at every kink. Iterating the
+                # retained map lands each sample on the F2Dot14-quantized kink.
                 oldSeg = oldSegments.get(tag)
+                oldFvarTriple = (axis.minValue, axis.defaultValue, axis.maxValue)
+                withBreakpoints = dict(offsetByZ)
                 if oldSeg and newSeg:
-                    oldFvarTriple = (axis.minValue, axis.defaultValue, axis.maxValue)
                     denormNew = {
                         -1.0: newTriple[0],
                         0.0: newTriple[1],
@@ -1889,18 +1892,31 @@ def _instantiateAvarV2(
                         if fromCoordNew in (-1.0, 0.0, 1.0):
                             continue  # anchors already seeded
                         z = floatToFixedToFloat(z, 14)
-                        if not (-1.0 < z < 1.0) or z in offsetByZ:
+                        if not (-1.0 < z < 1.0) or z in withBreakpoints:
                             continue
                         user = piecewiseLinearMap(fromCoordNew, denormNew)
                         nOld = normalizeValue(user, oldFvarTriple)
                         xOld = piecewiseLinearMap(nOld, oldSeg)
-                        offsetByZ[z] = floatToFixedToFloat(xOld, 14) - z
+                        withBreakpoints[z] = floatToFixedToFloat(xOld, 14) - z
 
-                # Warn if a residual (retained-map requantization) remains.
-                oldFvarTriple = (axis.minValue, axis.defaultValue, axis.maxValue)
-                approxErr = _estimateAvar2OffsetError(
-                    oldSegments.get(tag), newSeg, oldFvarTriple, newTriple, offsetByZ
+                # Extra tents cost F2Dot14 rounding, so for a steep segment they
+                # can add more quantization noise than the structural error they
+                # remove. Keep the interior breakpoints only when they do not
+                # increase the estimated residual; this makes the collection a
+                # strict (never-worse) improvement over the {-1,0,+1,z_old}
+                # anchors. Warn when even the better choice is not bit-exact
+                # (a steep retained segment we cannot reproduce in F2Dot14).
+                errAnchors = _estimateAvar2OffsetError(
+                    oldSeg, newSeg, oldFvarTriple, newTriple, offsetByZ
                 )
+                errWith = _estimateAvar2OffsetError(
+                    oldSeg, newSeg, oldFvarTriple, newTriple, withBreakpoints
+                )
+                if errWith <= errAnchors:
+                    offsetByZ = withBreakpoints
+                    approxErr = errWith
+                else:
+                    approxErr = errAnchors
                 if approxErr > _AVAR2_OFFSET_WARN_THRESHOLD:
                     approxWarn[tag] = approxErr
 
