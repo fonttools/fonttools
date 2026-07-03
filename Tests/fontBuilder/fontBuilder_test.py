@@ -231,19 +231,10 @@ def test_build_cubic_ttf(tmp_path):
     glyph = pen.glyph()
     glyphs = {"A": glyph}
 
-    # cubic outlines are not allowed in glyf table format 0
-    fb = FontBuilder(1000, isTTF=True, glyphDataFormat=0)
-    with pytest.raises(
-        ValueError, match="Glyph 'A' has cubic Bezier outlines, but glyphDataFormat=0"
-    ):
+    # cubic outlines are not allowed in the glyf table
+    fb = FontBuilder(1000, isTTF=True)
+    with pytest.raises(ValueError, match="Glyph 'A' has cubic Bezier outlines"):
         fb.setupGlyf(glyphs)
-    # can skip check if feeling adventurous
-    fb.setupGlyf(glyphs, validateGlyphFormat=False)
-
-    # cubics are (will be) allowed in glyf table format 1
-    fb = FontBuilder(1000, isTTF=True, glyphDataFormat=1)
-    fb.setupGlyf(glyphs)
-    assert "A" in fb.font["glyf"].glyphs
 
 
 def test_build_otf(tmpdir):
