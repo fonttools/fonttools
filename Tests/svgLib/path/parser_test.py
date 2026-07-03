@@ -32,6 +32,27 @@ import pytest
                 ("closePath", ()),
             ],
         ),
+        # a redundant Z after a subpath is already closed is a no-op
+        # (valid per the SVG path grammar); it must not crash nor emit
+        # a second closePath.
+        (
+            "M 100 100 L 300 100 L 200 300 z z",
+            [
+                ("moveTo", ((100.0, 100.0),)),
+                ("lineTo", ((300.0, 100.0),)),
+                ("lineTo", ((200.0, 300.0),)),
+                ("lineTo", ((100.0, 100.0),)),
+                ("closePath", ()),
+            ],
+        ),
+        # a redundant Z following an empty (moveto-only) closed subpath
+        (
+            "M 100 100 Z Z",
+            [
+                ("moveTo", ((100.0, 100.0),)),
+                ("closePath", ()),
+            ],
+        ),
         (
             "M100,200 C100,100 250,100 250,200 S400,300 400,200",
             [
