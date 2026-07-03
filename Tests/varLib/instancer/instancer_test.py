@@ -1865,15 +1865,18 @@ class InstantiateAvar2Test(object):
         # breakpoint collection (worst 4 and 14 respectively).
         cases = [
             # gentle map, moderate moved default: structural error fully removed.
-            ({"opsz": {-1: -1, -0.5: -0.35, 0: 0, 0.5: 0.65, 1: 1}},
-             {"opsz": (8, 40, 120)}, 2),
+            (
+                {"opsz": {-1: -1, -0.5: -0.35, 0: 0, 0.5: 0.65, 1: 1}},
+                {"opsz": (8, 40, 120)},
+                2,
+            ),
             # moved default near the fvar edge + interior breakpoint: the regime
             # that exposed the bug. Structural error removed (was 14); the ~3
             # residual is retained-map requantization, not the offset math.
-            ({"opsz": {-1: -1, 0: 0, 1: 1, -0.45: -0.27}},
-             {"opsz": (8, 89.6, 144)}, 6),
+            ({"opsz": {-1: -1, 0: 0, 1: 1, -0.45: -0.27}}, {"opsz": (8, 89.6, 144)}, 6),
         ]
         for segments, limits, tol in cases:
+
             def make():
                 f = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
                 for tag, seg in segments.items():
@@ -1892,9 +1895,7 @@ class InstantiateAvar2Test(object):
                 o = round(_avar2_final_coords(original, {tag: u}).get(tag, 0) * 16384)
                 p = round(_avar2_final_coords(partial, {tag: u}).get(tag, 0) * 16384)
                 worst = max(worst, abs(o - p))
-            assert worst <= tol, (
-                f"{segments} {limits}: worst {worst} > tolerance {tol}"
-            )
+            assert worst <= tol, f"{segments} {limits}: worst {worst} > tolerance {tol}"
 
 
 class InstantiateVariableFontTest(object):
