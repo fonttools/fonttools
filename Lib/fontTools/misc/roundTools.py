@@ -44,7 +44,7 @@ def otRound(value: float) -> int:
             value (float): The input floating-point value.
 
     Returns
-            float: The rounded value.
+            int: The rounded value.
     """
     # See this thread for how we ended up with this implementation:
     # https://github.com/fonttools/fonttools/issues/1248#issuecomment-383198166
