@@ -5,6 +5,8 @@ Various round-to-integer helpers.
 import math
 import functools
 import logging
+from collections.abc import Callable
+from typing import TypeAlias
 
 log = logging.getLogger(__name__)
 
@@ -16,12 +18,16 @@ __all__ = [
     "nearestMultipleShortestRepr",
 ]
 
+RoundingFunction: TypeAlias = Callable[[float], float]
+"""A rounding strategy for numbers; can return a float as well as an int, as in
+some strategies rounding is conditional."""
 
-def noRound(value):
+
+def noRound(value: float) -> float:
     return value
 
 
-def otRound(value):
+def otRound(value: float) -> int:
     """Round float value to nearest integer towards ``+Infinity``.
 
     The OpenType spec (in the section on `"normalization" of OpenType Font Variations <https://docs.microsoft.com/en-us/typography/opentype/spec/otvaroverview#coordinate-scales-and-normalization>`_)
@@ -45,12 +51,12 @@ def otRound(value):
     return int(math.floor(value + 0.5))
 
 
-def maybeRound(v, tolerance, round=otRound):
+def maybeRound(v: float, tolerance: float, round: RoundingFunction = otRound) -> float:
     rounded = round(v)
     return rounded if abs(rounded - v) <= tolerance else v
 
 
-def roundFunc(tolerance, round=otRound):
+def roundFunc(tolerance: float, round: RoundingFunction = otRound) -> RoundingFunction:
     if tolerance < 0:
         raise ValueError("Rounding tolerance must be positive")
 
