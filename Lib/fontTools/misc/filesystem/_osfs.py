@@ -14,6 +14,7 @@ from ._errors import (
     DirectoryExpected,
     DirectoryNotEmpty,
     FileExpected,
+    IllegalBackReference,
     IllegalDestination,
     ResourceError,
     ResourceNotFound,
@@ -50,7 +51,10 @@ class OSFS(FS):
 
     def _abs(self, rel_path: str) -> Path:
         self.check()
-        return (self._root / rel_path.strip("/")).resolve()
+        abs_path = (self._root / rel_path.strip("/")).resolve()
+        if abs_path != self._root and self._root not in abs_path.parents:
+            raise IllegalBackReference(rel_path)
+        return abs_path
 
     def open(self, path: str, mode: str = "rb", **kwargs) -> IO[Any]:
         try:

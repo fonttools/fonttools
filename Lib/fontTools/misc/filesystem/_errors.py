@@ -52,3 +52,10 @@ class DestinationExists(ResourceError):
 
 class ResourceReadOnly(ResourceError):
     pass
+
+
+class IllegalBackReference(ValueError):
+    def __init__(self, path):
+        super().__init__(
+            f"path {path!r} contains back-references outside of filesystem"
+        )
