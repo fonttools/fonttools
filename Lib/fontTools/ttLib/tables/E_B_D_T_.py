@@ -405,7 +405,10 @@ def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
         # fall back to current directory if output file's directory isn't found
         folder = "."
     folder = os.path.join(folder, "bitmaps")
-    filename = glyphName + bitmapObject.fileExtension
+    # glyph names come straight from the font and may contain path separators
+    # (e.g. a crafted 'post' table); keep only the final component so a name
+    # like "../../evil" can't write the bitmap outside the export folder.
+    filename = os.path.basename(glyphName) + bitmapObject.fileExtension
     if not os.path.isdir(folder):
         os.makedirs(folder)
     folder = os.path.join(folder, "strike%d" % strikeIndex)
