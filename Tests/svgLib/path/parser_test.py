@@ -235,6 +235,18 @@ def test_equivalent_paths(pathdef1, pathdef2):
     assert pen1.value == pen2.value
 
 
+def test_closepath_ignores_floating_point_rounding():
+    pen = RecordingPen()
+    parse_path("M 0.1 0 l 0.2 0 l -0.2 0 z", pen)
+
+    assert [command for command, _ in pen.value] == [
+        "moveTo",
+        "lineTo",
+        "lineTo",
+        "closePath",
+    ]
+
+
 def test_exponents():
     # It can be e or E, the plus is optional, and a minimum of +/-3.4e38 must be supported.
     pen = RecordingPen()

@@ -8,6 +8,7 @@
 # License: MIT
 
 from .arc import EllipticalArc
+import cmath
 import re
 
 
@@ -171,7 +172,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
 
         elif command == "Z":
             # Close path
-            if current_pos != start_pos:
+            if not cmath.isclose(current_pos, start_pos, rel_tol=1e-15, abs_tol=1e-15):
                 pen.lineTo((start_pos.real, start_pos.imag))
             pen.closePath()
             current_pos = start_pos
