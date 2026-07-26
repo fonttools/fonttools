@@ -1547,6 +1547,18 @@ class cmap_format_14(CmapSubtable):
 
 
 class cmap_format_unknown(CmapSubtable):
+    def __init__(self, format):
+        CmapSubtable.__init__(self, format)
+        # We can't read the subtable, so there are no mappings to offer. The raw
+        # data is kept instead, and written back out as-is. fromXML() does the
+        # same.
+        self.cmap = {}
+
+    def ensureDecompiled(self, recurse=False):
+        # There is nothing to decompile, so hold on to the data; the base class
+        # would drop it.
+        pass
+
     def toXML(self, writer, ttFont):
         cmapName = self.__class__.__name__[:12] + str(self.format)
         writer.begintag(
