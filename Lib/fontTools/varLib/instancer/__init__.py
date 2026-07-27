@@ -1318,8 +1318,36 @@ def instantiateItemVariationStore(
     return defaultDeltas
 
 
+def _instantiateBASE(varfont, axisLimits):
+    if "BASE" not in varfont:
+        return
+
+    base = varfont["BASE"].table
+    varStore = getattr(base, "VarStore", None)
+    if varStore is None:
+        return
+
+    log.info("Instantiating BASE table")
+
+    fvarAxes = varfont["fvar"].axes
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+
+    merger = MutatorMerger(
+        varfont, defaultDeltas, deleteVariations=(not varStore.VarRegionList.Region)
+    )
+    merger.mergeTables(varfont, [varfont], ["BASE"])
+
+    if varStore.VarRegionList.Region:
+        base.remap_device_varidxes(varStore.optimize())
+    else:
+        # Downgrade BASE, it no longer references an ItemVariationStore.
+        del base.VarStore
+        base.Version = 0x00010000
+
+
 def instantiateOTL(varfont, axisLimits):
-    # TODO(anthrotype) Support partial instancing of JSTF and BASE tables
+    # TODO(anthrotype) Support partial instancing of JSTF table
+    _instantiateBASE(varfont, axisLimits)
 
     if (
         "GDEF" not in varfont

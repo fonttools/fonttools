@@ -396,6 +396,7 @@ def Object_remap_device_varidxes(self, varidxes_map):
 
 ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
 ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
+ot.BASE.remap_device_varidxes = Object_remap_device_varidxes
 
 
 class _Encoding(object):
