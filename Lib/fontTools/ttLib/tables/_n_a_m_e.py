@@ -18,6 +18,7 @@ from fontTools import ttLib
 import fontTools.ttLib.tables.otTables as otTables
 from fontTools.ttLib.tables import C_P_A_L_
 from . import DefaultTable
+import re
 import struct
 import logging
 
@@ -498,6 +499,18 @@ def _makeMacName(name, nameID, language, font=None):
         return None
 
 
+_xmlIndentation = re.compile(r"\A\n[ \t]*|\n[ \t]*\Z")
+
+
+def _stripXMLIndentation(s):
+    """Undo the newline and indentation that NameRecord.toXML puts around a value.
+
+    Only the layout the writer added is removed, so whitespace belonging to the
+    string itself survives the round-trip.
+    """
+    return _xmlIndentation.sub("", s)
+
+
 class NameRecord(object):
     def getEncoding(self, default="ascii"):
         """Returns the Python encoding name for this name entry based on its platformID,
@@ -627,7 +640,7 @@ class NameRecord(object):
         self.platformID = safeEval(attrs["platformID"])
         self.platEncID = safeEval(attrs["platEncID"])
         self.langID = safeEval(attrs["langID"])
-        s = strjoin(content).strip()
+        s = _stripXMLIndentation(strjoin(content))
         encoding = self.getEncoding()
         if self.encodingIsUnicodeCompatible() or safeEval(
             attrs.get("unicode", "False")
