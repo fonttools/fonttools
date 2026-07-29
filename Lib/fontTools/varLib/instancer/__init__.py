@@ -675,7 +675,9 @@ def instantiateCFF2(
 
     cff = varfont["CFF2"].cff
     topDict = cff.topDictIndex[0]
-    varStore = topDict.VarStore.otVarStore
+    varStore = getattr(topDict, "VarStore", None)
+    if varStore is not None:
+        varStore = varStore.otVarStore
     if not varStore:
         if downgrade:
             from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF

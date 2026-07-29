@@ -107,6 +107,18 @@ class InstantiateCFF2Test(object):
         program = varfont["CFF2"].cff.topDictIndex[0].CharStrings.values()[1].program
         assert program == expected
 
+    def test_no_varstore(self, varfont):
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-1.ttx"))
+
+        # Fully instancing empties the VarStore and removes it from the table.
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits({"wght": 0}))
+        assert not hasattr(varfont["CFF2"].cff.topDictIndex[0], "VarStore")
+
+        # A CFF2 table without a VariationStore must survive instancing.
+        # https://github.com/fonttools/fonttools/issues/4130
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits({"wght": 0}))
+
     def test_private_dict_vsindex(self):
         # https://github.com/fonttools/fonttools/issues/4129
         from fontTools.cffLib import FontDict, PrivateDict
