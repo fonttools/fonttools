@@ -107,6 +107,41 @@ class InstantiateCFF2Test(object):
         program = varfont["CFF2"].cff.topDictIndex[0].CharStrings.values()[1].program
         assert program == expected
 
+    def test_private_dict_vsindex(self):
+        # https://github.com/fonttools/fonttools/issues/4129
+        from fontTools.cffLib import FontDict, PrivateDict
+        from fontTools.varLib.varStore import VarStoreInstancer
+
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-2.ttx"))
+        topDict = varfont["CFF2"].cff.topDictIndex[0]
+
+        # Add a Private dict with a non-zero vsindex and blended values;
+        # its blends reference VarData 1, not VarData 0.
+        fontDict = FontDict()
+        fontDict.setCFF2(True)
+        private = PrivateDict()
+        private.vstore = topDict.VarStore
+        private.vsindex = 1
+        private.BlueValues = [[-12, 10, 20, 40], [0, 5, -5, 15]]
+        fontDict.Private = private
+        topDict.FDArray.append(fontDict)
+
+        pinned = {"wght": 1.0, "wdth": 1.0}
+        vsi = VarStoreInstancer(
+            topDict.VarStore.otVarStore, varfont["fvar"].axes, pinned
+        )
+        expected = [
+            v[0] + round(vsi.interpolateFromDeltas(1, v[1:]))
+            for v in private.BlueValues
+        ]
+
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits(pinned))
+
+        assert private.BlueValues == expected
+        # The store emptied; the dict's vsindex must be gone with it.
+        assert not hasattr(private, "vsindex")
+
     @pytest.mark.parametrize(
         "source_ttx, expected_ttx",
         [

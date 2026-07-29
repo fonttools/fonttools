@@ -776,21 +776,15 @@ def instantiateCFF2(
                 storeBlendsToVarStore(arg)
 
     # Add private blend lists to VarStore so we can instantiate values
-    for opcode, name, arg_type, default, converter in privateDictOperators2:
-        if arg_type not in ("number", "delta", "array"):
-            continue
-
-        vsindex = 0
-        for private in privateDicts:
+    for private in privateDicts:
+        vsindex = getattr(private, "vsindex", 0)
+        for opcode, name, arg_type, default, converter in privateDictOperators2:
+            if arg_type not in ("number", "delta", "array") or name == "vsindex":
+                continue
             if not hasattr(private, name):
                 continue
+
             values = getattr(private, name)
-
-            # This is safe here since "vsindex" is the first in the privateDictOperators2
-            if name == "vsindex":
-                vsindex = values[0]
-                continue
-
             if arg_type == "number":
                 values = [values]
 
@@ -821,18 +815,12 @@ def instantiateCFF2(
             command[1][:] = newArgs
 
     # Read back new private blends from the instantiated VarStore
-    for opcode, name, arg_type, default, converter in privateDictOperators2:
-        if arg_type not in ("number", "delta", "array"):
-            continue
-
-        vsindex = 0
-        for private in privateDicts:
-            if not hasattr(private, name):
+    for private in privateDicts:
+        vsindex = getattr(private, "vsindex", 0)
+        for opcode, name, arg_type, default, converter in privateDictOperators2:
+            if arg_type not in ("number", "delta", "array") or name == "vsindex":
                 continue
-
-            # This is safe here since "vsindex" is the first in the privateDictOperators2
-            if name == "vsindex":
-                vsindex = values[0]
+            if not hasattr(private, name):
                 continue
 
             values = getattr(private, name)
@@ -884,7 +872,12 @@ def instantiateCFF2(
                 command[1][0] = vsindexMapping[command[1][0]]
     for private in privateDicts:
         if hasattr(private, "vsindex"):
-            private.vsindex = vsindexMapping[private.vsindex]
+            if private.vsindex in vsindexMapping:
+                private.vsindex = vsindexMapping[private.vsindex]
+            else:
+                # The referenced VarData lost all its regions; the dict's
+                # blends have dissolved into plain values.
+                del private.vsindex
 
     # Remove initial vsindex commands that are implied
     for commands, private in zip(allCommands, allCommandPrivates):
