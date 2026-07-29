@@ -12,7 +12,7 @@ fontToolsDir = os.path.normpath(fontToolsDir)
 tablesDir = os.path.join(fontToolsDir, "Lib", "fontTools", "ttLib", "tables")
 docFile = os.path.join(fontToolsDir, "Doc/source/ttx.rst")
 
-names = glob.glob1(tablesDir, "*.py")
+names = glob.glob("*.py", root_dir=tablesDir)
 
 modules = []
 tables = []

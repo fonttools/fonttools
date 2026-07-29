@@ -778,21 +778,15 @@ def instantiateCFF2(
                 storeBlendsToVarStore(arg)
 
     # Add private blend lists to VarStore so we can instantiate values
-    for opcode, name, arg_type, default, converter in privateDictOperators2:
-        if arg_type not in ("number", "delta", "array"):
-            continue
-
-        vsindex = 0
-        for private in privateDicts:
+    for private in privateDicts:
+        vsindex = getattr(private, "vsindex", 0)
+        for opcode, name, arg_type, default, converter in privateDictOperators2:
+            if arg_type not in ("number", "delta", "array") or name == "vsindex":
+                continue
             if not hasattr(private, name):
                 continue
+
             values = getattr(private, name)
-
-            # This is safe here since "vsindex" is the first in the privateDictOperators2
-            if name == "vsindex":
-                vsindex = values[0]
-                continue
-
             if arg_type == "number":
                 values = [values]
 
@@ -823,18 +817,12 @@ def instantiateCFF2(
             command[1][:] = newArgs
 
     # Read back new private blends from the instantiated VarStore
-    for opcode, name, arg_type, default, converter in privateDictOperators2:
-        if arg_type not in ("number", "delta", "array"):
-            continue
-
-        vsindex = 0
-        for private in privateDicts:
-            if not hasattr(private, name):
+    for private in privateDicts:
+        vsindex = getattr(private, "vsindex", 0)
+        for opcode, name, arg_type, default, converter in privateDictOperators2:
+            if arg_type not in ("number", "delta", "array") or name == "vsindex":
                 continue
-
-            # This is safe here since "vsindex" is the first in the privateDictOperators2
-            if name == "vsindex":
-                vsindex = values[0]
+            if not hasattr(private, name):
                 continue
 
             values = getattr(private, name)
@@ -886,7 +874,12 @@ def instantiateCFF2(
                 command[1][0] = vsindexMapping[command[1][0]]
     for private in privateDicts:
         if hasattr(private, "vsindex"):
-            private.vsindex = vsindexMapping[private.vsindex]
+            if private.vsindex in vsindexMapping:
+                private.vsindex = vsindexMapping[private.vsindex]
+            else:
+                # The referenced VarData lost all its regions; the dict's
+                # blends have dissolved into plain values.
+                del private.vsindex
 
     # Remove initial vsindex commands that are implied
     for commands, private in zip(allCommands, allCommandPrivates):
@@ -1320,8 +1313,36 @@ def instantiateItemVariationStore(
     return defaultDeltas
 
 
+def _instantiateBASE(varfont, axisLimits):
+    if "BASE" not in varfont:
+        return
+
+    base = varfont["BASE"].table
+    varStore = getattr(base, "VarStore", None)
+    if varStore is None:
+        return
+
+    log.info("Instantiating BASE table")
+
+    fvarAxes = varfont["fvar"].axes
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+
+    merger = MutatorMerger(
+        varfont, defaultDeltas, deleteVariations=(not varStore.VarRegionList.Region)
+    )
+    merger.mergeTables(varfont, [varfont], ["BASE"])
+
+    if varStore.VarRegionList.Region:
+        base.remap_device_varidxes(varStore.optimize())
+    else:
+        # Downgrade BASE, it no longer references an ItemVariationStore.
+        del base.VarStore
+        base.Version = 0x00010000
+
+
 def instantiateOTL(varfont, axisLimits):
-    # TODO(anthrotype) Support partial instancing of JSTF and BASE tables
+    # TODO(anthrotype) Support partial instancing of JSTF table
+    _instantiateBASE(varfont, axisLimits)
 
     if (
         "GDEF" not in varfont
