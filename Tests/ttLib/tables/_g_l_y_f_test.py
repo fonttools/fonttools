@@ -270,22 +270,22 @@ class GlyfTableTest(unittest.TestCase):
         ):
             glyph_A.getCoordinates(glyphSet)
 
+    def _makeComponentGlyph(self, glyphSet, name, ref, dx, dy):
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent(ref, (1, 0, 0, 1, dx, dy))
+        glyphSet[name] = pen.glyph()
+
     def test_recalcBounds_recursiveComponent(self):
         # Integer-translate-only components take the fast path
         # (tryRecalcBoundsComposite); a recursive reference there must raise
         # TTLibError just like the getCoordinates slow path, rather than let a
         # raw RecursionError escape.
         # https://github.com/fonttools/fonttools/issues/3899
-        def make(glyphSet, name, ref, dx, dy):
-            pen = TTGlyphPen(glyphSet)
-            pen.addComponent(ref, (1, 0, 0, 1, dx, dy))
-            glyphSet[name] = pen.glyph()
-
         # A -> B -> A cycle, all plain integer translates.
         glyphSet = {}
         glyphSet["A"] = glyphSet["B"] = TTGlyphPen(glyphSet).glyph()
-        make(glyphSet, "A", "B", 10, 0)
-        make(glyphSet, "B", "A", 0, 10)
+        self._makeComponentGlyph(glyphSet, "A", "B", 10, 0)
+        self._makeComponentGlyph(glyphSet, "B", "A", 0, 10)
         # sanity check that this exercises the integer-translate fast path
         self.assertTrue(glyphSet["A"].components[0]._hasOnlyIntegerTranslate())
         with self.assertRaisesRegex(
@@ -298,15 +298,16 @@ class GlyfTableTest(unittest.TestCase):
         ):
             glyphSet["A"].recalcBounds(glyphSet, boundsDone=set())
 
-        # A glyph that references itself.
+    def test_recalcBounds_selfReferencingComponent(self):
         glyphSet = {}
         glyphSet["A"] = TTGlyphPen(glyphSet).glyph()
-        make(glyphSet, "A", "A", 5, 5)
+        self._makeComponentGlyph(glyphSet, "A", "A", 5, 5)
         with self.assertRaisesRegex(
             TTLibError, "glyph 'A' contains a recursive component reference"
         ):
             glyphSet["A"].recalcBounds(glyphSet)
 
+    def test_recalcBounds_acyclicComposite(self):
         # A valid acyclic integer-translate composite must still compute the
         # correct bounds (the recursion guard must not affect normal glyphs).
         glyphSet = {}
@@ -317,7 +318,7 @@ class GlyfTableTest(unittest.TestCase):
         pen.lineTo((5, 5))
         pen.closePath()
         glyphSet["base"] = pen.glyph()
-        make(glyphSet, "A", "base", 100, 200)
+        self._makeComponentGlyph(glyphSet, "A", "base", 100, 200)
         glyphSet["base"].recalcBounds(glyphSet)
         glyphSet["A"].recalcBounds(glyphSet, boundsDone=set())
         self.assertEqual(
