@@ -381,6 +381,37 @@ class GlyfTableTest(unittest.TestCase):
         self.assertEqual(font["glyf"][".notdef"].numberOfContours, 0)
         self.assertEqual(font["glyf"]["space"].numberOfContours, 0)
 
+    def test_decompile_otb_style_single_entry_loca(self):
+        # https://github.com/fonttools/fonttools/issues/4120
+        font = TTFont()
+        glyphNames = [".notdef", "space"]
+        font.setGlyphOrder(glyphNames)
+        font["loca"] = newTable("loca")
+        font["loca"].locations = [0]
+        font["glyf"] = newTable("glyf")
+        font["glyf"].decompile(b"", font)
+        self.assertEqual(len(font["glyf"]), len(glyphNames))
+        for name in glyphNames:
+            self.assertEqual(font["glyf"][name].numberOfContours, 0)
+
+    def test_compile_after_decompile_otb_style(self):
+        # https://github.com/fonttools/fonttools/issues/4120
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        glyphNames = [".notdef", "space"]
+        font.setGlyphOrder(glyphNames)
+        font["head"] = newTable("head")
+        font["head"].indexToLocFormat = 0
+        font["maxp"] = newTable("maxp")
+        font["maxp"].numGlyphs = len(glyphNames)
+        font["loca"] = newTable("loca")
+        font["loca"].locations = [0]
+        font["glyf"] = newTable("glyf")
+        font["glyf"].decompile(b"", font)
+        glyfData = font["glyf"].compile(font)
+        self.assertEqual(glyfData, b"\x00")
+        self.assertEqual(list(font["loca"]), [0] * (len(glyphNames) + 1))
+        self.assertEqual(font["maxp"].numGlyphs, len(glyphNames))
+
     def test_getPhantomPoints(self):
         # https://github.com/fonttools/fonttools/issues/2295
         font = TTFont()

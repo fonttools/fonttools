@@ -111,6 +111,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             glyph = Glyph(glyphdata)
             self.glyphs[glyphName] = glyph
             pos = nextPos
+        # OTB bitmap-only sfnt fonts use a single-entry loca ([0]) with an empty
+        # glyf shell; fill placeholder glyphs so compile() doesn't KeyError.
+        # Mirrors the tolerant handling in toXML() and _l_o_c_a.py.
+        # https://github.com/fonttools/fonttools/issues/4120
+        for glyphName in glyphOrder:
+            if glyphName not in self.glyphs:
+                log.warning("glyph '%s' has no entry in glyf table", glyphName)
+                self.glyphs[glyphName] = Glyph()
         if len(data) - nextPos >= 4:
             log.warning(
                 "too much 'glyf' table data: expected %d, received %d bytes",
