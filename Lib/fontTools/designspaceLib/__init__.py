@@ -2561,6 +2561,9 @@ class BaseDocReader(LogMixin):
 
     def readLibElement(self, libElement, instanceObject):
         """Read the lib element for the given instance."""
+        if len(libElement) == 0:
+            # an empty <lib> element is equivalent to no lib at all
+            return
         instanceObject.lib = plistlib.fromtree(libElement[0])
 
     def readInfoElement(self, infoElement, instanceObject):
@@ -2638,6 +2641,9 @@ class BaseDocReader(LogMixin):
     def readLib(self):
         """Read the lib element for the whole document."""
         for libElement in self.root.findall(".lib"):
+            if len(libElement) == 0:
+                # an empty <lib> element is equivalent to no lib at all
+                continue
             self.documentObject.lib = plistlib.fromtree(libElement[0])
 
 

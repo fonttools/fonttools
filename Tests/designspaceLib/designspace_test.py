@@ -919,6 +919,32 @@ def test_documentLib(tmpdir):
     assert new.lib[dummyKey] == dummyData
 
 
+def test_emptyLib(tmpdir):
+    # an empty <lib> element should read as an empty lib, not raise IndexError
+    tmpdir = str(tmpdir)
+    testDocPath = os.path.join(tmpdir, "testEmptyLibTest.designspace")
+    with open(testDocPath, "w", encoding="utf-8") as f:
+        f.write(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<designspace format="4.1">\n'
+            "  <axes>\n"
+            '    <axis tag="TAGA" name="axisName_a" minimum="0" maximum="1000"'
+            ' default="0"/>\n'
+            "  </axes>\n"
+            "  <instances>\n"
+            '    <instance name="instance.a" filename="instance.a.ufo">\n'
+            "      <lib/>\n"
+            "    </instance>\n"
+            "  </instances>\n"
+            "  <lib/>\n"
+            "</designspace>\n"
+        )
+    doc = DesignSpaceDocument()
+    doc.read(testDocPath)
+    assert doc.lib == {}
+    assert doc.instances[0].lib == {}
+
+
 def test_updatePaths(tmpdir):
     doc = DesignSpaceDocument()
     doc.path = str(tmpdir / "foo" / "bar" / "MyDesignspace.designspace")
