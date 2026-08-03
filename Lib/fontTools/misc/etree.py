@@ -45,6 +45,22 @@ try:
     from lxml.etree import *
 
     _have_lxml = True
+
+    _XMLParser = XMLParser
+
+    class XMLParser(_XMLParser):
+        """XMLParser subclass that doesn't resolve external entities.
+
+        Until lxml 5.0 the 'resolve_entities' option defaulted to True, so a
+        document carrying an external entity declaration could pull in local
+        files. The ElementTree backend never resolves them, and fontTools
+        parses untrusted documents, so keep the two backends in agreement.
+        """
+
+        def __init__(self, *args, **kwargs):
+            kwargs.setdefault("resolve_entities", False)
+            super(XMLParser, self).__init__(*args, **kwargs)
+
 except ImportError:
     try:
         from xml.etree.cElementTree import *
