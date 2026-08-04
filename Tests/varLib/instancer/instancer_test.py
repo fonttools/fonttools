@@ -14,6 +14,7 @@ from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
 from fontTools.varLib import featureVars
 from fontTools.varLib import models
+from fontTools.varLib import varStore
 import collections
 import itertools
 from copy import deepcopy
@@ -123,6 +124,53 @@ class InstantiateCFF2Test(object):
 
         program = varfont["CFF2"].cff.topDictIndex[0].CharStrings.values()[1].program
         assert program == expected
+
+    def test_no_varstore(self, varfont):
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-1.ttx"))
+
+        # Fully instancing empties the VarStore and removes it from the table.
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits({"wght": 0}))
+        assert not hasattr(varfont["CFF2"].cff.topDictIndex[0], "VarStore")
+
+        # A CFF2 table without a VariationStore must survive instancing.
+        # https://github.com/fonttools/fonttools/issues/4130
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits({"wght": 0}))
+
+    def test_private_dict_vsindex(self):
+        # https://github.com/fonttools/fonttools/issues/4129
+        from fontTools.cffLib import FontDict, PrivateDict
+        from fontTools.varLib.varStore import VarStoreInstancer
+
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-2.ttx"))
+        topDict = varfont["CFF2"].cff.topDictIndex[0]
+
+        # Add a Private dict with a non-zero vsindex and blended values;
+        # its blends reference VarData 1, not VarData 0.
+        fontDict = FontDict()
+        fontDict.setCFF2(True)
+        private = PrivateDict()
+        private.vstore = topDict.VarStore
+        private.vsindex = 1
+        private.BlueValues = [[-12, 10, 20, 40], [0, 5, -5, 15]]
+        fontDict.Private = private
+        topDict.FDArray.append(fontDict)
+
+        pinned = {"wght": 1.0, "wdth": 1.0}
+        vsi = VarStoreInstancer(
+            topDict.VarStore.otVarStore, varfont["fvar"].axes, pinned
+        )
+        expected = [
+            v[0] + round(vsi.interpolateFromDeltas(1, v[1:]))
+            for v in private.BlueValues
+        ]
+
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits(pinned))
+
+        assert private.BlueValues == expected
+        # The store emptied; the dict's vsindex must be gone with it.
+        assert not hasattr(private, "vsindex")
 
     @pytest.mark.parametrize(
         "source_ttx, expected_ttx",
@@ -887,6 +935,65 @@ def varfontGPOS2():
     return makeParametrizedVF(glyphOrder, features, values, increments)
 
 
+@pytest.fixture
+def varfontBASE():
+    # The feature file syntax has no way to express variable baseline
+    # coordinates, so the BASE table is built here: a single 'romn' baseline
+    # for 'latn' at -120 by default, -100 at wght=1.0 and -110 at wdth=1.0.
+    vf = makeParametrizedVF(
+        [".notdef", "A"], "feature kern { pos A A %d; } kern;", [-80], [(-10, -5)]
+    )
+    axisTags = [axis.axisTag for axis in vf["fvar"].axes]
+    storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
+    storeBuilder.setModel(
+        models.VariationModel([{}, {"wght": 1.0}, {"wdth": 1.0}], axisOrder=axisTags)
+    )
+    default, varIdx = storeBuilder.storeMasters([-120, -100, -110])
+
+    coord = otTables.BaseCoord()
+    coord.Format = 3
+    coord.Coordinate = default
+    coord.DeviceTable = builder.buildVarDevTable(varIdx)
+
+    baseValues = otTables.BaseValues()
+    baseValues.DefaultIndex = 0
+    baseValues.BaseCoord = [coord]
+    baseValues.BaseCoordCount = 1
+
+    baseScript = otTables.BaseScript()
+    baseScript.BaseValues = baseValues
+    baseScript.DefaultMinMax = None
+    baseScript.BaseLangSysRecord = []
+    baseScript.BaseLangSysCount = 0
+
+    scriptRecord = otTables.BaseScriptRecord()
+    scriptRecord.BaseScriptTag = "latn"
+    scriptRecord.BaseScript = baseScript
+
+    axis = otTables.Axis()
+    axis.BaseTagList = otTables.BaseTagList()
+    axis.BaseTagList.BaselineTag = ["romn"]
+    axis.BaseTagList.BaseTagCount = 1
+    axis.BaseScriptList = otTables.BaseScriptList()
+    axis.BaseScriptList.BaseScriptRecord = [scriptRecord]
+    axis.BaseScriptList.BaseScriptCount = 1
+
+    base = otTables.BASE()
+    base.Version = 0x00010001
+    base.HorizAxis = axis
+    base.VertAxis = None
+    base.VarStore = storeBuilder.finish()
+
+    vf["BASE"] = ttLib.newTable("BASE")
+    vf["BASE"].table = base
+    return vf
+
+
+def getBaseCoord(varfont):
+    axis = varfont["BASE"].table.HorizAxis
+    return axis.BaseScriptList.BaseScriptRecord[0].BaseScript.BaseValues.BaseCoord[0]
+
+
 class InstantiateOTLTest(object):
     @pytest.mark.parametrize(
         "location, expected",
@@ -1132,6 +1239,51 @@ class InstantiateOTLTest(object):
         valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
         assert not hasattr(valueRec1, "XAdvDevice")
         assert valueRec1.XAdvance == -25
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 0.0}, -120),
+            ({"wght": 0.5}, -110),
+            ({"wght": 1.0}, -100),
+            ({"wdth": 1.0}, -110),
+            ({"wdth": 0.5}, -115),
+        ],
+    )
+    def test_pin_and_drop_axis_BASE(self, varfontBASE, location, expected):
+        vf = varfontBASE
+
+        instancer.instantiateOTL(vf, instancer.NormalizedAxisLimits(location))
+
+        base = vf["BASE"].table
+        assert base.Version == 0x00010001
+        assert base.VarStore
+        coord = getBaseCoord(vf)
+        assert coord.Format == 3
+        assert coord.DeviceTable.DeltaFormat == 0x8000
+        assert coord.Coordinate == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 0.0, "wdth": 0.0}, -120),
+            ({"wght": 1.0, "wdth": 0.0}, -100),
+            ({"wght": 0.0, "wdth": 1.0}, -110),
+            ({"wght": 1.0, "wdth": 1.0}, -90),
+        ],
+    )
+    def test_full_instance_BASE(self, varfontBASE, location, expected):
+        vf = varfontBASE
+
+        instancer.instantiateOTL(vf, instancer.NormalizedAxisLimits(location))
+
+        base = vf["BASE"].table
+        assert base.Version == 0x00010000
+        assert not hasattr(base, "VarStore")
+        coord = getBaseCoord(vf)
+        assert coord.Format == 1
+        assert not hasattr(coord, "DeviceTable")
+        assert coord.Coordinate == expected
 
 
 class InstantiateAvarTest(object):
