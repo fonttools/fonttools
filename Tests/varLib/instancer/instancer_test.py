@@ -2095,9 +2095,15 @@ class InstantiateAvar2Test(object):
                 _avar2_final_coords(original, {"wght": wght}), abs=2 / 16384
             )
 
-    def test_avar2_null_varstore_behaves_as_v1(self, avar2_varfont):
-        # An avar 2.0 table with a NULL VarStore is legal and equivalent to
-        # plain v1. It used to crash normalize() by entering the v2 path.
+    def test_avar2_null_varstore_never_downgraded(self, avar2_varfont):
+        # An avar 2.0 table with a NULL VarStore is legal and behaves as
+        # plain v1 (it used to crash normalize() by entering the v2 path).
+        # It is never downgraded to v1: partial instancing takes the avar2
+        # path, creating offset-compensation delta rows on demand so the
+        # instance stays bit-exact against the original.
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        original["avar"].table.VarStore = None
+        original["avar"].table.VarIdxMap = None
         avar2_varfont["avar"].table.VarStore = None
         avar2_varfont["avar"].table.VarIdxMap = None
 
@@ -2106,6 +2112,21 @@ class InstantiateAvar2Test(object):
         )
         wght = next(axis for axis in partial["fvar"].axes if axis.axisTag == "wght")
         assert (wght.minValue, wght.defaultValue, wght.maxValue) == (300, 400, 700)
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+
+        # Survives compile+decompile, and the final normalized coordinates
+        # match the original (v1-behaving) font at the same user locations.
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+        assert partial["avar"].majorVersion == 2
+
+        for wght in (300, 350, 400, 550, 700):
+            assert _avar2_final_coords(partial, {"wght": wght}) == pytest.approx(
+                _avar2_final_coords(original, {"wght": wght}), abs=2 / 16384
+            )
 
     def test_unpopulated_default_2_tuple_limits(self, avar2_varfont):
         # AxisLimits({"wght": (300, 700)}) leaves default=None; the avar2

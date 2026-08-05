@@ -434,11 +434,9 @@ class AxisLimits(_BaseAxisLimits):
         if usingAvar and "avar" in varfont:
             avar = varfont["avar"]
 
-            if (
-                getattr(avar, "majorVersion", 1) >= 2
-                and getattr(avar.table, "VarStore", None) is not None
-                and set(self.pinnedLocation()).issuperset(a.axisTag for a in fvar.axes)
-            ):
+            if getattr(avar, "majorVersion", 1) >= 2 and set(
+                self.pinnedLocation()
+            ).issuperset(a.axisTag for a in fvar.axes):
                 # Full instancing of avar2 font (all axes pinned).
                 # Use avar table to normalize location and return.
                 location = self.pinnedLocation()
@@ -1501,10 +1499,12 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits=None, oldIntermediates
     # interior breakpoints used for exact offset compensation.
     oldSegments = {tag: dict(mapping) for tag, mapping in segments.items()}
 
+    # An avar version 2 font is never downgraded to version 1: even with a
+    # NULL/empty VarStore, partial instancing takes the avar2 path (offset
+    # compensation creates delta rows on demand), which keeps the other
+    # variation tables in old coordinate space and the instance bit-exact.
     version = getattr(avar, "majorVersion", 1)
-    hasAvar2VarStore = (
-        version >= 2 and getattr(avar.table, "VarStore", None) is not None
-    )
+    isAvar2 = version >= 2
 
     # Drop the table if we instantiate all the axes. An avar2 VarStore may
     # drive axes that have no v1 segment map (segments can even be empty),
@@ -1512,18 +1512,18 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits=None, oldIntermediates
     # segment-mapped ones — otherwise we'd delete live avar2 variation data.
     pinnedAxes = set(axisLimits.pinnedLocation())
     if pinnedAxes.issuperset(axis.axisTag for axis in varfont["fvar"].axes) or (
-        not hasAvar2VarStore and pinnedAxes.issuperset(segments)
+        not isAvar2 and pinnedAxes.issuperset(segments)
     ):
         log.info("Dropping avar table")
         del varfont["avar"]
         return
 
     # For avar2: need old intermediate values BEFORE modifying avar v1.
-    if hasAvar2VarStore and oldIntermediates is None:
+    if isAvar2 and oldIntermediates is None:
         oldIntermediates = _computeOldIntermediates(varfont, axisLimits)
 
     log.info("Instantiating avar table")
-    if hasAvar2VarStore:
+    if isAvar2:
         # For avar2 partial instancing, keep identity segments for pinned axes
         # that will be hidden in fvar. compile() needs segment entries for all
         # fvar axes. Self-contained axes' segments will be removed later when
@@ -1583,12 +1583,9 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits=None, oldIntermediates
 
     assert version == 2
 
-    if hasAvar2VarStore:
-        return _instantiateAvarV2(
-            varfont, axisLimits, normalizedLimits, oldIntermediates, oldSegments
-        )
-
-    return {}
+    return _instantiateAvarV2(
+        varfont, axisLimits, normalizedLimits, oldIntermediates, oldSegments
+    )
 
 
 def _computeOldIntermediates(varfont, axisLimits):
@@ -1688,6 +1685,22 @@ def _estimateAvar2OffsetError(oldSeg, newSeg, oldFvarTriple, newTriple, offsetBy
     return maxErr
 
 
+def _effectiveAvar2VarIdx(varStore, varIdxMap, axisIdx):
+    """The varIdx an axis actually resolves to in the avar2 VarStore.
+
+    Entries (or the implicit identity mapping) that point outside the store
+    behave as "no variation" at runtime, so report them as
+    NO_VARIATION_INDEX; this also covers a NULL VarStore.
+    """
+    varIdx = varIdxMap[axisIdx] if varIdxMap is not None else axisIdx
+    if varIdx == NO_VARIATION_INDEX or varStore is None:
+        return NO_VARIATION_INDEX
+    outer, inner = varIdx >> 16, varIdx & 0xFFFF
+    if outer >= len(varStore.VarData) or inner >= varStore.VarData[outer].ItemCount:
+        return NO_VARIATION_INDEX
+    return varIdx
+
+
 def _instantiateAvarV2(
     varfont, axisLimits, normalizedLimits, oldIntermediates, oldSegments=None
 ):
@@ -1719,6 +1732,28 @@ def _instantiateAvarV2(
         mapping = varIdxMap.mapping
         fill = mapping[-1] if mapping else NO_VARIATION_INDEX
         mapping.extend([fill] * (len(fvarAxes) - len(mapping)))
+
+    # Normalize mapping entries that don't resolve to a real store row (out
+    # of range, or a NULL VarStore) to NO_VARIATION_INDEX, mirroring runtime
+    # behavior. A version 2 font is never downgraded: with a NULL VarStore we
+    # start from an empty store and offset compensation creates delta rows on
+    # demand.
+    numAxes = len(fvarAxes)
+    rawMapping = [varIdxMap[i] if varIdxMap is not None else i for i in range(numAxes)]
+    effectiveMapping = [
+        _effectiveAvar2VarIdx(varStore, varIdxMap, i) for i in range(numAxes)
+    ]
+    if effectiveMapping != rawMapping:
+        if varIdxMap is None:
+            varIdxMap = builder.buildDeltaSetIndexMap(effectiveMapping)
+            avar.table.VarIdxMap = varIdxMap
+        else:
+            varIdxMap.mapping = effectiveMapping
+    if varStore is None:
+        varStore = builder.buildVarStore(
+            builder.buildVarRegionList([], [a.axisTag for a in fvarAxes]), []
+        )
+        avar.table.VarStore = varStore
 
     # Step 1: Convert IVS to TupleVariation representation and rebase
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(varStore, fvarAxes)
@@ -2585,14 +2620,15 @@ def instantiateVariableFont(
         log.info("Updating name table")
         names.updateNameTable(varfont, axisLimits)
 
-    # Detect avar2 partial instancing: avar v2 with VarStore, and not all
-    # fvar axes are pinned. In this mode, variation tables (gvar, HVAR, etc.)
-    # are kept in the old final-coordinate space, and the avar v2 offset
-    # compensation ensures the correct old-space final coordinates are produced.
+    # Detect avar2 partial instancing: avar version 2, and not all fvar axes
+    # are pinned. In this mode, variation tables (gvar, HVAR, etc.) are kept
+    # in the old final-coordinate space, and the avar v2 offset compensation
+    # ensures the correct old-space final coordinates are produced. A version
+    # 2 font is never downgraded to v1 — even with a NULL/empty VarStore, the
+    # avar2 path applies (offset compensation creates rows on demand).
     _isAvar2PartialInstancing = (
         "avar" in varfont
         and getattr(varfont["avar"], "majorVersion", 1) >= 2
-        and getattr(varfont["avar"].table, "VarStore", None) is not None
         and not set(axisLimits.pinnedLocation()).issuperset(
             a.axisTag for a in varfont["fvar"].axes
         )
@@ -2624,6 +2660,7 @@ def instantiateVariableFont(
         # For NO_VARIATION_INDEX axes (no IVS delta), the final coord equals
         # the intermediate coord, so the reachable range is [a_i, b_i].
         avar = varfont["avar"]
+        varStore = getattr(avar.table, "VarStore", None)
         varIdxMap = getattr(avar.table, "VarIdxMap", None)
         fvarAxes = varfont["fvar"].axes
 
@@ -2637,12 +2674,10 @@ def instantiateVariableFont(
             if tag not in oldIntermediates:
                 continue
 
-            if varIdxMap is not None:
-                varIdx = varIdxMap[axisIdx]
-            else:
-                varIdx = axisIdx
-
-            if varIdx == NO_VARIATION_INDEX:
+            if (
+                _effectiveAvar2VarIdx(varStore, varIdxMap, axisIdx)
+                == NO_VARIATION_INDEX
+            ):
                 a_i, d_i, b_i = oldIntermediates[tag]
                 reachableRanges[tag] = (min(a_i, b_i), max(a_i, b_i))
 
