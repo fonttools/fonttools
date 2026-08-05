@@ -13,10 +13,8 @@ from fontTools.misc.roundTools import otRound
 from fontTools.varLib.models import piecewiseLinearMap
 from fontTools.varLib.varStore import VarStoreInstancer, NO_VARIATION_INDEX
 from fontTools.ttLib import TTLibError
-from fontTools.varLib import instancer
 from . import DefaultTable
 from . import otTables
-from copy import deepcopy
 import struct
 import logging
 
@@ -200,77 +198,35 @@ class table__a_v_a_r(BaseTTXConverter):
 
         return mappedLocation
 
-    def renormalizeAxisLimits(self, axisLimits, font, *, versionOneOnly=False):
-        version = getattr(self, "majorVersion", 1)
-        if version not in (1, 2):
+    def renormalizeAxisLimits(self, axisLimits, font=None):
+        """Apply the avar v1 segment maps to normalized axis limits.
+
+        The values of ``axisLimits`` may be (min, default, max) triples or
+        longer sequences whose trailing elements are user-space distances
+        (as in NormalizedAxisTripleAndDistances); only the first three
+        elements are coordinates, so only those are mapped — the distances
+        pass through untouched. The mapped coordinates are quantized to
+        F2Dot14, to avoid surprise interpolations.
+
+        Returns a dict mapping axis tags to tuples of the same length as
+        the input values. avar version 2 mappings are NOT applied — the
+        VarStore-driven part of an avar 2 table is handled separately by
+        the instancer (see fontTools.varLib.instancer).
+        """
+        if getattr(self, "majorVersion", 1) not in (1, 2):
             raise NotImplementedError("Unknown avar table version")
 
         avarSegments = self.segments
         mappedAxisLimits = {}
         for axisTag, triple in axisLimits.items():
+            coords = tuple(triple)[:3]
+            distances = tuple(triple)[3:]
             avarMapping = avarSegments.get(axisTag, None)
             if avarMapping is not None:
-                triple = tuple(
-                    piecewiseLinearMap(value, avarMapping) for value in triple
+                coords = tuple(
+                    piecewiseLinearMap(value, avarMapping) for value in coords
                 )
-            mappedAxisLimits[axisTag] = triple
-
-        if version == 1 or versionOneOnly:
-            return instancer.NormalizedAxisLimits(mappedAxisLimits)
-
-        # Version 2
-
-        limits = deepcopy(axisLimits)
-        fvar = font["fvar"]
-        avar = self
-
-        varIdxMap = getattr(avar.table, "VarIdxMap", None)
-        varStore = getattr(avar.table, "VarStore", None)
-        if varStore is not None:
-            varStore = deepcopy(varStore)
-        axes = font["fvar"].axes
-
-        pinnedAxes = axisLimits.pinnedLocation()
-
-        defaultDeltas = instancer.instantiateItemVariationStore(
-            varStore, fvar.axes, limits
-        )
-
-        for axis in fvar.axes:
-            if axis.axisTag in limits:
-                continue
-            private = axis.flags & 0x1
-            if not private:
-                continue
-            # if private, pin at default
-            limits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(0, 0, 0)
-
-        newLimits = {}
-        for axisIdx, axis in enumerate(fvar.axes):
-            if axis.axisTag in pinnedAxes:
-                v = axisLimits[axis.axisTag][0]
-                newLimits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
-                    v, v, v
-                )
-                continue
-            varIdx = axisIdx
-            if varIdxMap is not None:
-                varIdx = varIdxMap[varIdx]
-            # Only for public axes
-            private = axis.flags & 0x1
-            identityAxisIndex = None if private else axisIdx
-            minV, maxV = varStore.getExtremes(
-                varIdx, fvar.axes, limits, identityAxisIndex
-            )
-            # TODO: To 2.14 and back...
-            default = defaultDeltas[varIdx]
-            newLimits[axis.axisTag] = instancer.NormalizedAxisTripleAndDistances(
-                max(-1, min((default + minV) / 16384, +1)),
-                default / 16384,
-                max(-1, min((default + maxV) / 16384, +1)),
-                axis.defaultValue - axis.minValue,
-                axis.maxValue - axis.defaultValue,
-            )
-        limits = newLimits
-
-        return instancer.NormalizedAxisLimits(limits)
+            # Quantize to F2Dot14, to avoid surprise interpolations.
+            coords = tuple(fi2fl(fl2fi(value, 14), 14) for value in coords)
+            mappedAxisLimits[axisTag] = coords + distances
+        return mappedAxisLimits

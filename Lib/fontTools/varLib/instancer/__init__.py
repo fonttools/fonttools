@@ -359,9 +359,6 @@ class _BaseAxisLimits(Mapping[str, AxisTriple]):
     def __getitem__(self, key: str) -> AxisTriple:
         return self._data[key]
 
-    def __setitem__(self, key, value):
-        self._data[key] = value
-
     def __iter__(self) -> Iterable[str]:
         return iter(self._data)
 
@@ -434,76 +431,67 @@ class AxisLimits(_BaseAxisLimits):
             if a.axisTag in self
         }
 
-        avarSegments = {}
         if usingAvar and "avar" in varfont:
             avar = varfont["avar"]
-            avarSegments = avar.segments
 
-            if getattr(avar, "majorVersion", 1) >= 2 and avar.table.VarStore:
-                pinnedAxes = set(self.pinnedLocation())
-                if pinnedAxes.issuperset(avarSegments):
-                    # Full instancing of avar2 font (all axes pinned).
-                    # Use avar table to normalize location and return.
-                    location = self.pinnedLocation()
-                    location = {
-                        tag: normalize(value, axes[tag], None)
-                        for tag, value in location.items()
-                    }
-                    return NormalizedAxisLimits(
-                        **avar.renormalizeLocation(location, varfont, dropZeroes=False)
-                    )
-                # else: partial instancing of avar2 font. Fall through to
-                # standard normalization, using versionOneOnly=True below
-                # to get intermediate-space limits (post-avar v1, pre-avar v2).
+            if (
+                getattr(avar, "majorVersion", 1) >= 2
+                and getattr(avar.table, "VarStore", None) is not None
+                and set(self.pinnedLocation()).issuperset(a.axisTag for a in fvar.axes)
+            ):
+                # Full instancing of avar2 font (all axes pinned).
+                # Use avar table to normalize location and return.
+                location = self.pinnedLocation()
+                location = {
+                    tag: normalize(value, axes[tag], None)
+                    for tag, value in location.items()
+                }
+                return NormalizedAxisLimits(
+                    **avar.renormalizeLocation(location, varfont, dropZeroes=False)
+                )
+            # else: partial instancing of an avar2 font falls through to the
+            # standard v1 normalization below, which yields intermediate-space
+            # limits (post-avar v1, pre-avar v2); the avar v2 offset
+            # compensation in the instancer handles the rest.
 
+        # Note: normalized values are intentionally NOT quantized here; the
+        # F2Dot14 quantization happens once, after the avar v1 mapping (in
+        # renormalizeAxisLimits), so pre-map rounding doesn't compound drift.
         normalizedLimits = {}
 
-        for axis_tag, triple in axes.items():
+        for axis_tag, fvarTriple in axes.items():
+            minUser, defaultUser, maxUser = fvarTriple
+            distanceNegative = defaultUser - minUser
+            distancePositive = maxUser - defaultUser
+
             if self[axis_tag] is None:  # Drop
-                normalizedLimits[axis_tag] = (0, 0, 0)
+                normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
+                    0, 0, 0, distanceNegative, distancePositive
+                )
                 continue
 
             minV, defaultV, maxV = self[axis_tag]
 
             if defaultV is None:
-                defaultV = triple[1]
+                defaultV = fvarTriple[1]
 
-            normalizedLimits[axis_tag] = tuple(
-                normalize(v, triple) for v in (minV, defaultV, maxV)
+            normalizedLimits[axis_tag] = NormalizedAxisTripleAndDistances(
+                *(normalizeValue(v, fvarTriple) for v in (minV, defaultV, maxV)),
+                distanceNegative,
+                distancePositive,
             )
-
-        fvarAxes = fvar.getAxes()
-        for tag, triple in normalizedLimits.items():
-            minV, defaultV, maxV = fvarAxes[tag]
-            if defaultV is None:
-                defaultV = triple[1]
-            distanceNegative = defaultV - minV
-            distancePositive = maxV - defaultV
-
-            if triple is None:  # Drop
-                normalizedLimits[tag] = NormalizedAxisTripleAndDistances(
-                    0, 0, 0, distanceNegative, distancePositive
-                )
-                continue
-
-            normalizedLimits[tag] = NormalizedAxisTripleAndDistances(
-                *triple, distanceNegative, distancePositive
-            )
-
-        normalizedLimits = NormalizedAxisLimits(normalizedLimits)
 
         if usingAvar and "avar" in varfont:
-            avar = varfont["avar"]
-            # For avar2 partial instancing, use versionOneOnly to get
-            # intermediate-space limits (post-avar v1, pre-avar v2).
-            # The avar v2 offset compensation will handle the rest.
-            versionOneOnly = (
-                getattr(avar, "majorVersion", 1) >= 2
-                and getattr(avar.table, "VarStore", None) is not None
+            normalizedLimits = varfont["avar"].renormalizeAxisLimits(
+                normalizedLimits, varfont
             )
-            normalizedLimits = avar.renormalizeAxisLimits(
-                normalizedLimits, varfont, versionOneOnly=versionOneOnly
-            )
+        else:
+            # Quantize to F2Dot14, to avoid surprise interpolations.
+            normalizedLimits = {
+                tag: tuple(floatToFixedToFloat(v, 14) for v in tuple(triple)[:3])
+                + tuple(triple)[3:]
+                for tag, triple in normalizedLimits.items()
+            }
 
         return NormalizedAxisLimits(normalizedLimits)
 
