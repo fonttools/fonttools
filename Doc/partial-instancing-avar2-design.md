@@ -24,8 +24,7 @@ problem is fundamentally harder because:
 3. Naively scaling the deltas to the new coordinate space fails because the
    negative and positive sides of an axis can have different scale factors, and
    a delta can push a coordinate across the default point (from one scale
-   factor to the other). This is the "non-homogeneous stretching" problem
-   identified in the earlier partial-instancing.pdf design note (not included in the repository).
+   factor to the other): the "non-homogeneous stretching" problem.
 
 This document describes an approach that sidesteps the delta scaling problem
 entirely.
@@ -83,8 +82,7 @@ terms change, and their interaction must be preserved.
 
 For a **public** axis that the user controls: the intermediate value ranges
 over the axis range, and the delta shifts it. The total function is
-`f(x) = x + delta(x)` — the "mountain range" from
-partial-instancing.pdf, an earlier design note (not included in the repository).
+`f(x) = x + delta(x)` — a "mountain range" over the axis.
 
 For a **private** (hidden) axis: the intermediate is always 0 (the user can't
 change it), and the delta alone determines the final value: `f = 0 + delta`.
