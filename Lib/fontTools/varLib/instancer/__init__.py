@@ -123,7 +123,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
-from fontTools.varLib.varStore import OnlineVarStoreBuilder
+from fontTools.varLib.varStore import NO_VARIATION_INDEX
 from .featureVars import instantiateFeatureVariations
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
@@ -1486,8 +1486,11 @@ def downgradeCFF2ToCFF(varfont):
     return varfont
 
 
-def instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates=None):
+def instantiateAvar(varfont, axisLimits, normalizedLimits=None, oldIntermediates=None):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
+
+    if normalizedLimits is None:
+        normalizedLimits = axisLimits.normalize(varfont)
 
     avar = varfont["avar"]
 
@@ -1498,17 +1501,22 @@ def instantiateAvar(varfont, axisLimits, normalizedLimits, oldIntermediates=None
     # interior breakpoints used for exact offset compensation.
     oldSegments = {tag: dict(mapping) for tag, mapping in segments.items()}
 
-    # drop table if we instantiate all the axes
-    pinnedAxes = set(axisLimits.pinnedLocation())
-    if pinnedAxes.issuperset(segments):
-        log.info("Dropping avar table")
-        del varfont["avar"]
-        return
-
     version = getattr(avar, "majorVersion", 1)
     hasAvar2VarStore = (
         version >= 2 and getattr(avar.table, "VarStore", None) is not None
     )
+
+    # Drop the table if we instantiate all the axes. An avar2 VarStore may
+    # drive axes that have no v1 segment map (segments can even be empty),
+    # so for those fonts require ALL fvar axes to be pinned, not merely all
+    # segment-mapped ones — otherwise we'd delete live avar2 variation data.
+    pinnedAxes = set(axisLimits.pinnedLocation())
+    if pinnedAxes.issuperset(axis.axisTag for axis in varfont["fvar"].axes) or (
+        not hasAvar2VarStore and pinnedAxes.issuperset(segments)
+    ):
+        log.info("Dropping avar table")
+        del varfont["avar"]
+        return
 
     # For avar2: need old intermediate values BEFORE modifying avar v1.
     if hasAvar2VarStore and oldIntermediates is None:
@@ -1612,29 +1620,14 @@ def _computeOldIntermediates(varfont, axisLimits):
         defV = triple.default if triple.default is not None else axis.defaultValue
         maxV = triple.maximum
 
-        # Normalize using old fvar (user space → normalized [-1, +1])
+        # Normalize using old fvar, map through old avar v1 segment map,
+        # quantize to F2Dot14 — all via the module's normalize() helper so
+        # the rounding behavior lives in a single place.
         oldFvarTriple = (axis.minValue, axis.defaultValue, axis.maxValue)
-        normMin = normalizeValue(minV, oldFvarTriple)
-        normDef = normalizeValue(defV, oldFvarTriple)
-        normMax = normalizeValue(maxV, oldFvarTriple)
-
-        # Map through old avar v1 segment map (normalized → intermediate)
         avarMapping = avarSegments.get(tag, None)
-        if avarMapping is not None:
-            a_i = piecewiseLinearMap(normMin, avarMapping)
-            d_i = piecewiseLinearMap(normDef, avarMapping)
-            b_i = piecewiseLinearMap(normMax, avarMapping)
-        else:
-            a_i = normMin
-            d_i = normDef
-            b_i = normMax
-
-        # Quantize to F2Dot14
-        a_i = floatToFixedToFloat(a_i, 14)
-        d_i = floatToFixedToFloat(d_i, 14)
-        b_i = floatToFixedToFloat(b_i, 14)
-
-        result[tag] = (a_i, d_i, b_i)
+        result[tag] = tuple(
+            normalize(v, oldFvarTriple, avarMapping) for v in (minV, defV, maxV)
+        )
 
     return result
 
@@ -1655,14 +1648,37 @@ def _estimateAvar2OffsetError(oldSeg, newSeg, oldFvarTriple, newTriple, offsetBy
     through the offsetByZ knots (what the 1-D VariationModel reproduces). The
     residual is dominated by F2Dot14 requantization of a steep retained avar v1
     segment (e.g. a moved default compressing part of the axis into a narrow z
-    band); offset compensation cannot remove it. Used only to decide whether to
-    warn, so a coarse uniform sample suffices.
+    band); offset compensation cannot remove it. Used only to decide which
+    encoding ships and whether to warn.
+
+    Sampled on a uniform grid augmented with the user-space preimages of every
+    kink of the residual (old/new avar v1 breakpoints and offset(z) knots), so
+    the worst kink cannot fall between uniform samples. The pointwise F2Dot14
+    rounding makes this an estimate rather than an exact bound, but every
+    piecewise-linear extremum is visited.
     """
     lo, _, hi = newTriple
-    maxErr = 0
     samples = 257
-    for i in range(samples):
-        u = lo + (hi - lo) * i / (samples - 1)
+    us = {lo + (hi - lo) * i / (samples - 1) for i in range(samples)}
+    denormOld = {-1.0: oldFvarTriple[0], 0.0: oldFvarTriple[1], 1.0: oldFvarTriple[2]}
+    denormNew = {-1.0: newTriple[0], 0.0: newTriple[1], 1.0: newTriple[2]}
+    if oldSeg:
+        us.update(piecewiseLinearMap(n, denormOld) for n in oldSeg)
+    zToNorm = None
+    if newSeg:
+        us.update(piecewiseLinearMap(n, denormNew) for n in newSeg)
+        # Inverse of newSeg, to pull offset(z) knots back to normalized space.
+        # (For a non-strictly-monotone map this picks one preimage, which is
+        # fine: the uniform grid still covers the rest.)
+        zToNorm = {v: k for k, v in newSeg.items()}
+    for z in offsetByZ:
+        n = piecewiseLinearMap(z, zToNorm) if zToNorm else z
+        us.add(piecewiseLinearMap(n, denormNew))
+
+    maxErr = 0
+    for u in us:
+        if not (lo <= u <= hi):
+            continue
         nOld = normalizeValue(u, oldFvarTriple)
         oldFinal = piecewiseLinearMap(nOld, oldSeg) if oldSeg else nOld
         nNew = normalizeValue(u, newTriple)
@@ -1695,7 +1711,14 @@ def _instantiateAvarV2(
     varIdxMap = getattr(avar.table, "VarIdxMap", None)
     oldSegments = oldSegments or {}
 
-    NO_VARIATION_INDEX = 0xFFFFFFFF
+    # A compiled DeltaSetIndexMap may be stored truncated (trailing duplicate
+    # entries are trimmed; reads clamp to the last entry). We write into the
+    # mapping by axis index below, so pad it back to full length first, with
+    # the same value clamping would have produced for each index.
+    if varIdxMap is not None and len(varIdxMap.mapping) < len(fvarAxes):
+        mapping = varIdxMap.mapping
+        fill = mapping[-1] if mapping else NO_VARIATION_INDEX
+        mapping.extend([fill] * (len(fvarAxes) - len(mapping)))
 
     # Step 1: Convert IVS to TupleVariation representation and rebase
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(varStore, fvarAxes)
@@ -1837,14 +1860,13 @@ def _instantiateAvarV2(
 
                 # Update VarIdxMap
                 if varIdxMap is None:
-                    from fontTools.ttLib.tables import otTables as _otTables
-
-                    varIdxMap = _otTables.DeltaSetIndexMap()
-                    varIdxMap.Format = 0
                     # Identity mapping for all axes, except this one
-                    varIdxMap.mapping = list(range(len(fvarAxes)))
+                    mapping = list(range(len(fvarAxes)))
+                    mapping[axisIdx] = varIdx
+                    varIdxMap = builder.buildDeltaSetIndexMap(mapping)
                     avar.table.VarIdxMap = varIdxMap
-                varIdxMap.mapping[axisIdx] = varIdx
+                else:
+                    varIdxMap.mapping[axisIdx] = varIdx
 
             outer = varIdx >> 16
             inner = varIdx & 0xFFFF
@@ -1869,11 +1891,14 @@ def _instantiateAvarV2(
             offsetByZ = {-1.0: a_i + 1.0, 0.0: d_i, 1.0: b_i - 1.0}
             if not isPinned:
                 newSeg = avar.segments.get(tag)
-                newTriple = (
-                    axisLimits[tag].minimum,
-                    axisLimits[tag].default,
-                    axisLimits[tag].maximum,
+                newLimit = axisLimits[tag]
+                # default may be unpopulated (2-tuple limits): means unchanged.
+                newDefault = (
+                    newLimit.default
+                    if newLimit.default is not None
+                    else axis.defaultValue
                 )
+                newTriple = (newLimit.minimum, newDefault, newLimit.maximum)
                 # Moved-default kink: where the OLD default lands in new space.
                 zOldNorm = normalizeValue(axis.defaultValue, newTriple)
                 zOld = piecewiseLinearMap(zOldNorm, newSeg) if newSeg else zOldNorm
@@ -1920,14 +1945,19 @@ def _instantiateAvarV2(
                 errAnchors = _estimateAvar2OffsetError(
                     oldSeg, newSeg, oldFvarTriple, newTriple, offsetByZ
                 )
-                errWith = _estimateAvar2OffsetError(
-                    oldSeg, newSeg, oldFvarTriple, newTriple, withBreakpoints
-                )
-                if errWith <= errAnchors:
-                    offsetByZ = withBreakpoints
-                    approxErr = errWith
-                else:
+                if len(withBreakpoints) == len(offsetByZ):
+                    # Collection added no breakpoints (the common case):
+                    # the two encodings are identical, skip the second pass.
                     approxErr = errAnchors
+                else:
+                    errWith = _estimateAvar2OffsetError(
+                        oldSeg, newSeg, oldFvarTriple, newTriple, withBreakpoints
+                    )
+                    if errWith <= errAnchors:
+                        offsetByZ = withBreakpoints
+                        approxErr = errWith
+                    else:
+                        approxErr = errAnchors
                 if approxErr > _AVAR2_OFFSET_WARN_THRESHOLD:
                     approxWarn[tag] = approxErr
 
@@ -2008,14 +2038,10 @@ def _instantiateAvarV2(
     elif varIdxMapping:
         # optimize() remapped indices but we had no VarIdxMap (implicit
         # identity). Create one if the mapping is no longer identity.
-        numAxes = len(fvarAxes)
-        newMapping = [varIdxMapping.get(i, i) for i in range(numAxes)]
-        if newMapping != list(range(numAxes)):
-            from fontTools.ttLib.tables import otTables as _otTables
-
-            varIdxMap = _otTables.DeltaSetIndexMap()
-            varIdxMap.Format = 0
-            varIdxMap.mapping = newMapping
+        varIdxMap = builder.buildDeltaSetIndexMap(
+            varIdxMapping.get(i, i) for i in range(len(fvarAxes))
+        )
+        if varIdxMap is not None:
             avar.table.VarIdxMap = varIdxMap
     avar.table.VarStore = newVarStore
 
@@ -2028,8 +2054,11 @@ def _isTupleVariationDead(tv, reachableRanges):
         if tag not in tv.axes:
             continue
         start, peak, end = tv.axes[tag]
-        # Region is dead if entirely outside reachable range
-        if hi <= start or lo >= end:
+        # Region is dead if entirely outside reachable range. Strict
+        # comparisons: supportScalar returns 1 (not 0) at v == peak, so a
+        # tent whose peak sits exactly on the reachable boundary (peak ==
+        # start == hi, or peak == end == lo) is still live there.
+        if hi < start or lo > end:
             return True
     return False
 
@@ -2116,13 +2145,17 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
                 100 * culled / before if before else 0,
             )
 
-    # Cull all IVS-based tables (skip the avar2 VarStore itself)
-    avarVarStore = varfont["avar"].table.VarStore if "avar" in varfont else None
-    for tag in varfont.keys():
+    # Cull all IVS-based tables. A fixed tag list (like the rest of the
+    # instancer uses) rather than probing every table in the font, which
+    # would force-decompile unrelated tables for nothing.
+    # TODO: VARC's MultiVarStore is not culled here (different structure).
+    for tag in ("HVAR", "VVAR", "MVAR", "GDEF", "BASE", "COLR"):
+        if tag not in varfont:
+            continue
         table = varfont[tag]
         table = getattr(table, "table", table)
         vs = getattr(table, "VarStore", None)
-        if vs is None or vs is avarVarStore:
+        if vs is None:
             continue
         removed = _cullItemVariationStore(vs, fvarAxes, reachableRanges)
         if removed:
@@ -2166,8 +2199,6 @@ def _computeReachableRangesForAvar2(varfont, axisLimits, reachableRanges):
     if varStore is None:
         return
     varIdxMap = getattr(avar.table, "VarIdxMap", None)
-
-    NO_VARIATION_INDEX = 0xFFFFFFFF
 
     # Private axes (originally hidden, not user-restricted) always have
     # intermediate coordinate = 0. Any VarStore region referencing them
@@ -2271,15 +2302,10 @@ def _instantiateFvarForAvar2(varfont, axisLimits, selfContainedAxes=None):
             else:
                 # Implicit identity mapping: axis i → varIdx i.
                 # After removing axes, need explicit mapping if non-identity.
-                newMapping = [
+                varIdxMap = builder.buildDeltaSetIndexMap(
                     i for i in range(originalAxisCount) if i not in removedAxisIndices
-                ]
-                if newMapping != list(range(len(newMapping))):
-                    from fontTools.ttLib.tables import otTables as _otTables
-
-                    varIdxMap = _otTables.DeltaSetIndexMap()
-                    varIdxMap.Format = 0
-                    varIdxMap.mapping = newMapping
+                )
+                if varIdxMap is not None:
                     avar.table.VarIdxMap = varIdxMap
 
     # Filter named instances: keep those within the new ranges
@@ -2429,6 +2455,40 @@ def normalize(value, triple, avarMapping=None):
     return floatToFixedToFloat(value, 14)
 
 
+def _instantiateVariationTables(varfont, limits, optimize, downgradeCFF2):
+    """Instantiate all variation-carrying tables at the given limits.
+
+    Returns the new value of the downgradeCFF2 flag (instantiateCFF2 reports
+    whether a downgrade to CFF is actually possible, i.e. nothing varies).
+    """
+    if "VARC" in varfont:
+        instantiateVARC(varfont, limits)
+
+    if "CFF2" in varfont:
+        downgradeCFF2 = instantiateCFF2(varfont, limits, downgrade=downgradeCFF2)
+
+    if "gvar" in varfont:
+        instantiateGvar(varfont, limits, optimize=optimize)
+
+    if "cvar" in varfont:
+        instantiateCvar(varfont, limits)
+
+    if "MVAR" in varfont:
+        instantiateMVAR(varfont, limits)
+
+    if "HVAR" in varfont:
+        instantiateHVAR(varfont, limits)
+
+    if "VVAR" in varfont:
+        instantiateVVAR(varfont, limits)
+
+    instantiateOTL(varfont, limits)
+
+    instantiateFeatureVariations(varfont, limits)
+
+    return downgradeCFF2
+
+
 def sanityCheckVariableTables(varfont):
     if "fvar" not in varfont:
         raise ValueError("Missing required table fvar")
@@ -2543,33 +2603,15 @@ def instantiateVariableFont(
             "avar2 partial instancing: keeping variation tables in old "
             "coordinate space"
         )
+        if downgradeCFF2:
+            # The result of avar2 partial instancing is still variable, so a
+            # downgrade to CFF is never possible.
+            log.warning("downgradeCFF2 is ignored for avar2 partial instancing")
+            downgradeCFF2 = False
     else:
-        if "VARC" in varfont:
-            instantiateVARC(varfont, normalizedLimits)
-
-        if "CFF2" in varfont:
-            downgradeCFF2 = instantiateCFF2(
-                varfont, normalizedLimits, downgrade=downgradeCFF2
-            )
-
-        if "gvar" in varfont:
-            instantiateGvar(varfont, normalizedLimits, optimize=optimize)
-
-        if "cvar" in varfont:
-            instantiateCvar(varfont, normalizedLimits)
-
-        if "MVAR" in varfont:
-            instantiateMVAR(varfont, normalizedLimits)
-
-        if "HVAR" in varfont:
-            instantiateHVAR(varfont, normalizedLimits)
-
-        if "VVAR" in varfont:
-            instantiateVVAR(varfont, normalizedLimits)
-
-        instantiateOTL(varfont, normalizedLimits)
-
-        instantiateFeatureVariations(varfont, normalizedLimits)
+        downgradeCFF2 = _instantiateVariationTables(
+            varfont, normalizedLimits, optimize, downgradeCFF2
+        )
 
     # For avar2 partial instancing, compute old intermediate values BEFORE
     # avar instancing modifies the segments. Used for both NO_VARIATION_INDEX
@@ -2584,7 +2626,6 @@ def instantiateVariableFont(
         avar = varfont["avar"]
         varIdxMap = getattr(avar.table, "VarIdxMap", None)
         fvarAxes = varfont["fvar"].axes
-        NO_VARIATION_INDEX = 0xFFFFFFFF
 
         for axisIdx, axis in enumerate(fvarAxes):
             tag = axis.axisTag
@@ -2628,30 +2669,9 @@ def instantiateVariableFont(
             list(selfContainedAxes),
         )
 
-        if "VARC" in varfont:
-            instantiateVARC(varfont, scLimits)
-
-        if "CFF2" in varfont:
-            instantiateCFF2(varfont, scLimits)
-
-        if "gvar" in varfont:
-            instantiateGvar(varfont, scLimits, optimize=optimize)
-
-        if "cvar" in varfont:
-            instantiateCvar(varfont, scLimits)
-
-        if "MVAR" in varfont:
-            instantiateMVAR(varfont, scLimits)
-
-        if "HVAR" in varfont:
-            instantiateHVAR(varfont, scLimits)
-
-        if "VVAR" in varfont:
-            instantiateVVAR(varfont, scLimits)
-
-        instantiateOTL(varfont, scLimits)
-
-        instantiateFeatureVariations(varfont, scLimits)
+        downgradeCFF2 = _instantiateVariationTables(
+            varfont, scLimits, optimize, downgradeCFF2
+        )
 
     with names.pruningUnusedNames(varfont):
         if "STAT" in varfont:

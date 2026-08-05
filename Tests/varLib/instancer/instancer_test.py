@@ -2049,6 +2049,124 @@ class InstantiateAvar2Test(object):
                 worst = max(worst, abs(o - p))
             assert worst <= tol, f"{segments} {limits}: worst {worst} > tolerance {tol}"
 
+    def test_truncated_varIdxMap(self, avar2_varfont):
+        # A compiled DeltaSetIndexMap may be stored truncated (trailing
+        # duplicates trimmed; reads clamp to the last entry). The fixture's
+        # mapping ends in NO_VARIATION_INDEX entries for wght/wdth/opsz, like
+        # fontations' Amstelvar-avar2.A.ttf; truncating it must not break the
+        # offset-compensation write path (which used to IndexError when
+        # writing at an axis index beyond the stored length).
+        mapping = avar2_varfont["avar"].table.VarIdxMap.mapping
+        assert mapping[-3:] == [varStore.NO_VARIATION_INDEX] * 3
+        avar2_varfont["avar"].table.VarIdxMap.mapping = mapping[:10]
+
+        reference = instancer.instantiateVariableFont(
+            ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False),
+            {"opsz": (8, 14, 30)},
+        )
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"opsz": (8, 14, 30)}
+        )
+
+        # Same final coordinates as instancing the untruncated font.
+        for user_loc in ({"opsz": 8}, {"opsz": 14}, {"opsz": 22}, {"opsz": 30}):
+            assert _avar2_final_coords(partial, user_loc) == pytest.approx(
+                _avar2_final_coords(reference, user_loc), abs=2 / 16384
+            )
+
+    def test_empty_v1_segments_keeps_avar2(self, avar2_varfont):
+        # avar2 fonts need no v1 segment maps (design doc §9.6). An empty (or
+        # partial) segments dict must not trigger the "all axes pinned" early
+        # drop of the table on a pure range restriction — that would delete
+        # the entire avar2 VarStore while gvar stays in old-space coordinates.
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        original["avar"].segments = {}
+        avar2_varfont["avar"].segments = {}
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"wght": (300, 400, 700)}
+        )
+
+        assert "avar" in partial
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+
+        for wght in (300, 400, 550, 700):
+            assert _avar2_final_coords(partial, {"wght": wght}) == pytest.approx(
+                _avar2_final_coords(original, {"wght": wght}), abs=2 / 16384
+            )
+
+    def test_avar2_null_varstore_behaves_as_v1(self, avar2_varfont):
+        # An avar 2.0 table with a NULL VarStore is legal and equivalent to
+        # plain v1. It used to crash normalize() by entering the v2 path.
+        avar2_varfont["avar"].table.VarStore = None
+        avar2_varfont["avar"].table.VarIdxMap = None
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"wght": (300, 400, 700)}
+        )
+        wght = next(axis for axis in partial["fvar"].axes if axis.axisTag == "wght")
+        assert (wght.minValue, wght.defaultValue, wght.maxValue) == (300, 400, 700)
+
+    def test_unpopulated_default_2_tuple_limits(self, avar2_varfont):
+        # AxisLimits({"wght": (300, 700)}) leaves default=None; the avar2
+        # offset-compensation path must fall back to the fvar default instead
+        # of crashing. Also exercises instantiateAvar's optional
+        # normalizedLimits (back-compat with the (varfont, axisLimits) form).
+        axisLimits = instancer.AxisLimits({"wght": (300, 700)})
+        instancer.instantiateAvar(avar2_varfont, axisLimits)
+
+        assert "avar" in avar2_varfont
+        assert getattr(avar2_varfont["avar"].table, "VarStore", None) is not None
+
+    def test_isTupleVariationDead_boundary_peak(self):
+        # supportScalar returns 1 (not 0) at v == peak, so a tent whose peak
+        # sits exactly on the reachable boundary is still live there.
+        live = TupleVariation({"wght": (0.5, 0.5, 1.0)}, [10] * 4)
+        assert not instancer._isTupleVariationDead(live, {"wght": (0.0, 0.5)})
+        live = TupleVariation({"wght": (-1.0, -0.5, -0.5)}, [10] * 4)
+        assert not instancer._isTupleVariationDead(live, {"wght": (-0.5, 0.0)})
+        dead = TupleVariation({"wght": (0.5, 0.75, 1.0)}, [10] * 4)
+        assert instancer._isTupleVariationDead(dead, {"wght": (0.0, 0.25)})
+
+    def test_avar2_culling_preserves_live_gvar_regions(self, avar2_varfont):
+        # Region culling may only delete TupleVariations whose support scalar
+        # is zero at EVERY reachable final coordinate. Sample a grid of user
+        # locations, map each through the spec pipeline of the ORIGINAL font,
+        # and require every culled gvar variation to be dead at all of them.
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        limits = {"wght": (300, 400, 700), "opsz": (10, 14, 20)}
+        partial = instancer.instantiateVariableFont(avar2_varfont, dict(limits))
+
+        def freeze(tv):
+            return (
+                tuple(sorted(tv.axes.items())),
+                tuple(tuple(c) if c is not None else None for c in tv.coordinates),
+            )
+
+        grid = [
+            {"wght": w, "opsz": o, "GRAD": g}
+            for w in (300, 400, 550, 700)
+            for o in (10, 14, 20)
+            for g in (-300, 0, 500)
+        ]
+        finals = [_avar2_final_coords(original, loc) for loc in grid]
+
+        gvarOld = original["gvar"].variations
+        gvarNew = partial["gvar"].variations
+        for glyphName in gvarOld:
+            kept = collections.Counter(freeze(tv) for tv in gvarNew[glyphName])
+            for tv in gvarOld[glyphName]:
+                if kept[freeze(tv)]:
+                    kept[freeze(tv)] -= 1
+                    continue
+                # culled: must be unreachable at every sampled location
+                for loc, final in zip(grid, finals):
+                    scalar = models.supportScalar(final, tv.axes)
+                    assert scalar == 0, (
+                        f"culled variation {tv.axes} of {glyphName!r} is live "
+                        f"(scalar {scalar}) at {loc} -> {final}"
+                    )
+
 
 class InstantiateVariableFontTest(object):
     @pytest.mark.parametrize(
@@ -2733,6 +2851,21 @@ def test_normalizeAxisLimits_no_avar(varfont):
 def test_normalizeAxisLimits_missing_from_fvar(varfont):
     with pytest.raises(ValueError, match="not present in fvar"):
         instancer.AxisLimits({"ZZZZ": 1000}).normalize(varfont)
+
+
+def test_normalizeAxisLimits_quantizes_after_avar_map(varfont):
+    # The F2Dot14 quantization must be applied AFTER the avar v1 mapping (and
+    # only there), like a shaping engine does: normalize -> map -> quantize.
+    # Pinning wght=650 on a 100/400/900 axis through this map yields
+    # 5/7 * 0.2 = 0.142857..., which is not F2Dot14-representable; the
+    # normalized location must land on the quantized 0.14288330078125.
+    varfont["avar"].segments["wght"] = {-1.0: -1.0, 0.0: 0.0, 0.7: 0.2, 1.0: 1.0}
+
+    normalized = instancer.AxisLimits({"wght": 650}).normalize(varfont)
+
+    for v in tuple(normalized["wght"])[:3]:
+        assert v == floatToFixedToFloat(v, 14)
+    assert normalized["wght"].default == 0.14288330078125
 
 
 def test_sanityCheckVariableTables(varfont):
