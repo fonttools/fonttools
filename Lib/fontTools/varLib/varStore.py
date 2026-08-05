@@ -11,6 +11,7 @@ from fontTools.varLib.builder import (
 from functools import partial
 from collections import defaultdict
 from heapq import heappush, heappop
+import itertools
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
@@ -191,6 +192,13 @@ ot.VarStore.__bool__ = VarStore___bool__
 
 
 class VarStoreInstancer(object):
+    """Evaluate a VarStore's deltas at a (mutable via setLocation) location.
+
+    Region supports are cached for the lifetime of the instancer: after
+    mutating the store's regions (or the fvar axes), construct a new
+    instancer rather than reusing this one via setLocation.
+    """
+
     def __init__(self, varstore, fvar_axes, location={}):
         self.fvar_axes = fvar_axes
         assert varstore is None or varstore.Format == 1
@@ -696,166 +704,151 @@ def VarStore_optimize(self, use_NO_VARIATION_INDEX=True, quantization=1):
 ot.VarStore.optimize = VarStore_optimize
 
 
-def VarStore_getExtremes(
-    self,
-    varIdx,
-    fvarAxes,
-    axisLimits,
-    identityAxisIndex=None,
-    nullAxes=set(),
-    cache=None,
-    _bias=None,
-    instancer=None,
-    evalCache=None,
-):
-    if varIdx == NO_VARIATION_INDEX:
-        if identityAxisIndex is None:
-            return 0, 0
-        else:
-            # Use axis limits to bound the identity range if available
-            axis = fvarAxes[identityAxisIndex]
-            tag = axis.axisTag
-            if tag in axisLimits:
-                lo = axisLimits[tag][0]
-                hi = axisLimits[tag][2]
-                return round(lo * 16384), round(hi * 16384)
-            return -16384, 16384
+def _tentValue(v, start, peak, end):
+    """Per-axis support-scalar factor at coordinate v (supportScalar semantics)."""
+    if v == peak:
+        return 1.0
+    if v <= start or end <= v:
+        return 0.0
+    if v < peak:
+        return (v - start) / (peak - start)
+    return (end - v) / (end - peak)
 
-    isTopLevel = cache is None
-    if cache is None:
-        cache = {}
 
-    # One instancer, reused across every location via setLocation (its region
-    # supports are cached), instead of building a fresh one per evaluation.
-    if instancer is None:
-        instancer = VarStoreInstancer(self, fvarAxes)
+# Maximum number of grid vertices VarStore_getExtremes enumerates for the
+# exact answer before falling back to the (looser but conservative and cheap)
+# interval bound. The grid is authoring-controlled, so a cap is needed to keep
+# crafted fonts from hanging the instancer.
+_GET_EXTREMES_MAX_GRID = 1 << 14
 
-    # Scoped memo (discarded when this top-level call returns) of the raw delta
-    # at each evaluated location. A location is fully determined by its source
-    # (regionIndex, loc) -- a region is evaluated only when none of its peak
-    # axes are in nullAxes, so all its peaks are set and loc is the sole extra
-    # coordinate -- so key on that pair (cheap, no dict/frozenset). The
-    # recursion re-visits the same locations many times; this collapses them.
-    if evalCache is None:
-        evalCache = {}
 
-    # Compute the bias once at the top level. The bias is the constant
-    # contribution from empty regions (scalar always 1). VarStoreInstancer
-    # at {} gives exactly the bias since non-empty regions get scalar=0.
-    # We subtract it from every VarStoreInstancer evaluation so that the
-    # recursive decomposition tracks only the varying part, then add it
-    # back once at the end. This avoids double-counting the bias across
-    # recursion levels.
-    if _bias is None:
-        instancer.setLocation({})
-        _bias = round(instancer[varIdx])
+def VarStore_getExtremes(self, varIdx, fvarAxes, axisLimits, identityAxisIndex=None):
+    """Conservatively bound the value this VarStore produces for varIdx.
 
-    key = frozenset(nullAxes)
-    if key in cache:
-        return cache[key]
+    Returns (minV, maxV) in F2Dot14 delta units, guaranteed to cover the
+    truly reachable range as the input axes vary over their extents:
+    [-1, +1] per axis, or the [min, max] interval from axisLimits (a dict of
+    axis tag to a (min, default, max, ...) sequence) for axes listed there.
+    If identityAxisIndex is not None, that axis's own identity contribution
+    (its coordinate, in F2Dot14 units) is added to the bound.
 
-    regionList = self.VarRegionList
+    The produced value is piecewise multilinear in the axis coordinates
+    (each region's scalar is a product of independent per-axis tents), so
+    over the box its exact extremes are attained at vertices of the grid
+    formed by each axis's tent breakpoints. When that grid is small enough
+    (real fonts) it is enumerated and the result is exact; otherwise the
+    result falls back to a per-region interval bound, which ignores
+    correlations between regions and may be wider than the true range —
+    never narrower. Callers use this to cull provably-unreachable variation
+    data, so conservativeness is a soundness requirement, not a nicety.
+    The fallback costs O(regions × axes); the cap on the exact path keeps
+    crafted fonts from hanging the instancer.
+    """
 
-    major = varIdx >> 16
-    minor = varIdx & 0xFFFF
-    varData = self.VarData[major]
-    regionIndices = varData.VarRegionIndex
-
-    minV = 0
-    maxV = 0
-    for regionIndex in regionIndices:
-        location = {}
-        region = regionList.Region[regionIndex]
-        skip = False
-        thisAxes = set()
-        for i, regionAxis in enumerate(region.VarRegionAxis):
-            peak = regionAxis.PeakCoord
-            if peak == 0:
-                continue
-            if i in nullAxes:
-                skip = True
-                break
-            thisAxes.add(i)
-            location[fvarAxes[i].axisTag] = peak
-        if skip:
-            continue
-        if not thisAxes:
-            # Empty region (all peaks zero): constant contribution (scalar = 1).
-            # Handled via _bias; skip here.
-            continue
-
-        locs = [None]
-        if identityAxisIndex in thisAxes:
-            locs = []
-            locs.append(-1)
-            locs.append(region.VarRegionAxis[identityAxisIndex].StartCoord)
-            locs.append(region.VarRegionAxis[identityAxisIndex].PeakCoord)
-            locs.append(region.VarRegionAxis[identityAxisIndex].EndCoord)
-            locs.append(+1)
-
-        for loc in locs:
-            if loc is not None:
-                location[fvarAxes[identityAxisIndex].axisTag] = loc
-
-            scalar = 1
-            for j, regionAxis in enumerate(region.VarRegionAxis):
-                peak = regionAxis.PeakCoord
-                if peak == 0:
-                    continue
-                axis = fvarAxes[j]
-                try:
-                    limits = axisLimits[axis.axisTag]
-                    if peak > 0:
-                        scalar *= limits[2] - limits[1]
-                    else:
-                        scalar *= limits[1] - limits[0]
-                except KeyError:
-                    pass
-
-            ekey = (regionIndex, loc)
-            raw = evalCache.get(ekey)
-            if raw is None:
-                instancer.setLocation(location)
-                raw = instancer[varIdx]
-                evalCache[ekey] = raw
-            v = raw - _bias + (0 if loc is None else round(loc * 16384))
-
-            minOther, maxOther = self.getExtremes(
-                varIdx,
-                fvarAxes,
-                axisLimits,
-                identityAxisIndex,
-                nullAxes | thisAxes,
-                cache,
-                _bias,
-                instancer,
-                evalCache,
-            )
-
-            minV = min(minV, (v + minOther) * scalar)
-            maxV = max(maxV, (v + maxOther) * scalar)
-
-    # Always account for identity range even if no region involves the
-    # identity axis. When no region peaks on the identity axis, the
-    # varying delta doesn't depend on it, so the identity term alone
-    # (without any varying contribution) bounds the range.
-    if identityAxisIndex is not None and identityAxisIndex not in nullAxes:
-        tag = fvarAxes[identityAxisIndex].axisTag
+    def axisInterval(axisIdx):
+        tag = fvarAxes[axisIdx].axisTag
         if tag in axisLimits:
-            lo = round(axisLimits[tag][0] * 16384)
-            hi = round(axisLimits[tag][2] * 16384)
-        else:
-            lo = -16384
-            hi = 16384
-        minV = min(minV, lo)
-        maxV = max(maxV, hi)
+            limits = axisLimits[tag]
+            return limits[0], limits[2]
+        return -1.0, +1.0
 
-    # Add bias once at the top level.
-    if isTopLevel:
-        minV += _bias
-        maxV += _bias
+    if varIdx == NO_VARIATION_INDEX:
+        activeRegions = []
+    else:
+        major = varIdx >> 16
+        minor = varIdx & 0xFFFF
+        varData = self.VarData[major]
+        regions = self.VarRegionList.Region
+        deltas = varData.Item[minor]
+        # Per region: (delta, [(axisIndex, start, peak, end), ...]) with the
+        # axes supportScalar would ignore already dropped.
+        activeRegions = []
+        for regionIndex, delta in zip(varData.VarRegionIndex, deltas):
+            if not delta:
+                continue
+            region = regions[regionIndex]
+            tents = []
+            for i, regionAxis in enumerate(region.VarRegionAxis):
+                start = regionAxis.StartCoord
+                peak = regionAxis.PeakCoord
+                end = regionAxis.EndCoord
+                # Mirror supportScalar's OT rules for axes it ignores.
+                if peak == 0 or start > peak or peak > end:
+                    continue
+                if start < 0 and end > 0:
+                    continue
+                tents.append((i, start, peak, end))
+            activeRegions.append((delta, tents))
 
-    cache[key] = (minV, maxV)
+    # Try the exact path: enumerate the breakpoint grid.
+    breakpoints = {}  # axisIndex -> set of coordinates
+    if identityAxisIndex is not None:
+        lo, hi = axisInterval(identityAxisIndex)
+        breakpoints[identityAxisIndex] = {lo, hi}
+    for delta, tents in activeRegions:
+        for i, start, peak, end in tents:
+            if i not in breakpoints:
+                lo, hi = axisInterval(i)
+                breakpoints[i] = {lo, hi}
+            lo, hi = axisInterval(i)
+            breakpoints[i].update(min(max(v, lo), hi) for v in (start, peak, end))
+    gridSize = 1
+    for points in breakpoints.values():
+        gridSize *= len(points)
+        if gridSize > _GET_EXTREMES_MAX_GRID:
+            break
+
+    if gridSize <= _GET_EXTREMES_MAX_GRID:
+        # Exact: evaluate at every grid vertex. Within each grid cell every
+        # region scalar is multilinear, so the extremes lie on vertices.
+        axisIndices = sorted(breakpoints)
+        axisPos = {i: n for n, i in enumerate(axisIndices)}
+        minV = maxV = None
+        for vertex in itertools.product(*(sorted(breakpoints[i]) for i in axisIndices)):
+            v = 0.0
+            for delta, tents in activeRegions:
+                scalar = 1.0
+                for i, start, peak, end in tents:
+                    scalar *= _tentValue(vertex[axisPos[i]], start, peak, end)
+                    if scalar == 0:
+                        break
+                if scalar:
+                    v += delta * scalar
+            if identityAxisIndex is not None:
+                v += round(vertex[axisPos[identityAxisIndex]] * 16384)
+            if minV is None:
+                minV = maxV = v
+            else:
+                minV = min(minV, v)
+                maxV = max(maxV, v)
+        return minV, maxV
+
+    # Fallback: per-region interval arithmetic. Each region's scalar range
+    # over the box is exact (per-axis tent factors are independent), but
+    # correlations between regions (and with the identity term) are ignored.
+    minV = maxV = 0.0
+    for delta, tents in activeRegions:
+        scalarMin = scalarMax = 1.0
+        for i, start, peak, end in tents:
+            lo, hi = axisInterval(i)
+            # The tent rises to the peak then falls, so over [lo, hi] the
+            # maximum is at the clamped peak, the minimum at an endpoint.
+            scalarMax *= _tentValue(min(max(peak, lo), hi), start, peak, end)
+            scalarMin *= min(
+                _tentValue(lo, start, peak, end),
+                _tentValue(hi, start, peak, end),
+            )
+            if scalarMax == 0:
+                break
+        if scalarMax == 0:
+            continue
+        minV += min(delta * scalarMin, delta * scalarMax)
+        maxV += max(delta * scalarMin, delta * scalarMax)
+
+    if identityAxisIndex is not None:
+        lo, hi = axisInterval(identityAxisIndex)
+        minV += round(lo * 16384)
+        maxV += round(hi * 16384)
 
     return minV, maxV
 
