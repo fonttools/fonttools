@@ -316,9 +316,11 @@ class GetExtremesTest:
     avar2 instancer uses it to delete "unreachable" variation regions. An
     under-wide bound silently corrupts instanced fonts.
 
-    The output is piecewise multilinear in the axis coordinates, so its exact
-    extremes are attained on the grid of per-axis tent breakpoints; that grid
-    is the ground truth used below.
+    For two-sided tents the output is piecewise multilinear, so its exact
+    extremes are attained on the grid of per-axis tent breakpoints. A one-sided
+    tent (start == peak or peak == end) is discontinuous at its peak, however,
+    so the ground-truth grid must also include the adjacent F2Dot14 point on the
+    open side.
     """
 
     @staticmethod
@@ -339,14 +341,20 @@ class GetExtremesTest:
     @classmethod
     def _trueExtremes(cls, regions, deltas, axisTags, axisLimits, identityAxisIndex):
         breakpoints = {tag: {-1.0, 0.0, 1.0} for tag in axisTags}
+        unit = 1 / 16384
         for region in regions:
             for tag, (start, peak, end) in region.items():
                 breakpoints[tag].update((start, peak, end))
+                if start == peak:
+                    breakpoints[tag].add(peak - unit)
+                if peak == end:
+                    breakpoints[tag].add(peak + unit)
         for tag in axisTags:
+            lo, hi = (-1.0, 1.0)
             if tag in axisLimits:
                 lo, hi = axisLimits[tag][0], axisLimits[tag][2]
-                breakpoints[tag] = {min(max(v, lo), hi) for v in breakpoints[tag]}
-                breakpoints[tag].update((lo, hi))
+            breakpoints[tag] = {min(max(v, lo), hi) for v in breakpoints[tag]}
+            breakpoints[tag].update((lo, hi))
         lo = hi = None
         for combo in itertools.product(*(sorted(breakpoints[tag]) for tag in axisTags)):
             location = dict(zip(axisTags, combo))
@@ -390,6 +398,30 @@ class GetExtremesTest:
         )
         # Small stores take the exact (breakpoint-grid) path.
         assert bound == pytest.approx(true)
+
+    def test_one_sided_support_extreme(self):
+        # A peak=end tent contributes at the peak, then drops to zero at the
+        # next F2Dot14 coordinate. The breakpoint-only grid sees the two rows
+        # cancel at 0.25 and misses the live second row immediately to its
+        # right, so the returned upper bound must also cover that grid point.
+        regions = [
+            {"wght": (0.0, 0.25, 0.25)},
+            {"wght": (0.0, 0.25, 0.5)},
+        ]
+        deltas = [-16384, 16384]
+        store = self._buildStore(regions, deltas, ["wght"])
+
+        _, boundHi = store.getExtremes(0, self._makeAxes(["wght"]), {}, None)
+        location = {"wght": 4097 / 16384}
+        reachable = sum(
+            supportScalar(location, region) * delta
+            for region, delta in zip(regions, deltas)
+        )
+        _, trueHi = self._trueExtremes(regions, deltas, ["wght"], {}, None)
+
+        assert reachable == 16380
+        assert trueHi == reachable
+        assert boundHi >= reachable
 
     def test_identity_axis(self):
         self._check(
