@@ -1827,6 +1827,41 @@ def _avar2_final_coords(font, user_loc):
     return avar.renormalizeLocation(norm, font, dropZeroes=False)
 
 
+def _set_private_avar2_axis_deltas(font, outputTag, regions, deltas):
+    """Replace avar2 deltas for an axis treated as private by the instancer.
+
+    The partial-instancing design uses HIDDEN_AXIS as its private-axis marker:
+    an unrestricted private axis has intermediate coordinate zero, so its
+    final coordinate is determined by the avar2 delta alone.
+    """
+    axes = font["fvar"].axes
+    axisTags = [axis.axisTag for axis in axes]
+    outputIndex = axisTags.index(outputTag)
+    regionList = builder.buildVarRegionList(regions, axisTags)
+    varData = builder.buildVarData(list(range(len(regions))), [deltas], optimize=False)
+    font["avar"].table.VarStore = builder.buildVarStore(regionList, [varData])
+    mapping = [varStore.NO_VARIATION_INDEX] * len(axes)
+    mapping[outputIndex] = 0
+    font["avar"].table.VarIdxMap = builder.buildDeltaSetIndexMap(mapping)
+    axes[outputIndex].flags |= 0x0001
+
+
+def _add_gvar_sentinel(font, axisTag, support, sentinel):
+    coordinateCount = len(font["gvar"].variations["T"][0].coordinates)
+    font["gvar"].variations["T"].append(
+        TupleVariation({axisTag: support}, [sentinel] * coordinateCount)
+    )
+
+
+def _has_gvar_sentinel(font, axisTag, support, sentinel):
+    return any(
+        variation.axes == {axisTag: support}
+        and variation.coordinates
+        and variation.coordinates[0] == sentinel
+        for variation in font["gvar"].variations["T"]
+    )
+
+
 class InstantiateAvar2Test(object):
     def test_partial_limit_axis_roundtrip_matches_direct_instance(self, avar2_varfont):
         partial = instancer.instantiateVariableFont(
@@ -2187,6 +2222,146 @@ class InstantiateAvar2Test(object):
                         f"culled variation {tv.axes} of {glyphName!r} is live "
                         f"(scalar {scalar}) at {loc} -> {final}"
                     )
+
+    def test_culling_preserves_one_sided_support_sentinel(self, avar2_varfont):
+        outputTag = "XOPQ"
+        inputTag = "wght"
+        support = (0.5, 1.0, 1.0)
+        sentinel = (12345, -6789)
+        _set_private_avar2_axis_deltas(
+            avar2_varfont,
+            outputTag,
+            [
+                {inputTag: (0.0, 0.25, 0.25)},
+                {inputTag: (0.0, 0.25, 0.5)},
+            ],
+            [-16384, 16384],
+        )
+        _add_gvar_sentinel(avar2_varfont, outputTag, support, sentinel)
+
+        inputAxis = next(
+            axis for axis in avar2_varfont["fvar"].axes if axis.axisTag == inputTag
+        )
+        normalizedInput = 4097 / 16384
+        userInput = inputAxis.defaultValue + normalizedInput * (
+            inputAxis.maxValue - inputAxis.defaultValue
+        )
+        location = {inputTag: userInput}
+        before = _avar2_final_coords(avar2_varfont, location)
+        assert before[outputTag] == 16380 / 16384
+        assert models.supportScalar(before, {outputTag: support}) > 0.99
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont,
+            {
+                inputTag: (
+                    inputAxis.minValue,
+                    inputAxis.defaultValue,
+                    inputAxis.maxValue,
+                )
+            },
+        )
+
+        assert _avar2_final_coords(partial, location)[outputTag] == before[outputTag]
+        assert _has_gvar_sentinel(partial, outputTag, support, sentinel)
+
+    def test_culling_bounds_runtime_rounded_avar2_delta(self, avar2_varfont):
+        outputTag = "XOPQ"
+        inputTag = "wght"
+        unit = 1 / 16384
+        support = (unit, unit, 1.0)
+        sentinel = (22222, -3333)
+        _set_private_avar2_axis_deltas(
+            avar2_varfont,
+            outputTag,
+            [
+                {inputTag: (0.0, 0.125, 0.25)},
+                {inputTag: (0.0, 0.125, 0.375)},
+            ],
+            [-8, 1],
+        )
+        _add_gvar_sentinel(avar2_varfont, outputTag, support, sentinel)
+
+        inputAxis = next(
+            axis for axis in avar2_varfont["fvar"].axes if axis.axisTag == inputTag
+        )
+        userInput = inputAxis.defaultValue + 0.25 * (
+            inputAxis.maxValue - inputAxis.defaultValue
+        )
+        location = {inputTag: userInput}
+        before = _avar2_final_coords(avar2_varfont, location)
+        assert before[outputTag] == unit
+        assert models.supportScalar(before, {outputTag: support}) == 1.0
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont,
+            {
+                inputTag: (
+                    inputAxis.minValue,
+                    inputAxis.defaultValue,
+                    inputAxis.maxValue,
+                )
+            },
+        )
+
+        assert _avar2_final_coords(partial, location)[outputTag] == unit
+        assert _has_gvar_sentinel(partial, outputTag, support, sentinel)
+
+    @pytest.mark.parametrize(
+        "delta,support,expected,sentinel",
+        [
+            pytest.param(32767, (0.5, 1.0, 1.0), 1.0, (30001, -30001), id="upper"),
+            pytest.param(-32768, (-1.0, -1.0, -0.5), -1.0, (-30001, 30001), id="lower"),
+        ],
+    )
+    def test_culling_clamps_overshooting_range_on_both_sides(
+        self, avar2_varfont, delta, support, expected, sentinel
+    ):
+        outputTag = "XOPQ"
+        inputTag = "wght"
+        _set_private_avar2_axis_deltas(avar2_varfont, outputTag, [{}], [delta])
+        _add_gvar_sentinel(avar2_varfont, outputTag, support, sentinel)
+
+        before = _avar2_final_coords(avar2_varfont, {})
+        assert before[outputTag] == expected
+        assert models.supportScalar(before, {outputTag: support}) == 1.0
+
+        inputAxis = next(
+            axis for axis in avar2_varfont["fvar"].axes if axis.axisTag == inputTag
+        )
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont,
+            {
+                inputTag: (
+                    inputAxis.minValue,
+                    inputAxis.defaultValue,
+                    inputAxis.maxValue,
+                )
+            },
+        )
+
+        assert _avar2_final_coords(partial, {})[outputTag] == expected
+        assert _has_gvar_sentinel(partial, outputTag, support, sentinel)
+
+    def test_full_instance_avar2_malformed_empty_varstore(self, avar2_varfont):
+        # With no VarIdxMap, an empty non-NULL VarStore produces implicit
+        # indices outside the store. The partial avar2 path treats them as zero
+        # deltas, so full instancing should do the same. HarfBuzz corroborates
+        # that defensive policy:
+        # https://github.com/harfbuzz/harfbuzz/blob/d2df3cdcc0836299a163dc0399a6b047d19ac56c/src/hb-ot-layout-common.hh#L3354-L3363
+        axisTags = [axis.axisTag for axis in avar2_varfont["fvar"].axes]
+        avar2_varfont["avar"].table.VarStore = builder.buildVarStore(
+            builder.buildVarRegionList([], axisTags), []
+        )
+        avar2_varfont["avar"].table.VarIdxMap = None
+        defaults = {
+            axis.axisTag: axis.defaultValue for axis in avar2_varfont["fvar"].axes
+        }
+
+        static = instancer.instantiateVariableFont(avar2_varfont, defaults)
+
+        assert "fvar" not in static
+        assert "avar" not in static
 
 
 class InstantiateVariableFontTest(object):
