@@ -92,6 +92,17 @@ def test_loadData_truncated_raises_TTLibError():
         entry.loadData(io.BytesIO(b"short"))
 
 
+def test_load_truncated_font_raises_TTLibError(ttfont_path):
+    # End-to-end: a font file cut short past its last table directory entry
+    # must fail with TTLibError when that table is loaded. Chop 4 bytes so we
+    # land inside the last table regardless of its 4-byte padding.
+    data = ttfont_path.read_bytes()[:-4]
+    font = TTFont(io.BytesIO(data), lazy=True)
+    with pytest.raises(TTLibError, match="unexpected end of table data"):
+        for tag in font.keys():
+            font[tag]
+
+
 def test_ttLib_sfnt_write_privData(tmp_path, ttfont_path):
     output_path = tmp_path / "TestTTF-Regular.woff"
     font = TTFont(ttfont_path)
