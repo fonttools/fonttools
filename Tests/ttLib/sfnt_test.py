@@ -7,6 +7,7 @@ from fontTools.ttLib.sfnt import (
     calcChecksum,
     SFNTDirectoryEntry,
     SFNTReader,
+    sfntDirectorySize,
     WOFFFlavorData,
 )
 from pathlib import Path
@@ -101,6 +102,24 @@ def test_load_truncated_font_raises_TTLibError(ttfont_path):
     with pytest.raises(TTLibError, match=r"unexpected end of '\w{4}' table data"):
         for tag in font.keys():
             font[tag]
+
+
+def test_truncated_table_directory_raises_TTLibError(ttfont_path):
+    # Keep the complete sfnt header but only half of its first table-directory
+    # entry. The short entry must raise TTLibError rather than struct.error.
+    data = ttfont_path.read_bytes()[
+        : sfntDirectorySize + SFNTDirectoryEntry.formatSize // 2
+    ]
+    with pytest.raises(TTLibError, match="unexpected end of table directory"):
+        TTFont(io.BytesIO(data))
+
+
+def test_bogus_numTables_raises_TTLibError(ttfont_path):
+    # Corrupting numTables makes the directory run past the end of the file.
+    data = bytearray(ttfont_path.read_bytes())
+    data[5] ^= 0xFF
+    with pytest.raises(TTLibError, match="unexpected end of table directory"):
+        TTFont(io.BytesIO(bytes(data)))
 
 
 def test_ttLib_sfnt_write_privData(tmp_path, ttfont_path):

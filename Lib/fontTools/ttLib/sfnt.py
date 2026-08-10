@@ -502,7 +502,15 @@ class DirectoryEntry(object):
         self.uncompressed = False  # if True, always embed entry raw
 
     def fromFile(self, file):
-        sstruct.unpack(self.format, file.read(self.formatSize), self)
+        data = file.read(self.formatSize)
+        if len(data) != self.formatSize:
+            # A file truncated inside the table directory, or one whose
+            # numTables is corrupt, would otherwise fail with a struct.error.
+            raise TTLibError(
+                "unexpected end of table directory: expected %d bytes but got %d"
+                % (self.formatSize, len(data))
+            )
+        sstruct.unpack(self.format, data, self)
 
     def fromString(self, str):
         sstruct.unpack(self.format, str, self)
