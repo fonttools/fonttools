@@ -88,7 +88,7 @@ def test_loadData_truncated_raises_TTLibError():
     entry.tag = "test"
     entry.offset = 0
     entry.length = 1000  # more than the stream holds
-    with pytest.raises(TTLibError):
+    with pytest.raises(TTLibError, match="unexpected end of 'test' table data"):
         entry.loadData(io.BytesIO(b"short"))
 
 
@@ -98,7 +98,7 @@ def test_load_truncated_font_raises_TTLibError(ttfont_path):
     # land inside the last table regardless of its 4-byte padding.
     data = ttfont_path.read_bytes()[:-4]
     font = TTFont(io.BytesIO(data), lazy=True)
-    with pytest.raises(TTLibError, match="unexpected end of table data"):
+    with pytest.raises(TTLibError, match=r"unexpected end of '\w{4}' table data"):
         for tag in font.keys():
             font[tag]
 

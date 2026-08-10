@@ -523,9 +523,16 @@ class DirectoryEntry(object):
             # A corrupt or truncated table directory entry can point past the
             # end of the file; raise a TTLibError instead of a bare assertion
             # (which is also silently skipped under `python -O`).
+            tag = getattr(self, "tag", None)
             raise TTLibError(
-                "unexpected end of table data: expected %d bytes but got %d "
-                "at offset %d" % (self.length, len(data), self.offset)
+                "unexpected end of '%s' table data: expected %d bytes but got "
+                "%d at offset %d"
+                % (
+                    Tag(tag) if tag is not None else "????",
+                    self.length,
+                    len(data),
+                    self.offset,
+                )
             )
         if hasattr(self.__class__, "decodeData"):
             data = self.decodeData(data)
