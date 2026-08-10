@@ -2,8 +2,13 @@ import io
 import copy
 import pickle
 import tempfile
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.sfnt import calcChecksum, SFNTReader, WOFFFlavorData
+from fontTools.ttLib import TTFont, TTLibError
+from fontTools.ttLib.sfnt import (
+    calcChecksum,
+    SFNTDirectoryEntry,
+    SFNTReader,
+    WOFFFlavorData,
+)
 from pathlib import Path
 import pytest
 
@@ -73,6 +78,18 @@ class SFNTReaderTest:
             if k == "file":
                 continue
             assert getattr(reader2, k) == v
+
+
+def test_loadData_truncated_raises_TTLibError():
+    # A corrupt table directory entry whose length runs past the end of the
+    # file must raise TTLibError, not a bare AssertionError (which is also
+    # silently skipped under `python -O`).
+    entry = SFNTDirectoryEntry()
+    entry.tag = "test"
+    entry.offset = 0
+    entry.length = 1000  # more than the stream holds
+    with pytest.raises(TTLibError):
+        entry.loadData(io.BytesIO(b"short"))
 
 
 def test_ttLib_sfnt_write_privData(tmp_path, ttfont_path):

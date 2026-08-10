@@ -519,7 +519,14 @@ class DirectoryEntry(object):
     def loadData(self, file):
         file.seek(self.offset)
         data = file.read(self.length)
-        assert len(data) == self.length
+        if len(data) != self.length:
+            # A corrupt or truncated table directory entry can point past the
+            # end of the file; raise a TTLibError instead of a bare assertion
+            # (which is also silently skipped under `python -O`).
+            raise TTLibError(
+                "unexpected end of table data: expected %d bytes but got %d "
+                "at offset %d" % (self.length, len(data), self.offset)
+            )
         if hasattr(self.__class__, "decodeData"):
             data = self.decodeData(data)
         return data
