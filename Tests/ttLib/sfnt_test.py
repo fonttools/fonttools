@@ -2,8 +2,13 @@ import io
 import copy
 import pickle
 import tempfile
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.sfnt import calcChecksum, SFNTReader, WOFFFlavorData
+from fontTools.ttLib import TTFont, TTLibError
+from fontTools.ttLib.sfnt import (
+    calcChecksum,
+    SFNTDirectoryEntry,
+    SFNTReader,
+    WOFFFlavorData,
+)
 from pathlib import Path
 import pytest
 
@@ -73,6 +78,29 @@ class SFNTReaderTest:
             if k == "file":
                 continue
             assert getattr(reader2, k) == v
+
+
+def test_loadData_truncated_raises_TTLibError():
+    # A corrupt table directory entry whose length runs past the end of the
+    # file must raise TTLibError, not a bare AssertionError (which is also
+    # silently skipped under `python -O`).
+    entry = SFNTDirectoryEntry()
+    entry.tag = "test"
+    entry.offset = 0
+    entry.length = 1000  # more than the stream holds
+    with pytest.raises(TTLibError, match="unexpected end of 'test' table data"):
+        entry.loadData(io.BytesIO(b"short"))
+
+
+def test_load_truncated_font_raises_TTLibError(ttfont_path):
+    # End-to-end: a font file cut short past its last table directory entry
+    # must fail with TTLibError when that table is loaded. Chop 4 bytes so we
+    # land inside the last table regardless of its 4-byte padding.
+    data = ttfont_path.read_bytes()[:-4]
+    font = TTFont(io.BytesIO(data), lazy=True)
+    with pytest.raises(TTLibError, match=r"unexpected end of '\w{4}' table data"):
+        for tag in font.keys():
+            font[tag]
 
 
 def test_ttLib_sfnt_write_privData(tmp_path, ttfont_path):
