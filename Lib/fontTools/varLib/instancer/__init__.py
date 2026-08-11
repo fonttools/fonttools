@@ -2268,8 +2268,9 @@ def _computeReachableRangesForAvar2(varfont, axisLimits, reachableRanges):
             varIdx, fvarAxes, privateAxisLimits, identityAxisIndex
         )
 
-        lo = max(-1, minV / 16384)
-        hi = min(+1, maxV / 16384)
+        lo = min(+1, max(-1, minV / 16384))
+        hi = min(+1, max(-1, maxV / 16384))
+        assert lo <= hi
         reachableRanges[tag] = (lo, hi)
 
         log.info(
