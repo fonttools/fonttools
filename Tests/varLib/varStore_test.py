@@ -105,6 +105,16 @@ def buildAxis(axisTag):
     return axis
 
 
+def test_VarStoreInstancer_out_of_range_index_returns_zero():
+    varData = buildVarData([], [[]], optimize=False)
+    varStore = buildVarStore(buildVarRegionList([], ["wght"]), [varData])
+    instancer = VarStoreInstancer(varStore, [buildAxis("wght")])
+
+    assert instancer[0] == 0
+    assert instancer[1] == 0  # inner index beyond the single item
+    assert instancer[1 << 16] == 0  # outer index beyond the single VarData
+
+
 @pytest.mark.parametrize(
     "numRegions, varData, expectedNumVarData, expectedBytes",
     [

@@ -246,6 +246,12 @@ class VarStoreInstancer(object):
         if varidx == NO_VARIATION_INDEX:
             return 0.0
         varData = self._varData
+        # Keep full instancing consistent with _effectiveAvar2VarIdx: out-of-range
+        # delta-set indices contribute zero. HarfBuzz uses the same policy:
+        # https://github.com/harfbuzz/harfbuzz/blob/d2df3cdcc0836299a163dc0399a6b047d19ac56c/src/hb-ot-layout-common.hh#L2912-L2918
+        # https://github.com/harfbuzz/harfbuzz/blob/d2df3cdcc0836299a163dc0399a6b047d19ac56c/src/hb-ot-layout-common.hh#L3354-L3363
+        if major >= len(varData) or minor >= len(varData[major].Item):
+            return 0.0
         scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
         deltas = varData[major].Item[minor]
         return self.interpolateFromDeltasAndScalars(deltas, scalars)
