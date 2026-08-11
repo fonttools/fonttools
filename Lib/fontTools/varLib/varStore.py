@@ -720,6 +720,7 @@ def _tentValue(v, start, peak, end):
 # interval bound. The grid is authoring-controlled, so a cap is needed to keep
 # crafted fonts from hanging the instancer.
 _GET_EXTREMES_MAX_GRID = 1 << 14
+_F2DOT14_UNIT = 1.0 / (1 << 14)
 
 
 def VarStore_getExtremes(self, varIdx, fvarAxes, axisLimits, identityAxisIndex=None):
@@ -735,14 +736,17 @@ def VarStore_getExtremes(self, varIdx, fvarAxes, axisLimits, identityAxisIndex=N
     The produced value is piecewise multilinear in the axis coordinates
     (each region's scalar is a product of independent per-axis tents), so
     over the box its exact extremes are attained at vertices of the grid
-    formed by each axis's tent breakpoints. When that grid is small enough
-    (real fonts) it is enumerated and the result is exact; otherwise the
-    result falls back to a per-region interval bound, which ignores
-    correlations between regions and may be wider than the true range —
-    never narrower. Callers use this to cull provably-unreachable variation
-    data, so conservativeness is a soundness requirement, not a nicety.
-    The fallback costs O(regions × axes); the cap on the exact path keeps
-    crafted fonts from hanging the instancer.
+    formed by each axis's tent breakpoints. One-sided tents (start == peak
+    or peak == end) are discontinuous at their peak, so the grid also
+    includes the adjacent F2Dot14 coordinate on the open side. When that
+    grid is small enough (real fonts) it is enumerated and the result is
+    exact; otherwise the result falls back to a per-region interval bound,
+    which ignores correlations between regions and may be wider than the
+    true range — never narrower. Callers use this to cull
+    provably-unreachable variation data, so conservativeness is a
+    soundness requirement, not a nicety. The fallback costs O(regions ×
+    axes); the cap on the exact path keeps crafted fonts from hanging the
+    instancer.
     """
 
     def axisInterval(axisIdx):
@@ -792,6 +796,10 @@ def VarStore_getExtremes(self, varIdx, fvarAxes, axisLimits, identityAxisIndex=N
                 breakpoints[i] = {lo, hi}
             lo, hi = axisInterval(i)
             breakpoints[i].update(min(max(v, lo), hi) for v in (start, peak, end))
+            if start == peak:
+                breakpoints[i].add(min(max(peak - _F2DOT14_UNIT, lo), hi))
+            if peak == end:
+                breakpoints[i].add(min(max(peak + _F2DOT14_UNIT, lo), hi))
     gridSize = 1
     for points in breakpoints.values():
         gridSize *= len(points)
