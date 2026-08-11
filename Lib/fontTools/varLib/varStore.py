@@ -733,20 +733,23 @@ def VarStore_getExtremes(self, varIdx, fvarAxes, axisLimits, identityAxisIndex=N
     If identityAxisIndex is not None, that axis's own identity contribution
     (its coordinate, in F2Dot14 units) is added to the bound.
 
-    The produced value is piecewise multilinear in the axis coordinates
-    (each region's scalar is a product of independent per-axis tents), so
-    over the box its exact extremes are attained at vertices of the grid
-    formed by each axis's tent breakpoints. One-sided tents (start == peak
-    or peak == end) are discontinuous at their peak, so the grid also
-    includes the adjacent F2Dot14 coordinate on the open side. When that
-    grid is small enough (real fonts) it is enumerated and the result is
-    exact; otherwise the result falls back to a per-region interval bound,
-    which ignores correlations between regions and may be wider than the
-    true range — never narrower. Callers use this to cull
-    provably-unreachable variation data, so conservativeness is a
-    soundness requirement, not a nicety. The fallback costs O(regions ×
-    axes); the cap on the exact path keeps crafted fonts from hanging the
-    instancer.
+    Before the final OpenType rounding, the produced value is piecewise
+    multilinear in the axis coordinates (each region's scalar is a product
+    of independent per-axis tents), so over the box its exact extremes are
+    attained at vertices of the grid formed by each axis's tent
+    breakpoints. One-sided tents (start == peak or peak == end) are
+    discontinuous at their peak, so the grid also includes the adjacent
+    F2Dot14 coordinate on the open side. When that grid is small enough
+    (real fonts) it is enumerated and the result is exact; otherwise the
+    result falls back to a per-region interval bound, which ignores
+    correlations between regions and may be wider than the true range —
+    never narrower. Callers use this to cull provably-unreachable
+    variation data, so conservativeness is a soundness requirement, not a
+    nicety. The fallback costs O(regions × axes); the cap on the exact
+    path keeps crafted fonts from hanging the instancer.
+
+    Raw extrema are rounded only after summing the identity and delta terms,
+    matching avar2 processing.
     """
 
     def axisInterval(axisIdx):
@@ -823,13 +826,13 @@ def VarStore_getExtremes(self, varIdx, fvarAxes, axisLimits, identityAxisIndex=N
                 if scalar:
                     v += delta * scalar
             if identityAxisIndex is not None:
-                v += round(vertex[axisPos[identityAxisIndex]] * 16384)
+                v += otRound(vertex[axisPos[identityAxisIndex]] * 16384)
             if minV is None:
                 minV = maxV = v
             else:
                 minV = min(minV, v)
                 maxV = max(maxV, v)
-        return minV, maxV
+        return otRound(minV), otRound(maxV)
 
     # Fallback: per-region interval arithmetic. Each region's scalar range
     # over the box is exact (per-axis tent factors are independent), but
@@ -855,10 +858,10 @@ def VarStore_getExtremes(self, varIdx, fvarAxes, axisLimits, identityAxisIndex=N
 
     if identityAxisIndex is not None:
         lo, hi = axisInterval(identityAxisIndex)
-        minV += round(lo * 16384)
-        maxV += round(hi * 16384)
+        minV += otRound(lo * 16384)
+        maxV += otRound(hi * 16384)
 
-    return minV, maxV
+    return otRound(minV), otRound(maxV)
 
 
 ot.VarStore.getExtremes = VarStore_getExtremes
