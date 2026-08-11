@@ -3,7 +3,7 @@ import pytest
 import random
 from io import StringIO
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.misc.roundTools import noRound
+from fontTools.misc.roundTools import noRound, otRound
 from fontTools.varLib.builder import (
     buildVarRegionList,
     buildVarData,
@@ -358,12 +358,14 @@ class GetExtremesTest:
         lo = hi = None
         for combo in itertools.product(*(sorted(breakpoints[tag]) for tag in axisTags)):
             location = dict(zip(axisTags, combo))
-            value = sum(
-                supportScalar(location, region) * delta
-                for region, delta in zip(regions, deltas)
+            value = otRound(
+                sum(
+                    supportScalar(location, region) * delta
+                    for region, delta in zip(regions, deltas)
+                )
             )
             if identityAxisIndex is not None:
-                value += round(location[axisTags[identityAxisIndex]] * 16384)
+                value += otRound(location[axisTags[identityAxisIndex]] * 16384)
             lo = value if lo is None else min(lo, value)
             hi = value if hi is None else max(hi, value)
         return lo, hi
