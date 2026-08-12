@@ -541,8 +541,8 @@ def test_load_does_not_resolve_external_entities(tmp_path):
 
     try:
         pl = plistlib.load(BytesIO(data))
-    except Exception:
-        # the ElementTree backend rejects the undefined entity outright
+    except etree.ParseError:
+        # the undefined entity is rejected outright
         return
 
     assert "s3cr3t" not in pl["note"]

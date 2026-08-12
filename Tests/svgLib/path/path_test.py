@@ -1,3 +1,4 @@
+from fontTools.misc import etree
 from fontTools.misc.textTools import tobytes
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib import SVGPath
@@ -99,7 +100,7 @@ def test_no_external_entity_expansion(tmp_path):
     for load in (lambda: SVGPath(svg), lambda: SVGPath.fromstring(svg.read_bytes())):
         try:
             root = load().root
-        except Exception:
-            # the ElementTree backend rejects the undefined entity outright
+        except etree.ParseError:
+            # the undefined entity is rejected outright
             continue
         assert all("s3cr3t" not in (el.text or "") for el in root.iter())

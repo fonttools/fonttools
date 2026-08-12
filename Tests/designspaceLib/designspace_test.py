@@ -22,6 +22,7 @@ from fontTools.designspaceLib import (
     processRules,
 )
 from fontTools.designspaceLib.types import Range
+from fontTools.misc import etree as ET
 from fontTools.misc import plistlib
 
 from .fixtures import datadir
@@ -1335,8 +1336,8 @@ def test_no_external_entity_expansion(tmp_path):
 
     try:
         doc = DesignSpaceDocument.fromfile(path)
-    except Exception:
-        # the ElementTree backend rejects the undefined entity outright
+    except ET.ParseError:
+        # the undefined entity is rejected outright
         return
 
     assert "s3cr3t" not in doc.axes[0].labelNames["en"]
