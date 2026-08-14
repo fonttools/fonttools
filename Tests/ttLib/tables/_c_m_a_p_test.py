@@ -56,6 +56,23 @@ class CmapSubtableTest(unittest.TestCase):
         self.assertEqual(subtable.getEncoding("ascii"), "ascii")
         self.assertEqual(subtable.getEncoding(default="xyz"), "xyz")
 
+    def test_decompile_truncated(self):
+        # A truncated cmap table, or one whose subtable offset points past the
+        # end of the data, used to raise a bare struct.error instead of
+        # TTLibError.
+        import struct
+
+        font = ttLib.TTFont()
+        cases = [
+            b"\x00\x00",  # shorter than the 4-byte header
+            struct.pack(">HH", 0, 3) + b"ab",  # 3 subtables promised, dir truncated
+            struct.pack(">HH", 0, 1) + struct.pack(">HHl", 3, 1, 9999),  # bad offset
+        ]
+        for data in cases:
+            table = table__c_m_a_p("cmap")
+            with self.assertRaises(ttLib.TTLibError):
+                table.decompile(data, font)
+
     def test_compile_2(self):
         subtable = self.makeSubtable(2, 1, 2, 0)
         subtable.cmap = {c: "cid%05d" % c for c in range(32, 8192)}

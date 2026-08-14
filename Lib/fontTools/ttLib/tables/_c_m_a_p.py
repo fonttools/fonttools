@@ -1,6 +1,6 @@
 from fontTools.misc.textTools import bytesjoin, safeEval, readHex
 from fontTools.misc.encodingTools import getEncoding
-from fontTools.ttLib import getSearchRange
+from fontTools.ttLib import getSearchRange, TTLibError
 from fontTools.unicode import Unicode
 from . import DefaultTable
 import sys
@@ -153,21 +153,33 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
         return result
 
     def decompile(self, data, ttFont):
+        if len(data) < 4:
+            raise TTLibError("cmap table is too short")
         tableVersion, numSubTables = struct.unpack(">HH", data[:4])
         self.tableVersion = int(tableVersion)
         self.tables = tables = []
         seenOffsets = {}
         for i in range(numSubTables):
-            platformID, platEncID, offset = struct.unpack(
-                ">HHl", data[4 + i * 8 : 4 + (i + 1) * 8]
-            )
+            entry = data[4 + i * 8 : 4 + (i + 1) * 8]
+            if len(entry) < 8:
+                raise TTLibError("cmap subtable directory is truncated")
+            platformID, platEncID, offset = struct.unpack(">HHl", entry)
             platformID, platEncID = int(platformID), int(platEncID)
+            # The offset points somewhere inside the cmap table; a malformed
+            # font can put it past the end of the data, so guard the header
+            # reads below instead of letting struct.unpack raise struct.error.
+            if offset < 0 or offset + 4 > len(data):
+                raise TTLibError("cmap subtable offset is out of bounds")
             format, length = struct.unpack(">HH", data[offset : offset + 4])
             if format in [8, 10, 12, 13]:
+                if offset + 8 > len(data):
+                    raise TTLibError("cmap subtable header is truncated")
                 format, reserved, length = struct.unpack(
                     ">HHL", data[offset : offset + 8]
                 )
             elif format in [14]:
+                if offset + 6 > len(data):
+                    raise TTLibError("cmap subtable header is truncated")
                 format, length = struct.unpack(">HL", data[offset : offset + 6])
 
             if not length:
