@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import operator
+
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 from fontTools.pens.basePen import decomposeSuperBezierSegment
 from fontTools.pens.filterPen import FilterPen
+from fontTools.pens.pointPen import BasePointToSegmentPen, ReverseContourPointPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
-from fontTools.pens.pointPen import BasePointToSegmentPen
-from fontTools.pens.pointPen import ReverseContourPointPen
 
 
 class Cu2QuPen(FilterPen):
@@ -216,9 +216,9 @@ class Cu2QuPointPen(BasePointToSegmentPen):
             pen.addPoint(pt, None, smooth, name, **kwargs)
         pen.endPath()
 
-    def addComponent(self, baseGlyphName, transformation):
+    def addComponent(self, glyphName, transformation):
         assert self.currentPath is None
-        self.pen.addComponent(baseGlyphName, transformation)
+        self.pen.addComponent(glyphName, transformation)
 
 
 class Cu2QuMultiPen:
