@@ -2190,10 +2190,21 @@ class Parser(object):
     def expect_variable_scalar_(self):
         self.advance_lexer_()  # "("
         scalar = VariableScalar()
+        default_seen = False
         while True:
             if self.cur_token_type_ == Lexer.SYMBOL and self.cur_token_ == ")":
                 break
-            location, value = self.expect_master_()
+            if self.cur_token_type_ == Lexer.NUMBER:
+                if default_seen:
+                    raise FeatureLibError(
+                        "Duplicate value for the default location",
+                        self.cur_token_location_,
+                    )
+                default_seen = True
+                location, value = {}, self.cur_token_
+                self.advance_lexer_()
+            else:
+                location, value = self.expect_master_()
             scalar.add_value(location, value)
         return scalar
 
