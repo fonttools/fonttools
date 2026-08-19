@@ -5,7 +5,6 @@ from fontTools.misc.testTools import FakeFont, getXML, parseXML
 import itertools
 import pytest
 
-
 KERN_VER_0_FMT_0_DATA = deHexStr(
     "0000 "  #  0: version=0
     "0001 "  #  2: nTables=1
@@ -375,8 +374,8 @@ class KernTable_format_0_Test(object):
             + b"\x01"
             + b"\x00"
             + b"\x01"
-            + b"\xFF"
-            + b"\xFF"
+            + b"\xff"
+            + b"\xff"
             + b"\x00"
             + b"\x02",
             font,

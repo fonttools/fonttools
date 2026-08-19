@@ -54,7 +54,7 @@ def updateBounds(bounds, p, min=min, max=max):
     Returns:
         The updated bounding rectangle ``(xMin, yMin, xMax, yMax)``.
     """
-    (x, y) = p
+    x, y = p
     if bounds is None:
         return x, y, x, y
     xMin, yMin, xMax, yMax = bounds
@@ -72,7 +72,7 @@ def pointInRect(p, rect):
     Returns:
         ``True`` if the point is inside the rectangle, ``False`` otherwise.
     """
-    (x, y) = p
+    x, y = p
     xMin, yMin, xMax, yMax = rect
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
 
@@ -134,7 +134,7 @@ def normRect(rect):
     Returns:
         A normalized bounding rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect
+    xMin, yMin, xMax, yMax = rect
     return min(xMin, xMax), min(yMin, yMax), max(xMin, xMax), max(yMin, yMax)
 
 
@@ -150,7 +150,7 @@ def scaleRect(rect, x, y):
     Returns:
         A scaled bounding rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect
+    xMin, yMin, xMax, yMax = rect
     return xMin * x, yMin * y, xMax * x, yMax * y
 
 
@@ -166,7 +166,7 @@ def offsetRect(rect, dx, dy):
     Returns:
         An offset bounding rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect
+    xMin, yMin, xMax, yMax = rect
     return xMin + dx, yMin + dy, xMax + dx, yMax + dy
 
 
@@ -182,7 +182,7 @@ def insetRect(rect, dx, dy):
     Returns:
         An inset bounding rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect
+    xMin, yMin, xMax, yMax = rect
     return xMin + dx, yMin + dy, xMax - dx, yMax - dy
 
 
@@ -200,8 +200,8 @@ def sectRect(rect1, rect2):
         rectangle. Returns ``False`` and ``(0, 0, 0, 0)`` if the input
         rectangles don't intersect.
     """
-    (xMin1, yMin1, xMax1, yMax1) = rect1
-    (xMin2, yMin2, xMax2, yMax2) = rect2
+    xMin1, yMin1, xMax1, yMax1 = rect1
+    xMin2, yMin2, xMax2, yMax2 = rect2
     xMin, yMin, xMax, yMax = (
         max(xMin1, xMin2),
         max(yMin1, yMin2),
@@ -225,8 +225,8 @@ def unionRect(rect1, rect2):
         The smallest rectangle in which both input rectangles are fully
         enclosed.
     """
-    (xMin1, yMin1, xMax1, yMax1) = rect1
-    (xMin2, yMin2, xMax2, yMax2) = rect2
+    xMin1, yMin1, xMax1, yMax1 = rect1
+    xMin2, yMin2, xMax2, yMax2 = rect2
     xMin, yMin, xMax, yMax = (
         min(xMin1, xMin2),
         min(yMin1, yMin2),
@@ -246,7 +246,7 @@ def rectCenter(rect):
     Returns:
         A 2D tuple representing the point at the center of the rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect
+    xMin, yMin, xMax, yMax = rect
     return (xMin + xMax) / 2, (yMin + yMax) / 2
 
 
@@ -260,7 +260,7 @@ def rectArea(rect):
     Returns:
         The area of the rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect
+    xMin, yMin, xMax, yMax = rect
     return (yMax - yMin) * (xMax - xMin)
 
 
@@ -276,7 +276,7 @@ def intRect(rect):
     Returns:
         A rounded bounding rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect
+    xMin, yMin, xMax, yMax = rect
     xMin = int(math.floor(xMin))
     yMin = int(math.floor(yMin))
     xMax = int(math.ceil(xMax))

@@ -320,7 +320,7 @@ class TestGLIF1(unittest.TestCase):
         glif = """
 		<glyph name="a" format="1">
 			<note>
-				\U0001F4A9
+				\U0001f4a9
 			</note>
 			<outline>
 			</outline>

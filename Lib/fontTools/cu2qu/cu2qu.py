@@ -26,7 +26,6 @@ import math
 
 from .errors import Error as Cu2QuError, ApproxNotFoundError
 
-
 __all__ = ["curve_to_quadratic", "curves_to_quadratic"]
 
 MAX_N = 100

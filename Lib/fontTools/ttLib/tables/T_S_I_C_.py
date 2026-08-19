@@ -1,4 +1,4 @@
-""" TSI{B,C,D,J,P,S,V} are private tables used by Microsoft Visual TrueType (VTT)
+"""TSI{B,C,D,J,P,S,V} are private tables used by Microsoft Visual TrueType (VTT)
 tool to store its table source data.
 
 TSIC contains the source text for the Variation CVT window and data for

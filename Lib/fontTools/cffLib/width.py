@@ -12,7 +12,6 @@ from collections import defaultdict
 from operator import add
 from functools import reduce
 
-
 __all__ = ["optimizeWidths", "main"]
 
 

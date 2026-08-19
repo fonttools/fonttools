@@ -15,7 +15,6 @@ from fontTools.misc.vector import Vector
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.iterTools import batched
 
-
 __all__ = ["scale_upem", "ScalerVisitor"]
 
 

@@ -4,7 +4,6 @@ from fontTools.misc.textTools import tostr
 from .parser import parse_path
 from .shapes import PathBuilder
 
-
 __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
 
 

@@ -8,7 +8,6 @@ import logging
 import os
 import re
 
-
 log = logging.getLogger(__name__)
 
 

@@ -5,7 +5,6 @@
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 import logging
 
-
 log = logging.getLogger("fontTools.merge")
 
 

@@ -25,7 +25,6 @@ from functools import reduce
 import logging
 import copy
 
-
 log = logging.getLogger(__name__)
 
 

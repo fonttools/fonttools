@@ -32,7 +32,6 @@ from typing import (
     Union,
 )
 
-
 __all__ = ["quadratic_to_curves"]
 
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from enum import Enum
 
-
 __all__ = ["StrEnum"]
 
 # StrEnum is only available in Python 3.11+

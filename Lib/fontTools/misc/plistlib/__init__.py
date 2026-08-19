@@ -25,7 +25,6 @@ from fontTools.misc import etree
 
 from fontTools.misc.textTools import tostr
 
-
 # By default, we
 #  - deserialize <data> elements as bytes and
 #  - serialize bytes as <data> elements.
@@ -75,7 +74,7 @@ def _date_from_string(s: str) -> datetime:
             break
         lst.append(int(val))
     # NOTE: mypy doesn't know that lst is 6 elements long.
-    return datetime(*lst)  # type:ignore
+    return datetime(*lst)  # type: ignore
 
 
 def _date_to_string(d: datetime) -> str:

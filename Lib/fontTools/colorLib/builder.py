@@ -34,7 +34,6 @@ from .errors import ColorLibError
 from .geometry import round_start_circle_stable_containment
 from .table_builder import BuildCallback, TableBuilder
 
-
 # TODO move type aliases to colorLib.types?
 T = TypeVar("T")
 _Kwargs = Mapping[str, Any]

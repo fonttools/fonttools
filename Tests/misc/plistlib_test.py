@@ -11,7 +11,6 @@ from fontTools.misc.textTools import tostr
 import pytest
 from collections.abc import Mapping
 
-
 # The testdata is generated using https://github.com/python/cpython/...
 # Mac/Tools/plistlib_generate_testdata.py
 # which uses PyObjC to control the Cocoa classes for generating plists

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""fontTools.misc.bezierTools.py -- tools for working with Bezier path segments.
-"""
+"""fontTools.misc.bezierTools.py -- tools for working with Bezier path segments."""
 
 from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
 from fontTools.misc.transform import Identity

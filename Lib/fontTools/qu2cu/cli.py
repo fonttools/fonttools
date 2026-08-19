@@ -7,7 +7,6 @@ from fontTools.pens.qu2cuPen import Qu2CuPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 import fontTools
 
-
 logger = logging.getLogger("fontTools.qu2cu")
 
 

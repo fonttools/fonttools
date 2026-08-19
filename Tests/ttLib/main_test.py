@@ -7,7 +7,6 @@ from fontTools.ttLib import __main__, TTFont, TTCollection
 
 import pytest
 
-
 TEST_DATA = Path(__file__).parent / "data"
 
 

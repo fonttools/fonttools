@@ -14,7 +14,6 @@ import os
 import pytest
 import unittest
 
-
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 TEST_DATA = deHexStr(

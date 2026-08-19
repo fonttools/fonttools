@@ -4,7 +4,6 @@ from fontTools.ttLib import TTLibError, getTableClass, getTableModule, newTable
 import unittest
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
-
 gvarClass = getTableClass("gvar")
 
 

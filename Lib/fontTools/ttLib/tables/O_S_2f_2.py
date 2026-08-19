@@ -5,7 +5,6 @@ from fontTools.ttLib.tables import DefaultTable
 import bisect
 import logging
 
-
 log = logging.getLogger(__name__)
 
 # panose classification
@@ -83,24 +82,18 @@ OS2_format_1_addition = """
 	ulCodePageRange2:   L
 """
 
-OS2_format_2_addition = (
-    OS2_format_1_addition
-    + """
+OS2_format_2_addition = OS2_format_1_addition + """
 	sxHeight:           h
 	sCapHeight:         h
 	usDefaultChar:      H
 	usBreakChar:        H
 	usMaxContext:       H
 """
-)
 
-OS2_format_5_addition = (
-    OS2_format_2_addition
-    + """
+OS2_format_5_addition = OS2_format_2_addition + """
 	usLowerOpticalPointSize:    H
 	usUpperOpticalPointSize:    H
 """
-)
 
 bigendian = "	>	# big endian\n"
 

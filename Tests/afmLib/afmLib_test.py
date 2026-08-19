@@ -2,7 +2,6 @@ import unittest
 import os
 from fontTools import afmLib
 
-
 CWD = os.path.abspath(os.path.dirname(__file__))
 DATADIR = os.path.join(CWD, "data")
 AFM = os.path.join(DATADIR, "TestAFM.afm")
