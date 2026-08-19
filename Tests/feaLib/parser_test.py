@@ -2145,6 +2145,14 @@ class ParserTest(unittest.TestCase):
             "<0 (100 wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0>",
         )
 
+    def test_variable_scalar_duplicate_bare_value(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Duplicate value for the default location",
+            self.parse,
+            "feature test {pos a (10 20 wght=900:30);} test",
+        )
+
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)
         p = Parser(featurefile, glyphNames, followIncludes=followIncludes)
