@@ -22,7 +22,7 @@ class GlifLibError(UFOLibError):
         # Loose backport of PEP 678 until we only support Python 3.11+, used for
         # adding additional context to errors.
         # TODO: Replace with https://docs.python.org/3.11/library/exceptions.html#BaseException.add_note
-        (message, *rest) = self.args
+        message, *rest = self.args
         self.args = ((message + "\n" + note), *rest)
 
 

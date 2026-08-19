@@ -18,7 +18,6 @@ from . import otTables
 import struct
 import logging
 
-
 log = logging.getLogger(__name__)
 
 from .otBase import BaseTTXConverter

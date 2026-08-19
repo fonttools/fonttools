@@ -10,7 +10,6 @@
 from .arc import EllipticalArc
 import re
 
-
 COMMANDS = set("MmZzLlHhVvCcSsQqTtAa")
 ARC_COMMANDS = set("Aa")
 UPPERCASE = set("MZLHVCSQTA")

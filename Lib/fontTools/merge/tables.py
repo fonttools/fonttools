@@ -10,7 +10,6 @@ from fontTools.merge.cmap import computeMegaCmap
 from fontTools.merge.util import *
 import logging
 
-
 log = logging.getLogger("fontTools.merge")
 
 

@@ -8,7 +8,6 @@ blink/renderer/core/svg/svg_path_parser.cc#L169-L278
 from fontTools.misc.transform import Identity, Scale
 from math import atan2, ceil, cos, fabs, isfinite, pi, radians, sin, sqrt, tan
 
-
 TWO_PI = 2 * pi
 PI_OVER_TWO = 0.5 * pi
 

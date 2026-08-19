@@ -4,7 +4,6 @@ from collections import deque
 from typing import Callable, Deque, Iterable, List, Optional, Tuple
 from .otBase import BaseTable
 
-
 __all__ = [
     "bfs_base_table",
     "dfs_base_table",

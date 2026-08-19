@@ -7,7 +7,6 @@ from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
 from io import BytesIO
 import unittest
 
-
 FVAR_DATA = deHexStr(
     "00 01 00 00 00 10 00 02 00 02 00 14 00 02 00 0C "
     "77 67 68 74 00 64 00 00 01 90 00 00 03 84 00 00 00 00 01 01 "

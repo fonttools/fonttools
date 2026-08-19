@@ -6,7 +6,6 @@ from collections.abc import Mapping, Callable
 import warnings
 from logging import PercentStyle
 
-
 # default logging level used by Timer class
 TIME_LEVEL = logging.DEBUG
 

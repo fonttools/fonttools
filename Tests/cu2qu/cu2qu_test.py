@@ -21,7 +21,6 @@ import json
 import pytest
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 
-
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
 
 MAX_ERR = 5

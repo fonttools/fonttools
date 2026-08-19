@@ -3,7 +3,6 @@ from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
 import unittest
 
-
 PROP_FORMAT_0_DATA = deHexStr(
     "0001 0000 0000 "  #  0: Version=1.0, Format=0
     "0005 "  #  6: DefaultProperties=European number terminator

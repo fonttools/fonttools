@@ -848,8 +848,7 @@ def test_parse_Device_DeltaValue_from_XML_and_compile():
     # https://github.com/fonttools/fonttools/pull/3757
     font = FakeFont([".notdef", "five"])
 
-    gpos_xml = dedent(
-        """\
+    gpos_xml = dedent("""\
         <Version value="0x00010000"/>
         <ScriptList>
           <!-- ScriptCount=1 -->
@@ -911,8 +910,7 @@ def test_parse_Device_DeltaValue_from_XML_and_compile():
               </EntryExitRecord>
             </CursivePos>
           </Lookup>
-        </LookupList>"""
-    )
+        </LookupList>""")
 
     gpos = parseXmlInto(font, otTables.GPOS(), gpos_xml)
 

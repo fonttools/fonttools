@@ -25,7 +25,6 @@ import struct
 from collections import OrderedDict
 import logging
 
-
 log = logging.getLogger(__name__)
 
 

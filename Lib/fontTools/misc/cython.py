@@ -1,4 +1,4 @@
-""" Exports a no-op 'cython' namespace similar to
+"""Exports a no-op 'cython' namespace similar to
 https://github.com/cython/cython/blob/master/Cython/Shadow.py
 
 This allows to optionally compile @cython decorated functions

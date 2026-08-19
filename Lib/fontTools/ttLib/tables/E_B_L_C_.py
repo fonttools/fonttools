@@ -12,7 +12,6 @@ import itertools
 from collections import deque
 import logging
 
-
 log = logging.getLogger(__name__)
 
 eblcHeaderFormat = """
@@ -122,13 +121,13 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
                 tup = struct.unpack(
                     indexSubTableArrayFormat, data[i : i + indexSubTableArraySize]
                 )
-                (firstGlyphIndex, lastGlyphIndex, additionalOffsetToIndexSubtable) = tup
+                firstGlyphIndex, lastGlyphIndex, additionalOffsetToIndexSubtable = tup
                 i = curTable.indexSubTableArrayOffset + additionalOffsetToIndexSubtable
 
                 tup = struct.unpack(
                     indexSubHeaderFormat, data[i : i + indexSubHeaderSize]
                 )
-                (indexFormat, imageFormat, imageDataOffset) = tup
+                indexFormat, imageFormat, imageDataOffset = tup
 
                 indexFormatClass = self.getIndexFormatClass(indexFormat)
                 indexSubTable = indexFormatClass(data[i + indexSubHeaderSize :], ttFont)
@@ -468,7 +467,7 @@ class EblcIndexSubTable(object):
         # Determines if a name, location pair is a valid data location.
         # Skip glyphs are marked when the size is equal to zero.
         def isValidLocation(args):
-            (name, (startByte, endByte)) = args
+            name, (startByte, endByte) = args
             return startByte < endByte
 
         # Remove all skip glyphs.

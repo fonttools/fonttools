@@ -8,7 +8,6 @@ import struct
 import array
 import logging
 
-
 log = logging.getLogger(__name__)
 
 
@@ -892,7 +891,7 @@ class cmap_format_4(CmapSubtable):
         data = (
             self.data
         )  # decompileHeader assigns the data after the header to self.data
-        (segCountX2, searchRange, entrySelector, rangeShift) = struct.unpack(
+        segCountX2, searchRange, entrySelector, rangeShift = struct.unpack(
             ">4H", data[:8]
         )
         data = data[8:]

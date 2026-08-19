@@ -628,7 +628,7 @@ class ContextHelper(object):
                 (r.GlyphCount,) = (len(x) + 1 for x in d)
 
             def ChainSetRuleData(r, d):
-                (r.Backtrack, r.Input, r.LookAhead) = d
+                r.Backtrack, r.Input, r.LookAhead = d
                 (
                     r.BacktrackGlyphCount,
                     r.InputGlyphCount,
@@ -649,7 +649,7 @@ class ContextHelper(object):
                 (r.ClassDef,) = d
 
             def SetChainContextData(r, d):
-                (r.BacktrackClassDef, r.InputClassDef, r.LookAheadClassDef) = d
+                r.BacktrackClassDef, r.InputClassDef, r.LookAheadClassDef = d
 
             RuleData = lambda r: (r.Class,)
             ChainRuleData = lambda r: (r.Backtrack, r.Input, r.LookAhead)
@@ -659,7 +659,7 @@ class ContextHelper(object):
                 (r.GlyphCount,) = (len(x) + 1 for x in d)
 
             def ChainSetRuleData(r, d):
-                (r.Backtrack, r.Input, r.LookAhead) = d
+                r.Backtrack, r.Input, r.LookAhead = d
                 (
                     r.BacktrackGlyphCount,
                     r.InputGlyphCount,
@@ -683,7 +683,7 @@ class ContextHelper(object):
                 (r.GlyphCount,) = (len(x) for x in d)
 
             def ChainSetRuleData(r, d):
-                (r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage) = d
+                r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage = d
                 (
                     r.BacktrackGlyphCount,
                     r.InputGlyphCount,

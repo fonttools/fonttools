@@ -9,7 +9,6 @@ from typing import List
 import re
 import logging
 
-
 log = logging.getLogger(__name__)
 
 # fmt: off

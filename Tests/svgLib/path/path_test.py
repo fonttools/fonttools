@@ -5,7 +5,6 @@ from fontTools.svgLib import SVGPath
 import os
 from tempfile import NamedTemporaryFile
 
-
 SVG_DATA = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
@@ -15,9 +14,7 @@ SVG_DATA = """\
 <path d="M 100 100 L 300 100 L 200 300 z"/>
 <path d="M100,200 C100,100 250,100 250,200 S400,300 400,200"/>
 </svg>
-""".encode(
-    "utf-8"
-)
+""".encode("utf-8")
 
 EXPECTED_PEN_COMMANDS = [
     ("moveTo", ((100.0, 100.0),)),

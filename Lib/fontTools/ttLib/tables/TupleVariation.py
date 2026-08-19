@@ -13,7 +13,6 @@ import struct
 import sys
 import warnings
 
-
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
 
 EMBEDDED_PEAK_TUPLE = 0x8000
