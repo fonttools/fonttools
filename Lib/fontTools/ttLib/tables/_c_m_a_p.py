@@ -12,6 +12,21 @@ import logging
 log = logging.getLogger(__name__)
 
 
+# Minimum length of a subtable, in bytes, for the fixed header that each
+# format's decompileHeader unpacks. Formats not listed here (8, 10 and any
+# unrecognised format, which fall back to cmap_format_unknown) store the body
+# verbatim without unpacking a fixed header, so they have no minimum.
+_CMAP_SUBTABLE_HEADER_SIZE = {
+    0: 6,  # ">HHH"
+    2: 6,  # ">HHH"
+    4: 6,  # ">HHH"
+    6: 6,  # ">HHH"
+    12: 16,  # ">HHLLL"
+    13: 16,  # ">HHLLL"
+    14: 10,  # ">HLL"
+}
+
+
 def _make_map(font, chars, gids):
     assert len(chars) == len(gids)
     glyphNames = font.getGlyphNameMany(gids)
@@ -163,13 +178,17 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
             entry = data[4 + i * 8 : 4 + (i + 1) * 8]
             if len(entry) < 8:
                 raise TTLibError("cmap subtable directory is truncated")
-            platformID, platEncID, offset = struct.unpack(">HHl", entry)
+            platformID, platEncID, offset = struct.unpack(">HHL", entry)
             platformID, platEncID = int(platformID), int(platEncID)
-            # The offset points somewhere inside the cmap table; a malformed
-            # font can put it past the end of the data, so guard the header
-            # reads below instead of letting struct.unpack raise struct.error.
-            if offset < 0 or offset + 4 > len(data):
-                raise TTLibError("cmap subtable offset is out of bounds")
+            # subtableOffset is an unsigned Offset32 pointing somewhere inside
+            # the cmap table; a malformed font can put it past the end of the
+            # data, so guard the header reads below instead of letting
+            # struct.unpack raise struct.error.
+            if offset + 4 > len(data):
+                raise TTLibError(
+                    "cmap subtable offset %d is out of bounds (data length %d)"
+                    % (offset, len(data))
+                )
             format, length = struct.unpack(">HH", data[offset : offset + 4])
             if format in [8, 10, 12, 13]:
                 if offset + 8 > len(data):
@@ -198,6 +217,23 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
             # Note that by default we decompile only the subtable header info;
             # any other data gets decompiled only when an attribute of the
             # subtable is referenced.
+            #
+            # Make sure the body is actually present and large enough for the
+            # fixed header decompileHeader will unpack. Otherwise the slice is
+            # short and we hit either an AssertionError (silenced under python
+            # -O, leaving a bogus length) or a struct.error deep inside
+            # decompileHeader; surface a TTLibError in both cases.
+            minHeaderSize = _CMAP_SUBTABLE_HEADER_SIZE.get(format, 0)
+            if length < minHeaderSize:
+                raise TTLibError(
+                    "cmap subtable header is truncated: length %d < %d"
+                    % (length, minHeaderSize)
+                )
+            if offset + length > len(data):
+                raise TTLibError(
+                    "cmap subtable is truncated: needs %d bytes, only %d available"
+                    % (length, len(data) - offset)
+                )
             table.decompileHeader(data[offset : offset + int(length)], ttFont)
             if offset in seenOffsets:
                 table.data = None  # Mark as decompiled
@@ -244,7 +280,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
                         tableData
                     )
                     tableData = tableData + chunk
-            data = data + struct.pack(">HHl", table.platformID, table.platEncID, offset)
+            data = data + struct.pack(">HHL", table.platformID, table.platEncID, offset)
         return data + tableData
 
     def toXML(self, writer, ttFont):

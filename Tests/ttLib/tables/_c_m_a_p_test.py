@@ -57,21 +57,59 @@ class CmapSubtableTest(unittest.TestCase):
         self.assertEqual(subtable.getEncoding(default="xyz"), "xyz")
 
     def test_decompile_truncated(self):
-        # A truncated cmap table, or one whose subtable offset points past the
-        # end of the data, used to raise a bare struct.error instead of
-        # TTLibError.
+        # A truncated cmap table, an out-of-bounds subtable offset, or a
+        # subtable whose length does not match the data used to raise a bare
+        # struct.error or AssertionError instead of TTLibError.
         import struct
 
         font = ttLib.TTFont()
-        cases = [
-            b"\x00\x00",  # shorter than the 4-byte header
-            struct.pack(">HH", 0, 3) + b"ab",  # 3 subtables promised, dir truncated
-            struct.pack(">HH", 0, 1) + struct.pack(">HHl", 3, 1, 9999),  # bad offset
-        ]
-        for data in cases:
-            table = table__c_m_a_p("cmap")
-            with self.assertRaises(ttLib.TTLibError):
-                table.decompile(data, font)
+
+        def cmap(numTables, *entries, body=b""):
+            data = struct.pack(">HH", 0, numTables)
+            for platformID, platEncID, offset in entries:
+                data += struct.pack(">HHL", platformID, platEncID, offset)
+            return data + body
+
+        # A subtable directory with one entry pointing at `offset`; the subtable
+        # header itself starts right after the 12-byte directory (offset 12).
+        def one_subtable(header):
+            return cmap(1, (3, 1, 12), body=header)
+
+        cases = {
+            "table shorter than the 4-byte header": (
+                b"\x00\x00",
+                "too short",
+            ),
+            "subtable directory truncated": (
+                struct.pack(">HH", 0, 3) + b"ab",
+                "directory is truncated",
+            ),
+            "offset past the end of the data": (
+                cmap(1, (3, 1, 9999)),
+                "out of bounds",
+            ),
+            # 0xFFFFFFFF pins the offset as an unsigned Offset32: read signed it
+            # would be -1 and slip through as an in-range negative index.
+            "offset 0xFFFFFFFF is unsigned and out of bounds": (
+                cmap(1, (3, 1, 0xFFFFFFFF)),
+                "out of bounds",
+            ),
+            # format 4 header is ">HHH" (6 bytes); a length of 4 is too small.
+            "length smaller than the format header": (
+                one_subtable(struct.pack(">HH", 4, 4)),
+                "header is truncated",
+            ),
+            # length claims 20 bytes but only 6 are present after the offset.
+            "length longer than the available data": (
+                one_subtable(struct.pack(">HHH", 4, 20, 0)),
+                "subtable is truncated",
+            ),
+        }
+        for label, (data, pattern) in cases.items():
+            with self.subTest(label):
+                table = table__c_m_a_p("cmap")
+                with self.assertRaisesRegex(ttLib.TTLibError, pattern):
+                    table.decompile(data, font)
 
     def test_compile_2(self):
         subtable = self.makeSubtable(2, 1, 2, 0)
