@@ -1,9 +1,15 @@
+import itertools
 import pytest
 import random
 from io import StringIO
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.misc.roundTools import noRound
-from fontTools.varLib.models import VariationModel
+from fontTools.misc.roundTools import noRound, otRound
+from fontTools.varLib.builder import (
+    buildVarRegionList,
+    buildVarData,
+    buildVarStore,
+)
+from fontTools.varLib.models import VariationModel, supportScalar
 from fontTools.varLib.varStore import OnlineVarStoreBuilder, VarStoreInstancer
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis
@@ -97,6 +103,16 @@ def buildAxis(axisTag):
     axis = Axis()
     axis.axisTag = axisTag
     return axis
+
+
+def test_VarStoreInstancer_out_of_range_index_returns_zero():
+    varData = buildVarData([], [[]], optimize=False)
+    varStore = buildVarStore(buildVarRegionList([], ["wght"]), [varData])
+    instancer = VarStoreInstancer(varStore, [buildAxis("wght")])
+
+    assert instancer[0] == 0
+    assert instancer[1] == 0  # inner index beyond the single item
+    assert instancer[1 << 16] == 0  # outer index beyond the single VarData
 
 
 @pytest.mark.parametrize(
@@ -302,3 +318,188 @@ def test_optimize_overflow():
     # - 32768..32768+65535-1: 4-byte dataset
     # - 32768+65535..65535+65535-1: 4-byte dataset
     assert len(varStore.VarData) == 4
+
+
+class GetExtremesTest:
+    """VarStore.getExtremes must be CONSERVATIVE: the interval it returns
+    must cover the truly reachable range of the store's output, because the
+    avar2 instancer uses it to delete "unreachable" variation regions. An
+    under-wide bound silently corrupts instanced fonts.
+
+    For two-sided tents the output is piecewise multilinear, so its exact
+    extremes are attained on the grid of per-axis tent breakpoints. A one-sided
+    tent (start == peak or peak == end) is discontinuous at its peak, however,
+    so the ground-truth grid must also include the adjacent F2Dot14 point on the
+    open side.
+    """
+
+    @staticmethod
+    def _buildStore(regions, deltas, axisTags):
+        regionList = buildVarRegionList(regions, axisTags)
+        varData = buildVarData(list(range(len(regions))), [deltas], optimize=False)
+        return buildVarStore(regionList, [varData])
+
+    @staticmethod
+    def _makeAxes(axisTags):
+        axes = []
+        for tag in axisTags:
+            axis = Axis()
+            axis.axisTag = tag
+            axes.append(axis)
+        return axes
+
+    @classmethod
+    def _trueExtremes(cls, regions, deltas, axisTags, axisLimits, identityAxisIndex):
+        breakpoints = {tag: {-1.0, 0.0, 1.0} for tag in axisTags}
+        unit = 1 / 16384
+        for region in regions:
+            for tag, (start, peak, end) in region.items():
+                breakpoints[tag].update((start, peak, end))
+                if start == peak:
+                    breakpoints[tag].add(peak - unit)
+                if peak == end:
+                    breakpoints[tag].add(peak + unit)
+        for tag in axisTags:
+            lo, hi = (-1.0, 1.0)
+            if tag in axisLimits:
+                lo, hi = axisLimits[tag][0], axisLimits[tag][2]
+            breakpoints[tag] = {min(max(v, lo), hi) for v in breakpoints[tag]}
+            breakpoints[tag].update((lo, hi))
+        lo = hi = None
+        for combo in itertools.product(*(sorted(breakpoints[tag]) for tag in axisTags)):
+            location = dict(zip(axisTags, combo))
+            value = otRound(
+                sum(
+                    supportScalar(location, region) * delta
+                    for region, delta in zip(regions, deltas)
+                )
+            )
+            if identityAxisIndex is not None:
+                value += otRound(location[axisTags[identityAxisIndex]] * 16384)
+            lo = value if lo is None else min(lo, value)
+            hi = value if hi is None else max(hi, value)
+        return lo, hi
+
+    @classmethod
+    def _check(cls, regions, deltas, axisTags, axisLimits, identityAxisIndex):
+        store = cls._buildStore(regions, deltas, axisTags)
+        boundLo, boundHi = store.getExtremes(
+            0, cls._makeAxes(axisTags), axisLimits, identityAxisIndex
+        )
+        trueLo, trueHi = cls._trueExtremes(
+            regions, deltas, axisTags, axisLimits, identityAxisIndex
+        )
+        assert boundLo <= trueLo + 1e-9 and boundHi >= trueHi - 1e-9, (
+            f"getExtremes ({boundLo}, {boundHi}) does not cover true range "
+            f"({trueLo}, {trueHi}) for regions={regions} deltas={deltas} "
+            f"axisLimits={axisLimits} identityAxisIndex={identityAxisIndex}"
+        )
+        return (boundLo, boundHi), (trueLo, trueHi)
+
+    def test_overlapping_same_axis_tents(self):
+        # The peak-sampling implementation this replaced missed the extremum
+        # of overlapping same-axis tents (it lies at another tent's start/end
+        # kink, not at any peak) and returned max=0 here — culling then
+        # deleted live gvar regions around wght=0.6.
+        bound, true = self._check(
+            [{"wght": (0.0, 0.4, 0.6)}, {"wght": (0.2, 0.5, 0.8)}],
+            [-16384, 8192],
+            ["wght"],
+            {},
+            None,
+        )
+        # Small stores take the exact (breakpoint-grid) path.
+        assert bound == pytest.approx(true)
+
+    def test_one_sided_support_extreme(self):
+        # A peak=end tent contributes at the peak, then drops to zero at the
+        # next F2Dot14 coordinate. The breakpoint-only grid sees the two rows
+        # cancel at 0.25 and misses the live second row immediately to its
+        # right, so the returned upper bound must also cover that grid point.
+        regions = [
+            {"wght": (0.0, 0.25, 0.25)},
+            {"wght": (0.0, 0.25, 0.5)},
+        ]
+        deltas = [-16384, 16384]
+        store = self._buildStore(regions, deltas, ["wght"])
+
+        _, boundHi = store.getExtremes(0, self._makeAxes(["wght"]), {}, None)
+        location = {"wght": 4097 / 16384}
+        reachable = sum(
+            supportScalar(location, region) * delta
+            for region, delta in zip(regions, deltas)
+        )
+        _, trueHi = self._trueExtremes(regions, deltas, ["wght"], {}, None)
+
+        assert reachable == 16380
+        assert trueHi == reachable
+        assert boundHi >= reachable
+
+    def test_identity_axis(self):
+        self._check(
+            [{"wght": (0.0, 0.5, 1.0)}, {"wght": (-1.0, -0.5, 0.0)}],
+            [8000, -4000],
+            ["wght"],
+            {},
+            0,
+        )
+
+    def test_pinned_axis_limits(self):
+        self._check(
+            [{"wght": (0.0, 0.5, 1.0), "opsz": (0.0, 1.0, 1.0)}],
+            [10000],
+            ["wght", "opsz"],
+            {"opsz": (0, 0, 0)},
+            None,
+        )
+
+    def test_conservative_random(self):
+        rng = random.Random(1234)
+        for _ in range(300):
+            nAxes = rng.randint(1, 3)
+            axisTags = ["ax%d" % i for i in range(nAxes)]
+            regions = []
+            deltas = []
+            for _ in range(rng.randint(1, 5)):
+                region = {}
+                for tag in axisTags:
+                    if rng.random() < 0.6:
+                        # OT-valid tent on one side of 0
+                        if rng.random() < 0.5:
+                            coords = sorted(
+                                round(rng.uniform(0, 1), 2) for _ in range(3)
+                            )
+                        else:
+                            coords = sorted(
+                                round(rng.uniform(-1, 0), 2) for _ in range(3)
+                            )
+                        if coords[1] != 0:
+                            region[tag] = tuple(coords)
+                regions.append(region)
+                deltas.append(rng.randint(-16384, 16384))
+            axisLimits = {}
+            for tag in axisTags:
+                r = rng.random()
+                if r < 0.25:
+                    axisLimits[tag] = (0, 0, 0)  # pinned private axis
+                elif r < 0.4:
+                    axisLimits[tag] = (
+                        round(rng.uniform(-1, 0), 2),
+                        0,
+                        round(rng.uniform(0, 1), 2),
+                    )
+            identityAxisIndex = rng.choice([None] + list(range(nAxes)))
+            self._check(regions, deltas, axisTags, axisLimits, identityAxisIndex)
+
+    def test_many_axes_falls_back_fast(self):
+        # A row peaking on many distinct axes explodes the breakpoint grid;
+        # getExtremes must fall back to the O(regions x axes) interval bound
+        # instead of hanging (the recursion it replaced was exponential).
+        # The fallback is looser but still conservative.
+        k = 30
+        axisTags = ["a%02d" % i for i in range(k)]
+        regions = [{tag: (0.0, 0.5, 1.0)} for tag in axisTags]
+        deltas = [1000] * k
+        store = self._buildStore(regions, deltas, axisTags)
+        boundLo, boundHi = store.getExtremes(0, self._makeAxes(axisTags), {}, None)
+        assert boundLo <= 0 and boundHi >= k * 1000  # all peaks reachable at once

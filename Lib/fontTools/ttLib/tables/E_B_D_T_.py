@@ -21,7 +21,6 @@ import os
 import struct
 import logging
 
-
 log = logging.getLogger(__name__)
 
 ebdtTableVersionFormat = """

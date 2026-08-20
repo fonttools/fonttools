@@ -8,7 +8,6 @@ import fontTools.qu2cu.cli as qu2cu_cli
 from fontTools.qu2cu.cli import _main as main
 from fontTools.ttLib import TTFont
 
-
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
 
 TEST_TTFS = [

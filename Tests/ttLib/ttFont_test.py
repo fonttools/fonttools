@@ -16,7 +16,6 @@ from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 import pytest
 
-
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 

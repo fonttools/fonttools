@@ -131,7 +131,7 @@ class CmapMergeUnitTest(unittest.TestCase):
     def makeSubtable(self, format, platformID, platEncID, cmap):
         module = ttLib.getTableModule("cmap")
         subtable = module.cmap_classes[format](format)
-        (subtable.platformID, subtable.platEncID, subtable.language, subtable.cmap) = (
+        subtable.platformID, subtable.platEncID, subtable.language, subtable.cmap = (
             platformID,
             platEncID,
             0,
@@ -223,7 +223,7 @@ class CmapMergeUnitTest(unittest.TestCase):
         mergedTable.merge(self.merger, [table1, table2])
 
         self.assertEqual(mergedTable.numSubTables, 2)
-        (uvsTable, cmapTable) = mergedTable.tables
+        uvsTable, cmapTable = mergedTable.tables
 
         self.assertEqual(
             (
@@ -276,7 +276,7 @@ class CmapMergeUnitTest(unittest.TestCase):
         mergedTable.merge(self.merger, [table1, table2])
 
         self.assertEqual(mergedTable.numSubTables, 3)
-        (uvsTable, cmap_4_3_1_Table, cmap_12_3_10_Table) = mergedTable.tables
+        uvsTable, cmap_4_3_1_Table, cmap_12_3_10_Table = mergedTable.tables
 
         self.assertEqual(
             (

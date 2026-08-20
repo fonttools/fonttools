@@ -1106,7 +1106,7 @@ def __subset_classify_context(self):
                     (r.GlyphCount,) = (len(x) + 1 for x in d)
 
                 def ChainSetRuleData(r, d):
-                    (r.Backtrack, r.Input, r.LookAhead) = d
+                    r.Backtrack, r.Input, r.LookAhead = d
                     (
                         r.BacktrackGlyphCount,
                         r.InputGlyphCount,
@@ -1127,7 +1127,7 @@ def __subset_classify_context(self):
                     (r.ClassDef,) = d
 
                 def SetChainContextData(r, d):
-                    (r.BacktrackClassDef, r.InputClassDef, r.LookAheadClassDef) = d
+                    r.BacktrackClassDef, r.InputClassDef, r.LookAheadClassDef = d
 
                 RuleData = lambda r: (r.Class,)
                 ChainRuleData = lambda r: (r.Backtrack, r.Input, r.LookAhead)
@@ -1137,7 +1137,7 @@ def __subset_classify_context(self):
                     (r.GlyphCount,) = (len(x) + 1 for x in d)
 
                 def ChainSetRuleData(r, d):
-                    (r.Backtrack, r.Input, r.LookAhead) = d
+                    r.Backtrack, r.Input, r.LookAhead = d
                     (
                         r.BacktrackGlyphCount,
                         r.InputGlyphCount,
@@ -1161,7 +1161,7 @@ def __subset_classify_context(self):
                     (r.GlyphCount,) = (len(x) for x in d)
 
                 def ChainSetRuleData(r, d):
-                    (r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage) = d
+                    r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage = d
                     (
                         r.BacktrackGlyphCount,
                         r.InputGlyphCount,
@@ -2101,9 +2101,7 @@ def prune_features(self):
         feature_indices = self.table.ScriptList.collect_features()
     else:
         feature_indices = []
-    (feature_indices, feature_index_map) = self.remap_duplicate_features(
-        feature_indices
-    )
+    feature_indices, feature_index_map = self.remap_duplicate_features(feature_indices)
 
     if self.table.FeatureList:
         self.table.FeatureList.subset_features(feature_indices)

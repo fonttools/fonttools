@@ -3,7 +3,6 @@ from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
 import unittest
 
-
 # Glyph Metamorphosis Table Examples
 # Example 1: Non-contextual Glyph Substitution
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6mort.html

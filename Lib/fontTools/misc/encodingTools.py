@@ -1,5 +1,4 @@
-"""fontTools.misc.encodingTools.py -- tools for working with OpenType encodings.
-"""
+"""fontTools.misc.encodingTools.py -- tools for working with OpenType encodings."""
 
 import fontTools.encodings.codecs
 

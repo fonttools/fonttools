@@ -21,8 +21,7 @@ class CffLibTest(DataFilesHandler):
         topDict.CharStrings.fromXML(
             None,
             None,
-            parseXML(
-                """
+            parseXML("""
             <CharString name=".notdef">
               endchar
             </CharString>
@@ -35,8 +34,7 @@ class CffLibTest(DataFilesHandler):
             <CharString name="baz"><!-- [-55.1, -55.1, 55.1, 55.1] -->
               -55.1 -55.1 rmoveto 110.2 hlineto 110.2 vlineto -110.2 hlineto endchar
             </CharString>
-        """
-            ),
+        """),
         )
 
         topDict.recalcFontBBox()
@@ -48,16 +46,14 @@ class CffLibTest(DataFilesHandler):
         topDict.CharStrings.fromXML(
             None,
             None,
-            parseXML(
-                """
+            parseXML("""
             <CharString name=".notdef">
               endchar
             </CharString>
             <CharString name="space">
               123 endchar
             </CharString>
-        """
-            ),
+        """),
         )
 
         topDict.recalcFontBBox()

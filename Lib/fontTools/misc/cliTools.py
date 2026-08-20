@@ -3,7 +3,6 @@
 import os
 import re
 
-
 numberAddedRE = re.compile(r"#\d+$")
 
 

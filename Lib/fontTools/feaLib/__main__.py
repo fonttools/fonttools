@@ -7,7 +7,6 @@ import sys
 import argparse
 import logging
 
-
 log = logging.getLogger("fontTools.feaLib")
 
 

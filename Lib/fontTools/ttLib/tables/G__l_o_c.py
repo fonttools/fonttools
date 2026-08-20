@@ -4,7 +4,6 @@ from . import DefaultTable
 import array
 import sys
 
-
 Gloc_header = """
     >        # big endian
     version: 16.16F    # Table version

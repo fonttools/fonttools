@@ -3,17 +3,17 @@
 Functions for reading and writing raw Type 1 data:
 
 read(path)
-	reads any Type 1 font file, returns the raw data and a type indicator:
-	'LWFN', 'PFB' or 'OTHER', depending on the format of the file pointed
-	to by 'path'.
-	Raises an error when the file does not contain valid Type 1 data.
+        reads any Type 1 font file, returns the raw data and a type indicator:
+        'LWFN', 'PFB' or 'OTHER', depending on the format of the file pointed
+        to by 'path'.
+        Raises an error when the file does not contain valid Type 1 data.
 
 write(path, data, kind='OTHER', dohex=False)
-	writes raw Type 1 data to the file pointed to by 'path'.
-	'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
-	'dohex' is a flag which determines whether the eexec encrypted
-	part should be written as hexadecimal or binary, but only if kind
-	is 'OTHER'.
+        writes raw Type 1 data to the file pointed to by 'path'.
+        'kind' can be one of 'LWFN', 'PFB' or 'OTHER'; it defaults to 'OTHER'.
+        'dohex' is a flag which determines whether the eexec encrypted
+        part should be written as hexadecimal or binary, but only if kind
+        is 'OTHER'.
 """
 
 import fontTools

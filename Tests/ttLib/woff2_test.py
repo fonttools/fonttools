@@ -1167,7 +1167,7 @@ class WOFF2HmtxTableTest(object):
         with pytest.raises(
             ttLib.TTLibError, match="Bits 2-7 of 'hmtx' flags are reserved"
         ):
-            hmtxTable.reconstruct(b"\xFF", ttFont=None)
+            hmtxTable.reconstruct(b"\xff", ttFont=None)
 
     def test_reconstruct_flags_required_bits(self):
         hmtxTable = WOFF2HmtxTable()

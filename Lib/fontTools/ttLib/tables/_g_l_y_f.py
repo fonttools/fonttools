@@ -1222,7 +1222,13 @@ class Glyph(object):
             g = glyfTable[glyphName]
 
             if boundsDone is None or glyphName not in boundsDone:
-                g.recalcBounds(glyfTable, boundsDone=boundsDone)
+                try:
+                    g.recalcBounds(glyfTable, boundsDone=boundsDone)
+                except RecursionError:
+                    raise ttLib.TTLibError(
+                        "glyph '%s' contains a recursive component reference"
+                        % glyphName
+                    )
                 if boundsDone is not None:
                     boundsDone.add(glyphName)
             # empty components shouldn't update the bounds of the parent glyph
@@ -1813,7 +1819,7 @@ class GlyphComponent(object):
             ]  # fixed 2.14
             data = data[4:]
         elif self.flags & WE_HAVE_A_TWO_BY_TWO:
-            (xscale, scale01, scale10, yscale) = struct.unpack(">hhhh", data[:8])
+            xscale, scale01, scale10, yscale = struct.unpack(">hhhh", data[:8])
             self.transform = [
                 [fi2fl(xscale, 14), fi2fl(scale01, 14)],
                 [fi2fl(scale10, 14), fi2fl(yscale, 14)],

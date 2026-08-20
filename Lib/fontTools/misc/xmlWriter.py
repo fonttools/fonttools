@@ -93,6 +93,9 @@ class XMLWriter(object):
 
     def writecdata(self, string):
         """Writes text in a CDATA section."""
+        # a CDATA section can't hold "]]>", so close it and open a new one around
+        # the ">"; the two sections read back as the original text
+        string = string.replace("]]>", "]]]]><![CDATA[>")
         self._writeraw("<![CDATA[" + string + "]]>")
 
     def write8bit(self, data, strip=False):

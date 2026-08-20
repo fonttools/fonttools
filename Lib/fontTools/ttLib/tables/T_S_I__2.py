@@ -1,4 +1,4 @@
-""" TSI{0,1,2,3,5} are private tables used by Microsoft Visual TrueType (VTT)
+"""TSI{0,1,2,3,5} are private tables used by Microsoft Visual TrueType (VTT)
 tool to store its hinting source data.
 
 TSI2 is the index table containing the lengths and offsets for the glyph

@@ -1790,3 +1790,48 @@ def test_buildCOLR_missing_base_glyph_in_glyphMap_raises_clear_error():
 
     with pytest.raises(ColorLibError, match="base glyph\\(s\\) not found in glyphMap"):
         buildCOLR(colorGlyphs, version=0, glyphMap=glyphMap)
+
+
+def test_buildCOLR_missing_paint_glyph_in_glyphMap_raises_clear_error():
+    glyphMap = {"A": 0}  # font only contains glyph A
+
+    # base glyph A exists, but its PaintGlyph references glyph "B" which does not
+    colorGlyphs = {
+        "A": {
+            "Format": ot.PaintFormat.PaintGlyph,
+            "Glyph": "B",
+            "Paint": {
+                "Format": ot.PaintFormat.PaintSolid,
+                "PaletteIndex": 0,
+                "Alpha": 1.0,
+            },
+        },
+    }
+
+    with pytest.raises(ColorLibError, match="PaintGlyph.*not found in glyphMap.*'B'"):
+        buildCOLR(colorGlyphs, version=1, glyphMap=glyphMap)
+
+
+def test_buildCOLR_missing_paint_colr_glyph_in_glyphMap_raises_clear_error():
+    glyphMap = {"A": 0}  # font only contains glyph A
+
+    # base glyph A exists, but its PaintColrGlyph references glyph "B" which does not
+    colorGlyphs = {
+        "A": {
+            "Format": ot.PaintFormat.PaintColrGlyph,
+            "Glyph": "B",
+        },
+    }
+
+    with pytest.raises(
+        ColorLibError, match="PaintColrGlyph.*not found in glyphMap.*'B'"
+    ):
+        buildCOLR(colorGlyphs, version=1, glyphMap=glyphMap)
+
+
+def test_buildCOLRv0_missing_layer_glyph_in_glyphMap_raises_clear_error():
+    glyphMap = {"A": 0}  # font only contains glyph A
+
+    # base glyph A exists, but one of its layers references glyph "B" which does not
+    with pytest.raises(ColorLibError, match="layer glyph not found in glyphMap: 'B'"):
+        buildCOLR({"A": [("A", 0), ("B", 1)]}, version=0, glyphMap=glyphMap)

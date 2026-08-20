@@ -37,7 +37,6 @@ import os.path
 import logging
 from io import BytesIO
 
-
 log = logging.getLogger("fontTools.varlib.mutator")
 
 # map 'wdth' axis (1..200) to OS/2.usWidthClass (1..9), rounding to closest

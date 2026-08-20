@@ -356,7 +356,7 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
         sstruct.unpack2(Silf_hdr_format, data, self)
         self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         if self.version >= 5.0:
-            (data, self.scheme) = grUtils.decompress(data)
+            data, self.scheme = grUtils.decompress(data)
             sstruct.unpack2(Silf_hdr_format_3, data, self)
             base = sstruct.calcsize(Silf_hdr_format_3)
         elif self.version < 3.0:
@@ -617,7 +617,7 @@ class Silf(object):
             for element in content:
                 if not isinstance(element, tuple):
                     continue
-                (tag, attrs, subcontent) = element
+                tag, attrs, subcontent = element
                 if tag == "justify":
                     j = _Object()
                     for k, v in attrs.items():
@@ -637,7 +637,7 @@ class Silf(object):
             for element in content:
                 if not isinstance(element, tuple):
                     continue
-                (tag, attrs, subcontent) = element
+                tag, attrs, subcontent = element
                 if tag == "pseudo":
                     k = int(attrs["unicode"], 16)
                     v = attrs["pseudo"]
@@ -787,10 +787,10 @@ class Pass(object):
 
     def decompile(self, data, ttFont, version=2.0):
         _, data = sstruct.unpack2(Silf_pass_format, data, self)
-        (numRange, _, _, _) = struct.unpack(">4H", data[:8])
+        numRange, _, _, _ = struct.unpack(">4H", data[:8])
         data = data[8:]
         for i in range(numRange):
-            (first, last, col) = struct.unpack(">3H", data[6 * i : 6 * i + 6])
+            first, last, col = struct.unpack(">3H", data[6 * i : 6 * i + 6])
             for g in range(first, last + 1):
                 self.colMap[ttFont.getGlyphName(g)] = col
         data = data[6 * numRange :]
@@ -799,7 +799,7 @@ class Pass(object):
         rules = struct.unpack_from((">%dH" % oRuleMap[-1]), data)
         self.rules = [rules[s:e] for (s, e) in zip(oRuleMap, oRuleMap[1:])]
         data = data[2 * oRuleMap[-1] :]
-        (self.minRulePreContext, self.maxRulePreContext) = struct.unpack("BB", data[:2])
+        self.minRulePreContext, self.maxRulePreContext = struct.unpack("BB", data[:2])
         numStartStates = self.maxRulePreContext - self.minRulePreContext + 1
         self.startStates = struct.unpack(
             (">%dH" % numStartStates), data[2 : 2 + numStartStates * 2]
@@ -813,7 +813,7 @@ class Pass(object):
             ("%dB" % self.numRules), data[: self.numRules]
         )
         data = data[self.numRules :]
-        (self.collisionThreshold, pConstraint) = struct.unpack(">BH", data[:3])
+        self.collisionThreshold, pConstraint = struct.unpack(">BH", data[:3])
         oConstraints = list(
             struct.unpack(
                 (">%dH" % (self.numRules + 1)), data[3 : 5 + self.numRules * 2]

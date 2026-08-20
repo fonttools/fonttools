@@ -22,14 +22,14 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
         self.langs = {}
 
     def decompile(self, data, ttFont):
-        (_, data) = sstruct.unpack2(Sill_hdr, data, self)
+        _, data = sstruct.unpack2(Sill_hdr, data, self)
         self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         (numLangs,) = struct.unpack(">H", data[:2])
         data = data[8:]
         maxsetting = 0
         langinfo = []
         for i in range(numLangs):
-            (langcode, numsettings, offset) = struct.unpack(
+            langcode, numsettings, offset = struct.unpack(
                 ">4sHH", data[i * 8 : (i + 1) * 8]
             )
             offset = int(offset / 8) - (numLangs + 1)
@@ -39,7 +39,7 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
         data = data[numLangs * 8 :]
         finfo = []
         for i in range(maxsetting):
-            (fid, val, _) = struct.unpack(">LHH", data[i * 8 : (i + 1) * 8])
+            fid, val, _ = struct.unpack(">LHH", data[i * 8 : (i + 1) * 8])
             finfo.append((fid, val))
         self.langs = {}
         for c, n, o in langinfo:

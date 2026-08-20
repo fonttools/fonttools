@@ -152,6 +152,7 @@ Tables currently supported
    tables/D_S_I_G_
    tables/E_B_D_T_
    tables/E_B_L_C_
+   tables/E_B_S_C_
    tables/F__e_a_t
    tables/_f_e_a_t
    tables/F_F_T_M_

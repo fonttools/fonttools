@@ -9,7 +9,6 @@ from fontTools.merge.base import add_method, mergeObjects
 from fontTools.merge.util import *
 import logging
 
-
 log = logging.getLogger("fontTools.merge")
 
 

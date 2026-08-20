@@ -51,14 +51,11 @@ def test_LevelFormatter():
     log.info("this also uses a custom format string")
     log.warning("this one uses the default format string")
 
-    assert stream.getvalue() == textwrap.dedent(
-        """\
+    assert stream.getvalue() == textwrap.dedent("""\
         %s [DEBUG] this uses a custom format string
         this also uses a custom format string
         [WARNING] this one uses the default format string
-        """
-        % name
-    )
+        """ % name)
 
 
 class TimerTest(object):

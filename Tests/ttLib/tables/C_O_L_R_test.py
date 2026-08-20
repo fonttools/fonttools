@@ -7,7 +7,6 @@ from pathlib import Path
 import binascii
 import pytest
 
-
 TEST_DATA_DIR = Path(__file__).parent / "data"
 
 
