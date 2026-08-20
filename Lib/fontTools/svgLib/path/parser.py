@@ -120,6 +120,12 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
     # Reverse for easy use of .pop()
     elements.reverse()
 
+    # A path data segment (if there is one) must begin with a moveto
+    # command (https://www.w3.org/TR/SVG11/paths.html#PathDataMovetoCommands);
+    # raise before any pen call instead of inventing a start point.
+    if elements and elements[-1] not in ("M", "m"):
+        raise ValueError("Path must start with a moveto command: %r" % pathdef)
+
     # start_pos is the initial point of the current subpath; it is retained
     # after a closepath so that a drawto command following Z can start a new
     # subpath at that same point, while subpath_open tracks whether there is
