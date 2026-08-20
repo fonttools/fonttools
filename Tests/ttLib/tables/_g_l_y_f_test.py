@@ -270,6 +270,67 @@ class GlyfTableTest(unittest.TestCase):
         ):
             glyph_A.getCoordinates(glyphSet)
 
+    def _makeComponentGlyph(self, glyphSet, name, ref, dx, dy):
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent(ref, (1, 0, 0, 1, dx, dy))
+        glyphSet[name] = pen.glyph()
+
+    def test_recalcBounds_recursiveComponent(self):
+        # Integer-translate-only components take the fast path
+        # (tryRecalcBoundsComposite); a recursive reference there must raise
+        # TTLibError just like the getCoordinates slow path, rather than let a
+        # raw RecursionError escape.
+        # https://github.com/fonttools/fonttools/issues/3899
+        # A -> B -> A cycle, all plain integer translates.
+        glyphSet = {}
+        glyphSet["A"] = glyphSet["B"] = TTGlyphPen(glyphSet).glyph()
+        self._makeComponentGlyph(glyphSet, "A", "B", 10, 0)
+        self._makeComponentGlyph(glyphSet, "B", "A", 0, 10)
+        # sanity check that this exercises the integer-translate fast path
+        self.assertTrue(glyphSet["A"].components[0]._hasOnlyIntegerTranslate())
+        with self.assertRaisesRegex(
+            TTLibError, "glyph '.' contains a recursive component reference"
+        ):
+            glyphSet["A"].recalcBounds(glyphSet)
+        # and via the boundsDone set that table__g_l_y_f.compile() passes
+        with self.assertRaisesRegex(
+            TTLibError, "glyph '.' contains a recursive component reference"
+        ):
+            glyphSet["A"].recalcBounds(glyphSet, boundsDone=set())
+
+    def test_recalcBounds_selfReferencingComponent(self):
+        glyphSet = {}
+        glyphSet["A"] = TTGlyphPen(glyphSet).glyph()
+        self._makeComponentGlyph(glyphSet, "A", "A", 5, 5)
+        with self.assertRaisesRegex(
+            TTLibError, "glyph 'A' contains a recursive component reference"
+        ):
+            glyphSet["A"].recalcBounds(glyphSet)
+
+    def test_recalcBounds_acyclicComposite(self):
+        # A valid acyclic integer-translate composite must still compute the
+        # correct bounds (the recursion guard must not affect normal glyphs).
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((5, 5))
+        pen.lineTo((10, 10))
+        pen.lineTo((10, 5))
+        pen.lineTo((5, 5))
+        pen.closePath()
+        glyphSet["base"] = pen.glyph()
+        self._makeComponentGlyph(glyphSet, "A", "base", 100, 200)
+        glyphSet["base"].recalcBounds(glyphSet)
+        glyphSet["A"].recalcBounds(glyphSet, boundsDone=set())
+        self.assertEqual(
+            (
+                glyphSet["A"].xMin,
+                glyphSet["A"].yMin,
+                glyphSet["A"].xMax,
+                glyphSet["A"].yMax,
+            ),
+            (105, 205, 110, 210),
+        )
+
     def test_trim_remove_hinting_composite_glyph(self):
         glyphSet = {"dummy": TTGlyphPen(None).glyph()}
 
