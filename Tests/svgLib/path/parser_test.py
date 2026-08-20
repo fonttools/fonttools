@@ -401,6 +401,48 @@ def test_invalid_implicit_command():
     assert exc_info.match("Unallowed implicit command")
 
 
+@pytest.mark.parametrize(
+    "pathdef",
+    [
+        "L 5 5",
+        "Z",
+        # bare coordinates aren't a moveto either
+        "5 5",
+        # a later moveto doesn't repair a bad start
+        "L 5 5 M 0 0",
+    ],
+)
+def test_path_must_start_with_moveto(pathdef):
+    # A path data segment must begin with a moveto command (SVG 1.1
+    # sec 8.3.2); raise before any pen call instead of inventing a
+    # start point for the malformed path.
+    # https://github.com/fonttools/fonttools/issues/4154
+    pen = RecordingPen()
+    with pytest.raises(ValueError, match="must start with a moveto"):
+        parse_path(pathdef, pen)
+    assert pen.value == []
+
+
+def test_initial_relative_moveto_with_current_pos():
+    # a caller-supplied current_pos affects an initial relative moveto...
+    pen = RecordingPen()
+    parse_path("m 5 5", pen, current_pos=(10, 20))
+    assert pen.value == [("moveTo", ((15.0, 25.0),)), ("endPath", ())]
+
+    # ...but does not legalize a leading drawto
+    pen = RecordingPen()
+    with pytest.raises(ValueError, match="must start with a moveto"):
+        parse_path("l 5 5", pen, current_pos=(10, 20))
+    assert pen.value == []
+
+
+def test_empty_path_is_noop():
+    pen = RecordingPen()
+    parse_path("", pen)
+    parse_path("   ", pen)
+    assert pen.value == []
+
+
 def test_arc_to_cubic_bezier():
     pen = RecordingPen()
     parse_path("M300,200 h-150 a150,150 0 1,0 150,-150 z", pen)
