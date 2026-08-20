@@ -1,10 +1,15 @@
 import io
 import os
 import re
+import struct
 from fontTools import ttLib
 from fontTools.fontBuilder import FontBuilder
 import unittest
-from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
+from fontTools.ttLib.tables._c_m_a_p import (
+    CmapSubtable,
+    cmap_format_unknown,
+    table__c_m_a_p,
+)
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")
@@ -60,8 +65,6 @@ class CmapSubtableTest(unittest.TestCase):
         # A truncated cmap table, an out-of-bounds subtable offset, or a
         # subtable whose length does not match the data used to raise a bare
         # struct.error or AssertionError instead of TTLibError.
-        import struct
-
         font = ttLib.TTFont()
 
         def cmap(numTables, *entries, body=b""):
@@ -110,6 +113,28 @@ class CmapSubtableTest(unittest.TestCase):
                 table = table__c_m_a_p("cmap")
                 with self.assertRaisesRegex(ttLib.TTLibError, pattern):
                     table.decompile(data, font)
+
+    def test_decompile_unknown_format_no_header_minimum(self):
+        # Formats 8 and 10, and any unrecognised format, are handled by
+        # cmap_format_unknown, which keeps the body verbatim instead of
+        # unpacking a fixed header, so a body too short for one is fine.
+        font = ttLib.TTFont()
+
+        for format, header in [
+            # 8 and 10 read a ">HHL" header off the subtable offset, so the
+            # body must be 8 bytes even though the length field says 4.
+            (8, struct.pack(">HHL", 8, 0, 4)),
+            (10, struct.pack(">HHL", 10, 0, 4)),
+            (99, struct.pack(">HH", 99, 4)),
+        ]:
+            with self.subTest(format=format):
+                data = struct.pack(">HH", 0, 1) + struct.pack(">HHL", 3, 1, 12) + header
+                table = table__c_m_a_p("cmap")
+                table.decompile(data, font)
+                subtable = table.tables[0]
+                self.assertIsInstance(subtable, cmap_format_unknown)
+                self.assertEqual(subtable.format, format)
+                self.assertEqual(subtable.data, header[:4])
 
     def test_compile_2(self):
         subtable = self.makeSubtable(2, 1, 2, 0)

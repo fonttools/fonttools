@@ -12,21 +12,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-# Minimum length of a subtable, in bytes, for the fixed header that each
-# format's decompileHeader unpacks. Formats not listed here (8, 10 and any
-# unrecognised format, which fall back to cmap_format_unknown) store the body
-# verbatim without unpacking a fixed header, so they have no minimum.
-_CMAP_SUBTABLE_HEADER_SIZE = {
-    0: 6,  # ">HHH"
-    2: 6,  # ">HHH"
-    4: 6,  # ">HHH"
-    6: 6,  # ">HHH"
-    12: 16,  # ">HHLLL"
-    13: 16,  # ">HHLLL"
-    14: 10,  # ">HLL"
-}
-
-
 def _make_map(font, chars, gids):
     assert len(chars) == len(gids)
     glyphNames = font.getGlyphNameMany(gids)
@@ -222,8 +207,11 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
             # fixed header decompileHeader will unpack. Otherwise the slice is
             # short and we hit either an AssertionError (silenced under python
             # -O, leaving a bogus length) or a struct.error deep inside
-            # decompileHeader; surface a TTLibError in both cases.
-            minHeaderSize = _CMAP_SUBTABLE_HEADER_SIZE.get(format, 0)
+            # decompileHeader; surface a TTLibError in both cases. Formats
+            # without a fixed header (8, 10 and any unrecognised format, which
+            # fall back to cmap_format_unknown) have an empty headerFormat and
+            # so no minimum.
+            minHeaderSize = struct.calcsize(table.headerFormat)
             if length < minHeaderSize:
                 raise TTLibError(
                     "cmap subtable header is truncated: length %d < %d"
@@ -317,6 +305,8 @@ class CmapSubtable(object):
     character codepoints to glyph names.
     """
 
+    headerFormat = ">HHH"
+
     @staticmethod
     def getSubtableClass(format):
         """Return the subtable class for a format."""
@@ -359,7 +349,8 @@ class CmapSubtable(object):
         return getattr(self, attr)
 
     def decompileHeader(self, data, ttFont):
-        format, length, language = struct.unpack(">HHH", data[:6])
+        headerSize = struct.calcsize(self.headerFormat)
+        format, length, language = struct.unpack(self.headerFormat, data[:headerSize])
         assert (
             len(data) == length
         ), "corrupt cmap table format %d (data length: %d, header length: %d)" % (
@@ -370,7 +361,7 @@ class CmapSubtable(object):
         self.format = int(format)
         self.length = int(length)
         self.language = int(language)
-        self.data = data[6:]
+        self.data = data[headerSize:]
         self.ttFont = ttFont
 
     def toXML(self, writer, ttFont):
@@ -1188,6 +1179,8 @@ class cmap_format_6(CmapSubtable):
 
 
 class cmap_format_12_or_13(CmapSubtable):
+    headerFormat = ">HHLLL"
+
     def __init__(self, format):
         self.format = format
         self.reserved = 0
@@ -1195,7 +1188,10 @@ class cmap_format_12_or_13(CmapSubtable):
         self.ttFont = None
 
     def decompileHeader(self, data, ttFont):
-        format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
+        headerSize = struct.calcsize(self.headerFormat)
+        format, reserved, length, language, nGroups = struct.unpack(
+            self.headerFormat, data[:headerSize]
+        )
         assert (
             len(data) == (16 + nGroups * 12) == (length)
         ), "corrupt cmap table format %d (data length: %d, header length: %d)" % (
@@ -1208,7 +1204,7 @@ class cmap_format_12_or_13(CmapSubtable):
         self.length = length
         self.language = language
         self.nGroups = nGroups
-        self.data = data[16:]
+        self.data = data[headerSize:]
         self.ttFont = ttFont
 
     def decompile(self, data, ttFont):
@@ -1398,9 +1394,14 @@ def cvtFromUVS(val):
 
 
 class cmap_format_14(CmapSubtable):
+    headerFormat = ">HLL"
+
     def decompileHeader(self, data, ttFont):
-        format, length, numVarSelectorRecords = struct.unpack(">HLL", data[:10])
-        self.data = data[10:]
+        headerSize = struct.calcsize(self.headerFormat)
+        format, length, numVarSelectorRecords = struct.unpack(
+            self.headerFormat, data[:headerSize]
+        )
+        self.data = data[headerSize:]
         self.length = length
         self.numVarSelectorRecords = numVarSelectorRecords
         self.ttFont = ttFont
@@ -1595,6 +1596,8 @@ class cmap_format_14(CmapSubtable):
 
 
 class cmap_format_unknown(CmapSubtable):
+    headerFormat = ""  # the body is kept verbatim, nothing is unpacked
+
     def toXML(self, writer, ttFont):
         cmapName = self.__class__.__name__[:12] + str(self.format)
         writer.begintag(
