@@ -11,6 +11,9 @@ if TYPE_CHECKING:
     from fontTools.misc.xmlWriter import XMLWriter
     from fontTools.ttLib import TTFont
 
+XMLAttrs = dict[str, str]
+XMLContent = list[str | tuple[str, XMLAttrs, "XMLContent"]]
+
 
 class DefaultTable:
     dependencies: list[str] = []
@@ -26,9 +29,7 @@ class DefaultTable:
     def compile(self, ttFont: TTFont) -> bytes:
         return self.data
 
-    def toXML(
-        self, writer: XMLWriter, ttFont: TTFont, **kwargs: dict[str, Any]
-    ) -> None:
+    def toXML(self, writer: XMLWriter, ttFont: TTFont, **kwargs: Any) -> None:
         if hasattr(self, "ERROR"):
             writer.comment("An error occurred during the decompilation of this table")
             writer.newline()
@@ -41,7 +42,7 @@ class DefaultTable:
         writer.newline()
 
     def fromXML(
-        self, name: str, attrs: dict[str, str], content: str, ttFont: TTFont
+        self, name: str, attrs: XMLAttrs, content: XMLContent, ttFont: TTFont
     ) -> None:
         from fontTools import ttLib
         from fontTools.misc.textTools import readHex
@@ -53,11 +54,11 @@ class DefaultTable:
     def __repr__(self) -> str:
         return "<'%s' table at %x>" % (self.tableTag, id(self))
 
-    def __eq__(self, other: Any) -> bool:
-        if type(self) != type(other):
+    def __eq__(self, other: object) -> bool:
+        if type(self) is not type(other):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         result = self.__eq__(other)
         return result if result is NotImplemented else not result
