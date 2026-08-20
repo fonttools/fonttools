@@ -320,6 +320,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     def keys(self):
         return self.glyphs.keys()
 
+    def __iter__(self):
+        return self.glyphs.__iter__()
+
+    def values(self):
+        return self.glyphs.values()
+
+    def items(self):
+        return self.glyphs.items()
+
     def has_key(self, glyphName):
         return glyphName in self.glyphs
 
