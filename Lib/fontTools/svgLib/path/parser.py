@@ -175,12 +175,13 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             # per the SVG path grammar and has no effect; ignore it instead of
             # crashing on start_pos being None.
             if start_pos is not None:
-                if not cmath.isclose(current_pos, start_pos, rel_tol=1e-15, abs_tol=1e-15):
+                if not cmath.isclose(
+                    current_pos, start_pos, rel_tol=1e-15, abs_tol=1e-15
+                ):
                     pen.lineTo((start_pos.real, start_pos.imag))
                 pen.closePath()
                 current_pos = start_pos
                 start_pos = None
-
             command = None  # You can't have implicit commands after closing.
 
         elif command == "L":
