@@ -356,6 +356,22 @@ def test_closepath_ignores_floating_point_rounding():
     ]
 
 
+def test_implicit_moveto_after_drift_suppressed_closepath():
+    # a closepath returning to its start with floating-point drift emits no
+    # closing lineTo (see test above), but must still reset the current
+    # position to the exact initial point, so that the implicit moveto of a
+    # following drawto lands on it rather than on the drifted position
+    assert 0.1 + 0.2 - 0.2 != 0.1  # the drift this test relies on
+    pen = RecordingPen()
+    parse_path("M 0.1 0 l 0.2 0 l -0.2 0 z l 0.1 0.1", pen)
+
+    assert pen.value[3] == ("closePath", ())
+    assert pen.value[4] == ("moveTo", ((0.1, 0.0),))
+    # the relative lineTo resolves against the exact initial point too
+    assert pen.value[5] == ("lineTo", ((0.1 + 0.1, 0.1),))
+    assert pen.value[6] == ("endPath", ())
+
+
 def test_exponents():
     # It can be e or E, the plus is optional, and a minimum of +/-3.4e38 must be supported.
     pen = RecordingPen()
