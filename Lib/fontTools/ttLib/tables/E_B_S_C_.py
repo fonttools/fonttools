@@ -5,7 +5,7 @@ from typing import Any
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import bytesjoin, safeEval
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables import DefaultTable
 from fontTools.ttLib.tables.DefaultTable import XMLAttrs, XMLContent
 from fontTools.ttLib.tables.E_B_L_C_ import sbitLineMetricsFormat, SbitLineMetrics
@@ -142,10 +142,10 @@ class BitmapScaleTable:
             name, attrs, content = element
             if name == "sbitLineMetrics":
                 direction = attrs["direction"]
-                assert direction in (
-                    "hori",
-                    "vert",
-                ), "SbitLineMetrics direction specified invalid."
+                if direction not in ("hori", "vert"):
+                    raise TTLibError(
+                        f"invalid sbitLineMetrics direction: {direction!r}"
+                    )
                 metricObj = SbitLineMetrics()
                 metricObj.fromXML(name, attrs, content, ttFont)
                 setattr(self, direction, metricObj)
