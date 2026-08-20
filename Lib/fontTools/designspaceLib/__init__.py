@@ -2020,7 +2020,7 @@ class BaseDocReader(LogMixin):
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
-        tree = ET.parse(self.path)
+        tree = ET.parse(self.path, parser=ET.XMLParser())
         self.root = tree.getroot()
         self.documentObject.formatVersion = self.root.attrib.get("format", "3.0")
         self._axes = []

@@ -528,6 +528,25 @@ def test_custom_mapping():
     assert plistlib.loads(data) == {"a": 1, "b": 2}
 
 
+def test_load_does_not_resolve_external_entities(tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("s3cr3t")
+    data = (
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE plist [<!ENTITY xxe SYSTEM "%s">]>'
+        '<plist version="1.0"><dict><key>note</key><string>&xxe;</string>'
+        "</dict></plist>" % secret.as_uri()
+    ).encode("utf-8")
+
+    try:
+        pl = plistlib.load(BytesIO(data))
+    except Exception:
+        # the ElementTree backend rejects the undefined entity outright
+        return
+
+    assert "s3cr3t" not in pl["note"]
+
+
 if __name__ == "__main__":
     import sys
 

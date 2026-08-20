@@ -52,3 +52,21 @@ def test_pretty_print():
         "  <empty-element/>\n"
         "</root>\n"
     )
+
+
+def test_no_external_entity_expansion(tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("s3cr3t")
+    xml = (
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE root [<!ENTITY xxe SYSTEM "%s">]>'
+        "<root>&xxe;</root>" % secret.as_uri()
+    ).encode("utf-8")
+
+    try:
+        root = etree.fromstring(xml, parser=etree.XMLParser())
+    except etree.ParseError:
+        # the ElementTree backend rejects the undefined entity outright
+        return
+
+    assert "s3cr3t" not in etree.tostring(root, encoding="unicode")
