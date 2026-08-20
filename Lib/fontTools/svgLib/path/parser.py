@@ -170,11 +170,15 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
 
         elif command == "Z":
             # Close path
-            if current_pos != start_pos:
-                pen.lineTo((start_pos.real, start_pos.imag))
-            pen.closePath()
-            current_pos = start_pos
-            start_pos = None
+            # A redundant Z with no open subpath (e.g. "M0,0 Z Z") is valid
+            # per the SVG path grammar and has no effect; ignore it instead of
+            # crashing on start_pos being None.
+            if start_pos is not None:
+                if current_pos != start_pos:
+                    pen.lineTo((start_pos.real, start_pos.imag))
+                pen.closePath()
+                current_pos = start_pos
+                start_pos = None
             command = None  # You can't have implicit commands after closing.
 
         elif command == "L":
