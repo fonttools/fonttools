@@ -1614,6 +1614,12 @@ class cmap_format_unknown(CmapSubtable):
         # would drop it.
         pass
 
+    def __getattr__(self, attr):
+        # The base class lazily decompiles and retries, relying on
+        # ensureDecompiled() clearing self.data to terminate. We keep the data,
+        # so retrying would recurse forever.
+        raise AttributeError(attr)
+
     def toXML(self, writer, ttFont):
         cmapName = self.__class__.__name__[:12] + str(self.format)
         writer.begintag(

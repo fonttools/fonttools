@@ -328,6 +328,14 @@ class CmapSubtableTest(unittest.TestCase):
                 self.assertEqual(subtable.format, 10)
                 self.assertEqual(subtable.data, data)
 
+    def test_unsupported_format_missing_attribute(self):
+        # Retaining self.data must not make __getattr__ recurse forever.
+        path = os.path.join(DATA_DIR, "aots", "cmap10_font1.otf")
+        subtable = ttLib.TTFont(path)["cmap"].tables[0]
+        self.assertFalse(hasattr(subtable, "length"))
+        with self.assertRaises(AttributeError):
+            subtable.nosuchattribute
+
 
 if __name__ == "__main__":
     import sys
