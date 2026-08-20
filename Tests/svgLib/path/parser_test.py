@@ -217,6 +217,94 @@ import pytest
                 ("closePath", ()),
             ],
         ),
+        # a drawto command following a closepath starts a new subpath at the
+        # initial point of the just-closed subpath, i.e. there is an implicit
+        # moveto (SVG 1.1 sec 8.3.3); the new subpath is open, hence endPath
+        # https://github.com/fonttools/fonttools/issues/4154
+        (
+            "M0,0 L10,10 Z L5,5",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((5.0, 5.0),)),
+                ("endPath", ()),
+            ],
+        ),
+        # a redundant Z before the drawto must not emit a second closePath
+        # nor a spurious moveTo
+        (
+            "M0,0 L10,10 Z Z L5,5",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((5.0, 5.0),)),
+                ("endPath", ()),
+            ],
+        ),
+        # a relative drawto after closepath is relative to the initial point
+        # of the just-closed subpath
+        (
+            "M10,10 L20,20 Z l5,5",
+            [
+                ("moveTo", ((10.0, 10.0),)),
+                ("lineTo", ((20.0, 20.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("closePath", ()),
+                ("moveTo", ((10.0, 10.0),)),
+                ("lineTo", ((15.0, 15.0),)),
+                ("endPath", ()),
+            ],
+        ),
+        # the implicitly-opened subpath can itself be closed, back to the
+        # same initial point
+        (
+            "M0,0 L10,0 L10,10 Z L5,5 Z",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((10.0, 0.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((5.0, 5.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+            ],
+        ),
+        # S/T immediately after a closepath: the previous command (Z) is
+        # not a C/S or Q/T, so the reflected first control point falls
+        # back to the current point, i.e. the initial point of the
+        # just-closed subpath
+        (
+            "M0,0 C0,5 5,5 5,0 Z S10,5 10,0",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("curveTo", ((0.0, 5.0), (5.0, 5.0), (5.0, 0.0))),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("curveTo", ((0.0, 0.0), (10.0, 5.0), (10.0, 0.0))),
+                ("endPath", ()),
+            ],
+        ),
+        (
+            "M0,0 Q2.5,5 5,0 Z T10,0",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("qCurveTo", ((2.5, 5.0), (5.0, 0.0))),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("qCurveTo", ((0.0, 0.0), (10.0, 0.0))),
+                ("endPath", ()),
+            ],
+        ),
     ],
 )
 def test_parse_path(pathdef, expected):
