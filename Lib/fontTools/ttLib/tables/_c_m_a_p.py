@@ -1192,13 +1192,18 @@ class cmap_format_12_or_13(CmapSubtable):
         format, reserved, length, language, nGroups = struct.unpack(
             self.headerFormat, data[:headerSize]
         )
-        assert (
-            len(data) == (16 + nGroups * 12) == (length)
-        ), "corrupt cmap table format %d (data length: %d, header length: %d)" % (
-            self.format,
-            len(data),
-            length,
-        )
+        if len(data) != length:
+            raise TTLibError(
+                "cmap subtable format %d is truncated: length %d, got %d bytes"
+                % (self.format, length, len(data))
+            )
+        expectedLength = headerSize + nGroups * 12
+        if length != expectedLength:
+            raise TTLibError(
+                "cmap subtable format %d has an inconsistent group count: "
+                "length %d, but %d groups need %d bytes"
+                % (self.format, length, nGroups, expectedLength)
+            )
         self.format = format
         self.reserved = reserved
         self.length = length

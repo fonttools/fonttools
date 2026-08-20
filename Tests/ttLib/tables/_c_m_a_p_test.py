@@ -136,6 +136,27 @@ class CmapSubtableTest(unittest.TestCase):
                 self.assertEqual(subtable.format, format)
                 self.assertEqual(subtable.data, header[:4])
 
+    def test_decompile_format_12_inconsistent_nGroups(self):
+        # nGroups and length disagree: the header check used to be an assert,
+        # which python -O drops, leaving a subtable claiming groups that are
+        # not there.
+        font = ttLib.TTFont()
+        # length says 28 bytes, but nGroups == 0 accounts for the 16-byte
+        # header alone.
+        body = struct.pack(">HHLLL", 12, 0, 28, 0, 0) + b"\0" * 12
+        data = struct.pack(">HH", 0, 1) + struct.pack(">HHL", 3, 10, 12) + body
+        table = table__c_m_a_p("cmap")
+        with self.assertRaisesRegex(ttLib.TTLibError, "inconsistent group count"):
+            table.decompile(data, font)
+
+    def test_decompile_subtable_format_12_truncated(self):
+        # a subtable decompiled on its own does not go through the length
+        # checks table__c_m_a_p.decompile does up front.
+        subtable = CmapSubtable.newSubtable(12)
+        data = struct.pack(">HHLLL", 12, 0, 28, 0, 1)
+        with self.assertRaisesRegex(ttLib.TTLibError, "is truncated"):
+            subtable.decompile(data, ttLib.TTFont())
+
     def test_compile_2(self):
         subtable = self.makeSubtable(2, 1, 2, 0)
         subtable.cmap = {c: "cid%05d" % c for c in range(32, 8192)}
