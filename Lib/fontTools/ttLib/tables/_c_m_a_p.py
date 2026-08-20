@@ -1,6 +1,6 @@
 from fontTools.misc.textTools import bytesjoin, safeEval, readHex
 from fontTools.misc.encodingTools import getEncoding
-from fontTools.ttLib import getSearchRange
+from fontTools.ttLib import getSearchRange, TTLibError
 from fontTools.unicode import Unicode
 from . import DefaultTable
 import sys
@@ -152,21 +152,37 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
         return result
 
     def decompile(self, data, ttFont):
+        if len(data) < 4:
+            raise TTLibError("cmap table is too short")
         tableVersion, numSubTables = struct.unpack(">HH", data[:4])
         self.tableVersion = int(tableVersion)
         self.tables = tables = []
         seenOffsets = {}
         for i in range(numSubTables):
-            platformID, platEncID, offset = struct.unpack(
-                ">HHl", data[4 + i * 8 : 4 + (i + 1) * 8]
-            )
+            entry = data[4 + i * 8 : 4 + (i + 1) * 8]
+            if len(entry) < 8:
+                raise TTLibError("cmap subtable directory is truncated")
+            platformID, platEncID, offset = struct.unpack(">HHL", entry)
             platformID, platEncID = int(platformID), int(platEncID)
+            # subtableOffset is an unsigned Offset32 pointing somewhere inside
+            # the cmap table; a malformed font can put it past the end of the
+            # data, so guard the header reads below instead of letting
+            # struct.unpack raise struct.error.
+            if offset + 4 > len(data):
+                raise TTLibError(
+                    "cmap subtable offset %d is out of bounds (data length %d)"
+                    % (offset, len(data))
+                )
             format, length = struct.unpack(">HH", data[offset : offset + 4])
             if format in [8, 10, 12, 13]:
+                if offset + 8 > len(data):
+                    raise TTLibError("cmap subtable header is truncated")
                 format, reserved, length = struct.unpack(
                     ">HHL", data[offset : offset + 8]
                 )
             elif format in [14]:
+                if offset + 6 > len(data):
+                    raise TTLibError("cmap subtable header is truncated")
                 format, length = struct.unpack(">HL", data[offset : offset + 6])
 
             if not length:
@@ -185,6 +201,26 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
             # Note that by default we decompile only the subtable header info;
             # any other data gets decompiled only when an attribute of the
             # subtable is referenced.
+            #
+            # Make sure the body is actually present and large enough for the
+            # fixed header decompileHeader will unpack. Otherwise the slice is
+            # short and we hit either an AssertionError (silenced under python
+            # -O, leaving a bogus length) or a struct.error deep inside
+            # decompileHeader; surface a TTLibError in both cases. Formats
+            # without a fixed header (8, 10 and any unrecognised format, which
+            # fall back to cmap_format_unknown) have an empty headerFormat and
+            # so no minimum.
+            minHeaderSize = struct.calcsize(table.headerFormat)
+            if length < minHeaderSize:
+                raise TTLibError(
+                    "cmap subtable header is truncated: length %d < %d"
+                    % (length, minHeaderSize)
+                )
+            if offset + length > len(data):
+                raise TTLibError(
+                    "cmap subtable is truncated: needs %d bytes, only %d available"
+                    % (length, len(data) - offset)
+                )
             table.decompileHeader(data[offset : offset + int(length)], ttFont)
             if offset in seenOffsets:
                 table.data = None  # Mark as decompiled
@@ -231,7 +267,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
                         tableData
                     )
                     tableData = tableData + chunk
-            data = data + struct.pack(">HHl", table.platformID, table.platEncID, offset)
+            data = data + struct.pack(">HHL", table.platformID, table.platEncID, offset)
         return data + tableData
 
     def toXML(self, writer, ttFont):
@@ -267,6 +303,8 @@ class CmapSubtable(object):
     The object exposes a ``.cmap`` attribute, which contains a dictionary mapping
     character codepoints to glyph names.
     """
+
+    headerFormat = ">HHH"
 
     @staticmethod
     def getSubtableClass(format):
@@ -310,7 +348,8 @@ class CmapSubtable(object):
         return getattr(self, attr)
 
     def decompileHeader(self, data, ttFont):
-        format, length, language = struct.unpack(">HHH", data[:6])
+        headerSize = struct.calcsize(self.headerFormat)
+        format, length, language = struct.unpack(self.headerFormat, data[:headerSize])
         assert (
             len(data) == length
         ), "corrupt cmap table format %d (data length: %d, header length: %d)" % (
@@ -321,7 +360,7 @@ class CmapSubtable(object):
         self.format = int(format)
         self.length = int(length)
         self.language = int(language)
-        self.data = data[6:]
+        self.data = data[headerSize:]
         self.ttFont = ttFont
 
     def toXML(self, writer, ttFont):
@@ -1139,6 +1178,8 @@ class cmap_format_6(CmapSubtable):
 
 
 class cmap_format_12_or_13(CmapSubtable):
+    headerFormat = ">HHLLL"
+
     def __init__(self, format):
         self.format = format
         self.reserved = 0
@@ -1146,20 +1187,28 @@ class cmap_format_12_or_13(CmapSubtable):
         self.ttFont = None
 
     def decompileHeader(self, data, ttFont):
-        format, reserved, length, language, nGroups = struct.unpack(">HHLLL", data[:16])
-        assert (
-            len(data) == (16 + nGroups * 12) == (length)
-        ), "corrupt cmap table format %d (data length: %d, header length: %d)" % (
-            self.format,
-            len(data),
-            length,
+        headerSize = struct.calcsize(self.headerFormat)
+        format, reserved, length, language, nGroups = struct.unpack(
+            self.headerFormat, data[:headerSize]
         )
+        if len(data) != length:
+            raise TTLibError(
+                "cmap subtable format %d is truncated: length %d, got %d bytes"
+                % (self.format, length, len(data))
+            )
+        expectedLength = headerSize + nGroups * 12
+        if length != expectedLength:
+            raise TTLibError(
+                "cmap subtable format %d has an inconsistent group count: "
+                "length %d, but %d groups need %d bytes"
+                % (self.format, length, nGroups, expectedLength)
+            )
         self.format = format
         self.reserved = reserved
         self.length = length
         self.language = language
         self.nGroups = nGroups
-        self.data = data[16:]
+        self.data = data[headerSize:]
         self.ttFont = ttFont
 
     def decompile(self, data, ttFont):
@@ -1349,9 +1398,14 @@ def cvtFromUVS(val):
 
 
 class cmap_format_14(CmapSubtable):
+    headerFormat = ">HLL"
+
     def decompileHeader(self, data, ttFont):
-        format, length, numVarSelectorRecords = struct.unpack(">HLL", data[:10])
-        self.data = data[10:]
+        headerSize = struct.calcsize(self.headerFormat)
+        format, length, numVarSelectorRecords = struct.unpack(
+            self.headerFormat, data[:headerSize]
+        )
+        self.data = data[headerSize:]
         self.length = length
         self.numVarSelectorRecords = numVarSelectorRecords
         self.ttFont = ttFont
@@ -1546,6 +1600,8 @@ class cmap_format_14(CmapSubtable):
 
 
 class cmap_format_unknown(CmapSubtable):
+    headerFormat = ""  # the body is kept verbatim, nothing is unpacked
+
     def toXML(self, writer, ttFont):
         cmapName = self.__class__.__name__[:12] + str(self.format)
         writer.begintag(

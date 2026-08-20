@@ -1,10 +1,15 @@
 import io
 import os
 import re
+import struct
 from fontTools import ttLib
 from fontTools.fontBuilder import FontBuilder
 import unittest
-from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
+from fontTools.ttLib.tables._c_m_a_p import (
+    CmapSubtable,
+    cmap_format_unknown,
+    table__c_m_a_p,
+)
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")
@@ -55,6 +60,102 @@ class CmapSubtableTest(unittest.TestCase):
         self.assertEqual(subtable.getEncoding(), None)
         self.assertEqual(subtable.getEncoding("ascii"), "ascii")
         self.assertEqual(subtable.getEncoding(default="xyz"), "xyz")
+
+    def test_decompile_truncated(self):
+        # A truncated cmap table, an out-of-bounds subtable offset, or a
+        # subtable whose length does not match the data used to raise a bare
+        # struct.error or AssertionError instead of TTLibError.
+        font = ttLib.TTFont()
+
+        def cmap(numTables, *entries, body=b""):
+            data = struct.pack(">HH", 0, numTables)
+            for platformID, platEncID, offset in entries:
+                data += struct.pack(">HHL", platformID, platEncID, offset)
+            return data + body
+
+        # A subtable directory with one entry pointing at `offset`; the subtable
+        # header itself starts right after the 12-byte directory (offset 12).
+        def one_subtable(header):
+            return cmap(1, (3, 1, 12), body=header)
+
+        cases = {
+            "table shorter than the 4-byte header": (
+                b"\x00\x00",
+                "too short",
+            ),
+            "subtable directory truncated": (
+                struct.pack(">HH", 0, 3) + b"ab",
+                "directory is truncated",
+            ),
+            "offset past the end of the data": (
+                cmap(1, (3, 1, 9999)),
+                "out of bounds",
+            ),
+            # 0xFFFFFFFF pins the offset as an unsigned Offset32: read signed it
+            # would be -1 and slip through as an in-range negative index.
+            "offset 0xFFFFFFFF is unsigned and out of bounds": (
+                cmap(1, (3, 1, 0xFFFFFFFF)),
+                "out of bounds",
+            ),
+            # format 4 header is ">HHH" (6 bytes); a length of 4 is too small.
+            "length smaller than the format header": (
+                one_subtable(struct.pack(">HH", 4, 4)),
+                "header is truncated",
+            ),
+            # length claims 20 bytes but only 6 are present after the offset.
+            "length longer than the available data": (
+                one_subtable(struct.pack(">HHH", 4, 20, 0)),
+                "subtable is truncated",
+            ),
+        }
+        for label, (data, pattern) in cases.items():
+            with self.subTest(label):
+                table = table__c_m_a_p("cmap")
+                with self.assertRaisesRegex(ttLib.TTLibError, pattern):
+                    table.decompile(data, font)
+
+    def test_decompile_unknown_format_no_header_minimum(self):
+        # Formats 8 and 10, and any unrecognised format, are handled by
+        # cmap_format_unknown, which keeps the body verbatim instead of
+        # unpacking a fixed header, so a body too short for one is fine.
+        font = ttLib.TTFont()
+
+        for format, header in [
+            # 8 and 10 read a ">HHL" header off the subtable offset, so the
+            # body must be 8 bytes even though the length field says 4.
+            (8, struct.pack(">HHL", 8, 0, 4)),
+            (10, struct.pack(">HHL", 10, 0, 4)),
+            (99, struct.pack(">HH", 99, 4)),
+        ]:
+            with self.subTest(format=format):
+                data = struct.pack(">HH", 0, 1) + struct.pack(">HHL", 3, 1, 12) + header
+                table = table__c_m_a_p("cmap")
+                table.decompile(data, font)
+                subtable = table.tables[0]
+                self.assertIsInstance(subtable, cmap_format_unknown)
+                self.assertEqual(subtable.format, format)
+                self.assertEqual(subtable.data, header[:4])
+
+    def test_decompile_format_12_inconsistent_nGroups(self):
+        # nGroups and length disagree: the header check used to be an assert,
+        # which python -O drops, leaving a subtable claiming groups that are
+        # not there.
+        font = ttLib.TTFont()
+        # length says 28 bytes, but nGroups == 0 accounts for the 16-byte
+        # header alone.
+        body = struct.pack(">HHLLL", 12, 0, 28, 0, 0) + b"\0" * 12
+        data = struct.pack(">HH", 0, 1) + struct.pack(">HHL", 3, 10, 12) + body
+        table = table__c_m_a_p("cmap")
+        with self.assertRaisesRegex(ttLib.TTLibError, "inconsistent group count"):
+            table.decompile(data, font)
+
+    def test_decompile_subtable_format_12_truncated(self):
+        # a subtable decompiled on its own does not go through the length
+        # checks table__c_m_a_p.decompile does up front.
+        subtable = CmapSubtable.newSubtable(12)
+        data = struct.pack(">HHLLL", 12, 0, 28, 0, 1)
+        with self.assertRaisesRegex(ttLib.TTLibError, "is truncated"):
+            subtable.decompile(data, ttLib.TTFont())
 
     def test_compile_2(self):
         subtable = self.makeSubtable(2, 1, 2, 0)
