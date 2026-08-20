@@ -23,6 +23,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
 from fontTools.ttLib.tables import ttProgram
 import sys
 import array
+from collections.abc import ValuesView, ItemsView
 from copy import deepcopy
 from io import StringIO, BytesIO
 import itertools
@@ -952,6 +953,39 @@ class GlyphComponentTest:
         assert comp.flags == 0
         assert (comp.firstPt, comp.secondPt) == (1, 2)
         assert not hasattr(comp, "transform")
+
+    def test_items(self):
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in glyf.glyphOrder:
+            glyf[name] = Glyph()
+        assert isinstance(glyf.items(), ItemsView)
+        items = list(glyf.items())
+        assert items == [
+            (".notdef", glyf[".notdef"]),
+            ("a", glyf["a"]),
+            ("b", glyf["b"]),
+        ]
+
+    def test_iter(self):
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in glyf.glyphOrder:
+            glyf[name] = Glyph()
+        names = [name for name in glyf]
+        assert names == [".notdef", "a", "b"]
+
+    def test_values(self):
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in glyf.glyphOrder:
+            glyf[name] = Glyph()
+        assert isinstance(glyf.values(), ValuesView)
+        glyphs = list(glyf.values())
+        assert glyphs == [glyf[".notdef"], glyf["a"], glyf["b"]]
 
 
 class GlyphCubicTest:
