@@ -8,7 +8,6 @@ import cairo
 import math
 import sys
 
-
 font = TTFont(sys.argv[1])
 unicode = sys.argv[2]
 

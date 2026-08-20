@@ -2,7 +2,6 @@ from fontTools.ttLib.tables import otTables as ot
 from copy import deepcopy
 import logging
 
-
 log = logging.getLogger("fontTools.varLib.instancer")
 
 

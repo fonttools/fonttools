@@ -5,7 +5,6 @@ from fontTools.ttLib.tables._t_r_a_k import *
 from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
 import unittest
 
-
 # /Library/Fonts/Osaka.ttf from OSX has trak table with both horiz and vertData
 OSAKA_TRAK_TABLE_DATA = deHexStr(
     "00 01 00 00 00 00 00 0c 00 40 00 00 00 03 00 02 00 00 00 2c ff ff "

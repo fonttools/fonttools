@@ -22,7 +22,6 @@ from typing import (
     Tuple,
 )
 
-
 _COVERAGE_ATTR = "Coverage"  # tables that have one coverage use this name
 
 

@@ -137,7 +137,6 @@ from .misc.timeTools import timestampNow
 import struct
 from collections import OrderedDict
 
-
 _headDefaults = dict(
     tableVersion=1.0,
     fontRevision=1.0,
@@ -973,7 +972,7 @@ def addFvar(font, axes, instances):
                 name,
             ) = axis_def
         else:
-            (axis.axisTag, axis.minValue, axis.defaultValue, axis.maxValue, name) = (
+            axis.axisTag, axis.minValue, axis.defaultValue, axis.maxValue, name = (
                 axis_def.tag,
                 axis_def.minimum,
                 axis_def.default,

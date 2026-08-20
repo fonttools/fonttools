@@ -122,7 +122,6 @@ import getopt
 import re
 import logging
 
-
 log = logging.getLogger("fontTools.ttx")
 
 opentypeheaderRE = re.compile("""sfntVersion=['"]OTTO["']""")

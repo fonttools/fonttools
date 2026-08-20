@@ -1127,7 +1127,7 @@ class MutatorMerger(AligningMerger):
         self.deleteVariations = deleteVariations
 
 
-@MutatorMerger.merger(ot.CaretValue)
+@MutatorMerger.merger((ot.CaretValue, ot.BaseCoord))
 def merge(merger, self, lst):
     # Hack till we become selfless.
     self.__dict__ = lst[0].__dict__.copy()

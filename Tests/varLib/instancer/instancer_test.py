@@ -14,7 +14,9 @@ from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
 from fontTools.varLib import featureVars
 from fontTools.varLib import models
+from fontTools.varLib import varStore
 import collections
+import itertools
 from copy import deepcopy
 from io import BytesIO, StringIO
 import logging
@@ -23,10 +25,27 @@ import re
 from types import SimpleNamespace
 import pytest
 
-
 # see Tests/varLib/instancer/conftest.py for "varfont" fixture definition
 
 TESTDATA = os.path.join(os.path.dirname(__file__), "data")
+TTLIB_TABLES_DATA = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "ttLib", "tables", "data")
+)
+AVAR2_SUBSET_PATH = os.path.join(TTLIB_TABLES_DATA, "Amstelvar-avar2.subset.ttf")
+AVAR2_FULL_INSTANCE_LOCATION = {
+    "GRAD": 0,
+    "XTRA": 562,
+    "XOPQ": 176,
+    "YOPQ": 124,
+    "YTLC": 500,
+    "YTUC": 750,
+    "YTAS": 767,
+    "YTDE": -240,
+    "YTFI": 760,
+    "wght": 650,
+    "wdth": 90,
+    "opsz": 32,
+}
 
 
 @pytest.fixture(params=[True, False], ids=["optimize", "no-optimize"])
@@ -105,6 +124,53 @@ class InstantiateCFF2Test(object):
 
         program = varfont["CFF2"].cff.topDictIndex[0].CharStrings.values()[1].program
         assert program == expected
+
+    def test_no_varstore(self, varfont):
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-1.ttx"))
+
+        # Fully instancing empties the VarStore and removes it from the table.
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits({"wght": 0}))
+        assert not hasattr(varfont["CFF2"].cff.topDictIndex[0], "VarStore")
+
+        # A CFF2 table without a VariationStore must survive instancing.
+        # https://github.com/fonttools/fonttools/issues/4130
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits({"wght": 0}))
+
+    def test_private_dict_vsindex(self):
+        # https://github.com/fonttools/fonttools/issues/4129
+        from fontTools.cffLib import FontDict, PrivateDict
+        from fontTools.varLib.varStore import VarStoreInstancer
+
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-2.ttx"))
+        topDict = varfont["CFF2"].cff.topDictIndex[0]
+
+        # Add a Private dict with a non-zero vsindex and blended values;
+        # its blends reference VarData 1, not VarData 0.
+        fontDict = FontDict()
+        fontDict.setCFF2(True)
+        private = PrivateDict()
+        private.vstore = topDict.VarStore
+        private.vsindex = 1
+        private.BlueValues = [[-12, 10, 20, 40], [0, 5, -5, 15]]
+        fontDict.Private = private
+        topDict.FDArray.append(fontDict)
+
+        pinned = {"wght": 1.0, "wdth": 1.0}
+        vsi = VarStoreInstancer(
+            topDict.VarStore.otVarStore, varfont["fvar"].axes, pinned
+        )
+        expected = [
+            v[0] + round(vsi.interpolateFromDeltas(1, v[1:]))
+            for v in private.BlueValues
+        ]
+
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits(pinned))
+
+        assert private.BlueValues == expected
+        # The store emptied; the dict's vsindex must be gone with it.
+        assert not hasattr(private, "vsindex")
 
     @pytest.mark.parametrize(
         "source_ttx, expected_ttx",
@@ -869,6 +935,65 @@ def varfontGPOS2():
     return makeParametrizedVF(glyphOrder, features, values, increments)
 
 
+@pytest.fixture
+def varfontBASE():
+    # The feature file syntax has no way to express variable baseline
+    # coordinates, so the BASE table is built here: a single 'romn' baseline
+    # for 'latn' at -120 by default, -100 at wght=1.0 and -110 at wdth=1.0.
+    vf = makeParametrizedVF(
+        [".notdef", "A"], "feature kern { pos A A %d; } kern;", [-80], [(-10, -5)]
+    )
+    axisTags = [axis.axisTag for axis in vf["fvar"].axes]
+    storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
+    storeBuilder.setModel(
+        models.VariationModel([{}, {"wght": 1.0}, {"wdth": 1.0}], axisOrder=axisTags)
+    )
+    default, varIdx = storeBuilder.storeMasters([-120, -100, -110])
+
+    coord = otTables.BaseCoord()
+    coord.Format = 3
+    coord.Coordinate = default
+    coord.DeviceTable = builder.buildVarDevTable(varIdx)
+
+    baseValues = otTables.BaseValues()
+    baseValues.DefaultIndex = 0
+    baseValues.BaseCoord = [coord]
+    baseValues.BaseCoordCount = 1
+
+    baseScript = otTables.BaseScript()
+    baseScript.BaseValues = baseValues
+    baseScript.DefaultMinMax = None
+    baseScript.BaseLangSysRecord = []
+    baseScript.BaseLangSysCount = 0
+
+    scriptRecord = otTables.BaseScriptRecord()
+    scriptRecord.BaseScriptTag = "latn"
+    scriptRecord.BaseScript = baseScript
+
+    axis = otTables.Axis()
+    axis.BaseTagList = otTables.BaseTagList()
+    axis.BaseTagList.BaselineTag = ["romn"]
+    axis.BaseTagList.BaseTagCount = 1
+    axis.BaseScriptList = otTables.BaseScriptList()
+    axis.BaseScriptList.BaseScriptRecord = [scriptRecord]
+    axis.BaseScriptList.BaseScriptCount = 1
+
+    base = otTables.BASE()
+    base.Version = 0x00010001
+    base.HorizAxis = axis
+    base.VertAxis = None
+    base.VarStore = storeBuilder.finish()
+
+    vf["BASE"] = ttLib.newTable("BASE")
+    vf["BASE"].table = base
+    return vf
+
+
+def getBaseCoord(varfont):
+    axis = varfont["BASE"].table.HorizAxis
+    return axis.BaseScriptList.BaseScriptRecord[0].BaseScript.BaseValues.BaseCoord[0]
+
+
 class InstantiateOTLTest(object):
     @pytest.mark.parametrize(
         "location, expected",
@@ -1115,20 +1240,67 @@ class InstantiateOTLTest(object):
         assert not hasattr(valueRec1, "XAdvDevice")
         assert valueRec1.XAdvance == -25
 
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 0.0}, -120),
+            ({"wght": 0.5}, -110),
+            ({"wght": 1.0}, -100),
+            ({"wdth": 1.0}, -110),
+            ({"wdth": 0.5}, -115),
+        ],
+    )
+    def test_pin_and_drop_axis_BASE(self, varfontBASE, location, expected):
+        vf = varfontBASE
+
+        instancer.instantiateOTL(vf, instancer.NormalizedAxisLimits(location))
+
+        base = vf["BASE"].table
+        assert base.Version == 0x00010001
+        assert base.VarStore
+        coord = getBaseCoord(vf)
+        assert coord.Format == 3
+        assert coord.DeviceTable.DeltaFormat == 0x8000
+        assert coord.Coordinate == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 0.0, "wdth": 0.0}, -120),
+            ({"wght": 1.0, "wdth": 0.0}, -100),
+            ({"wght": 0.0, "wdth": 1.0}, -110),
+            ({"wght": 1.0, "wdth": 1.0}, -90),
+        ],
+    )
+    def test_full_instance_BASE(self, varfontBASE, location, expected):
+        vf = varfontBASE
+
+        instancer.instantiateOTL(vf, instancer.NormalizedAxisLimits(location))
+
+        base = vf["BASE"].table
+        assert base.Version == 0x00010000
+        assert not hasattr(base, "VarStore")
+        coord = getBaseCoord(vf)
+        assert coord.Format == 1
+        assert not hasattr(coord, "DeviceTable")
+        assert coord.Coordinate == expected
+
 
 class InstantiateAvarTest(object):
     @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
     def test_pin_and_drop_axis(self, varfont, location):
         location = instancer.AxisLimits(location)
+        normalized = location.normalize(varfont)
 
-        instancer.instantiateAvar(varfont, location)
+        instancer.instantiateAvar(varfont, location, normalized)
 
         assert set(varfont["avar"].segments).isdisjoint(location)
 
     def test_full_instance(self, varfont):
         location = instancer.AxisLimits(wght=0.0, wdth=0.0)
+        normalized = location.normalize(varfont)
 
-        instancer.instantiateAvar(varfont, location)
+        instancer.instantiateAvar(varfont, location, normalized)
 
         assert "avar" not in varfont
 
@@ -1296,8 +1468,9 @@ class InstantiateAvarTest(object):
     )
     def test_limit_axes(self, varfont, axisLimits, expectedSegments):
         axisLimits = instancer.AxisLimits(axisLimits)
+        normalized = axisLimits.normalize(varfont)
 
-        instancer.instantiateAvar(varfont, axisLimits)
+        instancer.instantiateAvar(varfont, axisLimits, normalized)
 
         newSegments = varfont["avar"].segments
         expectedSegments = {
@@ -1321,9 +1494,10 @@ class InstantiateAvarTest(object):
         varfont["avar"].segments["wght"] = invalidSegmentMap
 
         axisLimits = instancer.AxisLimits(wght=(100, 400))
+        normalized = axisLimits.normalize(varfont)
 
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
-            instancer.instantiateAvar(varfont, axisLimits)
+            instancer.instantiateAvar(varfont, axisLimits, normalized)
 
         assert "Invalid avar" in caplog.text
         assert "wght" not in varfont["avar"].segments
@@ -1598,6 +1772,11 @@ def varfont3():
     return f
 
 
+@pytest.fixture
+def avar2_varfont():
+    return ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+
+
 def _dump_ttx(ttFont):
     # compile to temporary bytes stream, reload and dump to XML
     tmp = BytesIO()
@@ -1623,6 +1802,566 @@ def _get_expected_instance_ttx(
         encoding="utf-8",
     ) as fp:
         return stripVariableItemsFromTTX(fp.read())
+
+
+def _avar2_final_coords(font, user_loc):
+    """Final normalized coordinates per the avar2 spec pipeline.
+
+    Applies fvar normalization then the avar v1 + v2 mapping
+    (table__a_v_a_r.renormalizeLocation), i.e. the exact algorithm a shaping
+    engine runs. Used as an independent oracle: a correctly partial-instanced
+    font must produce the same final coordinates as the original font at the
+    same user-space location, for every axis that survives in the instance.
+    """
+    fvar = font["fvar"]
+    norm = {
+        axis.axisTag: models.normalizeValue(
+            user_loc.get(axis.axisTag, axis.defaultValue),
+            (axis.minValue, axis.defaultValue, axis.maxValue),
+        )
+        for axis in fvar.axes
+    }
+    avar = font.get("avar")
+    if avar is None:
+        return norm
+    return avar.renormalizeLocation(norm, font, dropZeroes=False)
+
+
+def _set_private_avar2_axis_deltas(font, outputTag, regions, deltas):
+    """Replace avar2 deltas for an axis treated as private by the instancer.
+
+    The partial-instancing design uses HIDDEN_AXIS as its private-axis marker:
+    an unrestricted private axis has intermediate coordinate zero, so its
+    final coordinate is determined by the avar2 delta alone.
+    """
+    axes = font["fvar"].axes
+    axisTags = [axis.axisTag for axis in axes]
+    outputIndex = axisTags.index(outputTag)
+    regionList = builder.buildVarRegionList(regions, axisTags)
+    varData = builder.buildVarData(list(range(len(regions))), [deltas], optimize=False)
+    font["avar"].table.VarStore = builder.buildVarStore(regionList, [varData])
+    mapping = [varStore.NO_VARIATION_INDEX] * len(axes)
+    mapping[outputIndex] = 0
+    font["avar"].table.VarIdxMap = builder.buildDeltaSetIndexMap(mapping)
+    axes[outputIndex].flags |= 0x0001
+
+
+def _add_gvar_sentinel(font, axisTag, support, sentinel):
+    coordinateCount = len(font["gvar"].variations["T"][0].coordinates)
+    font["gvar"].variations["T"].append(
+        TupleVariation({axisTag: support}, [sentinel] * coordinateCount)
+    )
+
+
+def _has_gvar_sentinel(font, axisTag, support, sentinel):
+    return any(
+        variation.axes == {axisTag: support}
+        and variation.coordinates
+        and variation.coordinates[0] == sentinel
+        for variation in font["gvar"].variations["T"]
+    )
+
+
+class InstantiateAvar2Test(object):
+    def test_partial_limit_axis_roundtrip_matches_direct_instance(self, avar2_varfont):
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"wght": (300, 400, 700)}
+        )
+
+        wght = next(axis for axis in partial["fvar"].axes if axis.axisTag == "wght")
+        assert (wght.minValue, wght.defaultValue, wght.maxValue) == (300, 400, 700)
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+        assert getattr(partial["avar"].table, "VarIdxMap", None) is not None
+        assert all(tag in partial for tag in ("gvar", "HVAR", "MVAR"))
+
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+
+        staged = instancer.instantiateVariableFont(
+            partial, AVAR2_FULL_INSTANCE_LOCATION
+        )
+        direct = instancer.instantiateVariableFont(
+            ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False),
+            AVAR2_FULL_INSTANCE_LOCATION,
+        )
+
+        assert _dump_ttx(staged) == _dump_ttx(direct)
+
+    def test_partial_pin_self_contained_axis_preserves_avar2(self, avar2_varfont):
+        partial = instancer.instantiateVariableFont(avar2_varfont, {"wght": 650})
+
+        assert all(axis.axisTag != "wght" for axis in partial["fvar"].axes)
+        assert "wght" not in partial["avar"].segments
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+        assert getattr(partial["avar"].table, "VarIdxMap", None) is not None
+        assert all(tag in partial for tag in ("gvar", "HVAR", "MVAR"))
+
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+
+        assert all(axis.axisTag != "wght" for axis in partial["fvar"].axes)
+        assert "wght" not in partial["avar"].segments
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+
+    # In Amstelvar-avar2.subset several fvar axes share a single avar2 varIdx
+    # (GRAD & XOPQ, YOPQ & YTLC & YTUC, ...). Offset compensation must not leak
+    # between axes that share a delta row. Each case below restricts/pins one or
+    # more shared-varIdx axes and checks that the final normalized coordinates
+    # of every surviving axis still match the original font at the same user
+    # location (the spec-pipeline oracle above). Before the fix these diverged
+    # by up to ~1.0 (full scale) on the untouched partner axes.
+    @pytest.mark.parametrize(
+        "limits, samples",
+        [
+            # two axes sharing a varIdx, both restricted
+            (
+                {"GRAD": (-100, 0, 300), "XOPQ": (50, 176, 220)},
+                [
+                    {"GRAD": -100, "XOPQ": 220},
+                    {"GRAD": 300, "XOPQ": 50},
+                    {"GRAD": 150, "XOPQ": 176},
+                ],
+            ),
+            # three axes sharing a varIdx, all restricted
+            (
+                {
+                    "YOPQ": (30, 124, 130),
+                    "YTLC": (450, 500, 560),
+                    "YTUC": (600, 750, 900),
+                },
+                [
+                    {"YOPQ": 30, "YTLC": 560, "YTUC": 600},
+                    {"YOPQ": 130, "YTLC": 450, "YTUC": 900},
+                ],
+            ),
+            # restrict one axis of a shared pair; the free partner (GRAD) must
+            # stay uncorrupted even when the restricted axis is off its default
+            (
+                {"XOPQ": (100, 176, 250)},
+                [{"XOPQ": 250, "GRAD": g} for g in (-300, 0, 300, 500)],
+            ),
+            # restricted axis whose default MOVES: exercises the empty-region
+            # bias, which contaminated the free partner unconditionally
+            (
+                {"XOPQ": (100, 220, 250)},
+                [{"XOPQ": 220, "GRAD": g} for g in (-300, 0, 500)],
+            ),
+            # moved default sampled at INTERIOR points (unique varIdx axis):
+            # the inverse renormalization kinks where the old default lands in
+            # the new space, so a plain two-tent offset is wrong between the
+            # anchors even though it is exact at min/default/max.
+            (
+                {"XTRA": (421, 586, 617)},
+                [{"XTRA": x} for x in (450, 470, 519, 560, 600)],
+            ),
+            # moved default on a shared-varIdx axis, sampled at interior points
+            (
+                {"XOPQ": (100, 220, 250)},
+                [{"XOPQ": x, "GRAD": g} for x in (130, 176, 210) for g in (-200, 300)],
+            ),
+            # pin one axis of a shared pair (kept hidden as it is not
+            # self-contained); its free partner must be unaffected
+            (
+                {"XOPQ": 200},
+                [{"XOPQ": 200, "GRAD": g} for g in (-300, 0, 500)],
+            ),
+        ],
+    )
+    def test_partial_instance_final_coords_match_original(self, limits, samples):
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        partial = instancer.instantiateVariableFont(
+            ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False), dict(limits)
+        )
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+
+        partial_axes = {axis.axisTag for axis in partial["fvar"].axes}
+        for user_loc in samples:
+            orig_final = _avar2_final_coords(original, user_loc)
+            part_loc = {k: v for k, v in user_loc.items() if k in partial_axes}
+            part_final = _avar2_final_coords(partial, part_loc)
+            for tag in partial_axes:
+                o = round(orig_final.get(tag, 0) * 16384)
+                p = round(part_final.get(tag, 0) * 16384)
+                # tolerance: a couple of F2Dot14 units of rounding noise
+                assert abs(o - p) <= 2, (
+                    f"axis {tag} at {user_loc}: original final {o} "
+                    f"!= partial {p} (diff {o - p})"
+                )
+
+    def test_offset_compensation_exhaustive(self):
+        # Exhaustive offset-compensation check: every single-axis and pairwise
+        # restriction (with a MOVED default, the hardest case) must reproduce
+        # the original font's final normalized coordinates at interior user
+        # locations for every surviving axis. Also doubles as an integration
+        # smoke test that the full partial-instancing path (including region
+        # culling / getExtremes) runs cleanly across many axis combinations.
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        axes = {
+            a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
+            for a in original["fvar"].axes
+        }
+
+        def moved(tag):
+            lo, d, hi = axes[tag]
+            return (round(lo + (d - lo) * 0.3), round(d + (hi - d) * 0.3), round(hi))
+
+        tags = list(axes)
+        combos = list(itertools.combinations(tags, 1)) + list(
+            itertools.combinations(tags, 2)
+        )
+        for combo in combos:
+            limits = {t: moved(t) for t in combo}
+            partial = instancer.instantiateVariableFont(
+                ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False), dict(limits)
+            )
+            partial_axes = {axis.axisTag for axis in partial["fvar"].axes}
+            for i in range(5):
+                user_loc = {
+                    t: moved(t)[0] + (moved(t)[2] - moved(t)[0]) * i / 4 for t in combo
+                }
+                orig_final = _avar2_final_coords(original, user_loc)
+                part_loc = {k: v for k, v in user_loc.items() if k in partial_axes}
+                part_final = _avar2_final_coords(partial, part_loc)
+                for tag in partial_axes:
+                    o = round(orig_final.get(tag, 0) * 16384)
+                    p = round(part_final.get(tag, 0) * 16384)
+                    assert abs(o - p) <= 2, (
+                        f"{combo} axis {tag} at {user_loc}: "
+                        f"original final {o} != partial {p} (diff {o - p})"
+                    )
+
+    def test_offset_compensation_interior_avar1_breakpoints(self):
+        # An avar v1 map with a breakpoint strictly inside the retained range
+        # adds a kink to the offset function that the {-1, 0, +1, z_old} anchors
+        # alone miss, so partial instancing was approximate there (worst under a
+        # moved default). _instantiateAvarV2 now also collects each retained
+        # avar v1 breakpoint, removing that structural error. A smaller residual
+        # from F2Dot14 requantization of the retained (steep, near-edge) segment
+        # map can remain, so tolerances are per-case rather than the 2-unit
+        # quantization floor used elsewhere. Every case below FAILS without the
+        # breakpoint collection (worst 4 and 14 respectively).
+        cases = [
+            # gentle map, moderate moved default: structural error fully removed.
+            (
+                {"opsz": {-1: -1, -0.5: -0.35, 0: 0, 0.5: 0.65, 1: 1}},
+                {"opsz": (8, 40, 120)},
+                2,
+            ),
+            # moved default near the fvar edge + interior breakpoint: the regime
+            # that exposed the bug. Structural error removed (was 14); the ~3
+            # residual is retained-map requantization, not the offset math.
+            ({"opsz": {-1: -1, 0: 0, 1: 1, -0.45: -0.27}}, {"opsz": (8, 89.6, 144)}, 6),
+        ]
+        for segments, limits, tol in cases:
+
+            def make():
+                f = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+                for tag, seg in segments.items():
+                    f["avar"].segments[tag] = dict(seg)
+                return f
+
+            original = make()
+            partial = instancer.instantiateVariableFont(make(), dict(limits))
+            partial_axes = {axis.axisTag for axis in partial["fvar"].axes}
+            tag = next(iter(limits))
+            assert tag in partial_axes
+            lo, _, hi = limits[tag]
+            worst = 0
+            for i in range(401):
+                u = lo + (hi - lo) * i / 400
+                o = round(_avar2_final_coords(original, {tag: u}).get(tag, 0) * 16384)
+                p = round(_avar2_final_coords(partial, {tag: u}).get(tag, 0) * 16384)
+                worst = max(worst, abs(o - p))
+            assert worst <= tol, f"{segments} {limits}: worst {worst} > tolerance {tol}"
+
+    def test_truncated_varIdxMap(self, avar2_varfont):
+        # A compiled DeltaSetIndexMap may be stored truncated (trailing
+        # duplicates trimmed; reads clamp to the last entry). The fixture's
+        # mapping ends in NO_VARIATION_INDEX entries for wght/wdth/opsz, like
+        # fontations' Amstelvar-avar2.A.ttf; truncating it must not break the
+        # offset-compensation write path (which used to IndexError when
+        # writing at an axis index beyond the stored length).
+        mapping = avar2_varfont["avar"].table.VarIdxMap.mapping
+        assert mapping[-3:] == [varStore.NO_VARIATION_INDEX] * 3
+        avar2_varfont["avar"].table.VarIdxMap.mapping = mapping[:10]
+
+        reference = instancer.instantiateVariableFont(
+            ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False),
+            {"opsz": (8, 14, 30)},
+        )
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"opsz": (8, 14, 30)}
+        )
+
+        # Same final coordinates as instancing the untruncated font.
+        for user_loc in ({"opsz": 8}, {"opsz": 14}, {"opsz": 22}, {"opsz": 30}):
+            assert _avar2_final_coords(partial, user_loc) == pytest.approx(
+                _avar2_final_coords(reference, user_loc), abs=2 / 16384
+            )
+
+    def test_empty_v1_segments_keeps_avar2(self, avar2_varfont):
+        # avar2 fonts need no v1 segment maps (design doc §9.6). An empty (or
+        # partial) segments dict must not trigger the "all axes pinned" early
+        # drop of the table on a pure range restriction — that would delete
+        # the entire avar2 VarStore while gvar stays in old-space coordinates.
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        original["avar"].segments = {}
+        avar2_varfont["avar"].segments = {}
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"wght": (300, 400, 700)}
+        )
+
+        assert "avar" in partial
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+
+        for wght in (300, 400, 550, 700):
+            assert _avar2_final_coords(partial, {"wght": wght}) == pytest.approx(
+                _avar2_final_coords(original, {"wght": wght}), abs=2 / 16384
+            )
+
+    def test_avar2_null_varstore_never_downgraded(self, avar2_varfont):
+        # An avar 2.0 table with a NULL VarStore is legal and behaves as
+        # plain v1 (it used to crash normalize() by entering the v2 path).
+        # It is never downgraded to v1: partial instancing takes the avar2
+        # path, creating offset-compensation delta rows on demand so the
+        # instance stays bit-exact against the original.
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        original["avar"].table.VarStore = None
+        original["avar"].table.VarIdxMap = None
+        avar2_varfont["avar"].table.VarStore = None
+        avar2_varfont["avar"].table.VarIdxMap = None
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont, {"wght": (300, 400, 700)}
+        )
+        wght = next(axis for axis in partial["fvar"].axes if axis.axisTag == "wght")
+        assert (wght.minValue, wght.defaultValue, wght.maxValue) == (300, 400, 700)
+        assert partial["avar"].majorVersion == 2
+        assert getattr(partial["avar"].table, "VarStore", None) is not None
+
+        # Survives compile+decompile, and the final normalized coordinates
+        # match the original (v1-behaving) font at the same user locations.
+        bytes_out = BytesIO()
+        partial.save(bytes_out)
+        bytes_out.seek(0)
+        partial = ttLib.TTFont(bytes_out, recalcTimestamp=False)
+        assert partial["avar"].majorVersion == 2
+
+        for wght in (300, 350, 400, 550, 700):
+            assert _avar2_final_coords(partial, {"wght": wght}) == pytest.approx(
+                _avar2_final_coords(original, {"wght": wght}), abs=2 / 16384
+            )
+
+    def test_unpopulated_default_2_tuple_limits(self, avar2_varfont):
+        # AxisLimits({"wght": (300, 700)}) leaves default=None; the avar2
+        # offset-compensation path must fall back to the fvar default instead
+        # of crashing. Also exercises instantiateAvar's optional
+        # normalizedLimits (back-compat with the (varfont, axisLimits) form).
+        axisLimits = instancer.AxisLimits({"wght": (300, 700)})
+        instancer.instantiateAvar(avar2_varfont, axisLimits)
+
+        assert "avar" in avar2_varfont
+        assert getattr(avar2_varfont["avar"].table, "VarStore", None) is not None
+
+    def test_isTupleVariationDead_boundary_peak(self):
+        # supportScalar returns 1 (not 0) at v == peak, so a tent whose peak
+        # sits exactly on the reachable boundary is still live there.
+        live = TupleVariation({"wght": (0.5, 0.5, 1.0)}, [10] * 4)
+        assert not instancer._isTupleVariationDead(live, {"wght": (0.0, 0.5)})
+        live = TupleVariation({"wght": (-1.0, -0.5, -0.5)}, [10] * 4)
+        assert not instancer._isTupleVariationDead(live, {"wght": (-0.5, 0.0)})
+        dead = TupleVariation({"wght": (0.5, 0.75, 1.0)}, [10] * 4)
+        assert instancer._isTupleVariationDead(dead, {"wght": (0.0, 0.25)})
+
+    def test_avar2_culling_preserves_live_gvar_regions(self, avar2_varfont):
+        # Region culling may only delete TupleVariations whose support scalar
+        # is zero at EVERY reachable final coordinate. Sample a grid of user
+        # locations, map each through the spec pipeline of the ORIGINAL font,
+        # and require every culled gvar variation to be dead at all of them.
+        original = ttLib.TTFont(AVAR2_SUBSET_PATH, recalcTimestamp=False)
+        limits = {"wght": (300, 400, 700), "opsz": (10, 14, 20)}
+        partial = instancer.instantiateVariableFont(avar2_varfont, dict(limits))
+
+        def freeze(tv):
+            return (
+                tuple(sorted(tv.axes.items())),
+                tuple(tuple(c) if c is not None else None for c in tv.coordinates),
+            )
+
+        grid = [
+            {"wght": w, "opsz": o, "GRAD": g}
+            for w in (300, 400, 550, 700)
+            for o in (10, 14, 20)
+            for g in (-300, 0, 500)
+        ]
+        finals = [_avar2_final_coords(original, loc) for loc in grid]
+
+        gvarOld = original["gvar"].variations
+        gvarNew = partial["gvar"].variations
+        for glyphName in gvarOld:
+            kept = collections.Counter(freeze(tv) for tv in gvarNew[glyphName])
+            for tv in gvarOld[glyphName]:
+                if kept[freeze(tv)]:
+                    kept[freeze(tv)] -= 1
+                    continue
+                # culled: must be unreachable at every sampled location
+                for loc, final in zip(grid, finals):
+                    scalar = models.supportScalar(final, tv.axes)
+                    assert scalar == 0, (
+                        f"culled variation {tv.axes} of {glyphName!r} is live "
+                        f"(scalar {scalar}) at {loc} -> {final}"
+                    )
+
+    def test_culling_preserves_one_sided_support_sentinel(self, avar2_varfont):
+        outputTag = "XOPQ"
+        inputTag = "wght"
+        support = (0.5, 1.0, 1.0)
+        sentinel = (12345, -6789)
+        _set_private_avar2_axis_deltas(
+            avar2_varfont,
+            outputTag,
+            [
+                {inputTag: (0.0, 0.25, 0.25)},
+                {inputTag: (0.0, 0.25, 0.5)},
+            ],
+            [-16384, 16384],
+        )
+        _add_gvar_sentinel(avar2_varfont, outputTag, support, sentinel)
+
+        inputAxis = next(
+            axis for axis in avar2_varfont["fvar"].axes if axis.axisTag == inputTag
+        )
+        normalizedInput = 4097 / 16384
+        userInput = inputAxis.defaultValue + normalizedInput * (
+            inputAxis.maxValue - inputAxis.defaultValue
+        )
+        location = {inputTag: userInput}
+        before = _avar2_final_coords(avar2_varfont, location)
+        assert before[outputTag] == 16380 / 16384
+        assert models.supportScalar(before, {outputTag: support}) > 0.99
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont,
+            {
+                inputTag: (
+                    inputAxis.minValue,
+                    inputAxis.defaultValue,
+                    inputAxis.maxValue,
+                )
+            },
+        )
+
+        assert _avar2_final_coords(partial, location)[outputTag] == before[outputTag]
+        assert _has_gvar_sentinel(partial, outputTag, support, sentinel)
+
+    def test_culling_bounds_runtime_rounded_avar2_delta(self, avar2_varfont):
+        outputTag = "XOPQ"
+        inputTag = "wght"
+        unit = 1 / 16384
+        support = (unit, unit, 1.0)
+        sentinel = (22222, -3333)
+        _set_private_avar2_axis_deltas(
+            avar2_varfont,
+            outputTag,
+            [
+                {inputTag: (0.0, 0.125, 0.25)},
+                {inputTag: (0.0, 0.125, 0.375)},
+            ],
+            [-8, 1],
+        )
+        _add_gvar_sentinel(avar2_varfont, outputTag, support, sentinel)
+
+        inputAxis = next(
+            axis for axis in avar2_varfont["fvar"].axes if axis.axisTag == inputTag
+        )
+        userInput = inputAxis.defaultValue + 0.25 * (
+            inputAxis.maxValue - inputAxis.defaultValue
+        )
+        location = {inputTag: userInput}
+        before = _avar2_final_coords(avar2_varfont, location)
+        assert before[outputTag] == unit
+        assert models.supportScalar(before, {outputTag: support}) == 1.0
+
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont,
+            {
+                inputTag: (
+                    inputAxis.minValue,
+                    inputAxis.defaultValue,
+                    inputAxis.maxValue,
+                )
+            },
+        )
+
+        assert _avar2_final_coords(partial, location)[outputTag] == unit
+        assert _has_gvar_sentinel(partial, outputTag, support, sentinel)
+
+    @pytest.mark.parametrize(
+        "delta,support,expected,sentinel",
+        [
+            pytest.param(32767, (0.5, 1.0, 1.0), 1.0, (30001, -30001), id="upper"),
+            pytest.param(-32768, (-1.0, -1.0, -0.5), -1.0, (-30001, 30001), id="lower"),
+        ],
+    )
+    def test_culling_clamps_overshooting_range_on_both_sides(
+        self, avar2_varfont, delta, support, expected, sentinel
+    ):
+        outputTag = "XOPQ"
+        inputTag = "wght"
+        _set_private_avar2_axis_deltas(avar2_varfont, outputTag, [{}], [delta])
+        _add_gvar_sentinel(avar2_varfont, outputTag, support, sentinel)
+
+        before = _avar2_final_coords(avar2_varfont, {})
+        assert before[outputTag] == expected
+        assert models.supportScalar(before, {outputTag: support}) == 1.0
+
+        inputAxis = next(
+            axis for axis in avar2_varfont["fvar"].axes if axis.axisTag == inputTag
+        )
+        partial = instancer.instantiateVariableFont(
+            avar2_varfont,
+            {
+                inputTag: (
+                    inputAxis.minValue,
+                    inputAxis.defaultValue,
+                    inputAxis.maxValue,
+                )
+            },
+        )
+
+        assert _avar2_final_coords(partial, {})[outputTag] == expected
+        assert _has_gvar_sentinel(partial, outputTag, support, sentinel)
+
+    def test_full_instance_avar2_malformed_empty_varstore(self, avar2_varfont):
+        # With no VarIdxMap, an empty non-NULL VarStore produces implicit
+        # indices outside the store. The partial avar2 path treats them as zero
+        # deltas, so full instancing should do the same. HarfBuzz corroborates
+        # that defensive policy:
+        # https://github.com/harfbuzz/harfbuzz/blob/d2df3cdcc0836299a163dc0399a6b047d19ac56c/src/hb-ot-layout-common.hh#L3354-L3363
+        axisTags = [axis.axisTag for axis in avar2_varfont["fvar"].axes]
+        avar2_varfont["avar"].table.VarStore = builder.buildVarStore(
+            builder.buildVarRegionList([], axisTags), []
+        )
+        avar2_varfont["avar"].table.VarIdxMap = None
+        defaults = {
+            axis.axisTag: axis.defaultValue for axis in avar2_varfont["fvar"].axes
+        }
+
+        static = instancer.instantiateVariableFont(avar2_varfont, defaults)
+
+        assert "fvar" not in static
+        assert "avar" not in static
 
 
 class InstantiateVariableFontTest(object):
@@ -2308,6 +3047,21 @@ def test_normalizeAxisLimits_no_avar(varfont):
 def test_normalizeAxisLimits_missing_from_fvar(varfont):
     with pytest.raises(ValueError, match="not present in fvar"):
         instancer.AxisLimits({"ZZZZ": 1000}).normalize(varfont)
+
+
+def test_normalizeAxisLimits_quantizes_after_avar_map(varfont):
+    # The F2Dot14 quantization must be applied AFTER the avar v1 mapping (and
+    # only there), like a shaping engine does: normalize -> map -> quantize.
+    # Pinning wght=650 on a 100/400/900 axis through this map yields
+    # 5/7 * 0.2 = 0.142857..., which is not F2Dot14-representable; the
+    # normalized location must land on the quantized 0.14288330078125.
+    varfont["avar"].segments["wght"] = {-1.0: -1.0, 0.0: 0.0, 0.7: 0.2, 1.0: 1.0}
+
+    normalized = instancer.AxisLimits({"wght": 650}).normalize(varfont)
+
+    for v in tuple(normalized["wght"])[:3]:
+        assert v == floatToFixedToFloat(v, 14)
+    assert normalized["wght"].default == 0.14288330078125
 
 
 def test_sanityCheckVariableTables(varfont):

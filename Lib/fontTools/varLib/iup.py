@@ -12,7 +12,6 @@ from typing import (
 )
 from numbers import Integral, Real
 
-
 _Point = Tuple[Real, Real]
 _Delta = Tuple[Real, Real]
 _PointSegment = Sequence[_Point]

@@ -6,7 +6,6 @@ import re
 import os
 import unittest
 
-
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")
 

@@ -47,7 +47,6 @@ import logging
 import warnings
 import os
 
-
 log = logging.getLogger(__name__)
 
 

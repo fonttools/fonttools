@@ -3,7 +3,6 @@ from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
 import unittest
 
-
 # Example: Format 0 Ligature Caret Table
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6lcar.html
 LCAR_FORMAT_0_DATA = deHexStr(

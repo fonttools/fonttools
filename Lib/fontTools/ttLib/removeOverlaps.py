@@ -18,7 +18,6 @@ from fontTools.pens.t2CharStringPen import T2CharStringPen
 
 import pathops
 
-
 __all__ = ["removeOverlaps"]
 
 

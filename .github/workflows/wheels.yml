@@ -27,7 +27,7 @@ jobs:
     - name: Build source distribution and pure-python wheel
       run: |
         uv build
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: pure
         path: |
@@ -59,7 +59,7 @@ jobs:
       with:
         submodules: recursive
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: "3.x"
     - name: Install dependencies
@@ -70,7 +70,7 @@ jobs:
       env:
         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
         CIBW_ARCHS: ${{ matrix.arch }}
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: wheels-${{ matrix.os }}-${{ matrix.arch }}
         path: wheelhouse/*.whl
@@ -90,10 +90,10 @@ jobs:
       id-token: write # IMPORTANT: mandatory for trusted publishing
 
     steps:
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@v8
       with:
         # so that all artifacts are downloaded in the same directory specified by 'path'
         merge-multiple: true
         path: dist
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.13.0
+      uses: pypa/gh-action-pypi-publish@v1.14.2

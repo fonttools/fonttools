@@ -18,7 +18,6 @@ from . import otTables
 import struct
 import logging
 
-
 log = logging.getLogger(__name__)
 
 from .otBase import BaseTTXConverter
@@ -174,18 +173,17 @@ class table__a_v_a_r(BaseTTXConverter):
         varStore = self.table.VarStore
         axes = font["fvar"].axes
         if varStore is not None:
-            instancer = VarStoreInstancer(varStore, axes, mappedLocation)
+            varStoreInstancer = VarStoreInstancer(varStore, axes, mappedLocation)
 
         coords = list(fl2fi(mappedLocation.get(axis.axisTag, 0), 14) for axis in axes)
 
         out = []
         for varIdx, v in enumerate(coords):
-
             if varIdxMap is not None:
                 varIdx = varIdxMap[varIdx]
 
             if varStore is not None:
-                delta = instancer[varIdx]
+                delta = varStoreInstancer[varIdx]
                 v += otRound(delta)
                 v = min(max(v, -(1 << 14)), +(1 << 14))
 
@@ -198,3 +196,36 @@ class table__a_v_a_r(BaseTTXConverter):
         }
 
         return mappedLocation
+
+    def renormalizeAxisLimits(self, axisLimits, font=None):
+        """Apply the avar v1 segment maps to normalized axis limits.
+
+        The values of ``axisLimits`` may be (min, default, max) triples or
+        longer sequences whose trailing elements are user-space distances
+        (as in NormalizedAxisTripleAndDistances); only the first three
+        elements are coordinates, so only those are mapped — the distances
+        pass through untouched. The mapped coordinates are quantized to
+        F2Dot14, to avoid surprise interpolations.
+
+        Returns a dict mapping axis tags to tuples of the same length as
+        the input values. avar version 2 mappings are NOT applied — the
+        VarStore-driven part of an avar 2 table is handled separately by
+        the instancer (see fontTools.varLib.instancer).
+        """
+        if getattr(self, "majorVersion", 1) not in (1, 2):
+            raise NotImplementedError("Unknown avar table version")
+
+        avarSegments = self.segments
+        mappedAxisLimits = {}
+        for axisTag, triple in axisLimits.items():
+            coords = tuple(triple)[:3]
+            distances = tuple(triple)[3:]
+            avarMapping = avarSegments.get(axisTag, None)
+            if avarMapping is not None:
+                coords = tuple(
+                    piecewiseLinearMap(value, avarMapping) for value in coords
+                )
+            # Quantize to F2Dot14, to avoid surprise interpolations.
+            coords = tuple(fi2fl(fl2fi(value, 14), 14) for value in coords)
+            mappedAxisLimits[axisTag] = coords + distances
+        return mappedAxisLimits

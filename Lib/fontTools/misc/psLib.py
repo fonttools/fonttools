@@ -21,7 +21,6 @@ from collections.abc import Callable
 from string import whitespace
 import logging
 
-
 log = logging.getLogger(__name__)
 
 ps_special = b"()<>[]{}%"  # / is one too, but we take care of that one differently

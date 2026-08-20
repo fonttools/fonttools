@@ -1813,7 +1813,7 @@ class GlyphComponent(object):
             ]  # fixed 2.14
             data = data[4:]
         elif self.flags & WE_HAVE_A_TWO_BY_TWO:
-            (xscale, scale01, scale10, yscale) = struct.unpack(">hhhh", data[:8])
+            xscale, scale01, scale10, yscale = struct.unpack(">hhhh", data[:8])
             self.transform = [
                 [fi2fl(xscale, 14), fi2fl(scale01, 14)],
                 [fi2fl(scale10, 14), fi2fl(yscale, 14)],

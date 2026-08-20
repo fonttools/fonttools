@@ -17,7 +17,6 @@ from functools import reduce
 import sys
 import logging
 
-
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__ + ".timer"), level=logging.INFO)
 

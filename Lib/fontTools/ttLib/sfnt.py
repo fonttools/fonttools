@@ -25,7 +25,6 @@ import struct
 from collections import OrderedDict
 import logging
 
-
 log = logging.getLogger(__name__)
 
 
@@ -502,7 +501,15 @@ class DirectoryEntry(object):
         self.uncompressed = False  # if True, always embed entry raw
 
     def fromFile(self, file):
-        sstruct.unpack(self.format, file.read(self.formatSize), self)
+        data = file.read(self.formatSize)
+        if len(data) != self.formatSize:
+            # A file truncated inside the table directory, or one whose
+            # numTables is corrupt, would otherwise fail with a struct.error.
+            raise TTLibError(
+                "unexpected end of table directory: expected %d bytes but got %d"
+                % (self.formatSize, len(data))
+            )
+        sstruct.unpack(self.format, data, self)
 
     def fromString(self, str):
         sstruct.unpack(self.format, str, self)
@@ -519,7 +526,21 @@ class DirectoryEntry(object):
     def loadData(self, file):
         file.seek(self.offset)
         data = file.read(self.length)
-        assert len(data) == self.length
+        if len(data) != self.length:
+            # A corrupt or truncated table directory entry can point past the
+            # end of the file; raise a TTLibError instead of a bare assertion
+            # (which is also silently skipped under `python -O`).
+            tag = getattr(self, "tag", None)
+            raise TTLibError(
+                "unexpected end of '%s' table data: expected %d bytes but got "
+                "%d at offset %d"
+                % (
+                    Tag(tag) if tag is not None else "????",
+                    self.length,
+                    len(data),
+                    self.offset,
+                )
+            )
         if hasattr(self.__class__, "decodeData"):
             data = self.decodeData(data)
         return data

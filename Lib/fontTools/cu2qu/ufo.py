@@ -37,7 +37,6 @@ from .errors import (
     IncompatibleFontsError,
 )
 
-
 __all__ = ["fonts_to_quadratic", "font_to_quadratic"]
 
 # The default approximation error below is a relative value (1/1000 of the EM square).

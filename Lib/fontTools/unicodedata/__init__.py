@@ -6,7 +6,6 @@ import re
 from bisect import bisect_right
 from typing import Literal, TypeVar, overload
 
-
 try:
     # use unicodedata backport compatible with python2:
     # https://github.com/fonttools/unicodedata2

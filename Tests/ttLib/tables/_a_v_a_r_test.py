@@ -11,8 +11,8 @@ import fontTools.varLib.models as models
 import fontTools.varLib.varStore as varStore
 from io import BytesIO
 import os
+import pytest
 import unittest
-
 
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
@@ -198,6 +198,42 @@ class Avar2Test(unittest.TestCase):
         assert abs(expandedStats.area) < abs(blackStats.area)
 
         assert regularStats.meanX < expandedStats.meanX
+
+
+class RenormalizeAxisLimitsTest(unittest.TestCase):
+    def test_maps_coordinates_not_distances(self):
+        # Values may be 5-element (min, default, max, distanceNegative,
+        # distancePositive) sequences; the trailing distances are USER-space
+        # distances, not coordinates, and must not be warped by the map.
+        avar = table__a_v_a_r()
+        avar.segments = {"ELSH": {-1.0: -1.0, -0.5: -0.8, 0.0: 0.0, 0.5: 0.8, 1.0: 1.0}}
+
+        out = avar.renormalizeAxisLimits({"ELSH": (-0.5, 0.0, 0.5, 0.25, 0.75)})
+
+        coords = out["ELSH"][:3]
+        assert coords == (
+            pytest.approx(-0.8, abs=1 / 16384),
+            0.0,
+            pytest.approx(0.8, abs=1 / 16384),
+        )
+        assert out["ELSH"][3:] == (0.25, 0.75)
+
+    def test_quantizes_to_F2Dot14_after_map(self):
+        avar = table__a_v_a_r()
+        avar.segments = {"wght": {-1.0: -1.0, 0.0: 0.0, 0.7: 0.2, 1.0: 1.0}}
+
+        out = avar.renormalizeAxisLimits({"wght": (0.0, 0.5, 0.5)})
+
+        # 0.5 maps to 1/7 = 0.142857..., which must be quantized.
+        assert out["wght"] == (0.0, 0.14288330078125, 0.14288330078125)
+
+    def test_axis_without_segment_map_passes_through(self):
+        avar = table__a_v_a_r()
+        avar.segments = {}
+
+        out = avar.renormalizeAxisLimits({"wght": (-0.25, 0.0, 0.75)})
+
+        assert out["wght"] == (-0.25, 0.0, 0.75)
 
 
 if __name__ == "__main__":

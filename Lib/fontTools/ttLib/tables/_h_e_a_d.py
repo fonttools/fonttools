@@ -11,7 +11,6 @@ from fontTools.misc.arrayTools import intRect, unionRect
 from . import DefaultTable
 import logging
 
-
 log = logging.getLogger(__name__)
 
 headFormat = """

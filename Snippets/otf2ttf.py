@@ -11,7 +11,6 @@ from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
 
-
 log = logging.getLogger()
 
 # default approximation error, measured in UPEM

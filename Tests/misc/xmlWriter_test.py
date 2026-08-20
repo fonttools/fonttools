@@ -76,6 +76,14 @@ class TestXMLWriter(unittest.TestCase):
         writer.writecdata("foo&bar")
         self.assertEqual(HEADER + b"<![CDATA[foo&bar]]>", writer.file.getvalue())
 
+    def test_writecdata_split_terminator(self):
+        writer = XMLWriter(BytesIO())
+        writer.writecdata("foo]]><tag/>bar")
+        self.assertEqual(
+            HEADER + b"<![CDATA[foo]]]]><![CDATA[><tag/>bar]]>",
+            writer.file.getvalue(),
+        )
+
     def test_simpletag(self):
         writer = XMLWriter(BytesIO())
         writer.simpletag("tag", a="1", b="2")

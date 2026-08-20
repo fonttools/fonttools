@@ -4,7 +4,6 @@ from fontTools.config import OPTIONS
 from fontTools.misc.loggingTools import deprecateFunction
 import logging
 
-
 log = logging.getLogger(__name__)
 
 
