@@ -7,10 +7,8 @@ from fontTools.misc.textTools import bytesjoin, safeEval
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import DefaultTable
+from fontTools.ttLib.tables.DefaultTable import XMLAttrs, XMLContent
 from fontTools.ttLib.tables.E_B_L_C_ import sbitLineMetricsFormat, SbitLineMetrics
-
-XMLAttrs = dict[str, str]
-XMLContent = list[str | tuple[str, XMLAttrs, "XMLContent"]]
 
 ebscHeaderFormat = """
     > # big endian
@@ -144,6 +142,10 @@ class BitmapScaleTable:
             name, attrs, content = element
             if name == "sbitLineMetrics":
                 direction = attrs["direction"]
+                assert direction in (
+                    "hori",
+                    "vert",
+                ), "SbitLineMetrics direction specified invalid."
                 metricObj = SbitLineMetrics()
                 metricObj.fromXML(name, attrs, content, ttFont)
                 setattr(self, direction, metricObj)

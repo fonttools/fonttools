@@ -1,9 +1,10 @@
 import io
 
+import pytest
+
 from fontTools.misc.testTools import getXML, parseXmlInto
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.E_B_S_C_ import BitmapScaleTable, table_E_B_S_C_
-
 
 EBSC_XML = """\
 <header version="2.0" numSizes="1"/>
@@ -161,6 +162,22 @@ def test_fromxml_accepts_bitmap_scale_table_before_header():
     assert table.numSizes == 1
     assert len(table.bitmapScaleTables) == 1
     assertBitmapScaleTableEqual(table.bitmapScaleTables[0], makeBitmapScaleTable())
+
+
+def test_fromxml_rejects_invalid_sbit_line_metrics_direction():
+    table = table_E_B_S_C_()
+    with pytest.raises(
+        AssertionError, match="SbitLineMetrics direction specified invalid"
+    ):
+        parseXmlInto(
+            TTFont(),
+            table,
+            """\
+<bitmapScaleTable index="0">
+  <sbitLineMetrics direction="diagonal"/>
+</bitmapScaleTable>
+""",
+        )
 
 
 def test_save_writes_ebsc_after_ebdt_and_eblc():
