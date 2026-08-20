@@ -170,6 +170,10 @@ def populateCOLRv0(
         baseGlyphRecords.append(baseRec)
 
         for layerGlyph, paletteIndex in layers:
+            if glyphMap is not None and layerGlyph not in glyphMap:
+                raise ColorLibError(
+                    f"populateCOLRv0: layer glyph not found in glyphMap: {layerGlyph!r}"
+                )
             layerRec = ot.LayerRecord()
             layerRec.LayerGlyph = layerGlyph
             layerRec.PaletteIndex = paletteIndex
