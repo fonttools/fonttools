@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from fontTools.colorLib.builder import buildCOLR
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables as ot
@@ -6,6 +8,7 @@ from fontTools.varLib import (
     build_many,
     load_designspace,
     _add_COLR,
+    _add_avar,
     addGSUBFeatureVariations,
 )
 from fontTools.varLib.errors import VarLibValidationError
@@ -15,6 +18,7 @@ from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
 from fontTools.varLib import set_default_weight_width_slant
 from fontTools.designspaceLib import (
+    AxisDescriptor,
     DesignSpaceDocumentError,
     DesignSpaceDocument,
     SourceDescriptor,
@@ -40,6 +44,71 @@ def reload_font(font):
     font.close()
     buf.seek(0)
     return TTFont(buf)
+
+
+def test_varlib_avar_accepts_identical_duplicate_axis_map_input():
+    axis = AxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=100,
+        default=400,
+        maximum=900,
+        map=[
+            (100, 80),
+            (400, 450),
+            (400, 450),
+            (600, 700),
+            (900, 1000),
+        ],
+    )
+
+    avar = _add_avar(
+        TTFont(),
+        OrderedDict([(axis.name, axis)]),
+        mappings=[],
+        axisTags=[axis.tag],
+    )
+
+    assert avar.segments[axis.tag] == {
+        -1.0: -1.0,
+        0.0: 0.0,
+        1.0: 1.0,
+        0.4: 5 / 11,
+    }
+
+
+def test_varlib_avar_rejects_conflicting_duplicate_axis_map_input():
+    axis = AxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=100,
+        default=400,
+        maximum=900,
+        map=[(100, 80), (400, 450), (600, 700), (400, 500), (900, 1000)],
+    )
+
+    with pytest.raises(DesignSpaceDocumentError, match="Axis 'Weight'"):
+        _add_avar(
+            TTFont(),
+            OrderedDict([(axis.name, axis)]),
+            mappings=[],
+            axisTags=[axis.tag],
+        )
+
+
+def test_varlib_build_conflicting_default_map_raises_designspace_error():
+    designspace = DesignSpaceDocument.fromfile(
+        os.path.join(os.path.dirname(__file__), "data", "Build.designspace")
+    )
+    axis = next(axis for axis in designspace.axes if axis.name == "weight")
+    # A last-wins temporary dict previously shifted the duplicate default's
+    # normalized value from zero, causing a misleading "Base master not found"
+    # before _add_avar.
+    axis.map = [(0, 0), (368, 368), (368, 369), (1000, 1000)]
+
+    with pytest.raises(DesignSpaceDocumentError, match="input value 368") as exc_info:
+        build(designspace)
+    assert "Base master not found" not in str(exc_info.value)
 
 
 class BuildTest(unittest.TestCase):
