@@ -310,6 +310,32 @@ class CmapSubtableTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate"):
             cmap.compile(ttFont=None)
 
+    def test_unsupported_format_is_preserved(self):
+        # A subtable in a format we can't read is kept as raw data and written
+        # back out unchanged.
+        path = os.path.join(DATA_DIR, "aots", "cmap10_font1.otf")
+        for lazy in (True, False):
+            with self.subTest(lazy=lazy):
+                font = ttLib.TTFont(path, lazy=lazy)
+                data = font["cmap"].tables[0].data
+
+                font.saveXML(io.StringIO(), tables=["cmap"])
+                buf = io.BytesIO()
+                font.save(buf)
+                buf.seek(0)
+
+                subtable = ttLib.TTFont(buf)["cmap"].tables[0]
+                self.assertEqual(subtable.format, 10)
+                self.assertEqual(subtable.data, data)
+
+    def test_unsupported_format_missing_attribute(self):
+        # Retaining self.data must not make __getattr__ recurse forever.
+        path = os.path.join(DATA_DIR, "aots", "cmap10_font1.otf")
+        subtable = ttLib.TTFont(path)["cmap"].tables[0]
+        self.assertFalse(hasattr(subtable, "length"))
+        with self.assertRaises(AttributeError):
+            subtable.nosuchattribute
+
 
 if __name__ == "__main__":
     import sys

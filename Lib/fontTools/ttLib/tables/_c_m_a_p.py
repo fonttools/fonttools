@@ -1602,6 +1602,24 @@ class cmap_format_14(CmapSubtable):
 class cmap_format_unknown(CmapSubtable):
     headerFormat = ""  # the body is kept verbatim, nothing is unpacked
 
+    def __init__(self, format):
+        CmapSubtable.__init__(self, format)
+        # We can't read the subtable, so there are no mappings to offer. The raw
+        # data is kept instead, and written back out as-is. fromXML() does the
+        # same.
+        self.cmap = {}
+
+    def ensureDecompiled(self, recurse=False):
+        # There is nothing to decompile, so hold on to the data; the base class
+        # would drop it.
+        pass
+
+    def __getattr__(self, attr):
+        # The base class lazily decompiles and retries, relying on
+        # ensureDecompiled() clearing self.data to terminate. We keep the data,
+        # so retrying would recurse forever.
+        raise AttributeError(attr)
+
     def toXML(self, writer, ttFont):
         cmapName = self.__class__.__name__[:12] + str(self.format)
         writer.begintag(
