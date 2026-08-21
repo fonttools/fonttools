@@ -85,6 +85,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
     """
 
+    def __init__(self, tag=None):
+        super().__init__(tag)
+        self.glyphs = {}
+
     # this attribute controls the amount of padding applied to glyph data upon compile.
     # Glyph lenghts are aligned to multiples of the specified value.
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
@@ -140,19 +144,20 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         dataList = []
         recalcBBoxes = ttFont.recalcBBoxes
         boundsDone = set()
-        for glyphName in self.glyphOrder:
-            glyph = self.glyphs[glyphName]
-            glyphData = glyph.compile(
-                self,
-                recalcBBoxes,
-                boundsDone=boundsDone,
-                optimizeSize=not optimizeSpeed,
-            )
-            if padding > 1:
-                glyphData = pad(glyphData, size=padding)
-            locations.append(currentLocation)
-            currentLocation = currentLocation + len(glyphData)
-            dataList.append(glyphData)
+        if self.glyphs:
+            for glyphName in self.glyphOrder:
+                glyph = self.glyphs[glyphName]
+                glyphData = glyph.compile(
+                    self,
+                    recalcBBoxes,
+                    boundsDone=boundsDone,
+                    optimizeSize=not optimizeSpeed,
+                )
+                if padding > 1:
+                    glyphData = pad(glyphData, size=padding)
+                locations.append(currentLocation)
+                currentLocation = currentLocation + len(glyphData)
+                dataList.append(glyphData)
         locations.append(currentLocation)
 
         if padding == 1 and currentLocation < 0x20000:
@@ -175,7 +180,11 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         if "loca" in ttFont:
             ttFont["loca"].set(locations)
         if "maxp" in ttFont:
-            ttFont["maxp"].numGlyphs = len(self.glyphs)
+            # TODO: Should this maxp update be removed?
+            # It is redundant because maxp computes numGlyphs when compiled.
+            # Moreover, self.glyphOrder is not intrinsic to the glyf table,
+            # so using it here seems semantically inaccurate.
+            ttFont["maxp"].numGlyphs = len(self.glyphOrder)
         if not data:
             # As a special case when all glyph in the font are empty, add a zero byte
             # to the table, so that OTS doesn’t reject it, and to make the table work
@@ -367,7 +376,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         self._reverseGlyphOrder = {}
 
     def __len__(self):
-        assert len(self.glyphOrder) == len(self.glyphs)
+        if self.glyphs:
+            assert len(self.glyphOrder) == len(self.glyphs)
         return len(self.glyphs)
 
     def _getPhantomPoints(self, glyphName, hMetrics, vMetrics=None):
