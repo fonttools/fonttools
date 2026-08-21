@@ -228,6 +228,18 @@ class FreeTypePenTest(unittest.TestCase):
         self.assertEqual(size, (500, 500))
         self.assertEqual(buf1, buf2)
 
+    def test_sub_contours(self):
+        pen = FreeTypePen(None)
+        box(pen, offset=(0, 0))
+        with pen as sub_pen:
+            box(sub_pen, offset=(500, 0))
+        with pen as sub_pen:
+            box(sub_pen, offset=(1000, 0))
+        t = Scale(0.05, 0.05)
+        buf, size = pen.buffer(width=None, height=None, transform=t)
+        self.assertEqual(size, (75, 25))
+        self.assertEqual(buf, b"\xff" * size[0] * size[1])
+
 
 if __name__ == "__main__":
     import sys
