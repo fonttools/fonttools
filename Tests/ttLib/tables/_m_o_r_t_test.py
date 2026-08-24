@@ -42,6 +42,30 @@ MORT_NONCONTEXTUAL_DATA = deHexStr(
 assert len(MORT_NONCONTEXTUAL_DATA) == 88
 
 
+# Paired with TestAATMorx.ttf in unicode-org/text-rendering-tests. This table
+# exercises all five metamorphosis subtable types.
+MORT_ALL_TYPES_DATA = deHexStr(
+    "00010000000000010000001f0000021000000005004420000000000100060008"
+    "002a00300000001e010104050101010101010101010101010101010101010101"
+    "010101010101000000000102002a0000002a8000002a20010088200100000002"
+    "0005000a002c003200420000001e010101010401010101010101010101010101"
+    "010101010101010101010101000000000100002c000000000000002c00000000"
+    "0021000000000000000000050000000000000000000000000000000000000000"
+    "0000000000000000000000000000000000000000000000000000000000000000"
+    "00d42002000000040006000e0030003c0048005000c80000001e010101010101"
+    "0405010101010101010101010101010101010101010101010000000001000000"
+    "0000000200300000003680000030804800000028800000460000000000000000"
+    "0000000000000000000000000000000000000000000000000000000000000000"
+    "000000000000000000000000000000000000000000c800c800c800c800c800c8"
+    "00c800c800c800c800c800c800c800c800c800c800c800c800c800c800c800c8"
+    "00c800c800c800c800c800c800c800c8000f0000001820040000000800060004"
+    "000100040000000000080009004c2005000000100005000a002c003200420000"
+    "001e010101010101010101010104010101010101010101010101010101010101"
+    "000000000100002c0000ffffffff002c00200000ffff000c"
+)
+assert len(MORT_ALL_TYPES_DATA) == 536
+
+
 MORT_NONCONTEXTUAL_XML = [
     '<Version value="0x00010000"/>',
     "<!-- MorphChainCount=1 -->",
@@ -105,6 +129,97 @@ class MORTNoncontextualGlyphSubstitutionTest(unittest.TestCase):
         self.assertEqual(
             hexStr(table.compile(self.font)), hexStr(MORT_NONCONTEXTUAL_DATA)
         )
+
+
+class MORTAllSubtableTypesTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+        cls.font = FakeFont(
+            [
+                ".notdef",
+                "space",
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G",
+                "H",
+                "O",
+                "X",
+                "Y",
+                "Z",
+                "zero",
+                "one",
+                "one_zero",
+                "one_one",
+                "one_two",
+                "one_three",
+                "one_four",
+                "one_five",
+                "two",
+                "three",
+                "four",
+                "five",
+                "six",
+                "seven",
+                "eight",
+                "nine",
+            ]
+        )
+
+    def decompile(self, data):
+        table = newTable("mort")
+        table.decompile(data, self.font)
+        return table
+
+    def assertSemantics(self, table):
+        subtables = table.table.MorphChain[0].MorphSubtable
+        self.assertEqual(
+            [subtable.MorphType for subtable in subtables], [0, 1, 2, 4, 5]
+        )
+
+        rearrangement = subtables[0].SubStruct.StateTable
+        self.assertTrue(rearrangement.States[0].Transitions[4].MarkFirst)
+        transition = rearrangement.States[0].Transitions[5]
+        self.assertTrue(transition.MarkLast)
+        self.assertEqual(transition.Verb, 1)
+
+        contextual = subtables[1].SubStruct.StateTable
+        self.assertEqual(contextual.PerGlyphLookups, [{"C": "D"}])
+        self.assertEqual(contextual.States[0].Transitions[4].CurrentIndex, 0)
+
+        ligature = subtables[2].SubStruct.StateTable
+        transition = ligature.States[1].Transitions[5]
+        self.assertTrue(transition.SetComponent)
+        self.assertEqual(
+            [(action.GlyphIndexDelta, action.Store) for action in transition.Actions],
+            [(0, False), (30, False)],
+        )
+        self.assertEqual(ligature.LigComponents, [0] * 60)
+        self.assertEqual(ligature.Ligatures, ["one"])
+
+        self.assertEqual(subtables[3].SubStruct.Substitution, {"G": "H"})
+
+        insertion = subtables[4].SubStruct.StateTable
+        transition = insertion.States[0].Transitions[4]
+        self.assertEqual(transition.CurrentInsertionAction, ["Y"])
+
+    def test_decompile_all_types(self):
+        self.assertSemantics(self.decompile(MORT_ALL_TYPES_DATA))
+
+    def test_binary_roundtrip(self):
+        table = self.decompile(MORT_ALL_TYPES_DATA)
+        self.assertSemantics(self.decompile(table.compile(self.font)))
+
+    def test_xml_roundtrip(self):
+        table = self.decompile(MORT_ALL_TYPES_DATA)
+        compiled = newTable("mort")
+        for name, attrs, content in parseXML(getXML(table.toXML)):
+            compiled.fromXML(name, attrs, content, font=self.font)
+        self.assertSemantics(self.decompile(compiled.compile(self.font)))
 
 
 if __name__ == "__main__":

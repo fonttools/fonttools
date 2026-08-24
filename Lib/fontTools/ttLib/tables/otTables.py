@@ -2723,7 +2723,11 @@ def _buildClasses():
             9: ExtensionPos,
         },
         "mort": {
+            0: RearrangementMorph,
+            1: ContextualMorph,
+            2: LigatureMorph,
             4: NoncontextualMorph,
+            5: InsertionMorph,
         },
         "morx": {
             0: RearrangementMorph,

@@ -1,3 +1,5 @@
+- [mort] Add semantic decompilation, TTX, and compilation support for
+  rearrangement, contextual-substitution, ligature, and insertion subtables.
 - [colorLib] Raise a legible error when a COLRv0 layer, or a COLRv1 PaintGlyph or
   PaintColrGlyph, references a glyph missing from the glyphMap, instead of failing
   obscurely later (#2629)

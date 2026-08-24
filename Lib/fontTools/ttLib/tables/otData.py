@@ -4563,7 +4563,7 @@ otData = [
         "RearrangementMorph",
         [
             FieldSpec(
-                "STXHeader(RearrangementMorphAction)",
+                "MorphStateTable(RearrangementMorphAction)",
                 "StateTable",
                 description="Finite-state transducer table for indic rearrangement.",
             ),
@@ -4573,7 +4573,7 @@ otData = [
         "ContextualMorph",
         [
             FieldSpec(
-                "STXHeader(ContextualMorphAction)",
+                "MorphStateTable(ContextualMorphAction)",
                 "StateTable",
                 description="Finite-state transducer for contextual glyph substitution.",
             ),
@@ -4583,7 +4583,7 @@ otData = [
         "LigatureMorph",
         [
             FieldSpec(
-                "STXHeader(LigatureMorphAction)",
+                "MorphStateTable(LigatureMorphAction)",
                 "StateTable",
                 description="Finite-state transducer for ligature substitution.",
             ),
@@ -4603,7 +4603,7 @@ otData = [
         "InsertionMorph",
         [
             FieldSpec(
-                "STXHeader(InsertionMorphAction)",
+                "MorphStateTable(InsertionMorphAction)",
                 "StateTable",
                 description="Finite-state transducer for glyph insertion.",
             ),
