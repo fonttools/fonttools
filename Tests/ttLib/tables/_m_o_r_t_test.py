@@ -1,3 +1,5 @@
+import copy
+
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
@@ -64,6 +66,17 @@ MORT_ALL_TYPES_DATA = deHexStr(
     "000000000100002c0000ffffffff002c00200000ffff000c"
 )
 assert len(MORT_ALL_TYPES_DATA) == 536
+
+
+# Converted from HarfBuzz's TestMORXFourtyone.ttf. The ligature component
+# table contains relative zeroes in the range covered by the final action.
+MORT_LIGATURE_REBASE_DATA = deHexStr(
+    "00010000000000010000000100000078000200010004000000000001ffffffff"
+    "00000001000000000000000000542002000000010007000e001a002200300038"
+    "00480000000701010405060101000000000001010200001a0000001a8000001a"
+    "803000000000001a8000001e00000002000000000048004a0048004800050006"
+)
+assert len(MORT_LIGATURE_REBASE_DATA) == 128
 
 
 MORT_NONCONTEXTUAL_XML = [
@@ -220,6 +233,45 @@ class MORTAllSubtableTypesTest(unittest.TestCase):
         for name, attrs, content in parseXML(getXML(table.toXML)):
             compiled.fromXML(name, attrs, content, font=self.font)
         self.assertSemantics(self.decompile(compiled.compile(self.font)))
+
+    def test_xml_roundtrip_preserves_unused_glyph_class(self):
+        table = self.decompile(MORT_ALL_TYPES_DATA)
+        stateTable = table.table.MorphChain[0].MorphSubtable[0].SubStruct.StateTable
+        stateTable.GlyphClassCount = 7
+        for state in stateTable.States:
+            state.Transitions[6] = copy.deepcopy(state.Transitions[5])
+
+        compiled = newTable("mort")
+        for name, attrs, content in parseXML(getXML(table.toXML)):
+            compiled.fromXML(name, attrs, content, font=self.font)
+
+        stateTable = (
+            self.decompile(compiled.compile(self.font))
+            .table.MorphChain[0]
+            .MorphSubtable[0]
+            .SubStruct.StateTable
+        )
+        self.assertEqual(stateTable.GlyphClassCount, 7)
+        self.assertIn(6, stateTable.States[0].Transitions)
+
+
+class MORTLigatureRoundTripTest(unittest.TestCase):
+    def test_binary_roundtrip_preserves_component_rebasing(self):
+        font = FakeFont([".notdef", "space", "a", "b", "c", "a_c", "b_c"])
+        table = newTable("mort")
+        table.decompile(MORT_LIGATURE_REBASE_DATA, font)
+        self.assertEqual(table.compile(font), MORT_LIGATURE_REBASE_DATA)
+
+    def test_xml_roundtrip_preserves_component_rebasing(self):
+        font = FakeFont([".notdef", "space", "a", "b", "c", "a_c", "b_c"])
+        table = newTable("mort")
+        table.decompile(MORT_LIGATURE_REBASE_DATA, font)
+
+        compiled = newTable("mort")
+        for name, attrs, content in parseXML(getXML(table.toXML)):
+            compiled.fromXML(name, attrs, content, font=font)
+
+        self.assertEqual(compiled.compile(font), MORT_LIGATURE_REBASE_DATA)
 
 
 if __name__ == "__main__":
