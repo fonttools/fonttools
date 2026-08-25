@@ -266,9 +266,23 @@ class MORTLigatureRoundTripTest(unittest.TestCase):
         font = FakeFont([".notdef", "space", "a", "b", "c", "a_c", "b_c"])
         table = newTable("mort")
         table.decompile(MORT_LIGATURE_REBASE_DATA, font)
+        xml = getXML(table.toXML)
+        first = xml.index("        <MortLigatureRebase>")
+        last = xml.index("        </MortLigatureRebase>", first) + 1
+        self.assertEqual(
+            xml[first:last],
+            [
+                "        <MortLigatureRebase>",
+                '          <Component index="4"/>',
+                '          <Component index="5"/>',
+                '          <Component index="6"/>',
+                '          <Component index="7"/>',
+                "        </MortLigatureRebase>",
+            ],
+        )
 
         compiled = newTable("mort")
-        for name, attrs, content in parseXML(getXML(table.toXML)):
+        for name, attrs, content in parseXML(xml):
             compiled.fromXML(name, attrs, content, font=font)
 
         self.assertEqual(compiled.compile(font), MORT_LIGATURE_REBASE_DATA)
