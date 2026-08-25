@@ -26,8 +26,10 @@ from .otTables import (
     AATState,
     AATAction,
     ContextualMorphAction,
+    LigAction,
     LigatureMorphAction,
     InsertionMorphAction,
+    MortSubtable,
     MorxSubtable,
     ExtendMode as _ExtendMode,
     CompositeMode as _CompositeMode,
@@ -1150,6 +1152,71 @@ class AATLookupWithDataOffset(BaseConverter):
         lookup.xmlWrite(xmlWriter, font, value, name, attrs)
 
 
+class MortSubtableConverter(BaseConverter):
+    def read(self, reader, font, tableDict):
+        pos = reader.pos
+        m = MortSubtable()
+        m.StructLength = reader.readUShort()
+        m.CoverageFlags = reader.readUInt8()
+        m.MorphType = reader.readUInt8()
+        m.SubFeatureFlags = reader.readULong()
+        tableClass = lookupTypes["mort"].get(m.MorphType)
+        if tableClass is None:
+            assert False, "unsupported 'mort' lookup type %s" % m.MorphType
+
+        # Limit the state-table reader to this subtable. In particular, the
+        # legacy ligature format has no encoded ligature count and uses the end
+        # of the subtable as its only upper bound.
+        headerLength = reader.pos - pos
+        data = reader.data[reader.pos : reader.pos + m.StructLength - headerLength]
+        assert len(data) == m.StructLength - headerLength
+        subReader = OTTableReader(data=data, tableTag=reader.tableTag)
+        m.SubStruct = tableClass()
+        m.SubStruct.decompile(subReader, font)
+        reader.seek(pos + m.StructLength)
+        return m
+
+    def xmlWrite(self, xmlWriter, font, value, name, attrs):
+        xmlWriter.begintag(name, attrs)
+        xmlWriter.newline()
+        xmlWriter.comment("StructLength=%d" % value.StructLength)
+        xmlWriter.newline()
+        xmlWriter.simpletag("CoverageFlags", value=value.CoverageFlags)
+        xmlWriter.newline()
+        xmlWriter.comment("MorphType=%d" % value.MorphType)
+        xmlWriter.newline()
+        xmlWriter.simpletag("SubFeatureFlags", value="0x%08x" % value.SubFeatureFlags)
+        xmlWriter.newline()
+        value.SubStruct.toXML(xmlWriter, font)
+        xmlWriter.endtag(name)
+        xmlWriter.newline()
+
+    def xmlRead(self, attrs, content, font):
+        m = MortSubtable()
+        m.CoverageFlags = 0
+        for eltName, eltAttrs, eltContent in filter(istuple, content):
+            if eltName == "CoverageFlags":
+                m.CoverageFlags = safeEval(eltAttrs["value"])
+            elif eltName == "SubFeatureFlags":
+                m.SubFeatureFlags = safeEval(eltAttrs["value"])
+            elif eltName.endswith("Morph"):
+                m.fromXML(eltName, eltAttrs, eltContent, font)
+            else:
+                assert False, eltName
+        return m
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        lengthIndex = len(writer.items)
+        before = writer.getDataLength()
+        value.StructLength = 0xDEAD
+        value.compile(writer, font)
+        assert writer.items[lengthIndex] == b"\xde\xad"
+        length = writer.getDataLength() - before
+        if length > 0xFFFF:
+            raise ValueError("mort subtable exceeds 65535 bytes")
+        writer.items[lengthIndex] = struct.pack(">H", length)
+
+
 class MorxSubtableConverter(BaseConverter):
     _PROCESSING_ORDERS = {
         # bits 30 and 28 of morx.CoverageFlags; see morx spec
@@ -1524,6 +1591,14 @@ class STXHeader(BaseConverter):
                 xmlWriter.newline()
             xmlWriter.endtag("LigComponents")
             xmlWriter.newline()
+        if hasattr(value, "_MortLigatureRebase"):
+            xmlWriter.begintag("MortLigatureRebase")
+            xmlWriter.newline()
+            for componentIndex in sorted(value._MortLigatureRebase):
+                xmlWriter.simpletag("Component", index=componentIndex)
+                xmlWriter.newline()
+            xmlWriter.endtag("MortLigatureRebase")
+            xmlWriter.newline()
         self._xmlWriteLigatures(xmlWriter, font, value, name, attrs)
         xmlWriter.endtag(name)
         xmlWriter.newline()
@@ -1556,9 +1631,21 @@ class STXHeader(BaseConverter):
                 table.LigComponents = self._xmlReadLigComponents(
                     eltAttrs, eltContent, font
                 )
+            elif eltName == "MortLigatureRebase":
+                table._MortLigatureRebase = {
+                    safeEval(componentAttrs["index"])
+                    for componentName, componentAttrs, _componentContent in filter(
+                        istuple, eltContent
+                    )
+                    if componentName == "Component"
+                }
             elif eltName == "Ligatures":
                 table.Ligatures = self._xmlReadLigatures(eltAttrs, eltContent, font)
-        table.GlyphClassCount = max(table.GlyphClasses.values()) + 1
+        glyphClasses = list(table.GlyphClasses.values())
+        glyphClasses.extend(
+            glyphClass for state in table.States for glyphClass in state.Transitions
+        )
+        table.GlyphClassCount = max(glyphClasses, default=-1) + 1
         return table
 
     def _xmlReadState(self, attrs, content, font):
@@ -1584,6 +1671,572 @@ class STXHeader(BaseConverter):
             if eltName == "Ligature":
                 ligs.append(eltAttrs["glyph"])
         return ligs
+
+
+class StateHeader(STXHeader):
+    """Converter for the obsolete, non-extended AAT state-table format."""
+
+    def read(self, reader, font, tableDict):
+        table = AATStateTable()
+        pos = reader.pos
+        table.GlyphClassCount = reader.readUShort()
+        classTableOffset = reader.readUShort()
+        stateArrayOffset = reader.readUShort()
+        entryTableOffset = reader.readUShort()
+        if table.GlyphClassCount == 0:
+            raise ValueError("mort state table has no glyph classes")
+
+        substitutionTableOffset = None
+        actionOffset = componentOffset = ligatureOffset = None
+        actionReader = None
+        if issubclass(self.tableClass, ContextualMorphAction):
+            substitutionTableOffset = reader.readUShort()
+        elif issubclass(self.tableClass, LigatureMorphAction):
+            actionOffset = reader.readUShort()
+            componentOffset = reader.readUShort()
+            ligatureOffset = reader.readUShort()
+            if (
+                componentOffset > ligatureOffset
+                or (ligatureOffset - componentOffset) % 2
+            ):
+                raise ValueError("invalid mort ligature component table")
+            componentReader = reader.getSubReader(0)
+            componentReader.seek(pos + componentOffset)
+            rawComponents = componentReader.readUShortArray(
+                (ligatureOffset - componentOffset) // 2
+            )
+            if any(component % 2 for component in rawComponents):
+                raise ValueError("invalid mort ligature component value")
+            table.LigComponents = [component // 2 for component in rawComponents]
+            table.Ligatures = []
+            table._MortLigatureRebase = set()
+        elif issubclass(self.tableClass, InsertionMorphAction):
+            actionOffset = reader.readUShort()
+            actionReader = reader.getSubReader(0)
+            actionReader.seek(pos + actionOffset)
+
+        classTableReader = reader.getSubReader(0)
+        classTableReader.seek(pos + classTableOffset)
+        firstGlyph = classTableReader.readUShort()
+        glyphCount = classTableReader.readUShort()
+        glyphClasses = classTableReader.readUInt8Array(glyphCount)
+        table.GlyphClasses = {
+            font.getGlyphName(firstGlyph + i): glyphClass
+            for i, glyphClass in enumerate(glyphClasses)
+        }
+
+        stateArrayReader = reader.getSubReader(0)
+        stateArrayReader.seek(pos + stateArrayOffset)
+        entryTableReader = reader.getSubReader(0)
+        entryTableReader.seek(pos + entryTableOffset)
+        stateDataLength = entryTableOffset - stateArrayOffset
+        if stateDataLength < 0:
+            raise ValueError("mort state-array offset follows its entry table")
+        numStates = stateDataLength // table.GlyphClassCount
+        transitionCache = {}
+        for _stateIndex in range(numStates):
+            state = AATState()
+            table.States.append(state)
+            for glyphClass in range(table.GlyphClassCount):
+                entryIndex = stateArrayReader.readUInt8()
+                transition = transitionCache.get(entryIndex)
+                if transition is None:
+                    transition = self._readTransition(
+                        entryTableReader,
+                        entryIndex,
+                        font,
+                        actionReader,
+                        pos,
+                        stateArrayOffset,
+                        componentOffset,
+                        ligatureOffset,
+                        table,
+                    )
+                    transitionCache[entryIndex] = transition
+                state.Transitions[glyphClass] = transition
+
+        if substitutionTableOffset is not None:
+            self._readContextualLookups(
+                table, reader, font, pos, substitutionTableOffset
+            )
+        elif ligatureOffset is not None:
+            ligatureBase = ligatureOffset // 2
+            table._MortLigatureRebase = {
+                componentIndex
+                for componentIndex in table._MortLigatureRebase
+                if table.LigComponents[componentIndex] >= ligatureBase
+            }
+            for componentIndex in table._MortLigatureRebase:
+                # Unused entries are commonly zero. Only values which actually
+                # include the ligature-table base need to be normalized.
+                table.LigComponents[componentIndex] -= ligatureBase
+
+            ligatureCount = self._countLegacyLigatures(table, len(font.getGlyphOrder()))
+            ligatureReader = reader.getSubReader(0)
+            ligatureReader.seek(pos + ligatureOffset)
+            table.Ligatures = font.getGlyphNameMany(
+                ligatureReader.readUShortArray(ligatureCount)
+            )
+        return table
+
+    def _readTransition(
+        self,
+        reader,
+        entryIndex,
+        font,
+        actionReader,
+        stateTablePos,
+        stateArrayOffset,
+        componentOffset,
+        ligatureOffset,
+        table,
+    ):
+        transition = self.tableClass()
+        entrySize = (
+            4
+            if issubclass(self.tableClass, LigatureMorphAction)
+            else transition.staticSize
+        )
+        entryReader = reader.getSubReader(reader.pos + entryIndex * entrySize)
+
+        if issubclass(self.tableClass, ContextualMorphAction):
+            transition.NewState = entryReader.readUShort()
+            flags = entryReader.readUShort()
+            transition.SetMark = bool(flags & 0x8000)
+            transition.DontAdvance = bool(flags & 0x4000)
+            transition.ReservedFlags = flags & 0x3FFF
+            transition._MortMarkOffset = entryReader.readShort()
+            transition._MortCurrentOffset = entryReader.readShort()
+        elif issubclass(self.tableClass, LigatureMorphAction):
+            transition.NewState = entryReader.readUShort()
+            flags = entryReader.readUShort()
+            transition.SetComponent = bool(flags & 0x8000)
+            transition.DontAdvance = bool(flags & 0x4000)
+            transition.ReservedFlags = 0
+            transition.Actions = []
+            ligActionOffset = flags & 0x3FFF
+            if ligActionOffset:
+                transition.Actions = self._readLigatureActions(
+                    reader,
+                    font,
+                    stateTablePos,
+                    ligActionOffset,
+                    componentOffset,
+                    ligatureOffset,
+                    table,
+                )
+        else:
+            transition.decompile(entryReader, font, actionReader)
+
+        newStateOffset = transition.NewState - stateArrayOffset
+        if newStateOffset < 0 or newStateOffset % table.GlyphClassCount:
+            raise ValueError("invalid mort new-state offset")
+        transition.NewState = newStateOffset // table.GlyphClassCount
+        return transition
+
+    def _readContextualLookups(
+        self, table, reader, font, stateTablePos, substitutionTableOffset
+    ):
+        transitions = {
+            transition
+            for state in table.States
+            for transition in state.Transitions.values()
+        }
+        offsets = sorted(
+            {
+                offset
+                for transition in transitions
+                for offset in (
+                    transition._MortMarkOffset,
+                    transition._MortCurrentOffset,
+                )
+                if offset
+            }
+        )
+        offsetToIndex = {offset: i for i, offset in enumerate(offsets)}
+        glyphOrder = font.getGlyphOrder()
+        # reader.data holds just this subtable, so this is the room between
+        # the state-table header and the end of the subtable.
+        available = len(reader.data) - stateTablePos
+        for offset in offsets:
+            # The entry offset plus a glyph ID gives the word offset of that
+            # glyph's replacement, so an offset (which may be negative) exposes
+            # a per-glyph window rather than a whole lookup table. Fonts trim
+            # the windows: words before the substitution table mean "no
+            # substitution" (like HarfBuzz), and we also stop at the end of
+            # the subtable (stricter than HarfBuzz's blob-wide bound).
+            firstGlyph = max(0, (substitutionTableOffset + 1) // 2 - offset)
+            lastGlyph = min(len(glyphOrder) - 1, (available - 2) // 2 - offset)
+            lookup = {}
+            if firstGlyph <= lastGlyph:
+                lookupReader = reader.getSubReader(0)
+                lookupReader.seek(stateTablePos + 2 * (offset + firstGlyph))
+                replacements = lookupReader.readUShortArray(lastGlyph - firstGlyph + 1)
+                lookup = {
+                    glyphOrder[firstGlyph + i]: font.getGlyphName(replacement)
+                    for i, replacement in enumerate(replacements)
+                    if replacement != 0
+                }
+            table.PerGlyphLookups.append(lookup)
+        for transition in transitions:
+            transition.MarkIndex = (
+                offsetToIndex[transition._MortMarkOffset]
+                if transition._MortMarkOffset
+                else 0xFFFF
+            )
+            transition.CurrentIndex = (
+                offsetToIndex[transition._MortCurrentOffset]
+                if transition._MortCurrentOffset
+                else 0xFFFF
+            )
+            del transition._MortMarkOffset
+            del transition._MortCurrentOffset
+
+    def _readLigatureActions(
+        self,
+        reader,
+        font,
+        stateTablePos,
+        ligActionOffset,
+        componentOffset,
+        ligatureOffset,
+        table,
+    ):
+        actionReader = reader.getSubReader(0)
+        actionReader.seek(stateTablePos + ligActionOffset)
+        glyphCount = len(font.getGlyphOrder())
+        result = []
+        rebased = False
+        last = False
+        while not last:
+            value = actionReader.readULong()
+            last = bool(value & 0x80000000)
+            store = bool(value & 0x40000000)
+            componentWordOffset = value & 0x3FFFFFFF
+            if componentWordOffset & 0x20000000:
+                componentWordOffset -= 0x40000000
+            componentIndex = componentWordOffset - componentOffset // 2
+            if (
+                componentIndex >= len(table.LigComponents)
+                or componentIndex + glyphCount <= 0
+            ):
+                raise ValueError("mort ligature component offset is out of bounds")
+            if (store or last) and not rebased:
+                start = max(0, componentIndex)
+                limit = min(len(table.LigComponents), componentIndex + glyphCount)
+                table._MortLigatureRebase.update(range(start, limit))
+                rebased = True
+
+            action = LigAction()
+            action.Store = store
+            action.GlyphIndexDelta = componentIndex
+            result.append(action)
+        return result
+
+    @staticmethod
+    def _countLegacyLigatures(table, glyphCount):
+        count = 0
+        transitions = {
+            transition
+            for state in table.States
+            for transition in state.Transitions.values()
+        }
+        for transition in transitions:
+            cumulativeMax = 0
+            for index, action in enumerate(transition.Actions):
+                start = max(0, action.GlyphIndexDelta)
+                limit = min(
+                    len(table.LigComponents),
+                    action.GlyphIndexDelta + glyphCount,
+                )
+                cumulativeMax += max(table.LigComponents[start:limit], default=0)
+                if action.Store or index == len(transition.Actions) - 1:
+                    count = max(count, cumulativeMax + 1)
+        return count
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        glyphClassCount = value.GlyphClassCount
+        if not 0 < glyphClassCount <= 256:
+            raise ValueError("mort state tables support 1 to 256 glyph classes")
+
+        glyphClasses = sorted(
+            (font.getGlyphID(glyph), glyphClass)
+            for glyph, glyphClass in value.GlyphClasses.items()
+        )
+        if glyphClasses:
+            firstGlyph = glyphClasses[0][0]
+            lastGlyph = glyphClasses[-1][0]
+            classValues = dict(glyphClasses)
+            classes = bytes(
+                classValues.get(glyphID, 1)
+                for glyphID in range(firstGlyph, lastGlyph + 1)
+            )
+        else:
+            firstGlyph = 0
+            classes = b""
+        classData = struct.pack(">HH", firstGlyph, len(classes)) + classes
+
+        genericActionData, genericActionIndex = self.tableClass.compileActions(
+            font, value.States
+        )
+        entries = []
+        entryIDs = {}
+        stateEntryIDs = []
+        for state in value.States:
+            row = []
+            for glyphClass in range(glyphClassCount):
+                transition = state.Transitions[glyphClass]
+                transitionWriter = OTTableWriter()
+                transition.compile(transitionWriter, font, genericActionIndex)
+                key = transitionWriter.getAllData()
+                entryIndex = entryIDs.get(key)
+                if entryIndex is None:
+                    entryIndex = len(entries)
+                    if entryIndex > 0xFF:
+                        raise ValueError(
+                            "mort state tables support at most 256 entries"
+                        )
+                    entryIDs[key] = entryIndex
+                    entries.append(transition)
+                row.append(entryIndex)
+            stateEntryIDs.append(row)
+
+        extraSize = 0
+        if issubclass(self.tableClass, ContextualMorphAction):
+            extraSize = 2
+        elif issubclass(self.tableClass, LigatureMorphAction):
+            extraSize = 6
+        elif issubclass(self.tableClass, InsertionMorphAction):
+            extraSize = 2
+        classTableOffset = 8 + extraSize
+        stateArrayOffset = self._aligned(classTableOffset + len(classData), 2)
+        stateData = bytes(entry for row in stateEntryIDs for entry in row)
+        entryTableOffset = self._aligned(stateArrayOffset + len(stateData), 2)
+        entrySize = (
+            4
+            if issubclass(self.tableClass, LigatureMorphAction)
+            else self.tableClass.staticSize
+        )
+        tailOffset = entryTableOffset + len(entries) * entrySize
+
+        extra = b""
+        tail = b""
+        contextOffsets = None
+        ligatureActionOffsets = None
+        if issubclass(self.tableClass, ContextualMorphAction):
+            extra, tail, contextOffsets = self._compileContextualLookups(
+                value, font, tailOffset
+            )
+        elif issubclass(self.tableClass, LigatureMorphAction):
+            extra, tail, ligatureActionOffsets = self._compileLigatureData(
+                value, font, entries, tailOffset
+            )
+        elif issubclass(self.tableClass, InsertionMorphAction):
+            if tailOffset > 0xFFFF:
+                raise ValueError("mort insertion-action offset exceeds 16 bits")
+            extra = struct.pack(">H", tailOffset)
+            tail = genericActionData
+
+        entryData = b"".join(
+            self._compileTransition(
+                transition,
+                font,
+                genericActionIndex,
+                stateArrayOffset,
+                glyphClassCount,
+                contextOffsets,
+                ligatureActionOffsets,
+            )
+            for transition in entries
+        )
+        data = struct.pack(
+            ">HHHH",
+            glyphClassCount,
+            classTableOffset,
+            stateArrayOffset,
+            entryTableOffset,
+        )
+        data += extra + classData
+        data = pad(data, 2) + stateData
+        data = pad(data, 2) + entryData + tail
+        data = pad(data, 4)
+        if len(data) > 0xFFFF:
+            raise ValueError("mort state table exceeds 65535 bytes")
+        writer.writeData(data)
+
+    @staticmethod
+    def _aligned(value, alignment):
+        return value + (-value % alignment)
+
+    def _compileContextualLookups(self, table, font, tailOffset):
+        count = self._countPerGlyphLookups(table)
+        if len(table.PerGlyphLookups) != count:
+            raise ValueError(
+                "mort contextual actions refer to %d lookups, but the table has %d"
+                % (count, len(table.PerGlyphLookups))
+            )
+        glyphOrder = font.getGlyphOrder()
+        offsets = []
+        data = b""
+        for lookup in table.PerGlyphLookups:
+            offset = (tailOffset + len(data)) // 2
+            if offset > 0x7FFF:
+                raise ValueError("mort substitution offset exceeds signed 16 bits")
+            offsets.append(offset)
+            replacements = []
+            for glyph in glyphOrder:
+                replacement = lookup.get(glyph)
+                replacements.append(
+                    0 if replacement is None else font.getGlyphID(replacement)
+                )
+            data += struct.pack(">%dH" % len(replacements), *replacements)
+        if tailOffset > 0xFFFF:
+            raise ValueError("mort substitution-table offset exceeds 16 bits")
+        return struct.pack(">H", tailOffset), data, offsets
+
+    def _compileLigatureData(self, table, font, entries, tailOffset):
+        sequences = []
+        sequenceSet = set()
+        for transition in entries:
+            sequence = tuple(
+                (action.GlyphIndexDelta, action.Store) for action in transition.Actions
+            )
+            if sequence and sequence not in sequenceSet:
+                sequenceSet.add(sequence)
+                sequences.append(sequence)
+
+        actionOffset = self._aligned(tailOffset, 4)
+        actionCount = sum(len(sequence) for sequence in sequences)
+        componentOffset = actionOffset + actionCount * 4
+        glyphCount = len(font.getGlyphOrder())
+        ligatureOffset = componentOffset + len(table.LigComponents) * 2
+        if max(actionOffset, componentOffset, ligatureOffset) > 0xFFFF:
+            raise ValueError("mort ligature-table offset exceeds 16 bits")
+
+        actionOffsets = {}
+        actionData = b""
+        rebaseComponents = getattr(table, "_MortLigatureRebase", None)
+        if rebaseComponents is None:
+            rebaseComponents = set()
+        else:
+            rebaseComponents = set(rebaseComponents)
+        for sequence in sequences:
+            sequenceOffset = actionOffset + len(actionData)
+            if sequenceOffset > 0x3FFF:
+                raise ValueError("mort ligature-action offset exceeds 14 bits")
+            actionOffsets[sequence] = sequenceOffset
+            rebased = False
+            for index, (delta, store) in enumerate(sequence):
+                value = componentOffset // 2 + delta
+                if not -(1 << 29) <= value < (1 << 29):
+                    raise ValueError("mort ligature component offset exceeds 30 bits")
+                value &= 0x3FFFFFFF
+                last = index == len(sequence) - 1
+                value |= 0x40000000 if store else 0
+                value |= 0x80000000 if last else 0
+                actionData += struct.pack(">I", value)
+                addBase = (store or last) and not rebased
+                if addBase and not hasattr(table, "_MortLigatureRebase"):
+                    start = max(0, delta)
+                    limit = min(len(table.LigComponents), delta + glyphCount)
+                    rebaseComponents.update(range(start, limit))
+                rebased |= store or last
+
+        componentData = b""
+        for componentIndex, component in enumerate(table.LigComponents):
+            component *= 2
+            if componentIndex in rebaseComponents:
+                component += ligatureOffset
+            if not 0 <= component <= 0xFFFF:
+                raise ValueError("mort ligature component value exceeds 16 bits")
+            componentData += struct.pack(">H", component)
+
+        ligatureData = b"".join(
+            struct.pack(">H", font.getGlyphID(glyph)) for glyph in table.Ligatures
+        )
+        extra = struct.pack(">HHH", actionOffset, componentOffset, ligatureOffset)
+        tail = (
+            bytes(actionOffset - tailOffset) + actionData + componentData + ligatureData
+        )
+        return extra, tail, actionOffsets
+
+    def _compileTransition(
+        self,
+        transition,
+        font,
+        actionIndex,
+        stateArrayOffset,
+        glyphClassCount,
+        contextOffsets,
+        ligatureActionOffsets,
+    ):
+        newState = stateArrayOffset + transition.NewState * glyphClassCount
+        if not 0 <= newState <= 0xFFFF:
+            raise ValueError("mort new-state offset exceeds 16 bits")
+
+        if issubclass(self.tableClass, ContextualMorphAction):
+            flags = transition.ReservedFlags
+            flags |= 0x8000 if transition.SetMark else 0
+            flags |= 0x4000 if transition.DontAdvance else 0
+            markOffset = (
+                0
+                if transition.MarkIndex == 0xFFFF
+                else contextOffsets[transition.MarkIndex]
+            )
+            currentOffset = (
+                0
+                if transition.CurrentIndex == 0xFFFF
+                else contextOffsets[transition.CurrentIndex]
+            )
+            return struct.pack(">HHhh", newState, flags, markOffset, currentOffset)
+
+        if issubclass(self.tableClass, LigatureMorphAction):
+            if transition.ReservedFlags:
+                raise ValueError("mort ligature entries cannot encode reserved flags")
+            flags = 0x8000 if transition.SetComponent else 0
+            flags |= 0x4000 if transition.DontAdvance else 0
+            sequence = tuple(
+                (action.GlyphIndexDelta, action.Store) for action in transition.Actions
+            )
+            flags |= ligatureActionOffsets.get(sequence, 0)
+            return struct.pack(">HH", newState, flags)
+
+        transitionWriter = OTTableWriter()
+        transition.compile(transitionWriter, font, actionIndex)
+        data = transitionWriter.getAllData()
+        return struct.pack(">H", newState) + data[2:]
+
+
+class MorphStateTable(BaseConverter):
+    """Dispatch to classic or extended AAT state-table encoding by table tag."""
+
+    def __init__(self, name, repeat, aux, tableClass, *, description=""):
+        BaseConverter.__init__(
+            self, name, repeat, aux, tableClass, description=description
+        )
+        self.legacy = StateHeader(
+            name, repeat, aux, tableClass, description=description
+        )
+        self.extended = STXHeader(
+            name, repeat, aux, tableClass, description=description
+        )
+
+    def _converter(self, tableTag):
+        return self.legacy if tableTag == "mort" else self.extended
+
+    def read(self, reader, font, tableDict):
+        return self._converter(reader.tableTag).read(reader, font, tableDict)
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        return self._converter(writer.tableTag).write(
+            writer, font, tableDict, value, repeatIndex
+        )
+
+    def xmlRead(self, attrs, content, font):
+        return self.extended.xmlRead(attrs, content, font)
+
+    def xmlWrite(self, xmlWriter, font, value, name, attrs):
+        return self.extended.xmlWrite(xmlWriter, font, value, name, attrs)
 
 
 class CIDGlyphMap(BaseConverter):
@@ -2321,12 +2974,13 @@ converterMapping = {
     "CIDGlyphMap": CIDGlyphMap,
     "GlyphCIDMap": GlyphCIDMap,
     "MortChain": StructWithLength,
-    "MortSubtable": StructWithLength,
+    "MortSubtable": MortSubtableConverter,
     "MorxChain": StructWithLength,
     "MorxSubtable": MorxSubtableConverter,
     # "Template" types
     "AATLookup": lambda C: partial(AATLookup, tableClass=C),
     "AATLookupWithDataOffset": lambda C: partial(AATLookupWithDataOffset, tableClass=C),
+    "MorphStateTable": lambda C: partial(MorphStateTable, tableClass=C),
     "STXHeader": lambda C: partial(STXHeader, tableClass=C),
     "OffsetTo": lambda C: partial(Table, tableClass=C),
     "LOffsetTo": lambda C: partial(LTable, tableClass=C),
