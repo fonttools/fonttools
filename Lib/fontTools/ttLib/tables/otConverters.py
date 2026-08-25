@@ -1855,20 +1855,29 @@ class StateHeader(STXHeader):
         )
         offsetToIndex = {offset: i for i, offset in enumerate(offsets)}
         glyphOrder = font.getGlyphOrder()
+        # reader.data holds just this subtable, so this is the room between
+        # the state-table header and the end of the subtable.
+        available = len(reader.data) - stateTablePos
         for offset in offsets:
-            byteOffset = offset * 2
-            if byteOffset < substitutionTableOffset:
-                raise ValueError("mort substitution offset precedes substitution table")
-            lookupReader = reader.getSubReader(0)
-            lookupReader.seek(stateTablePos + byteOffset)
-            replacements = lookupReader.readUShortArray(len(glyphOrder))
-            table.PerGlyphLookups.append(
-                {
-                    glyph: font.getGlyphName(replacement)
-                    for glyph, replacement in zip(glyphOrder, replacements)
+            # The entry offset plus a glyph ID gives the word offset of that
+            # glyph's replacement, so an offset (which may be negative) exposes
+            # a per-glyph window rather than a whole lookup table. Fonts trim
+            # the windows: words before the substitution table mean "no
+            # substitution" (like HarfBuzz), and we also stop at the end of
+            # the subtable (stricter than HarfBuzz's blob-wide bound).
+            firstGlyph = max(0, (substitutionTableOffset + 1) // 2 - offset)
+            lastGlyph = min(len(glyphOrder) - 1, (available - 2) // 2 - offset)
+            lookup = {}
+            if firstGlyph <= lastGlyph:
+                lookupReader = reader.getSubReader(0)
+                lookupReader.seek(stateTablePos + 2 * (offset + firstGlyph))
+                replacements = lookupReader.readUShortArray(lastGlyph - firstGlyph + 1)
+                lookup = {
+                    glyphOrder[firstGlyph + i]: font.getGlyphName(replacement)
+                    for i, replacement in enumerate(replacements)
                     if replacement != 0
                 }
-            )
+            table.PerGlyphLookups.append(lookup)
         for transition in transitions:
             transition.MarkIndex = (
                 offsetToIndex[transition._MortMarkOffset]
