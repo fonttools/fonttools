@@ -472,9 +472,88 @@ class SubsetTest:
         subset.main([fontpath, "--unicodes=ac00", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
         assert len(subsetfont.getGlyphOrder()) == 6
+        varc = subsetfont["VARC"].table
+        assert len(varc.AxisIndicesList.Item) == 2
+        assert len(varc.MultiVarStore.MultiVarData) == 1
+        assert len(varc.MultiVarStore.MultiVarData[0].Item) == 2
+        assert len(varc.MultiVarStore.SparseVarRegionList.Region) == 3
         subset.main([fontpath, "--unicodes=ac01", "--output-file=%s" % subsetpath])
         subsetfont = TTFont(subsetpath)
         assert len(subsetfont.getGlyphOrder()) == 8
+        varc = subsetfont["VARC"].table
+        assert len(varc.AxisIndicesList.Item) == 2
+        assert len(varc.MultiVarStore.MultiVarData) == 1
+        assert len(varc.MultiVarStore.MultiVarData[0].Item) == 5
+        assert len(varc.MultiVarStore.SparseVarRegionList.Region) == 3
+
+    def test_varComposite_condition_varidx(self):
+        fontpath = self.getpath("..", "..", "ttLib", "data", "varc-ac00-ac01.ttf")
+        font = TTFont(fontpath)
+        varc = font["VARC"].table
+
+        def makeCondition(varIdx):
+            condition = ot.ConditionTable()
+            condition.Format = 2
+            condition.DefaultValue = 0
+            condition.VarIdx = varIdx
+            return condition
+
+        unusedCondition = makeCondition(5)
+        negatedCondition = ot.ConditionTable()
+        negatedCondition.Format = 5
+        negatedCondition.ConditionTable = makeCondition(4)
+        usedCondition = ot.ConditionTable()
+        usedCondition.Format = 3
+        usedCondition.ConditionTable = [makeCondition(6), negatedCondition]
+
+        conditionList = ot.ConditionList()
+        conditionList.ConditionTable = [unusedCondition, usedCondition]
+        varc.ConditionList = conditionList
+        varc.VarCompositeGlyphs.VarCompositeGlyph[0].components[0].conditionIndex = 1
+
+        inputpath = self.temp_path(".ttf")
+        font.save(inputpath)
+        subsetpath = self.temp_path(".ttf")
+        subset.main([inputpath, "--unicodes=ac00", "--output-file=%s" % subsetpath])
+
+        subsetfont = TTFont(subsetpath)
+        varc = subsetfont["VARC"].table
+        assert len(varc.ConditionList.ConditionTable) == 1
+        condition = varc.ConditionList.ConditionTable[0]
+        assert condition.ConditionTable[0].VarIdx == 3
+        assert condition.ConditionTable[1].ConditionTable.VarIdx == 2
+        assert len(varc.MultiVarStore.MultiVarData) == 1
+        assert len(varc.MultiVarStore.MultiVarData[0].Item) == 4
+
+    def test_varComposite_drops_empty_auxiliary_data(self):
+        fontpath = self.getpath("..", "..", "ttLib", "data", "varc-ac00-ac01.ttf")
+        font = TTFont(fontpath)
+        varc = font["VARC"].table
+        for glyph in varc.VarCompositeGlyphs.VarCompositeGlyph:
+            for component in glyph.components:
+                component.axisIndicesIndex = None
+                component.axisValues = ()
+                component.axisValuesVarIndex = ot.NO_VARIATION_INDEX
+                component.transformVarIndex = ot.NO_VARIATION_INDEX
+
+        conditionList = ot.ConditionList()
+        condition = ot.ConditionTable()
+        condition.Format = 1
+        condition.AxisIndex = 0
+        condition.FilterRangeMinValue = 0
+        condition.FilterRangeMaxValue = 1
+        conditionList.ConditionTable = [condition]
+        varc.ConditionList = conditionList
+
+        inputpath = self.temp_path(".ttf")
+        font.save(inputpath)
+        subsetpath = self.temp_path(".ttf")
+        subset.main([inputpath, "--unicodes=ac00", "--output-file=%s" % subsetpath])
+
+        varc = TTFont(subsetpath)["VARC"].table
+        assert varc.MultiVarStore is None
+        assert varc.ConditionList is None
+        assert varc.AxisIndicesList is None
 
     def test_timing_publishes_parts(self):
         fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
