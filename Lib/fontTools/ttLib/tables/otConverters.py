@@ -1591,6 +1591,14 @@ class STXHeader(BaseConverter):
                 xmlWriter.newline()
             xmlWriter.endtag("LigComponents")
             xmlWriter.newline()
+        if hasattr(value, "_MortLigatureRebase"):
+            xmlWriter.begintag("MortLigatureRebase")
+            xmlWriter.newline()
+            for componentIndex in sorted(value._MortLigatureRebase):
+                xmlWriter.simpletag("Component", index=componentIndex)
+                xmlWriter.newline()
+            xmlWriter.endtag("MortLigatureRebase")
+            xmlWriter.newline()
         self._xmlWriteLigatures(xmlWriter, font, value, name, attrs)
         xmlWriter.endtag(name)
         xmlWriter.newline()
@@ -1623,9 +1631,21 @@ class STXHeader(BaseConverter):
                 table.LigComponents = self._xmlReadLigComponents(
                     eltAttrs, eltContent, font
                 )
+            elif eltName == "MortLigatureRebase":
+                table._MortLigatureRebase = {
+                    safeEval(componentAttrs["index"])
+                    for componentName, componentAttrs, _componentContent in filter(
+                        istuple, eltContent
+                    )
+                    if componentName == "Component"
+                }
             elif eltName == "Ligatures":
                 table.Ligatures = self._xmlReadLigatures(eltAttrs, eltContent, font)
-        table.GlyphClassCount = max(table.GlyphClasses.values()) + 1
+        glyphClasses = list(table.GlyphClasses.values())
+        glyphClasses.extend(
+            glyphClass for state in table.States for glyphClass in state.Transitions
+        )
+        table.GlyphClassCount = max(glyphClasses, default=-1) + 1
         return table
 
     def _xmlReadState(self, attrs, content, font):
@@ -1741,12 +1761,15 @@ class StateHeader(STXHeader):
             )
         elif ligatureOffset is not None:
             ligatureBase = ligatureOffset // 2
+            table._MortLigatureRebase = {
+                componentIndex
+                for componentIndex in table._MortLigatureRebase
+                if table.LigComponents[componentIndex] >= ligatureBase
+            }
             for componentIndex in table._MortLigatureRebase:
                 # Unused entries are commonly zero. Only values which actually
                 # include the ligature-table base need to be normalized.
-                if table.LigComponents[componentIndex] >= ligatureBase:
-                    table.LigComponents[componentIndex] -= ligatureBase
-            del table._MortLigatureRebase
+                table.LigComponents[componentIndex] -= ligatureBase
 
             ligatureCount = self._countLegacyLigatures(table, len(font.getGlyphOrder()))
             ligatureReader = reader.getSubReader(0)
@@ -2083,7 +2106,11 @@ class StateHeader(STXHeader):
 
         actionOffsets = {}
         actionData = b""
-        rebaseComponents = set()
+        rebaseComponents = getattr(table, "_MortLigatureRebase", None)
+        if rebaseComponents is None:
+            rebaseComponents = set()
+        else:
+            rebaseComponents = set(rebaseComponents)
         for sequence in sequences:
             sequenceOffset = actionOffset + len(actionData)
             if sequenceOffset > 0x3FFF:
@@ -2100,7 +2127,7 @@ class StateHeader(STXHeader):
                 value |= 0x80000000 if last else 0
                 actionData += struct.pack(">I", value)
                 addBase = (store or last) and not rebased
-                if addBase:
+                if addBase and not hasattr(table, "_MortLigatureRebase"):
                     start = max(0, delta)
                     limit = min(len(table.LigComponents), delta + glyphCount)
                     rebaseComponents.update(range(start, limit))
