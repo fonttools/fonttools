@@ -79,6 +79,32 @@ MORT_LIGATURE_REBASE_DATA = deHexStr(
 assert len(MORT_LIGATURE_REBASE_DATA) == 128
 
 
+# Modeled on the contextual subtables of Apple's CharcoalCY/GenevaCY/
+# HelveticaCY: the entry's mark offset is negative, arranged so that
+# 2 * (offset + glyphID) lands inside the substitution table only for the
+# glyphs the entry can apply to. Words outside the substitution table mean
+# "no substitution", so per-entry windows are trimmed rather than covering
+# the whole glyph repertoire.
+MORT_TRIMMED_CONTEXTUAL_DATA = deHexStr(
+    "0001000000000001000000010000004c0000000100400001000000010005000a"
+    "0010001a0032001e000104000000000001000000000200100000000000000015"
+    "80000000000000100000fffb0000001f00000000"
+)
+assert len(MORT_TRIMMED_CONTEXTUAL_DATA) == 84
+
+
+# Same layout, but the entries carry three distinct offsets: -5 (trimmed by
+# both bounds), 24 (clamped only by the subtable end, overlapping the first
+# window), and 100 (entirely out of bounds, so an empty per-glyph window that
+# must still keep its lookup index).
+MORT_TRIMMED_CONTEXTUAL_WINDOWS_DATA = deHexStr(
+    "0001000000000001000000010000004c0000000100400001000000010005000a"
+    "0010001a0032001e000104000000000001000000000200100000000000000015"
+    "80000064000000100000fffb0018001f00000000"
+)
+assert len(MORT_TRIMMED_CONTEXTUAL_WINDOWS_DATA) == 84
+
+
 MORT_NONCONTEXTUAL_XML = [
     '<Version value="0x00010000"/>',
     "<!-- MorphChainCount=1 -->",
@@ -253,6 +279,70 @@ class MORTAllSubtableTypesTest(unittest.TestCase):
         )
         self.assertEqual(stateTable.GlyphClassCount, 7)
         self.assertIn(6, stateTable.States[0].Transitions)
+
+
+class MORTTrimmedContextualTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.font = FakeFont(
+            [".notdef"]
+            + ["g%d" % i for i in range(1, 30)]
+            + ["hyphen", "emdash"]
+            + ["h%d" % i for i in range(32, 40)]
+        )
+
+    def decompile(self, data):
+        table = newTable("mort")
+        table.decompile(data, self.font)
+        return table
+
+    def assertSemantics(self, table):
+        stateTable = table.table.MorphChain[0].MorphSubtable[0].SubStruct.StateTable
+        self.assertEqual(stateTable.PerGlyphLookups, [{"hyphen": "emdash"}])
+        self.assertEqual(stateTable.GlyphClasses, {"hyphen": 4})
+        transition = stateTable.States[1].Transitions[4]
+        self.assertEqual(transition.MarkIndex, 0)
+        self.assertEqual(transition.CurrentIndex, 0xFFFF)
+
+    def test_decompile_trimmed_window(self):
+        self.assertSemantics(self.decompile(MORT_TRIMMED_CONTEXTUAL_DATA))
+
+    def test_binary_roundtrip(self):
+        table = self.decompile(MORT_TRIMMED_CONTEXTUAL_DATA)
+        self.assertSemantics(self.decompile(table.compile(self.font)))
+
+    def test_xml_roundtrip(self):
+        table = self.decompile(MORT_TRIMMED_CONTEXTUAL_DATA)
+        compiled = newTable("mort")
+        for name, attrs, content in parseXML(getXML(table.toXML)):
+            compiled.fromXML(name, attrs, content, font=self.font)
+        self.assertSemantics(self.decompile(compiled.compile(self.font)))
+
+    def assertWindowSemantics(self, table):
+        stateTable = table.table.MorphChain[0].MorphSubtable[0].SubStruct.StateTable
+        self.assertEqual(
+            stateTable.PerGlyphLookups, [{"hyphen": "emdash"}, {"g1": "emdash"}, {}]
+        )
+        transition = stateTable.States[0].Transitions[4]
+        self.assertEqual(transition.MarkIndex, 2)
+        self.assertEqual(transition.CurrentIndex, 0xFFFF)
+        transition = stateTable.States[1].Transitions[4]
+        self.assertEqual(transition.MarkIndex, 0)
+        self.assertEqual(transition.CurrentIndex, 1)
+
+    def test_decompile_empty_and_tail_clamped_windows(self):
+        self.assertWindowSemantics(self.decompile(MORT_TRIMMED_CONTEXTUAL_WINDOWS_DATA))
+
+    def test_windows_binary_roundtrip(self):
+        table = self.decompile(MORT_TRIMMED_CONTEXTUAL_WINDOWS_DATA)
+        self.assertWindowSemantics(self.decompile(table.compile(self.font)))
+
+    def test_windows_xml_roundtrip(self):
+        table = self.decompile(MORT_TRIMMED_CONTEXTUAL_WINDOWS_DATA)
+        compiled = newTable("mort")
+        for name, attrs, content in parseXML(getXML(table.toXML)):
+            compiled.fromXML(name, attrs, content, font=self.font)
+        self.assertWindowSemantics(self.decompile(compiled.compile(self.font)))
 
 
 class MORTLigatureRoundTripTest(unittest.TestCase):
