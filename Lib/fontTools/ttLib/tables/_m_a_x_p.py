@@ -46,7 +46,16 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 
     def compile(self, ttFont):
         if "glyf" in ttFont:
-            if ttFont.isLoaded("glyf") and ttFont.recalcBBoxes:
+            if (
+                ttFont.isLoaded("glyf")
+                and ttFont.recalcBBoxes
+                # bitmap-only sfnt fonts (X11 OTB) have an empty glyf table with
+                # no outline glyph records to recalculate from; recalc() also
+                # assumes numGlyphs matches the loca/glyphs, which does not
+                # hold for these fonts as numGlyphs counts the bitmap glyphs
+                # https://github.com/fonttools/fonttools/issues/4120
+                and ttFont["glyf"].glyphs
+            ):
                 self.recalc(ttFont)
         else:
             pass  # CFF

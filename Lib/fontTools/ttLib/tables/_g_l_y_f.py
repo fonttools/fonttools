@@ -139,6 +139,17 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         dataList = []
         recalcBBoxes = ttFont.recalcBBoxes
         boundsDone = set()
+        if not self.glyphs:
+            # Bitmap-only sfnt fonts (X11 OTB) have an empty 'glyf' table and a
+            # single-entry 'loca': the glyphs are bitmaps in EBLC/EBDT and no
+            # outline glyph records exist. Emit that empty shell instead of
+            # iterating glyphOrder (which would raise KeyError), and leave
+            # maxp.numGlyphs alone since in these fonts it counts the bitmap
+            # glyphs, not the 'loca' entries.
+            # https://github.com/fonttools/fonttools/issues/4120
+            if "loca" in ttFont:
+                ttFont["loca"].set([0])
+            return b"\0"
         for glyphName in self.glyphOrder:
             glyph = self.glyphs[glyphName]
             glyphData = glyph.compile(

@@ -442,6 +442,84 @@ class GlyfTableTest(unittest.TestCase):
         self.assertEqual(font["glyf"][".notdef"].numberOfContours, 0)
         self.assertEqual(font["glyf"]["space"].numberOfContours, 0)
 
+    def test_decompile_otb_style_single_entry_loca(self):
+        # https://github.com/fonttools/fonttools/issues/4120
+        # An OTB bitmap-only sfnt has an empty glyf table and a single-entry
+        # loca; decompiling it must not synthesize outline glyph records.
+        font = TTFont()
+        glyphNames = [".notdef", "space"]
+        font.setGlyphOrder(glyphNames)
+        font["loca"] = newTable("loca")
+        font["loca"].locations = [0]
+        font["glyf"] = newTable("glyf")
+        font["glyf"].decompile(b"", font)
+        self.assertEqual(len(font["glyf"].glyphs), 0)
+        self.assertIsNone(font["glyf"].get(".notdef"))
+
+    def test_compile_after_decompile_otb_style(self):
+        # https://github.com/fonttools/fonttools/issues/4120
+        # Recompiling the OTB empty shell must not raise KeyError, must keep
+        # the single-entry loca, and must leave maxp.numGlyphs (which counts
+        # the bitmap glyphs in these fonts) untouched.
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        glyphNames = [".notdef", "space"]
+        font.setGlyphOrder(glyphNames)
+        font["head"] = newTable("head")
+        font["head"].indexToLocFormat = 0
+        font["maxp"] = newTable("maxp")
+        font["maxp"].numGlyphs = len(glyphNames)
+        font["loca"] = newTable("loca")
+        font["loca"].locations = [0]
+        font["glyf"] = newTable("glyf")
+        font["glyf"].decompile(b"", font)
+        glyfData = font["glyf"].compile(font)
+        self.assertEqual(glyfData, b"\x00")
+        self.assertEqual(list(font["loca"]), [0])
+        self.assertEqual(font["maxp"].numGlyphs, len(glyphNames))
+
+    def test_save_reload_otb_style_single_entry_loca(self):
+        # https://github.com/fonttools/fonttools/issues/4120
+        # The crash was on save after loading an OTB font; the structure must
+        # also survive a save->reload->save round trip.
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        glyphNames = [".notdef", "space"]
+        font.setGlyphOrder(glyphNames)
+        font["head"] = newTable("head")
+        font["head"].decompile(b"\0" * 54, font)  # zeroed but complete 'head'
+        font["head"].indexToLocFormat = 0
+        font["maxp"] = newTable("maxp")
+        font["maxp"].tableVersion = 0x00005000
+        font["maxp"].numGlyphs = len(glyphNames)
+        font["hmtx"] = newTable("hmtx")
+        font["hmtx"].metrics = {name: (600, 0) for name in glyphNames}
+        font["loca"] = newTable("loca")
+        font["loca"].locations = [0]
+        font["glyf"] = newTable("glyf")
+        font["glyf"].decompile(b"", font)
+
+        buf = BytesIO()
+        font.save(buf)
+        buf.seek(0)
+        font2 = TTFont(buf)
+        self.assertEqual(list(font2["loca"]), [0])
+        self.assertEqual(font2["maxp"].numGlyphs, len(glyphNames))
+        self.assertEqual(len(font2["glyf"].glyphs), 0)
+
+        # saving the reloaded font again must not raise (issue #4120 pt. 1)
+        buf2 = BytesIO()
+        font2.save(buf2)
+
+    def test_compile_glyph_missing_from_glyphs_raises(self):
+        # a partially-populated glyf.glyphs (e.g. from a truncated loca in an
+        # ordinary TrueType font) must keep failing loudly instead of being
+        # normalized to empty glyphs
+        font = TTFont()
+        font.setGlyphOrder([".notdef", "space"])
+        font["glyf"] = newTable("glyf")
+        font["glyf"].glyphs = {".notdef": Glyph()}
+        with self.assertRaises(KeyError):
+            font["glyf"].compile(font)
+
     def test_getPhantomPoints(self):
         # https://github.com/fonttools/fonttools/issues/2295
         font = TTFont()
