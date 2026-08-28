@@ -43,6 +43,22 @@ def test_subfs_rejects_traversal_out_of_root(tmp_path):
         sub.readbytes("../../outside.txt")
 
 
+def test_osfs_rejects_symlink_out_of_root(tmp_path):
+    # resolve() expands symlinks, so a link inside the root that points outside
+    # it is rejected as well; this is stricter than pyfilesystem2 and intended.
+    (tmp_path / "outside").mkdir()
+    (tmp_path / "outside" / "secret.txt").write_bytes(b"secret")
+    root = tmp_path / "root"
+    root.mkdir()
+    try:
+        (root / "link").symlink_to(tmp_path / "outside", target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlinks not supported")
+    ofs = OSFS(root)
+    with pytest.raises(IllegalBackReference):
+        ofs.readbytes("link/secret.txt")
+
+
 def _evil_zip(path):
     with zipfile.ZipFile(path, "w") as z:
         z.writestr("font.ufo/metainfo.plist", b"x")

@@ -52,7 +52,13 @@ class OSFS(FS):
     def _abs(self, rel_path: str) -> Path:
         self.check()
         abs_path = (self._root / rel_path.strip("/")).resolve()
-        if abs_path != self._root and self._root not in abs_path.parents:
+        # resolve() expands symlinks as well as back-references, so a symlink
+        # inside the root that points outside it is rejected too. That is
+        # stricter than pyfilesystem2, whose OSFS normalizes textually and
+        # follows symlinks out of the root, and deliberately so: paths reaching
+        # here can come from untrusted data, e.g. a glyph file name read from a
+        # third-party UFO's contents.plist.
+        if not abs_path.is_relative_to(self._root):
             raise IllegalBackReference(rel_path)
         return abs_path
 
