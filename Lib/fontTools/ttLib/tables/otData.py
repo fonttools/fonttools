@@ -5932,7 +5932,7 @@ otData = [
                 description="Number of entries encoded in this table.",
             ),
             FieldSpec(
-                "LOffset",
+                "MappingEntriesOffset",
                 "MappingEntries",
                 description="Offset to a MappingEntries sub-table.",
             ),

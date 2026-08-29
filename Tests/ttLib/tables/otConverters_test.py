@@ -1,9 +1,11 @@
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont, makeXMLWriter
 from fontTools.misc.textTools import deHexStr
+from fontTools.ttLib.tables import otTables
 import fontTools.ttLib.tables.otConverters as otConverters
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
+import struct
 import unittest
 
 
@@ -425,6 +427,124 @@ class AATLookupTest(unittest.TestCase):
                 "</Foo>",
             ],
         )
+
+
+class MappingEntriesConverterTest(unittest.TestCase):
+    font = FakeFont([])
+
+    def roundTrip(self, entries, stringIds=False):
+        patchMap = otTables.PatchMap()
+        patchMap.Format = 2
+        patchMap.Reserved = 0
+        patchMap.Flags = 0
+        patchMap.CompatibilityId = [0, 0, 0, 0]
+        patchMap.DefaultPatchFormat = 1
+        patchMap.NumEntries = len(entries)
+        patchMap.MappingEntries = otTables.MappingEntries()
+        patchMap.MappingEntries.entries = entries
+        if stringIds:
+            patchMap.EntryIdStringData = otTables.EntryIdStringData()
+            patchMap.EntryIdStringData.data = b""
+        else:
+            patchMap.EntryIdStringData = None
+        patchMap.UrlTemplateLength = 0
+        patchMap.UrlTemplate = []
+
+        writer = OTTableWriter(tableTag="IFT ")
+        patchMap.compile(writer, self.font)
+        data = writer.getAllData()
+
+        roundTripped = otTables.PatchMap()
+        roundTripped.decompile(OTTableReader(data, tableTag="IFT "), self.font)
+        return data, roundTripped
+
+    def test_numeric_entry_ids_round_trip(self):
+        data, patchMap = self.roundTrip(
+            [
+                {
+                    "formatFlags": otConverters.MappingEntryFormat.HAS_ENTRY_ID,
+                    "entryIds": [1, 4],
+                },
+                {"formatFlags": otConverters.MappingEntryFormat(0)},
+            ]
+        )
+
+        entriesOffset = struct.unpack_from(">L", data, 25)[0]
+        self.assertEqual(
+            data[entriesOffset:],
+            deHexStr("04 000001 000004 00"),
+        )
+        self.assertEqual(
+            [entry["entryIds"] for entry in patchMap.MappingEntries.entries],
+            [[1, 4], [5]],
+        )
+
+    def test_string_entry_ids_round_trip(self):
+        data, patchMap = self.roundTrip(
+            [
+                {"formatFlags": otConverters.MappingEntryFormat(0)},
+                {
+                    "formatFlags": otConverters.MappingEntryFormat.HAS_ENTRY_ID,
+                    "entryIds": [b"ab", b"", b"\0\xff"],
+                },
+                {"formatFlags": otConverters.MappingEntryFormat(0)},
+            ],
+            stringIds=True,
+        )
+
+        entriesOffset, stringDataOffset = struct.unpack_from(">LL", data, 25)
+        self.assertEqual(
+            data[entriesOffset:stringDataOffset],
+            deHexStr("00 04 800002 800000 000002 00"),
+        )
+        self.assertEqual(data[stringDataOffset:], b"ab\0\xff")
+        self.assertEqual(
+            [entry["entryIds"] for entry in patchMap.MappingEntries.entries],
+            [[b""], [b"ab", b"", b"\0\xff"], [b"\0\xff"]],
+        )
+
+    def test_string_entry_ids_xml_round_trip(self):
+        converter = otConverters.MappingEntriesConverter(
+            "entries", 0, None, otTables.MappingEntries
+        )
+        writer = makeXMLWriter()
+        converter.xmlWrite(
+            writer,
+            self.font,
+            [
+                {
+                    "formatFlags": otConverters.MappingEntryFormat.HAS_ENTRY_ID,
+                    "entryIds": [b"ab", b"\0\xff"],
+                }
+            ],
+            "MappingEntries",
+            [],
+        )
+        self.assertEqual(
+            writer.file.getvalue().decode("utf-8").splitlines(),
+            [
+                '<entry formatFlags="4">',
+                '  <entryId type="bytes" value="6162"/>',
+                '  <entryId type="bytes" value="00ff"/>',
+                "</entry>",
+            ],
+        )
+
+        entries = converter.xmlRead(
+            {},
+            [
+                (
+                    "entry",
+                    {"formatFlags": "4"},
+                    [
+                        ("entryId", {"value": "6162", "type": "bytes"}, []),
+                        ("entryId", {"value": "00ff", "type": "bytes"}, []),
+                    ],
+                )
+            ],
+            self.font,
+        )
+        self.assertEqual(entries[0]["entryIds"], [b"ab", b"\0\xff"])
 
 
 from fontTools.misc.lazyTools import LazyList
