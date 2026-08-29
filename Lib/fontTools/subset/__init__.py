@@ -2840,27 +2840,24 @@ def closure_glyphs(self, s):
 def prune_post_subset(self, font, options):
     table = self.table
 
-    store = table.MultiVarStore
-    if store is not None:
-        usedVarIdxes = set()
-        table.collect_varidxes(usedVarIdxes)
-        varidx_map = store.subset_varidxes(usedVarIdxes)
-        table.remap_varidxes(varidx_map)
-
-    axisIndicesList = table.AxisIndicesList.Item
+    axisIndicesList = table.AxisIndicesList
     if axisIndicesList is not None:
+        items = axisIndicesList.Item
         usedIndices = set()
         for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
             for comp in glyph.components:
                 if comp.axisIndicesIndex is not None:
                     usedIndices.add(comp.axisIndicesIndex)
         usedIndices = sorted(usedIndices)
-        table.AxisIndicesList.Item = _list_subset(axisIndicesList, usedIndices)
-        mapping = {old: new for new, old in enumerate(usedIndices)}
-        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
-            for comp in glyph.components:
-                if comp.axisIndicesIndex is not None:
-                    comp.axisIndicesIndex = mapping[comp.axisIndicesIndex]
+        if usedIndices:
+            axisIndicesList.Item = _list_subset(items, usedIndices)
+            mapping = {old: new for new, old in enumerate(usedIndices)}
+            for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+                for comp in glyph.components:
+                    if comp.axisIndicesIndex is not None:
+                        comp.axisIndicesIndex = mapping[comp.axisIndicesIndex]
+        else:
+            table.AxisIndicesList = None
 
     conditionList = table.ConditionList
     if conditionList is not None:
@@ -2871,12 +2868,25 @@ def prune_post_subset(self, font, options):
                 if comp.conditionIndex is not None:
                     usedIndices.add(comp.conditionIndex)
         usedIndices = sorted(usedIndices)
-        conditionList.ConditionTable = _list_subset(conditionTables, usedIndices)
-        mapping = {old: new for new, old in enumerate(usedIndices)}
-        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
-            for comp in glyph.components:
-                if comp.conditionIndex is not None:
-                    comp.conditionIndex = mapping[comp.conditionIndex]
+        if usedIndices:
+            conditionList.ConditionTable = _list_subset(conditionTables, usedIndices)
+            mapping = {old: new for new, old in enumerate(usedIndices)}
+            for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+                for comp in glyph.components:
+                    if comp.conditionIndex is not None:
+                        comp.conditionIndex = mapping[comp.conditionIndex]
+        else:
+            table.ConditionList = None
+
+    # Conditions can reference the variation store, so subset them first.
+    store = table.MultiVarStore
+    if store is not None:
+        usedVarIdxes = set()
+        table.collect_varidxes(usedVarIdxes)
+        varidx_map = store.subset_varidxes(usedVarIdxes)
+        table.remap_varidxes(varidx_map)
+        if not store:
+            table.MultiVarStore = None
 
     return True
 
