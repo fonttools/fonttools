@@ -1,3 +1,6 @@
+4.64.0 (released 2026-08-31)
+----------------------------
+
 - [feaLib] Fix name-table parsing for multibyte Mac encodings (#1196, #4092).
 - [ttProgram] Also indent TrueType assembly following ``IDEF[ ]``, like function
   definitions (#4093).
