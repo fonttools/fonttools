@@ -525,7 +525,6 @@ class BuilderTest(object):
         s = builder.buildSingleSubstSubtable({"one": "two"})
         flags = (
             builder.LOOKUP_FLAG_RIGHT_TO_LEFT
-            | builder.LOOKUP_FLAG_USE_MARK_FILTERING_SET
         )
         lookup = builder.buildLookup([s], flags, markFilterSet=999)
         assert getXML(lookup.toXML) == [
