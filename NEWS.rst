@@ -1,16 +1,85 @@
+4.64.0 (released 2026-08-31)
+----------------------------
+
+- [feaLib] Fix name-table parsing for multibyte Mac encodings (#1196, #4092).
+- [ttProgram] Also indent TrueType assembly following ``IDEF[ ]``, like function
+  definitions (#4093).
+- [subset] Keep East Asian spacing ``palt`` by default (#4094).
+- [subset] Bug fix for MATH table in which constructions for glyphs that are only
+  added during MATH closure were kept (#4096).
+- [ufoLib] Make glyph-to-group construction accessible outside of lookup function
+  (#4102).
+- [glyf] Use reverse glyph map for O(1) ``__setitem__`` membership (#4103).
+- [ttLib] Fix ``fixLookupOverFlows()`` reporting success when it had not promoted
+  any lookup to Extension, masking unresolvable overflows.
+- [ttLib] Add support for TrueType Collection version 2 (#4100).
+- [ttLib] Pin a single head.modified timestamp across ``TTCollection.save`` (#4111).
+- [ttLib] Give an actionable error when LookupList overflow is unrecoverable (#4109).
+- [ttLib] Add support for the AAT bitmap tables ``bhed``, ``bdat``, ``bloc``,
+  variants of ``head``, ``EBDT``, ``EBLC`` used in legacy Apple bitmap-only fonts
+  (#4115).
+- [ttLib] Check ``OS/2`` fsSelection/macStyle consistency against ``bhed`` as well
+  as ``head`` (#4118, #4119).
+- [misc.roundTools] Add types and documentation (#4123).
+- [varLib.instancer] Instance the ``BASE`` table (#4137).
+- [varLib.instancer] Fix Private-dict ``vsindex`` handling in ``instantiateCFF2``
+  (#4129, #4132).
+- [varLib.instancer] Fix crash instancing CFF2 fonts without a VariationStore
+  (#4130, #4131).
+- [sfnt] Raise ``TTLibError`` instead of ``AssertionError`` or ``struct.error``
+  when reading a font truncated within the table directory or a table entry
+  (#4147, #4149).
+- [misc.xmlWriter] Escape the ``]]>`` terminator inside CDATA sections, so an SVG
+  document containing it can no longer smuggle markup past a TTX round trip
+  (#4139).
+- [varLib.instancer] Implement avar2 partial-instancing: the avar version 2
+  ItemVariationStore is adjusted so that remaining axes behave the same after
+  limiting the designspace (#4045).
+- [feaLib] Add shorthand for the value at the default location in a variable
+  scalar: ``(100 wght=900:120)`` means ``(wght=400:100 wght=900:120)`` when the
+  wght default is 400 (#4024).
+- [cmap] Raise ``TTLibError`` for a truncated or out-of-bounds cmap subtable
+  header (#4151).
+- [designspaceLib] Reject conflicting duplicate inputs in axis maps instead of
+  silently keeping the last one (#4153).
+- [designspaceLib] Read an empty ``<lib>`` element as an empty lib instead of
+  raising ``IndexError`` (#4142, #4144).
 - [colorLib] Raise a legible error when a COLRv0 layer, or a COLRv1 PaintGlyph or
   PaintColrGlyph, references a glyph missing from the glyphMap, instead of failing
-  obscurely later (#2629)
-- [feaLib] Fix name-table parsing for multibyte Mac encodings (#1196) (#4092)
-- [subset] keep East Asian spacing palt by default (#4094)
-- [subset] bug fix for MATH table in which constructions for glyphs that are only added
-  during MATH closure were kept (#4096)
-- [ttLib] Add support for TrueType Collection version 2 (#4100)
-- [ufoLib] Make glyph-to-group construction accessible outside of lookup function
-  (#4102)
-- [glyf] Use reverse glyph map for O(1) `__setitem__` membership (#4103)
-- [ttLib] Give an actionable error when LookupList overflow is unrecoverable (#4109)
-- [ttLib] Pin a single head.modified timestamp across TTCollection.save (#4111)
+  obscurely later (#2629, #4141).
+- [cmap] Don't drop subtables in unsupported formats when compiling or dumping a
+  font read from binary (#4136).
+- [ttLib] Implement ``splitSinglePos`` so GPOS lookup type 1 offset overflows can
+  be recovered by splitting the subtable (#4091, #4108).
+- [cmap] Round-trip empty Macintosh format 2 subtables (#3663, #4117).
+- [glyf] Raise ``TTLibError`` instead of ``RecursionError`` when ``recalcBounds()``
+  hits a composite-component reference cycle (#3899, #4116).
+- [svgLib] Fix crash parsing an SVG path with consecutive closepath commands
+  (``Z Z``) (#4122).
+- [ttLib] Fix ``DefaultTable`` type annotations (#4126).
+- [ttLib] Add support for the ``EBSC`` (Embedded Bitmap Scaling) table (#4113).
+- [svgLib] Suppress spurious close segments caused by floating-point drift in
+  relative path commands (#3860, #4127).
+- [qu2cu] Fix ``TypeError`` in the Cython-compiled build when ``Qu2CuPen`` passes
+  tuple splines (#4160).
+- [mort] Add semantic decompilation, TTX, and compilation support for
+  rearrangement, contextual-substitution, ligature, and insertion subtables
+  (#4158, #4159, #4161).
+- [svgLib] Start a new subpath at the just-closed subpath's initial point when a
+  drawto command follows a closepath, per SVG spec (#4154, #4155).
+- [misc.filesystem] **SECURITY** Reject paths that resolve outside the filesystem
+  root: a malicious UFO could read arbitrary files via ``..`` components in
+  ``contents.plist``, and a crafted ``.ufoz`` could create files outside its
+  temporary mirror (#4124).
+- [ttLib] **SECURITY** Sanitise glyph names used as filenames in EBDT/CBDT
+  ``ttx -z extfile`` export, preventing arbitrary file writes from untrusted
+  fonts (#4128).
+- [misc.etree] **SECURITY** Don't resolve external XML entities in ``XMLParser``
+  when lxml is used, preventing XXE file disclosure on lxml < 5.0 (#4145).
+- [subset] Fully prune ``VARC`` auxiliary data: collect and remap variation
+  indices referenced by condition tables when subsetting the ``MultiVarStore``,
+  and drop the ``AxisIndicesList``, ``ConditionList``, and ``MultiVarStore``
+  when they end up empty (#4162).
 
 4.63.0 (released 2026-05-14)
 ----------------------------

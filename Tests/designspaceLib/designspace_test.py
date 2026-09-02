@@ -22,6 +22,7 @@ from fontTools.designspaceLib import (
     processRules,
 )
 from fontTools.designspaceLib.types import Range
+from fontTools.misc import etree as ET
 from fontTools.misc import plistlib
 
 from .fixtures import datadir
@@ -1426,3 +1427,25 @@ def test_map_backward_single_entry():
     assert ax.map_backward(200) == 100
     assert ax.map_backward(300) == 200
     assert ax.map_backward(100) == 0
+
+
+def test_no_external_entity_expansion(tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("s3cr3t")
+    path = tmp_path / "test.designspace"
+    path.write_text(
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE designspace [<!ENTITY xxe SYSTEM "%s">]>'
+        '<designspace format="4.1"><axes>'
+        '<axis tag="wght" name="Weight" minimum="0" maximum="1" default="0">'
+        '<labelname xml:lang="en">x&xxe;</labelname>'
+        "</axis></axes></designspace>" % secret.as_uri()
+    )
+
+    try:
+        doc = DesignSpaceDocument.fromfile(path)
+    except ET.ParseError:
+        # the undefined entity is rejected outright
+        return
+
+    assert "s3cr3t" not in doc.axes[0].labelNames["en"]

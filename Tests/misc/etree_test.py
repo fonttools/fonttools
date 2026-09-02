@@ -52,3 +52,24 @@ def test_pretty_print():
         "  <empty-element/>\n"
         "</root>\n"
     )
+
+
+def test_no_external_entity_expansion(tmp_path):
+    # NOTE: only lxml < 5.0 ever resolved these, so on a newer lxml (and on the
+    # ElementTree backend) this passes either way; it guards the old versions
+    # that setup.py still allows.
+    secret = tmp_path / "secret.txt"
+    secret.write_text("s3cr3t")
+    xml = (
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE root [<!ENTITY xxe SYSTEM "%s">]>'
+        "<root>&xxe;</root>" % secret.as_uri()
+    ).encode("utf-8")
+
+    try:
+        root = etree.fromstring(xml, parser=etree.XMLParser())
+    except etree.ParseError:
+        # the undefined entity is rejected outright
+        return
+
+    assert "s3cr3t" not in etree.tostring(root, encoding="unicode")

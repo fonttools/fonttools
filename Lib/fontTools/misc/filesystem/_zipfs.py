@@ -9,9 +9,14 @@ import zipfile
 from datetime import datetime
 
 from ._base import FS
-from ._errors import FileExpected, ResourceNotFound, ResourceReadOnly
+from ._errors import (
+    FileExpected,
+    IllegalBackReference,
+    ResourceNotFound,
+    ResourceReadOnly,
+)
 from ._info import Info
-from ._path import dirname, forcedir, normpath, relpath
+from ._path import dirname, escapes_root, forcedir, normpath, relpath
 from ._tempfs import TempFS
 
 if typing.TYPE_CHECKING:
@@ -66,14 +71,30 @@ class ReadZipFS(FS):
     @property
     def _directory(self) -> TempFS:
         if self._directory_fs is None:
-            self._directory_fs = _fs = TempFS()
+            # Reject escaping member names up front, so the error names the zip
+            # entry rather than a path the caller never passed.
             for zip_name in self._zip.namelist():
-                resource_name = zip_name
-                if resource_name.endswith("/"):
-                    _fs.makedirs(resource_name, recreate=True)
-                else:
-                    _fs.makedirs(dirname(resource_name), recreate=True)
-                    _fs.create(resource_name)
+                if escapes_root(zip_name):
+                    raise IllegalBackReference(zip_name)
+            # Populate a local mirror and only publish it once it is complete:
+            # an archive can fail partway through for reasons the pre-scan can't
+            # see (a member named both as a file and as a directory, an escaping
+            # name that only pathlib recognises on this platform), and a cached
+            # half-built mirror would answer later calls from a silently
+            # truncated view of the zip instead of failing again.
+            _fs = TempFS()
+            try:
+                for zip_name in self._zip.namelist():
+                    resource_name = zip_name
+                    if resource_name.endswith("/"):
+                        _fs.makedirs(resource_name, recreate=True)
+                    else:
+                        _fs.makedirs(dirname(resource_name), recreate=True)
+                        _fs.create(resource_name)
+            except Exception:
+                _fs.close()
+                raise
+            self._directory_fs = _fs
         return self._directory_fs
 
     def close(self):

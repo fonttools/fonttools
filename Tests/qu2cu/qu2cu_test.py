@@ -28,6 +28,11 @@ class Qu2CuTest:
     def test_empty_input(self):
         assert quadratic_to_curves([]) == []
 
+    def test_tuple_spline(self):
+        assert quadratic_to_curves([((0, 0), (0, 1), (1, 1))]) == [
+            ((0, 0), (0, 1), (1, 1))
+        ]
+
     @pytest.mark.parametrize(
         "quadratics, expected, tolerance, cubic_only",
         [
