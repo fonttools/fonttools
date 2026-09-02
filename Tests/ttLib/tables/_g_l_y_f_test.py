@@ -977,6 +977,7 @@ class GlyphComponentTest:
         glyf = font["glyf"]
         assert isinstance(glyf.items(), ItemsView)
         items = list(glyf.items())
+        assert items[0][1].numberOfContours == 2  # .notdef
         assert items == [
             (".notdef", glyf[".notdef"]),
             (".null", glyf[".null"]),
@@ -985,7 +986,6 @@ class GlyphComponentTest:
             ("period", glyf["period"]),
             ("ellipsis", glyf["ellipsis"]),
         ]
-        assert items[0][1].numberOfContours == 2  # .notdef
 
     def test_iter(self):
         glyf = newTable("glyf")
@@ -1023,6 +1023,7 @@ class GlyphComponentTest:
         glyf = font["glyf"]
         assert isinstance(glyf.values(), ValuesView)
         glyphs = list(glyf.values())
+        assert glyphs[0].numberOfContours == 2  # .notdef
         assert glyphs == [
             glyf[".notdef"],
             glyf[".null"],
@@ -1031,7 +1032,6 @@ class GlyphComponentTest:
             glyf["period"],
             glyf["ellipsis"],
         ]
-        assert glyphs[0].numberOfContours == 2  # .notdef
 
 
 class GlyphCubicTest:
