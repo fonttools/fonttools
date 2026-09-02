@@ -26,6 +26,7 @@ import array
 from collections.abc import ValuesView, ItemsView
 from copy import deepcopy
 from io import StringIO, BytesIO
+from pathlib import Path
 import itertools
 import pytest
 import re
@@ -968,6 +969,24 @@ class GlyphComponentTest:
             ("b", glyf["b"]),
         ]
 
+    def test_items_lazy(self):
+        font = TTFont(
+            Path(__file__).parent.parent.parent / "ttx" / "data" / "TestTTF.ttf",
+            lazy=True,
+        )
+        glyf = font["glyf"]
+        assert isinstance(glyf.items(), ItemsView)
+        items = list(glyf.items())
+        assert items == [
+            (".notdef", glyf[".notdef"]),
+            (".null", glyf[".null"]),
+            ("CR", glyf["CR"]),
+            ("space", glyf["space"]),
+            ("period", glyf["period"]),
+            ("ellipsis", glyf["ellipsis"]),
+        ]
+        assert items[0][1].numberOfContours == 2  # .notdef
+
     def test_iter(self):
         glyf = newTable("glyf")
         glyf.glyphs = {}
@@ -976,6 +995,15 @@ class GlyphComponentTest:
             glyf[name] = Glyph()
         names = [name for name in glyf]
         assert names == [".notdef", "a", "b"]
+
+    def test_iter_lazy(self):
+        font = TTFont(
+            Path(__file__).parent.parent.parent / "ttx" / "data" / "TestTTF.ttf",
+            lazy=True,
+        )
+        glyf = font["glyf"]
+        names = [name for name in glyf]
+        assert names == [".notdef", ".null", "CR", "space", "period", "ellipsis"]
 
     def test_values(self):
         glyf = newTable("glyf")
@@ -986,6 +1014,24 @@ class GlyphComponentTest:
         assert isinstance(glyf.values(), ValuesView)
         glyphs = list(glyf.values())
         assert glyphs == [glyf[".notdef"], glyf["a"], glyf["b"]]
+
+    def test_values_lazy(self):
+        font = TTFont(
+            Path(__file__).parent.parent.parent / "ttx" / "data" / "TestTTF.ttf",
+            lazy=True,
+        )
+        glyf = font["glyf"]
+        assert isinstance(glyf.values(), ValuesView)
+        glyphs = list(glyf.values())
+        assert glyphs == [
+            glyf[".notdef"],
+            glyf[".null"],
+            glyf["CR"],
+            glyf["space"],
+            glyf["period"],
+            glyf["ellipsis"],
+        ]
+        assert glyphs[0].numberOfContours == 2  # .notdef
 
 
 class GlyphCubicTest:
