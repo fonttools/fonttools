@@ -1,6 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
+from collections.abc import ItemsView, ValuesView
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
@@ -324,10 +325,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         return self.glyphs.__iter__()
 
     def values(self):
-        return self.glyphs.values()
+        return ValuesView(self)
 
     def items(self):
-        return self.glyphs.items()
+        return ItemsView(self)
 
     def has_key(self, glyphName):
         return glyphName in self.glyphs
