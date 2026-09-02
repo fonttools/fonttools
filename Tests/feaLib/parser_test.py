@@ -234,6 +234,25 @@ class ParserTest(unittest.TestCase):
             "anon TEST { \n no end in sight",
         )
 
+    def test_anon_regexMetacharacterTag(self):
+        # the closing tag is matched literally: regex metacharacters in the tag
+        # (all of ``. + * ^ ~ !`` are valid feature-file name characters) must
+        # not move where the block ends, so the inner "} X;" does not terminate it
+        anon = self.parse("anon .+.+ {\n} X;\n} .+.+;\n").statements[0]
+        self.assertIsInstance(anon, ast.AnonymousBlock)
+        self.assertEqual(anon.tag, ".+.+")
+        self.assertEqual(anon.content, "} X;\n")
+
+    def test_anon_invalidRegexTag(self):
+        # a tag that is not a valid regular expression must raise a
+        # FeatureLibError rather than leaking a re.error out of the parser
+        self.assertRaisesRegex(
+            FeatureLibError,
+            r"Expected '} \*;' to terminate anonymous block",
+            self.parse,
+            "anon * {\n no end in sight",
+        )
+
     def test_attach(self):
         doc = self.parse("table GDEF {Attach [a e] 2;} GDEF;")
         s = doc.statements[0].statements[0]

@@ -179,7 +179,7 @@ class Lexer(object):
         tag = tag.strip()
         self.scan_until_(Lexer.CHAR_NEWLINE_)
         self.scan_over_(Lexer.CHAR_NEWLINE_)
-        regexp = r"}\s*" + tag + r"\s*;"
+        regexp = r"}\s*" + re.escape(tag) + r"\s*;"
         split = re.split(regexp, self.text_[self.pos_ :], maxsplit=1)
         if len(split) != 2:
             raise FeatureLibError(
