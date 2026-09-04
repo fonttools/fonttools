@@ -88,6 +88,8 @@ class BuilderTest(unittest.TestCase):
         contextual_inline_format_4
         chain_context_multi_subst_class
         duplicate_language_stmt
+        script_language_tracking script_language_tracking_DFLT
+        script_language_tracking_multi script_language_tracking_redundant
         CursivePosSubtable
         MarkBasePosSubtable
         MarkLigPosSubtable
@@ -568,6 +570,19 @@ class BuilderTest(unittest.TestCase):
         builder.start_feature(location=None, name="test")
         builder.set_script(location=None, script="cyrl")
         self.assertEqual(builder.language_systems, {("cyrl", "dflt")})
+
+    def test_script_matching_current_script(self):
+        # The current script starts out as the first declared language system,
+        # so this script statement is a no-op and, in particular, does not
+        # reset the lookupflag.
+        # https://github.com/fonttools/fonttools/issues/1824
+        builder = Builder(makeTTFont(), (None, None))
+        builder.add_language_system(None, "latn", "dflt")
+        builder.start_feature(location=None, name="test")
+        builder.set_lookup_flag(None, 8, None, None)
+        builder.set_script(location=None, script="latn")
+        self.assertEqual(builder.language_systems, {("latn", "dflt")})
+        self.assertEqual(builder.lookupflag_, 8)
 
     def test_script_in_aalt_feature(self):
         self.assertRaisesRegex(

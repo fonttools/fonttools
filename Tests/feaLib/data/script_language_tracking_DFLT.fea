@@ -1,0 +1,12 @@
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+# Here DFLT/dflt is the first declared language system, so it is the current
+# one until the script statement; the first rule is registered under both
+# declared systems and only the second one is latn-only.
+feature kern {
+    pos a b -10;
+    script latn;
+    language dflt;
+    pos c d -20;
+} kern;

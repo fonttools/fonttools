@@ -128,6 +128,7 @@ class Builder(object):
             self.scalar_builder = VariableScalarBuilder.from_ttf(font)
         self.default_language_systems_ = set()
         self.script_ = None
+        self.language_ = None
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
         self.use_extension_ = False
@@ -1083,7 +1084,10 @@ class Builder(object):
                 location,
             )
         self.language_systems = self.get_default_language_systems_()
-        self.script_ = "DFLT"
+        # The current script and language start out as the first declared
+        # language system, sorted by (script, language) tag. Kind of odd,
+        # but matches makeotf (and fea-rs matches us)
+        self.script_, self.language_ = min(self.language_systems)
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
         self.lookupflag_ = 0
@@ -1097,6 +1101,8 @@ class Builder(object):
         assert self.cur_feature_name_ is not None
         self.cur_feature_name_ = None
         self.language_systems = None
+        self.script_ = None
+        self.language_ = None
         self.cur_lookup_ = None
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
@@ -1169,6 +1175,7 @@ class Builder(object):
             cur_lookups = self.features_.get(key, [])
             self.features_[key] = [x for x in cur_lookups if x not in lookups]
         self.language_systems = frozenset([(self.script_, language)])
+        self.language_ = language
 
         if required:
             key = (self.script_, language)
@@ -1237,8 +1244,13 @@ class Builder(object):
                 "Script statements are not allowed " "within standalone lookup blocks",
                 location,
             )
-        if self.language_systems == {(script, "dflt")}:
-            # Nothing to do.
+        if script == self.script_ and self.language_ == "dflt":
+            # A script statement naming the already-current script still narrows
+            # the language systems that the rules after it are registered under,
+            # and still terminates the current lookup; it differs from the normal
+            # path only in leaving script_ and the lookupflag alone, see
+            # https://github.com/fonttools/fonttools/issues/1824.
+            self.set_language(location, "dflt", include_default=True, required=False)
             return
         self.cur_lookup_ = None
         self.script_ = script
