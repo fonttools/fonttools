@@ -271,7 +271,7 @@ Matt Fontaine, Takaaki Fuji, Rob Hagemans, Yannis Haralambous, Greg Hitchcock,
 Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack Jansen,
 Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming, Liang Hai, Peter
 Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamura, Dave Opstad, Laurence Penney,
-Roozbeh Pournader, Garret Rieger, Read Roberts, Colin Rofls, Guido van Rossum,
+Roozbeh Pournader, ptt, Garret Rieger, Read Roberts, Colin Rofls, Guido van Rossum,
 Just van Rossum, Andreas Seidel, Georg Seifert, Chris Simpkins, Miguel Sousa,
 Adam Twardoch, Adrien Tétar, Vitaly Volkov, Paul Wise.
 
