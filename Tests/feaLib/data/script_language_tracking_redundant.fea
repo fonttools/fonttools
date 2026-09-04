@@ -1,0 +1,32 @@
+languagesystem latn dflt;
+languagesystem cyrl dflt;
+
+# The current script starts out as the first declared language system, sorted
+# by tag, so "script cyrl" is redundant here. It must still restrict the rules
+# that follow to cyrl/dflt, while preserving the lookupflag,
+# see https://github.com/fonttools/fonttools/issues/1824.
+feature test {
+    lookupflag IgnoreMarks;
+    script cyrl;
+    sub A by B;
+} test;
+
+# Same, but with a rule before the redundant script statement. The statement
+# narrows the language systems from both declared ones to cyrl/dflt alone, so
+# it has to terminate the current lookup: C -> D must not be added to the
+# lookup that A -> B already registered under latn/dflt as well.
+feature dist {
+    sub A by B;
+    script cyrl;
+    sub C by D;
+} dist;
+
+# A script statement repeated after a real script change narrows nothing, but
+# it terminates the current lookup all the same, so the rules around it end up
+# in separate lookups. This pattern shows up in the wild, e.g. in Braah One.
+feature psts {
+    script latn;
+    sub A by B;
+    script latn;
+    sub C by D;
+} psts;

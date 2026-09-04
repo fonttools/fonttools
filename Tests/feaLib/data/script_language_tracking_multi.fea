@@ -1,0 +1,36 @@
+languagesystem DFLT dflt;
+languagesystem bng2 dflt;
+languagesystem beng dflt;
+
+# The feature opens with a script statement naming DFLT, the first declared
+# language system, so it is redundant. It still stops the rules that follow
+# from being registered under every declared language system, so each lookup
+# below is registered under its own script only.
+feature akhn {
+    lookup akhn_dflt {
+        script DFLT;
+        sub a b by c;
+    } akhn_dflt;
+
+    lookup akhn_bng2 {
+        script bng2;
+        sub a b by d;
+    } akhn_bng2;
+
+    lookup akhn_beng {
+        script beng;
+        sub a b by e;
+    } akhn_beng;
+} akhn;
+
+# The same without named lookup blocks.
+feature blwf {
+    script DFLT;
+    sub f by g;
+
+    script bng2;
+    sub f by h;
+
+    script beng;
+    sub f by i;
+} blwf;
