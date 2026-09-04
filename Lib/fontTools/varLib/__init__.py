@@ -1543,7 +1543,9 @@ def main(args=None):
                 # Only use basename to prevent path traversal attacks
                 filename = os.path.basename(vf.filename)
             else:
-                filename = vf.name + ".{ext}"
+                # vf.name comes straight from the designspace and is equally
+                # attacker-controlled, so basename it too
+                filename = os.path.basename(vf.name) + ".{ext}"
             vf_name_to_output_path[vf.name] = os.path.join(output_dir, filename)
 
     vf_names_to_build = {vf.name for vf in vfs_to_build}

@@ -661,6 +661,54 @@ class BuildTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(outdir))
         self.assertTrue(os.path.exists(os.path.join(outdir, "BuildMain-VF.ttf")))
 
+    def test_varLib_main_output_dir_contains_traversal_name(self):
+        # A designspace can name a variable font with path separators; that name
+        # is used to build the output filename, so an un-basenamed name escapes
+        # --output-dir. The compile step is stubbed out to isolate path handling.
+        from unittest import mock
+        from fontTools.designspaceLib import (
+            RangeAxisSubsetDescriptor,
+            VariableFontDescriptor,
+        )
+
+        self.temp_dir()
+        outdir = os.path.join(self.tempdir, "output_dir_traversal_test")
+        os.makedirs(outdir)
+
+        doc = DesignSpaceDocument()
+        axis = AxisDescriptor()
+        axis.name = "Weight"
+        axis.tag = "wght"
+        axis.minimum, axis.default, axis.maximum = 400, 400, 700
+        doc.addAxis(axis)
+        doc.addVariableFont(
+            VariableFontDescriptor(
+                name="../escaped",
+                axisSubsets=[RangeAxisSubsetDescriptor(name="Weight")],
+            )
+        )
+        doc.formatVersion = "5.0"
+        ds_path = os.path.join(self.tempdir, "traversal.designspace")
+        doc.write(ds_path)
+
+        class FakeVF:
+            sfntVersion = "\x00\x01\x00\x00"
+
+            def save(self, path):
+                with open(path, "wb") as f:
+                    f.write(b"")
+
+        with mock.patch(
+            "fontTools.varLib.build_many",
+            lambda designspace, finder, **kw: {
+                vf.name: FakeVF() for vf in designspace.getVariableFonts()
+            },
+        ):
+            varLib_main([ds_path, "--output-dir", outdir])
+
+        self.assertTrue(os.path.exists(os.path.join(outdir, "escaped.ttf")))
+        self.assertFalse(os.path.exists(os.path.join(self.tempdir, "escaped.ttf")))
+
     def test_varLib_main_drop_implied_oncurves(self):
         self.temp_dir()
         outdir = os.path.join(self.tempdir, "drop_implied_oncurves_test")
