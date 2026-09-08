@@ -2831,12 +2831,11 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         writer.write(encoding=encoding, xml_declaration=xml_declaration)
         return f.getvalue()
 
-    def read(self, path: str | os.PathLike[str]):
+    def read(self, path: str | os.PathLike[str]) -> None:
         """Read a designspace file from ``path`` and populates the fields of
         ``self`` with the data.
         """
-        if hasattr(path, "__fspath__"):  # support os.PathLike objects
-            path = path.__fspath__()
+        path = os.fspath(path)
         self.path = path
         self.filename = os.path.basename(path)
         reader = self.readerClass(path, self)
@@ -2844,17 +2843,17 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         if self.sources:
             self.findDefault()
 
-    def write(self, path: str | os.PathLike[str]):
+    def write(self, path: str | os.PathLike[str]) -> None:
         """Write this designspace to ``path``."""
-        if hasattr(path, "__fspath__"):  # support os.PathLike objects
-            path = path.__fspath__()
+        path = os.fspath(path)
         self.path = path
         self.filename = os.path.basename(path)
         self.updatePaths()
         writer = self.writerClass(path, self)
         writer.write()
 
-    def _posixRelativePath(self, otherPath):
+    def _posixRelativePath(self, otherPath: str) -> str:
+        assert self.path is not None
         relative = os.path.relpath(otherPath, os.path.dirname(self.path))
         return posix(relative)
 
@@ -3043,13 +3042,13 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             for descriptor in self.sources:
                 if descriptor.filename is not None and not force:
                     continue
-                if self.path is not None:
+                if self.path is not None and descriptor.path is not None:
                     descriptor.filename = self._posixRelativePath(descriptor.path)
         if instances:
             for descriptor in self.instances:
                 if descriptor.filename is not None and not force:
                     continue
-                if self.path is not None:
+                if self.path is not None and descriptor.path is not None:
                     descriptor.filename = self._posixRelativePath(descriptor.path)
 
     def newAxisDescriptor(self):

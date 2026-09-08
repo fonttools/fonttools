@@ -715,7 +715,7 @@ class FontBuilder(object):
         axes: Sequence[
             AxisDescriptor | tuple[str, float, float, float, str | Mapping[str, str]]
         ],
-        instances: Sequence[InstanceDescriptor | Mapping[str, Any]],
+        instances: Sequence[InstanceDescriptor | dict[str, Any]],
     ) -> None:
         """Adds an font variations table to the font.
 
@@ -755,8 +755,8 @@ class FontBuilder(object):
             raise KeyError("'fvar' table is missing; can't add 'avar'.")
 
         axisTags = [axis.axisTag for axis in self.font["fvar"].axes]
-        axes = OrderedDict(enumerate(axes))  # Only values are used
-        _add_avar(self.font, axes, mappings, axisTags)
+        axesByIndex = OrderedDict(enumerate(axes))  # Only values are used
+        _add_avar(self.font, axesByIndex, mappings, axisTags)
 
     def setupGvar(self, variations):
         gvar = self.font["gvar"] = newTable("gvar")
@@ -1020,7 +1020,7 @@ def addFvar(
     axes: Sequence[
         AxisDescriptor | tuple[str, float, float, float, str | Mapping[str, str]]
     ],
-    instances: Sequence[InstanceDescriptor | Mapping[str, Any]],
+    instances: Sequence[InstanceDescriptor | dict[str, Any]],
 ):
     from .ttLib.tables._f_v_a_r import Axis, NamedInstance
 

@@ -1258,9 +1258,7 @@ def build(
     filename as found in designspace file and map it to master font
     binary as to be opened (eg. .ttf or .otf).
     """
-    if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
-        pass
-    else:  # Assume a file path
+    if not isinstance(designspace, DesignSpaceDocument):  # Assume a file path
         designspace = DesignSpaceDocument.fromfile(designspace)
 
     ds = load_designspace(designspace)
