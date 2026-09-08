@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import (
@@ -516,7 +516,13 @@ def _makeMacName(name, nameID, language, font=None):
 
 
 class NameRecord(object):
-    def getEncoding(self, default="ascii"):
+    @overload
+    def getEncoding(self) -> str: ...
+    @overload
+    def getEncoding(self, default: str) -> str: ...
+    @overload
+    def getEncoding(self, default: None) -> str | None: ...
+    def getEncoding(self, default: str | None = "ascii") -> str | None:
         """Returns the Python encoding name for this name entry based on its platformID,
         platEncID, and langID.  If encoding for these values is not known, by default
         'ascii' is returned.  That can be overriden by passing a value to the default
