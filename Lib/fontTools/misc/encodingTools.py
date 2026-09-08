@@ -1,9 +1,10 @@
 """fontTools.misc.encodingTools.py -- tools for working with OpenType encodings."""
 
+from types import EllipsisType
+
 import fontTools.encodings.codecs
 
-# Map keyed by platformID, then platEncID, then possibly langID
-_encodingMap = {
+_encodingMap: dict[int, dict[int, str | dict[int | EllipsisType, str]]] = {
     0: {  # Unicode
         0: "utf_16_be",
         1: "utf_16_be",
@@ -58,14 +59,18 @@ _encodingMap = {
         10: "utf_16_be",
     },
 }
+"""Map keyed by platformID, then platEncID, then possibly langID"""
 
 
-def getEncoding(platformID, platEncID, langID, default=None):
+def getEncoding(
+    platformID: int, platEncID: int, langID: int | None, default: str | None = None
+) -> str | None:
     """Returns the Python encoding name for OpenType platformID/encodingID/langID
     triplet.  If encoding for these values is not known, by default None is
     returned.  That can be overriden by passing a value to the default argument.
     """
     encoding = _encodingMap.get(platformID, {}).get(platEncID, default)
     if isinstance(encoding, dict):
-        encoding = encoding.get(langID, encoding[Ellipsis])
+        fallback = encoding[Ellipsis]
+        encoding = fallback if langID is None else encoding.get(langID, fallback)
     return encoding

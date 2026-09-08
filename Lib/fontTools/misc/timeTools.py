@@ -25,7 +25,7 @@ MONTHNAMES = [
 ]
 
 
-def asctime(t=None):
+def asctime(t: time.struct_time | None = None) -> str:
     """
     Convert a tuple or struct_time representing a time as returned by gmtime()
     or localtime() to a 24-character string of the following form:
@@ -54,11 +54,11 @@ def asctime(t=None):
     return s
 
 
-def timestampToString(value):
+def timestampToString(value: float) -> str:
     return asctime(time.gmtime(max(0, value + epoch_diff)))
 
 
-def timestampFromString(value):
+def timestampFromString(value: str) -> int:
     wkday, mnth = value[:7].split()
     t = datetime.strptime(value[7:], " %d %H:%M:%S %Y")
     t = t.replace(month=MONTHNAMES.index(mnth), tzinfo=timezone.utc)
@@ -67,7 +67,7 @@ def timestampFromString(value):
     return int(t.timestamp()) - epoch_diff
 
 
-def timestampNow():
+def timestampNow() -> int:
     # https://reproducible-builds.org/specs/source-date-epoch/
     source_date_epoch = os.environ.get("SOURCE_DATE_EPOCH")
     if source_date_epoch is not None:
@@ -75,7 +75,7 @@ def timestampNow():
     return int(time.time() - epoch_diff)
 
 
-def timestampSinceEpoch(value):
+def timestampSinceEpoch(value: float) -> int:
     return int(value - epoch_diff)
 
 

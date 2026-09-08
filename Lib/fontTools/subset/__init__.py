@@ -19,11 +19,14 @@ from fontTools.subset.svg import *
 from fontTools.varLib import varStore, multiVarStore  # For monkey-patching
 from fontTools.ttLib.tables._n_a_m_e import NameRecordVisitor, makeName
 from fontTools.unicodedata import mirrored
+import os
 import sys
 import struct
 import array
 import logging
 from collections import Counter, defaultdict
+from collections.abc import Collection, Iterable
+from typing import Any, BinaryIO, Literal
 from functools import reduce
 from types import MethodType
 
@@ -3318,7 +3321,7 @@ class Options(object):
         pass
 
     # spaces in tag names (e.g. "SVG ", "cvt ") are stripped by the argument parser
-    _drop_tables_default = [
+    _drop_tables_default: list[str] = [
         "JSTF",
         "DSIG",
         "EBDT",
@@ -3328,7 +3331,7 @@ class Options(object):
         "LTSH",
     ]
     _drop_tables_default += ["Feat", "Glat", "Gloc", "Silf", "Sill"]  # Graphite
-    _no_subset_tables_default = [
+    _no_subset_tables_default: list[str] = [
         "avar",
         "BASE",
         "fvar",
@@ -3350,10 +3353,17 @@ class Options(object):
         "cvar",
         "STAT",
     ]
-    _hinting_tables_default = ["cvt", "cvar", "fpgm", "prep", "hdmx", "VDMX"]
+    _hinting_tables_default: list[str] = [
+        "cvt",
+        "cvar",
+        "fpgm",
+        "prep",
+        "hdmx",
+        "VDMX",
+    ]
 
     # Based on HarfBuzz shapers
-    _layout_features_groups = {
+    _layout_features_groups: dict[str, list[str]] = {
         # Default shaper
         "common": ["rvrn", "ccmp", "liga", "locl", "mark", "mkmk", "rlig"],
         "fractions": ["frac", "numr", "dnom"],
@@ -3404,11 +3414,11 @@ class Options(object):
             "blwm",
         ],
     }
-    _layout_features_default = _uniq_sort(
+    _layout_features_default: list[str] = _uniq_sort(
         sum(iter(_layout_features_groups.values()), [])
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self.drop_tables = self._drop_tables_default[:]
         self.no_subset_tables = self._no_subset_tables_default[:]
         self.passthrough_tables = False  # keep/drop tables we can't subset
@@ -3466,7 +3476,9 @@ class Options(object):
                 raise self.UnknownOptionError("Unknown option '%s'" % k)
             setattr(self, k, v)
 
-    def parse_opts(self, argv, ignore_unknown=[]):
+    def parse_opts(
+        self, argv: Iterable[str], ignore_unknown: Literal[True] | Collection[str] = []
+    ) -> list[str]:
         posargs = []
         passthru_options = []
         for a in argv:
@@ -3554,7 +3566,7 @@ class Subsetter(object):
     class MissingUnicodesSubsettingError(SubsettingError):
         pass
 
-    def __init__(self, options=None):
+    def __init__(self, options: Options | None = None) -> None:
         if not options:
             options = Options()
 
@@ -3563,7 +3575,13 @@ class Subsetter(object):
         self.glyph_names_requested = set()
         self.glyph_ids_requested = set()
 
-    def populate(self, glyphs=[], gids=[], unicodes=[], text=""):
+    def populate(
+        self,
+        glyphs: Iterable[str] = [],
+        gids: Iterable[int] = [],
+        unicodes: Iterable[int] = [],
+        text: str | bytes = "",
+    ) -> None:
         self.unicodes_requested.update(unicodes)
         if isinstance(text, bytes):
             text = text.decode("utf_8")
@@ -3861,7 +3879,7 @@ class Subsetter(object):
         tags = sorted(font.keys(), key=lambda tag: tagOrder.get(tag, 0))
         return [t for t in tags if t != "GlyphOrder"]
 
-    def subset(self, font):
+    def subset(self, font: ttLib.TTFont) -> None:
         self._prune_pre_subset(font)
         self._closure_glyphs(font)
         self._subset_glyphs(font)
@@ -3869,7 +3887,13 @@ class Subsetter(object):
 
 
 @timer("load font")
-def load_font(fontFile, options, checkChecksums=0, dontLoadGlyphNames=False, lazy=True):
+def load_font(
+    fontFile: str | os.PathLike[str] | BinaryIO,
+    options: Options,
+    checkChecksums: int = 0,
+    dontLoadGlyphNames: bool = False,
+    lazy: bool | None = True,
+) -> ttLib.TTFont:
     font = ttLib.TTFont(
         fontFile,
         checkChecksums=checkChecksums,

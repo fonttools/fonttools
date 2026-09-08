@@ -7,7 +7,10 @@ import array
 import struct
 import logging
 from functools import lru_cache
-from typing import Iterator, NamedTuple, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, NamedTuple, Optional, Tuple
+
+if TYPE_CHECKING:
+    from fontTools.ttLib import TTFont
 
 log = logging.getLogger(__name__)
 
@@ -1006,7 +1009,7 @@ class BaseTable(object):
 
         del self.__rawTable  # succeeded, get rid of debugging info
 
-    def compile(self, writer, font):
+    def compile(self, writer: OTTableWriter, font: "TTFont") -> None:
         self.ensureDecompiled()
         # TODO Following hack to be removed by rewriting how FormatSwitching tables
         # are handled.

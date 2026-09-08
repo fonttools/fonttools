@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import (
     bytechr,
@@ -20,6 +23,9 @@ from fontTools.ttLib.tables import C_P_A_L_
 from . import DefaultTable
 import struct
 import logging
+
+if TYPE_CHECKING:
+    from fontTools.ttLib import TTFont
 
 log = logging.getLogger(__name__)
 
@@ -49,7 +55,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
     dependencies = ["ltag"]
 
-    def __init__(self, tag=None):
+    def __init__(self, tag: str | bytes | None = None) -> None:
         super().__init__(tag)
         self.names = []
 
@@ -82,7 +88,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
             del name.offset, name.length
             self.names.append(name)
 
-    def compile(self, ttFont):
+    def compile(self, ttFont: TTFont) -> bytes:
         names = self.names
         names.sort()  # sort according to the spec; see NameRecord.__lt__()
         stringData = b""
@@ -186,7 +192,14 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
                     return name
         return None
 
-    def setName(self, string, nameID, platformID, platEncID, langID):
+    def setName(
+        self,
+        string: str | bytes,
+        nameID: int,
+        platformID: int,
+        platEncID: int,
+        langID: int,
+    ) -> None:
         """Set the 'string' for the name record identified by 'nameID', 'platformID',
         'platEncID' and 'langID'. If a record with that nameID doesn't exist, create it
         and append to the name table.
@@ -385,7 +398,12 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
                     self.names.append(macName)
         return nameID
 
-    def addName(self, string, platforms=((1, 0, 0), (3, 1, 0x409)), minNameID=255):
+    def addName(
+        self,
+        string: str,
+        platforms: Sequence[tuple[int, int, int]] = ((1, 0, 0), (3, 1, 0x409)),
+        minNameID: int = 255,
+    ) -> int:
         """Add a new name record containing 'string' for each (platformID, platEncID,
         langID) tuple specified in the 'platforms' list.
 

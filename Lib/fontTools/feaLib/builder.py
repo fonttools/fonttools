@@ -46,6 +46,10 @@ from io import StringIO
 import logging
 import warnings
 import os
+from typing import TYPE_CHECKING, Iterable
+
+if TYPE_CHECKING:
+    from fontTools.ttLib import TTFont
 
 log = logging.getLogger(__name__)
 
@@ -69,8 +73,12 @@ def addOpenTypeFeatures(font, featurefile, tables=None, debug=False):
 
 
 def addOpenTypeFeaturesFromString(
-    font, features, filename=None, tables=None, debug=False
-):
+    font: TTFont,
+    features: str | bytes,
+    filename: str | os.PathLike[str] | None = None,
+    tables: Iterable[str] | None = None,
+    debug: bool = False,
+) -> None:
     """Add features from a string to a font. Note that this replaces any
     features currently present.
 

@@ -2799,7 +2799,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             self.writerClass = BaseDocWriter
 
     @classmethod
-    def fromfile(cls, path, readerClass=None, writerClass=None):
+    def fromfile(cls, path: str | os.PathLike[str], readerClass=None, writerClass=None):
         """Read a designspace file from ``path`` and return a new instance of
         :class:.
         """
@@ -2831,7 +2831,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         writer.write(encoding=encoding, xml_declaration=xml_declaration)
         return f.getvalue()
 
-    def read(self, path):
+    def read(self, path: str | os.PathLike[str]):
         """Read a designspace file from ``path`` and populates the fields of
         ``self`` with the data.
         """
@@ -2844,7 +2844,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         if self.sources:
             self.findDefault()
 
-    def write(self, path):
+    def write(self, path: str | os.PathLike[str]):
         """Write this designspace to ``path``."""
         if hasattr(path, "__fspath__"):  # support os.PathLike objects
             path = path.__fspath__()

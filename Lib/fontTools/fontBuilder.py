@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = ["FontBuilder"]
 
 """
@@ -131,11 +133,29 @@ fb.save("test.otf")
 
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
-from .ttLib.tables._g_l_y_f import flagCubic
+from .ttLib.tables._g_l_y_f import Glyph, flagCubic
 from .ttLib.tables.O_S_2f_2 import Panose
 from .misc.timeTools import timestampNow
+import os
 import struct
 from collections import OrderedDict
+from typing import TYPE_CHECKING, Any, BinaryIO, Iterable, Mapping, Sequence
+
+if TYPE_CHECKING:
+    from .colorLib.builder import (
+        ColorPaletteType,
+        _ClipBoxInput,
+        _ColorGlyphsDict,
+        _OptionalLocalizedString,
+    )
+    from .designspaceLib import (
+        AxisDescriptor,
+        AxisMappingDescriptor,
+        InstanceDescriptor,
+    )
+    from .feaLib.ast import STATNameStatement
+    from .otlLib.builder import STATName
+    from .ttLib.tables import otTables as ot
 
 _headDefaults = dict(
     tableVersion=1.0,
@@ -309,7 +329,13 @@ def _getOS2Defaults():
 
 
 class FontBuilder(object):
-    def __init__(self, unitsPerEm=None, font=None, isTTF=True, glyphDataFormat=0):
+    def __init__(
+        self,
+        unitsPerEm: int | None = None,
+        font: TTFont | None = None,
+        isTTF: bool = True,
+        glyphDataFormat: int = 0,
+    ) -> None:
         """Initialize a FontBuilder instance.
 
         If the `font` argument is not given, a new `TTFont` will be
@@ -348,7 +374,7 @@ class FontBuilder(object):
             self.font = font
             self.isTTF = "glyf" in font
 
-    def save(self, file):
+    def save(self, file: str | os.PathLike[str] | BinaryIO) -> None:
         """Save the font. The 'file' argument can be either a pathname or a
         writable file object.
         """
@@ -367,23 +393,28 @@ class FontBuilder(object):
         for k, v in values.items():
             setattr(table, k, v)
 
-    def setupHead(self, **values):
+    def setupHead(self, **values: Any) -> None:
         """Create a new `head` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
         self._initTableWithValues("head", _headDefaults, values)
 
-    def updateHead(self, **values):
+    def updateHead(self, **values: Any) -> None:
         """Update the head table with the fields and values passed as
         keyword arguments.
         """
         self._updateTableWithValues("head", values)
 
-    def setupGlyphOrder(self, glyphOrder):
+    def setupGlyphOrder(self, glyphOrder: list[str]) -> None:
         """Set the glyph order for the font."""
         self.font.setGlyphOrder(glyphOrder)
 
-    def setupCharacterMap(self, cmapping, uvs=None, allowFallback=False):
+    def setupCharacterMap(
+        self,
+        cmapping: Mapping[int, str],
+        uvs: Sequence[tuple[int, int, str | None]] | None = None,
+        allowFallback: bool = False,
+    ) -> None:
         """Build the `cmap` table for the font. The `cmapping` argument should
         be a dict mapping unicode code points as integers to glyph names.
 
@@ -437,7 +468,12 @@ class FontBuilder(object):
         self.font["cmap"].tableVersion = 0
         self.font["cmap"].tables = subTables
 
-    def setupNameTable(self, nameStrings, windows=True, mac=True):
+    def setupNameTable(
+        self,
+        nameStrings: Mapping[int | str, str | Mapping[str, str]],
+        windows: bool = True,
+        mac: bool = True,
+    ) -> None:
         """Create the `name` table for the font. The `nameStrings` argument must
         be a dict, mapping nameIDs or descriptive names for the nameIDs to name
         record values. A value is either a string, or a dict, mapping language codes
@@ -488,7 +524,7 @@ class FontBuilder(object):
                 nameValue, ttFont=self.font, nameID=nameID, windows=windows, mac=mac
             )
 
-    def setupOS2(self, **values):
+    def setupOS2(self, **values: Any) -> None:
         """Create a new `OS/2` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
@@ -621,7 +657,7 @@ class FontBuilder(object):
         if regions:
             self.setupCFF2Regions(regions)
 
-    def setupCFF2Regions(self, regions):
+    def setupCFF2Regions(self, regions) -> None:
         from .varLib.builder import buildVarRegionList, buildVarData, buildVarStore
         from .cffLib import VarStoreData
 
@@ -637,7 +673,12 @@ class FontBuilder(object):
         for fontDict in topDict.FDArray:
             fontDict.Private.vstore = vstore
 
-    def setupGlyf(self, glyphs, calcGlyphBounds=True, validateGlyphFormat=True):
+    def setupGlyf(
+        self,
+        glyphs: dict[str, Glyph],
+        calcGlyphBounds: bool = True,
+        validateGlyphFormat: bool = True,
+    ) -> None:
         """Create the `glyf` table from a dict, that maps glyph names
         to `fontTools.ttLib.tables._g_l_y_f.Glyph` objects, for example
         as made by `fontTools.pens.ttGlyphPen.TTGlyphPen`.
@@ -669,7 +710,13 @@ class FontBuilder(object):
         if calcGlyphBounds:
             self.calcGlyphBounds()
 
-    def setupFvar(self, axes, instances):
+    def setupFvar(
+        self,
+        axes: Sequence[
+            AxisDescriptor | tuple[str, float, float, float, str | Mapping[str, str]]
+        ],
+        instances: Sequence[InstanceDescriptor | Mapping[str, Any]],
+    ) -> None:
         """Adds an font variations table to the font.
 
         Args:
@@ -692,7 +739,11 @@ class FontBuilder(object):
 
         addFvar(self.font, axes, instances)
 
-    def setupAvar(self, axes, mappings=None):
+    def setupAvar(
+        self,
+        axes: Sequence[AxisDescriptor],
+        mappings: Sequence[AxisMappingDescriptor] | None = None,
+    ) -> None:
         """Adds an axis variations table to the font.
 
         Args:
@@ -719,7 +770,7 @@ class FontBuilder(object):
         gvar.reserved = 0
         gvar.variations = variations
 
-    def calcGlyphBounds(self):
+    def calcGlyphBounds(self) -> None:
         """Calculate the bounding boxes of all glyphs in the `glyf` table.
         This is usually not called explicitly by client code.
         """
@@ -727,7 +778,9 @@ class FontBuilder(object):
         for glyph in glyphTable.glyphs.values():
             glyph.recalcBounds(glyphTable)
 
-    def setupHorizontalMetrics(self, metrics):
+    def setupHorizontalMetrics(
+        self, metrics: Mapping[str, tuple[float, float]]
+    ) -> None:
         """Create a new `hmtx` table, for horizontal metrics.
 
         The `metrics` argument must be a dict, mapping glyph names to
@@ -735,7 +788,7 @@ class FontBuilder(object):
         """
         self.setupMetrics("hmtx", metrics)
 
-    def setupVerticalMetrics(self, metrics):
+    def setupVerticalMetrics(self, metrics: Mapping[str, tuple[float, float]]) -> None:
         """Create a new `vmtx` table, for horizontal metrics.
 
         The `metrics` argument must be a dict, mapping glyph names to
@@ -743,7 +796,9 @@ class FontBuilder(object):
         """
         self.setupMetrics("vmtx", metrics)
 
-    def setupMetrics(self, tableTag, metrics):
+    def setupMetrics(
+        self, tableTag: str, metrics: Mapping[str, tuple[float, float]]
+    ) -> None:
         """See `setupHorizontalMetrics()` and `setupVerticalMetrics()`."""
         assert tableTag in ("hmtx", "vmtx")
         mtxTable = self.font[tableTag] = newTable(tableTag)
@@ -753,19 +808,23 @@ class FontBuilder(object):
             roundedMetrics[gn] = int(round(w)), int(round(lsb))
         mtxTable.metrics = roundedMetrics
 
-    def setupHorizontalHeader(self, **values):
+    def setupHorizontalHeader(self, **values: Any) -> None:
         """Create a new `hhea` table initialize it with default values,
         which can be overridden by keyword arguments.
         """
         self._initTableWithValues("hhea", _hheaDefaults, values)
 
-    def setupVerticalHeader(self, **values):
+    def setupVerticalHeader(self, **values: Any) -> None:
         """Create a new `vhea` table initialize it with default values,
         which can be overridden by keyword arguments.
         """
         self._initTableWithValues("vhea", _vheaDefaults, values)
 
-    def setupVerticalOrigins(self, verticalOrigins, defaultVerticalOrigin=None):
+    def setupVerticalOrigins(
+        self,
+        verticalOrigins: Mapping[str, int],
+        defaultVerticalOrigin: int | None = None,
+    ) -> None:
         """Create a new `VORG` table. The `verticalOrigins` argument must be
         a dict, mapping glyph names to vertical origin values.
 
@@ -796,7 +855,7 @@ class FontBuilder(object):
         for gn in verticalOrigins:
             vorgTable[gn] = verticalOrigins[gn]
 
-    def setupPost(self, keepGlyphNames=True, **values):
+    def setupPost(self, keepGlyphNames: bool = True, **values: Any) -> None:
         """Create a new `post` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
@@ -809,7 +868,7 @@ class FontBuilder(object):
         else:
             postTable.formatType = 3.0
 
-    def setupMaxp(self):
+    def setupMaxp(self) -> None:
         """Create a new `maxp` table. This is called implicitly by FontBuilder
         itself and is usually not called by client code.
         """
@@ -819,7 +878,7 @@ class FontBuilder(object):
             defaults = _maxpDefaultsOTF
         self._initTableWithValues("maxp", defaults, {})
 
-    def setupDummyDSIG(self):
+    def setupDummyDSIG(self) -> None:
         """This adds an empty DSIG table to the font to make some MS applications
         happy. This does not properly sign the font.
         """
@@ -831,7 +890,13 @@ class FontBuilder(object):
         )
         self._initTableWithValues("DSIG", {}, values)
 
-    def addOpenTypeFeatures(self, features, filename=None, tables=None, debug=False):
+    def addOpenTypeFeatures(
+        self,
+        features: str | bytes,
+        filename: str | os.PathLike[str] | None = None,
+        tables: Iterable[str] | None = None,
+        debug: bool = False,
+    ) -> None:
         """Add OpenType features to the font from a string containing
         Feature File syntax.
 
@@ -851,7 +916,9 @@ class FontBuilder(object):
             self.font, features, filename=filename, tables=tables, debug=debug
         )
 
-    def addFeatureVariations(self, conditionalSubstitutions, featureTag="rvrn"):
+    def addFeatureVariations(
+        self, conditionalSubstitutions, featureTag: str = "rvrn"
+    ) -> None:
         """Add conditional substitutions to a Variable Font.
 
         See `fontTools.varLib.featureVars.addFeatureVariations`.
@@ -867,13 +934,13 @@ class FontBuilder(object):
 
     def setupCOLR(
         self,
-        colorLayers,
-        version=None,
-        varStore=None,
-        varIndexMap=None,
-        clipBoxes=None,
-        allowLayerReuse=True,
-    ):
+        colorLayers: _ColorGlyphsDict,
+        version: int | None = None,
+        varStore: ot.VarStore | None = None,
+        varIndexMap: ot.DeltaSetIndexMap | None = None,
+        clipBoxes: dict[str, _ClipBoxInput] | None = None,
+        allowLayerReuse: bool = True,
+    ) -> None:
         """Build new COLR table using color layers dictionary.
 
         Cf. `fontTools.colorLib.builder.buildCOLR`.
@@ -893,11 +960,11 @@ class FontBuilder(object):
 
     def setupCPAL(
         self,
-        palettes,
-        paletteTypes=None,
-        paletteLabels=None,
-        paletteEntryLabels=None,
-    ):
+        palettes: Sequence[Sequence[tuple[float, float, float, float]]],
+        paletteTypes: Sequence[ColorPaletteType] | None = None,
+        paletteLabels: Sequence[_OptionalLocalizedString] | None = None,
+        paletteEntryLabels: Sequence[_OptionalLocalizedString] | None = None,
+    ) -> None:
         """Build new CPAL table using list of palettes.
 
         Optionally build CPAL v1 table using paletteTypes, paletteLabels and
@@ -915,7 +982,12 @@ class FontBuilder(object):
             nameTable=self.font.get("name"),
         )
 
-    def setupStat(self, axes, locations=None, elidedFallbackName=2):
+    def setupStat(
+        self,
+        axes,
+        locations=None,
+        elidedFallbackName: STATName | STATNameStatement = 2,
+    ) -> None:
         """Build a new 'STAT' table.
 
         See `fontTools.otlLib.builder.buildStatTable` for details about
@@ -943,7 +1015,13 @@ def buildCmapSubTable(cmapping, format, platformID, platEncID):
     return subTable
 
 
-def addFvar(font, axes, instances):
+def addFvar(
+    font,
+    axes: Sequence[
+        AxisDescriptor | tuple[str, float, float, float, str | Mapping[str, str]]
+    ],
+    instances: Sequence[InstanceDescriptor | Mapping[str, Any]],
+):
     from .ttLib.tables._f_v_a_r import Axis, NamedInstance
 
     assert axes

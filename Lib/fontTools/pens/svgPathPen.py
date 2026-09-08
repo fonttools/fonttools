@@ -1,8 +1,8 @@
-from typing import Callable
+from typing import Callable, Iterable
 from fontTools.pens.basePen import BasePen
 
 
-def pointToString(pt, ntos=str):
+def pointToString(pt: Iterable[float], ntos: Callable[[float], str] = str) -> str:
     return " ".join(ntos(i) for i in pt)
 
 
@@ -40,7 +40,7 @@ class SVGPathPen(BasePen):
             print(tpen.getCommands())
     """
 
-    def __init__(self, glyphSet, ntos: Callable[[float], str] = str):
+    def __init__(self, glyphSet, ntos: Callable[[float], str] = str) -> None:
         BasePen.__init__(self, glyphSet)
         self._commands = []
         self._lastCommand = None
@@ -204,7 +204,7 @@ class SVGPathPen(BasePen):
         self._lastCommand = None
         self._lastX = self._lastY = None
 
-    def getCommands(self):
+    def getCommands(self) -> str:
         return "".join(self._commands)
 
 

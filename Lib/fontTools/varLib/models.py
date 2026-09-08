@@ -272,8 +272,13 @@ class VariationModel(object):
     """
 
     def __init__(
-        self, locations, axisOrder=None, extrapolate=False, *, axisRanges=None
-    ):
+        self,
+        locations: Sequence[Mapping[str, float]],
+        axisOrder: Sequence[str] | None = None,
+        extrapolate: bool = False,
+        *,
+        axisRanges: Mapping[str, tuple[float, float]] | None = None,
+    ) -> None:
         locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
 
         if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
