@@ -84,6 +84,8 @@ class BaseTTXConverter(DefaultTable):
     we use for OpenType tables, which is necessarily subtly different.
     """
 
+    table: "BaseTable"
+
     def decompile(self, data, font):
         """Create an object from the binary data. Called automatically on access."""
         from . import otTables
