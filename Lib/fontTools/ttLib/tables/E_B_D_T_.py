@@ -11,6 +11,7 @@ from fontTools.misc.textTools import (
 )
 from .BitmapGlyphMetrics import (
     BigGlyphMetrics,
+    BitmapGlyphMetrics,
     bigGlyphMetricsFormat,
     SmallGlyphMetrics,
     smallGlyphMetricsFormat,
@@ -51,6 +52,8 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/ebdt
     """
+
+    strikeData: list[dict[str, "BitmapGlyph"]]
 
     # Keep a reference to the name of the data locator table.
     locatorName = "EBLC"
@@ -467,6 +470,11 @@ _bitmapGlyphSubclassPrefix = "ebdt_bitmap_format_"
 
 
 class BitmapGlyph(object):
+    # Set by table_E_B_D_T_.toXML and consumed (and deleted) by the image data
+    # writers, which have no other route to the strike's metrics.
+    exportMetrics: BitmapGlyphMetrics
+    exportBitDepth: int
+
     # For the external file format. This can be changed in subclasses. This way
     # when the extfile option is turned on files have the form: glyphName.ext
     # The default is just a flat binary file with no meaning.

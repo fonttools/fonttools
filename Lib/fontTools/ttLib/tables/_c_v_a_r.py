@@ -31,6 +31,9 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/cvar
     """
 
+    majorVersion: int
+    minorVersion: int
+
     dependencies = ["cvt ", "fvar"]
 
     def __init__(self, tag=None):

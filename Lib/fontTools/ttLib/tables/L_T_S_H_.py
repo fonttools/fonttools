@@ -19,6 +19,8 @@ class table_L_T_S_H_(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/ltsh
     """
 
+    yPels: dict[str, int]
+
     def decompile(self, data, ttFont):
         version, numGlyphs = struct.unpack(">HH", data[:4])
         data = data[4:]

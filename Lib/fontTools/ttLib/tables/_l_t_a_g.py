@@ -14,6 +14,8 @@ class table__l_t_a_g(DefaultTable.DefaultTable):
     See also https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6ltag.html
     """
 
+    tags: list[str]
+
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.version, self.flags = 1, 0

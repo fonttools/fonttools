@@ -431,6 +431,9 @@ class CmapSubtable(object):
 
 
 class cmap_format_0(CmapSubtable):
+
+    language: int
+
     def decompile(self, data, ttFont):
         # we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
         # If not, someone is calling the subtable decompile() directly, and must provide both args.
@@ -490,6 +493,9 @@ class SubHeader(object):
 
 
 class cmap_format_2(CmapSubtable):
+
+    language: int
+
     def setIDDelta(self, subHeader):
         subHeader.idDelta = 0
         # An empty subheader (an all-notdef two-byte range) has no glyphs to
@@ -926,6 +932,9 @@ def splitRange(startCode, endCode, cmap):
 
 
 class cmap_format_4(CmapSubtable):
+
+    language: int
+
     def decompile(self, data, ttFont):
         # we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
         # If not, someone is calling the subtable decompile() directly, and must provide both args.
@@ -1120,6 +1129,9 @@ class cmap_format_4(CmapSubtable):
 
 
 class cmap_format_6(CmapSubtable):
+
+    language: int
+
     def decompile(self, data, ttFont):
         # we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
         # If not, someone is calling the subtable decompile() directly, and must provide both args.
@@ -1187,6 +1199,10 @@ class cmap_format_6(CmapSubtable):
 
 
 class cmap_format_12_or_13(CmapSubtable):
+
+    language: int
+    length: int
+    nGroups: int
     headerFormat = ">HHLLL"
 
     def __init__(self, format: int) -> None:
@@ -1407,6 +1423,8 @@ def cvtFromUVS(val):
 
 
 class cmap_format_14(CmapSubtable):
+
+    uvsDict: dict[int, list[tuple[int, str | None]]]
     headerFormat = ">HLL"
 
     def decompileHeader(self, data, ttFont):
@@ -1609,6 +1627,8 @@ class cmap_format_14(CmapSubtable):
 
 
 class cmap_format_unknown(CmapSubtable):
+
+    data: bytes
     headerFormat = ""  # the body is kept verbatim, nothing is unpacked
 
     def __init__(self, format: int) -> None:

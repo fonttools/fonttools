@@ -18,6 +18,8 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/vorg
     """
 
+    VOriginRecords: dict[str, int]
+
     def decompile(self, data, ttFont):
         self.getGlyphName = (
             ttFont.getGlyphName
@@ -143,7 +145,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 
 
 class VOriginRecord(object):
-    def __init__(self, name=None, vOrigin=None):
+    def __init__(self, name: str = "", vOrigin: int = 0):
         self.glyphName = name
         self.vOrigin = vOrigin
 

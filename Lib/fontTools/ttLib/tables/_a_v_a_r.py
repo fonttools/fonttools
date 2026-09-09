@@ -52,6 +52,10 @@ class table__a_v_a_r(BaseTTXConverter):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/avar
     """
 
+    majorVersion: int
+    minorVersion: int
+    segments: dict[str, dict[float, float]]
+
     dependencies = ["fvar"]
 
     def __init__(self, tag=None):

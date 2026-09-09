@@ -20,6 +20,11 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/cpal
     """
 
+    palettes: list[list["Color"]]
+    paletteTypes: list[int]
+    paletteLabels: list[int]
+    paletteEntryLabels: list[int]
+
     NO_NAME_ID = 0xFFFF
     DEFAULT_PALETTE_TYPE = 0
 

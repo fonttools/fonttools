@@ -22,6 +22,9 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/colr
     """
 
+    ColorLayers: dict[str, list["LayerRecord"]]
+    version: int
+
     @staticmethod
     def _decompileColorLayersV0(table):
         if not table.LayerRecordArray:
@@ -149,7 +152,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 
 class LayerRecord(object):
-    def __init__(self, name=None, colorID=None):
+    def __init__(self, name: str = "", colorID: int = 0):
         self.name = name
         self.colorID = colorID
 

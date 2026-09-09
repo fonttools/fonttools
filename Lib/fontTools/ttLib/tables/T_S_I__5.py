@@ -18,6 +18,9 @@ log = logging.getLogger(__name__)
 
 
 class table_T_S_I__5(DefaultTable.DefaultTable):
+
+    glyphGrouping: dict[str, int]
+
     def decompile(self, data, ttFont):
         numGlyphs = ttFont["maxp"].numGlyphs
         a = array.array("H")
