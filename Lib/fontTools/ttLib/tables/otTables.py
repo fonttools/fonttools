@@ -938,6 +938,8 @@ class FeatureParamsCharacterVariants(FeatureParams):
 
 
 class Coverage(FormatSwitchingBaseTable):
+
+    glyphs: list[str]
     # manual implementation to get rid of glyphID dependencies
 
     def populateDefaults(self, propagator=None):
@@ -1180,6 +1182,9 @@ class VarRegionList(BaseTable):
 
 
 class SingleSubst(FormatSwitchingBaseTable):
+
+    mapping: dict[str, str]
+
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "mapping"):
             self.mapping = {}
@@ -1335,6 +1340,9 @@ class MultipleSubst(FormatSwitchingBaseTable):
 
 
 class ClassDef(FormatSwitchingBaseTable):
+
+    classDefs: dict[str, int]
+
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "classDefs"):
             self.classDefs = {}

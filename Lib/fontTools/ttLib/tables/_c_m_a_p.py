@@ -57,6 +57,8 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/cmap
     """
 
+    tables: list["CmapSubtable"]
+
     def getcmap(self, platformID, platEncID):
         """Returns the first subtable which matches the given platform and encoding.
 

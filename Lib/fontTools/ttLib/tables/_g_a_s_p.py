@@ -17,6 +17,8 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/gasp
     """
 
+    gaspRange: dict[int, int]
+
     version: int
 
     def decompile(self, data, ttFont):

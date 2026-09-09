@@ -29,6 +29,8 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/kern
     """
 
+    kernTables: list["KernTable_format_0 | KernTable_format_unkown"]
+
     def getkern(self, format):
         for subtable in self.kernTables:
             if subtable.format == format:
@@ -120,6 +122,10 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 class KernTable_format_0(object):
     # 'version' is kept for backward compatibility
     version = format = 0
+
+    coverage: int
+    tupleIndex: int | None
+    kernTable: dict[tuple[str, str], int]
 
     def __init__(self, apple: bool = False) -> None:
         self.apple = apple
@@ -270,7 +276,10 @@ class KernTable_format_0(object):
 
 
 class KernTable_format_unkown(object):
-    def __init__(self, format):
+    format: int
+    data: bytes
+
+    def __init__(self, format: int) -> None:
         self.format = format
 
     def decompile(self, data, ttFont):

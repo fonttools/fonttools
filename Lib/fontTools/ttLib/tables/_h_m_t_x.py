@@ -25,6 +25,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
     sideBearingName = "lsb"
     numberOfMetricsName = "numberOfHMetrics"
     longMetricFormat = "Hh"
+    metrics: dict[str, tuple[int, int]]
 
     def decompile(self, data, ttFont):
         numGlyphs = ttFont["maxp"].numGlyphs
