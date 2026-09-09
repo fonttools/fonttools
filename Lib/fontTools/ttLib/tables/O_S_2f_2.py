@@ -91,8 +91,8 @@ OS2_format_2_addition = OS2_format_1_addition + """
 """
 
 OS2_format_5_addition = OS2_format_2_addition + """
-	usLowerOpticalPointSize:    H
-	usUpperOpticalPointSize:    H
+	usLowerOpticalPointSize:    H   # py:float
+	usUpperOpticalPointSize:    H   # py:float
 """
 
 bigendian = "	>	# big endian\n"
@@ -155,15 +155,15 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
                 "OS/2 table version 4 and up: version %s",
                 self.version,
             )
-        self.panose = sstruct.pack(panoseFormat, self.panose)
+        d = self.__dict__.copy()
+        d["panose"] = sstruct.pack(panoseFormat, self.panose)
         if self.version == 0:
-            data = sstruct.pack(OS2_format_0, self)
+            data = sstruct.pack(OS2_format_0, d)
         elif self.version == 1:
-            data = sstruct.pack(OS2_format_1, self)
+            data = sstruct.pack(OS2_format_1, d)
         elif self.version in (2, 3, 4):
-            data = sstruct.pack(OS2_format_2, self)
+            data = sstruct.pack(OS2_format_2, d)
         elif self.version == 5:
-            d = self.__dict__.copy()
             d["usLowerOpticalPointSize"] = round(self.usLowerOpticalPointSize * 20)
             d["usUpperOpticalPointSize"] = round(self.usUpperOpticalPointSize * 20)
             data = sstruct.pack(OS2_format_5, d)
@@ -173,7 +173,6 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
             raise ttLib.TTLibError(
                 "unknown format for OS/2 table: version %s" % self.version
             )
-        self.panose = panose
         return data
 
     def toXML(self, writer, ttFont):

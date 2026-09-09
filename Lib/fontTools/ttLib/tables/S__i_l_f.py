@@ -360,7 +360,7 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
             sstruct.unpack2(Silf_hdr_format_3, data, self)
             base = sstruct.calcsize(Silf_hdr_format_3)
         elif self.version < 3.0:
-            self.numSilf = struct.unpack(">H", data[4:6])[]
+            self.numSilf = struct.unpack(">H", data[4:6])[0]
             self.scheme = 0
             self.compilerVersion = 0
             base = 8

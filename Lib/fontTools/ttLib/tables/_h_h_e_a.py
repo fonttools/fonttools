@@ -14,9 +14,9 @@ hheaFormat = """
 		descent:                h
 		lineGap:                h
 		advanceWidthMax:        H
-		minLeftSideBearing:     h
-		minRightSideBearing:    h
-		xMaxExtent:             h
+		minLeftSideBearing:     h  # py:float
+		minRightSideBearing:    h  # py:float
+		xMaxExtent:             h  # py:float
 		caretSlopeRise:         h
 		caretSlopeRun:          h
 		caretOffset:            h

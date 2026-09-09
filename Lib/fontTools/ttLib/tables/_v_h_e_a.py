@@ -14,9 +14,9 @@ vheaFormat = """
 		descent:		h
 		lineGap:		h
 		advanceHeightMax:	H
-		minTopSideBearing:	h
-		minBottomSideBearing:	h
-		yMaxExtent:		h
+		minTopSideBearing:	h  # py:float
+		minBottomSideBearing:	h  # py:float
+		yMaxExtent:		h  # py:float
 		caretSlopeRise:		h
 		caretSlopeRun:		h
 		caretOffset:		h

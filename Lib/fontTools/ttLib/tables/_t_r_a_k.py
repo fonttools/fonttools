@@ -39,7 +39,7 @@ TRACK_DATA_FORMAT_SIZE = sstruct.calcsize(TRACK_DATA_FORMAT)
 TRACK_TABLE_ENTRY_FORMAT = """
 	> # big endian
 	track:      16.16F
-	nameIndex:       H
+	nameIndex:       H  # py:"int | None"
 	offset:          H
 """
 
