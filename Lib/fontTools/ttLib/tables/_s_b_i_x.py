@@ -125,4 +125,6 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 
 
 class sbixStrikeOffset(object):
+    binaryFormat = sbixStrikeOffsetFormat
+
     pass

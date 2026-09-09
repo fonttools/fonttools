@@ -301,6 +301,13 @@ class Strike(object):
 
 
 class BitmapSizeTable(object):
+    hori: SbitLineMetrics
+    vert: SbitLineMetrics
+
+    binaryFormat = (
+        bitmapSizeTableFormatPart1,
+        bitmapSizeTableFormatPart2,
+    )
     # Returns all the simple metric names that bitmap size table
     # cares about in terms of XML creation.
     def _getXMLMetricNames(self):

@@ -28,6 +28,7 @@ import pkgutil
 import re
 import sys
 from pathlib import Path
+from types import ModuleType
 
 from fontTools.misc import sstruct
 from fontTools.ttLib import tables
@@ -38,7 +39,7 @@ END = "    # END sstruct decode"
 STRUCT_TO_PY = {
     **dict.fromkeys("bBhHiIlLqQ", "int"),
     **dict.fromkeys("fd", "float"),
-    **dict.fromkeys("spc", "bytes"),
+    **dict.fromkeys("spc", "str"),
     "?": "bool",
 }
 
@@ -123,22 +124,52 @@ def strip_blocks(text: str) -> str:
         while i < len(lines) and not lines[i].startswith(END):
             i += 1
         i += 1
-        if i < len(lines) and not lines[i].strip():
-            i += 1
     return "\n".join(out) + "\n"
 
 
+def declared(cls: ast.ClassDef) -> set[str]:
+    """Names the class already annotates by hand, which take precedence."""
+    return {
+        s.target.id
+        for s in cls.body
+        if isinstance(s, ast.AnnAssign) and isinstance(s.target, ast.Name)
+    }
+
+
 def insertion_line(cls: ast.ClassDef) -> int:
-    """Line to insert after: past the docstring, or the class header."""
-    first = cls.body[0] if cls.body else None
-    if (
-        isinstance(first, ast.Expr)
-        and isinstance(first.value, ast.Constant)
-        and isinstance(first.value.value, str)
-        and first.end_lineno
-    ):
-        return first.end_lineno
-    return cls.lineno
+    """Find the insertion point"""
+    at = cls.lineno
+    for i, stmt in enumerate(cls.body):
+        is_doc = (
+            i == 0
+            and isinstance(stmt, ast.Expr)
+            and isinstance(stmt.value, ast.Constant)
+            and isinstance(stmt.value.value, str)
+        )
+        if not (is_doc or isinstance(stmt, (ast.AnnAssign, ast.Assign))):
+            break
+        at = stmt.end_lineno or at
+    return at
+
+
+def declared_format(cls: ast.ClassDef, mod: ModuleType) -> list[str]:
+    """Formats a class claims via a ``binaryFormat`` attribute."""
+    for s in cls.body:
+        if not (
+            isinstance(s, ast.Assign)
+            and any(
+                isinstance(t, ast.Name) and t.id == "binaryFormat" for t in s.targets
+            )
+        ):
+            continue
+        names = s.value.elts if isinstance(s.value, ast.Tuple) else [s.value]
+        out = []
+        for n in names:
+            fmt = getattr(mod, n.id, None) if isinstance(n, ast.Name) else None
+            if isinstance(fmt, str):
+                out.append(fmt)
+        return out
+    return []
 
 
 def rewrite(module: str) -> tuple[str, str] | None:
@@ -151,11 +182,15 @@ def rewrite(module: str) -> tuple[str, str] | None:
     inserts: dict[int, dict[str, str]] = {}
     for cls in (n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)):
         fields: dict[str, str] = {}
+        # check for "binaryformat=..."
+        for fmt in declared_format(cls, mod):
+            fields.update(field_types(fmt))
         for call in (n for n in ast.walk(cls) if isinstance(n, ast.Call)):
             const = _self_format(call)
             fmt = getattr(mod, const, None) if const else None
             if isinstance(fmt, str):
                 fields.update(field_types(fmt))
+        fields = {n: t for n, t in fields.items() if n not in declared(cls)}
         if fields:
             inserts[insertion_line(cls)] = fields
 
@@ -165,7 +200,7 @@ def rewrite(module: str) -> tuple[str, str] | None:
     for at in sorted(inserts, reverse=True):
         # Pad only where there is not already a blank line
         lead = [] if at and not lines[at - 1].strip() else [""]
-        tail = [] if at < len(lines) and not lines[at].strip() else [""]
+        tail = [""] if at < len(lines) and lines[at].strip() else []
         block = lead + [BEGIN]
         block += [f"    {n}: {t}" for n, t in sorted(inserts[at].items())]
         block += [END] + tail

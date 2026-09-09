@@ -12,7 +12,7 @@ sbixGlyphHeaderFormat = """
 						# lower-left corner which corresponds to the origin of
 						# the glyph on the screen, that is the point on the
 						# baseline at the left edge of the glyph.
-	graphicType:  4s	# e.g. "png "
+	graphicType:  4s	# py:"str | None"  e.g. "png ", None until set
 """
 
 sbixGlyphHeaderFormatSize = sstruct.calcsize(sbixGlyphHeaderFormat)

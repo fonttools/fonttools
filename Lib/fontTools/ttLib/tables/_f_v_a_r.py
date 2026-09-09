@@ -26,7 +26,7 @@ FVAR_HEADER_FORMAT = """
 
 FVAR_AXIS_FORMAT = """
     > # big endian
-    axisTag:        4s
+    axisTag:        4s  # py:"str | None"
     minValue:       16.16F
     defaultValue:   16.16F
     maxValue:       16.16F

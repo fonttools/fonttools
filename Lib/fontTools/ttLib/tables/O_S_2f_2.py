@@ -61,7 +61,7 @@ OS2_format_0 = """
 	yStrikeoutSize:         h       # strikeout size
 	yStrikeoutPosition:     h       # strikeout position
 	sFamilyClass:           h       # font family class and subclass
-	panose:                 10s     # panose classification number
+	panose:                 10s     # py:Panose classification number
 	ulUnicodeRange1:        L       # character range
 	ulUnicodeRange2:        L       # character range
 	ulUnicodeRange3:        L       # character range

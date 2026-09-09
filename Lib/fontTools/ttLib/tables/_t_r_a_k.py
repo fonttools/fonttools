@@ -264,6 +264,7 @@ class TrackData(MutableMapping):
 
 
 class TrackTableEntry(MutableMapping):
+    binaryFormat = TRACK_TABLE_ENTRY_FORMAT
     def __init__(self, values={}, nameIndex=None):
         self.nameIndex = nameIndex
         self._map = dict(values)
