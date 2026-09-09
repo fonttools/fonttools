@@ -93,7 +93,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
     # no padding, except for when padding would allow to use short loca offsets.
     padding = 1
-    glyphs: dict[str, Glyph]
+    glyphs: dict[str, "Glyph"]
 
     def decompile(self, data, ttFont):
         loca = ttFont["loca"]
