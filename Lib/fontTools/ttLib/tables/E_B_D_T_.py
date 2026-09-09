@@ -213,6 +213,8 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 
 
 class EbdtComponent(object):
+    binaryFormat = ebdtComponentFormat
+
     def toXML(self, writer, ttFont):
         writer.begintag("ebdtComponent", [("name", self.name)])
         writer.newline()

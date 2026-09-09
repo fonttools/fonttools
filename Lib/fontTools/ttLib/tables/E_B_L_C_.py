@@ -301,8 +301,8 @@ class Strike(object):
 
 
 class BitmapSizeTable(object):
-    hori: SbitLineMetrics
-    vert: SbitLineMetrics
+    hori: "SbitLineMetrics"
+    vert: "SbitLineMetrics"
 
     binaryFormat = (
         bitmapSizeTableFormatPart1,
@@ -351,6 +351,8 @@ class BitmapSizeTable(object):
 
 
 class SbitLineMetrics(object):
+    binaryFormat = sbitLineMetricsFormat
+
     def toXML(self, name, writer, ttFont):
         writer.begintag("sbitLineMetrics", [("direction", name)])
         writer.newline()
