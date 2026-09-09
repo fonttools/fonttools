@@ -46,10 +46,15 @@ calcsize(fmt)
         it returns the size of the data in bytes.
 """
 
+from __future__ import annotations
+
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 from fontTools.misc.textTools import tobytes, tostr
 import struct
 import re
+from typing import Any, TypeVar, overload
+
+_ObjT = TypeVar("_ObjT")
 
 __version__ = "1.2"
 __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
@@ -59,7 +64,7 @@ class Error(Exception):
     pass
 
 
-def pack(fmt, obj):
+def pack(fmt: str | bytes, obj: Any) -> bytes:
     formatstring, names, fixes = getformat(fmt, keep_pad_byte=True)
     elements = []
     if not isinstance(obj, dict):
@@ -83,7 +88,13 @@ def pack(fmt, obj):
     return data
 
 
-def unpack(fmt, data, obj=None):
+@overload
+def unpack(fmt: str | bytes, data: str | bytes) -> dict[str, Any]: ...
+@overload
+def unpack(fmt: str | bytes, data: str | bytes, obj: None) -> dict[str, Any]: ...
+@overload
+def unpack(fmt: str | bytes, data: str | bytes, obj: _ObjT) -> _ObjT: ...
+def unpack(fmt: str | bytes, data: str | bytes, obj: Any = None) -> Any:
     if obj is None:
         obj = {}
     data = tobytes(data)
@@ -107,12 +118,20 @@ def unpack(fmt, data, obj=None):
     return obj
 
 
-def unpack2(fmt, data, obj=None):
+@overload
+def unpack2(fmt: str | bytes, data: bytes) -> tuple[dict[str, Any], bytes]: ...
+@overload
+def unpack2(
+    fmt: str | bytes, data: bytes, obj: None
+) -> tuple[dict[str, Any], bytes]: ...
+@overload
+def unpack2(fmt: str | bytes, data: bytes, obj: _ObjT) -> tuple[_ObjT, bytes]: ...
+def unpack2(fmt: str | bytes, data: bytes, obj: Any = None) -> tuple[Any, bytes]:
     length = calcsize(fmt)
     return unpack(fmt, data[:length], obj), data[length:]
 
 
-def calcsize(fmt):
+def calcsize(fmt: str | bytes) -> int:
     formatstring, names, fixes = getformat(fmt)
     return struct.calcsize(formatstring)
 
@@ -137,10 +156,13 @@ _emptyRE = re.compile(r"\s*(#.*)?$")
 
 _fixedpointmappings = {8: "b", 16: "h", 32: "l"}
 
-_formatcache = {}
+# fmt -> (struct format string, field -> format char, field -> fractional bits)
+_formatcache: dict[str, tuple[str, dict[str, str], dict[str, int]]] = {}
 
 
-def getformat(fmt, keep_pad_byte=False):
+def getformat(
+    fmt: str | bytes, keep_pad_byte: bool = False
+) -> tuple[str, dict[str, str], dict[str, int]]:
     fmt = tostr(fmt, encoding="ascii")
     try:
         formatstring, names, fixes = _formatcache[fmt]
