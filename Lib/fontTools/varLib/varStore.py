@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Mapping, Sequence
+
 from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.intTools import bit_count
 from fontTools.ttLib.tables import otTables as ot
@@ -12,6 +16,9 @@ from functools import partial
 from collections import defaultdict
 from heapq import heappush, heappop
 import itertools
+
+if TYPE_CHECKING:
+    from fontTools.ttLib.tables._f_v_a_r import Axis
 
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.VarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
@@ -199,7 +206,12 @@ class VarStoreInstancer(object):
     instancer rather than reusing this one via setLocation.
     """
 
-    def __init__(self, varstore, fvar_axes, location={}):
+    def __init__(
+        self,
+        varstore: ot.VarStore | None,
+        fvar_axes: Sequence[Axis],
+        location: Mapping[str, float] = {},
+    ) -> None:
         self.fvar_axes = fvar_axes
         assert varstore is None or varstore.Format == 1
         self._varData = varstore.VarData if varstore else []
@@ -211,7 +223,7 @@ class VarStoreInstancer(object):
         self._supports = {}
         self.setLocation(location)
 
-    def setLocation(self, location):
+    def setLocation(self, location: Mapping[str, float]) -> None:
         self.location = dict(location)
         self._clearCaches()
 
@@ -241,7 +253,7 @@ class VarStoreInstancer(object):
             delta += d * s
         return delta
 
-    def __getitem__(self, varidx):
+    def __getitem__(self, varidx: int) -> float:
         major, minor = varidx >> 16, varidx & 0xFFFF
         if varidx == NO_VARIATION_INDEX:
             return 0.0
