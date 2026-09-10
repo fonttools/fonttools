@@ -2699,6 +2699,42 @@ class MappingEntryFormat(IntFlag):
         return (self & MappingEntryFormat.CODE_POINT_BIAS_BITS) == 0x30
 
 
+class MappingEntriesTable(LTable):
+    """Propagate the sibling entry ID string data to MappingEntries."""
+
+    def read(self, reader, font, tableDict):
+        offset = self.readOffset(reader)
+        if offset == 0:
+            return None
+
+        stringDataOffset = reader.copy().readULong()
+        subReader = reader.getSubReader(offset)
+        subReader["EntryIdStringData"] = (
+            None
+            if stringDataOffset == 0
+            else reader.data[reader.offset + stringDataOffset :]
+        )
+
+        table = self.tableClass()
+        if font.lazy:
+            table.reader = subReader
+            table.font = font
+        else:
+            table.decompile(subReader, font)
+        return table
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        if value is None:
+            self.writeNullOffset(writer)
+            return
+
+        subWriter = writer.getSubWriter()
+        subWriter.name = self.name
+        subWriter["EntryIdStringData"] = tableDict.get("EntryIdStringData")
+        writer.writeSubTable(subWriter, offsetSize=self.staticSize)
+        value.compile(subWriter, font)
+
+
 # Reference implementation:
 # https://github.com/googlefonts/fontations/blob/main/read-fonts/src/tables/ift.rs
 class MappingEntriesConverter(BaseConverter):
@@ -2708,7 +2744,11 @@ class MappingEntriesConverter(BaseConverter):
 
         entryCount = reader["NumEntries"]
         entries = []
-        lastEntryId = -1
+        entryIdStringData = (
+            reader["EntryIdStringData"] if "EntryIdStringData" in reader else None
+        )
+        stringIdDataPos = 0
+        lastEntryId = b"" if entryIdStringData is not None else 0
 
         for _ in range(entryCount):
             entry = {}
@@ -2745,15 +2785,21 @@ class MappingEntriesConverter(BaseConverter):
             if formatFlags & MappingEntryFormat.HAS_ENTRY_ID:
                 ids = []
                 while True:
-                    # Per IFT spec, Entry IDs are delta-encoded. The value is a
-                    # signed 24-bit integer. The least significant bit is a
-                    # continuation flag (1 if more IDs follow). The remaining
-                    # upper bits are a signed integer, representing the delta
-                    # from the previous ID.
-                    encodedVal = reader.readInt24()
-                    delta = encodedVal >> 1
-                    hasMore = encodedVal & 0x01
-                    currentEntryId = lastEntryId + 1 + delta
+                    if entryIdStringData is not None:
+                        encodedVal = reader.readUInt24()
+                        length = encodedVal & 0x7FFFFF
+                        hasMore = encodedVal & 0x800000
+                        currentEntryId = entryIdStringData[
+                            stringIdDataPos : stringIdDataPos + length
+                        ]
+                        stringIdDataPos += length
+                    else:
+                        # Numeric Entry IDs are signed delta-encoded values. The
+                        # least significant bit is the continuation flag.
+                        encodedVal = reader.readInt24()
+                        delta = encodedVal >> 1
+                        hasMore = encodedVal & 0x01
+                        currentEntryId = lastEntryId + 1 + delta
                     ids.append(currentEntryId)
                     lastEntryId = currentEntryId
 
@@ -2761,8 +2807,11 @@ class MappingEntriesConverter(BaseConverter):
                         break
                 entry["entryIds"] = ids
             else:
-                entry["entryIds"] = [lastEntryId + 1]
-                lastEntryId = lastEntryId + 1
+                if entryIdStringData is not None:
+                    entry["entryIds"] = [lastEntryId]
+                else:
+                    lastEntryId += 1
+                    entry["entryIds"] = [lastEntryId]
 
             if formatFlags & MappingEntryFormat.HAS_PATCH_FORMAT:
                 entry["patchFormat"] = reader.readUInt8()
@@ -2789,7 +2838,14 @@ class MappingEntriesConverter(BaseConverter):
         from fontTools.misc.fixedTools import floatToFixed as fl2fi
 
         entries = value
-        lastId = -1
+        entryIdStringData = (
+            writer["EntryIdStringData"]
+            if writer.localState and "EntryIdStringData" in writer.localState
+            else None
+        )
+        stringIds = entryIdStringData is not None
+        lastId = b"" if stringIds else 0
+        stringData = bytearray()
 
         for entry in entries:
             # TODO: Automatically recompute formatFlags based on the contents of
@@ -2820,15 +2876,21 @@ class MappingEntriesConverter(BaseConverter):
             if formatFlags & MappingEntryFormat.HAS_ENTRY_ID:
                 ids = entry.get("entryIds", [])
                 for i, eid in enumerate(ids):
-                    # Recreate the delta-encoded Entry ID. The delta is shifted
-                    # left by one bit, and the least significant bit is set to 1
-                    # if more IDs follow in the list.
-                    delta = eid - lastId - 1
-                    has_more = 1 if i < len(ids) - 1 else 0
-                    encoded_value = (delta << 1) | has_more
-                    writer.writeUInt24(encoded_value & 0xFFFFFF)
+                    if stringIds:
+                        encodedValue = len(eid)
+                        if i < len(ids) - 1:
+                            encodedValue |= 0x800000
+                        writer.writeUInt24(encodedValue)
+                        stringData.extend(eid)
+                    else:
+                        # Numeric Entry IDs are signed delta-encoded values. The
+                        # least significant bit is the continuation flag.
+                        delta = eid - lastId - 1
+                        hasMore = 1 if i < len(ids) - 1 else 0
+                        encodedValue = (delta << 1) | hasMore
+                        writer.writeUInt24(encodedValue & 0xFFFFFF)
                     lastId = eid
-            else:
+            elif not stringIds:
                 lastId += 1
 
             if formatFlags & MappingEntryFormat.HAS_PATCH_FORMAT:
@@ -2843,6 +2905,9 @@ class MappingEntriesConverter(BaseConverter):
                 codepoints = entry.get("codePoints", [])
                 writer.writeData(sbsEncode([c - bias for c in codepoints if c >= bias]))
 
+        if stringIds:
+            entryIdStringData.data = bytes(stringData)
+
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         for entry in value:
             format_flags = entry.get("formatFlags", MappingEntryFormat(0))
@@ -2850,7 +2915,10 @@ class MappingEntriesConverter(BaseConverter):
             xmlWriter.newline()
             if "entryIds" in entry:
                 for eid in entry["entryIds"]:
-                    xmlWriter.simpletag("entryId", value=eid)
+                    if isinstance(eid, bytes):
+                        xmlWriter.simpletag("entryId", value=eid.hex(), type="bytes")
+                    else:
+                        xmlWriter.simpletag("entryId", value=eid)
                     xmlWriter.newline()
             if "featureTags" in entry:
                 for tag in entry["featureTags"]:
@@ -2902,9 +2970,12 @@ class MappingEntriesConverter(BaseConverter):
                         continue
                     ename, eattrs, econtent = e_elem
                     if ename == "entryId":
-                        entry.setdefault("entryIds", []).append(
-                            safeEval(eattrs["value"])
+                        entryId = (
+                            bytes.fromhex(eattrs["value"])
+                            if eattrs.get("type") == "bytes"
+                            else safeEval(eattrs["value"])
                         )
+                        entry.setdefault("entryIds", []).append(entryId)
                     elif ename == "featureTag":
                         entry.setdefault("featureTags", []).append(eattrs["value"])
                     elif ename == "designSpaceSegment":
@@ -2957,6 +3028,7 @@ converterMapping = {
     "BiasedAngle": BiasedAngle,
     "struct": Struct,
     "MappingEntries": MappingEntriesConverter,
+    "MappingEntriesOffset": MappingEntriesTable,
     "Offset": Table,
     "LOffset": LTable,
     "Offset24": Table24,
