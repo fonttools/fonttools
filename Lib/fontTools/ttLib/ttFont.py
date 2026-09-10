@@ -852,7 +852,7 @@ class TTFont(object):
             self._tableCache[(tag, data)] = table
         return table
 
-    def __setitem__(self, tag: str | bytes, table: DefaultTable) -> None:
+    def __setitem__(self, tag: str | bytes, table: DefaultTable | GlyphOrder) -> None:
         self.tables[Tag(tag)] = table
 
     def __delitem__(self, tag: str | bytes) -> None:
