@@ -23,7 +23,7 @@ Then you can make a variable-font this way:
 API *will* change in near future.
 """
 
-from typing import List
+from typing import List, Sequence
 from fontTools.misc.vector import Vector
 from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.fixedTools import floatToFixed as fl2fi
@@ -44,7 +44,11 @@ from fontTools.varLib.merger import VariationMerger, COLRVariationMerger
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
-from fontTools.designspaceLib import DesignSpaceDocument, InstanceDescriptor
+from fontTools.designspaceLib import (
+    AxisDescriptor,
+    DesignSpaceDocument,
+    InstanceDescriptor,
+)
 from fontTools.designspaceLib.split import splitInterpolable, splitVariableFonts
 from fontTools.varLib.stat import buildVFStatTable
 from fontTools.colorLib.builder import buildColrV1
@@ -71,7 +75,11 @@ FEAVAR_FEATURETAG_LIB_KEY = "com.github.fonttools.varLib.featureVarsFeatureTag"
 #
 
 
-def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
+def _add_fvar(
+    font: TTFont,
+    axes: OrderedDict[str, AxisDescriptor],
+    instances: list[InstanceDescriptor],
+):
     """
     Add 'fvar' table to font.
 
@@ -577,14 +585,24 @@ VVAR_FIELDS = _MetricsFields(
 )
 
 
-def _add_HVAR(font, masterModel, master_ttfs, axisTags):
+def _add_HVAR(
+    font: TTFont,
+    masterModel: models.VariationModel,
+    master_ttfs: Sequence[TTFont],
+    axisTags: Sequence[str],
+) -> None:
     getAdvanceMetrics = partial(
         _get_advance_metrics, font, masterModel, master_ttfs, axisTags, HVAR_FIELDS
     )
     _add_VHVAR(font, axisTags, HVAR_FIELDS, getAdvanceMetrics)
 
 
-def _add_VVAR(font, masterModel, master_ttfs, axisTags):
+def _add_VVAR(
+    font: TTFont,
+    masterModel: models.VariationModel,
+    master_ttfs: Sequence[TTFont],
+    axisTags: Sequence[str],
+) -> None:
     getAdvanceMetrics = partial(
         _get_advance_metrics, font, masterModel, master_ttfs, axisTags, VVAR_FIELDS
     )
@@ -734,7 +752,12 @@ def _get_advance_metrics(font, masterModel, master_ttfs, axisTags, tableFields):
     return vhAdvanceDeltasAndSupports, vOrigDeltasAndSupports
 
 
-def _add_MVAR(font, masterModel, master_ttfs, axisTags):
+def _add_MVAR(
+    font: TTFont,
+    masterModel: models.VariationModel,
+    master_ttfs: Sequence[TTFont],
+    axisTags: Sequence[str],
+) -> None:
     log.info("Generating MVAR")
 
     store_builder = varStore.OnlineVarStoreBuilder(axisTags)
@@ -812,7 +835,12 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
         mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
 
 
-def _add_BASE(font, masterModel, master_ttfs, axisTags):
+def _add_BASE(
+    font: TTFont,
+    masterModel: models.VariationModel,
+    master_ttfs: Sequence[TTFont],
+    axisTags: Sequence[str],
+):
     log.info("Generating BASE")
 
     merger = VariationMerger(masterModel, axisTags, font)
@@ -1345,7 +1373,7 @@ def _open_font(path, master_finder=lambda s: s):
     return font
 
 
-def load_masters(designspace, master_finder=lambda s: s):
+def load_masters(designspace: DesignSpaceDocument, master_finder=lambda s: s):
     """Ensure that all SourceDescriptor.font attributes have an appropriate TTFont
     object loaded, or else open TTFont objects from the SourceDescriptor.path
     attributes.
@@ -1396,7 +1424,9 @@ def _feature_variations_tags(ds):
     return sorted({t.strip() for t in raw_tags.split(",")})
 
 
-def addGSUBFeatureVariations(vf, designspace, featureTags=(), *, log_enabled=False):
+def addGSUBFeatureVariations(
+    vf, designspace: DesignSpaceDocument, featureTags=(), *, log_enabled=False
+):
     """Add GSUB FeatureVariations table to variable font, based on DesignSpace rules.
 
     Args:

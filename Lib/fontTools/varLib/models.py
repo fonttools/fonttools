@@ -272,7 +272,12 @@ class VariationModel(object):
     """
 
     def __init__(
-        self, locations, axisOrder=None, extrapolate=False, *, axisRanges=None
+        self,
+        locations: Sequence[Mapping[str, float]],
+        axisOrder: Sequence[str] | None = None,
+        extrapolate: bool = False,
+        *,
+        axisRanges: Mapping[str, tuple[float, float]] | None = None,
     ):
         locations = [{k: v for k, v in loc.items() if v != 0.0} for loc in locations]
 
@@ -323,8 +328,8 @@ class VariationModel(object):
         return subModel, subList(key, items)
 
     @staticmethod
-    def computeAxisRanges(locations):
-        axisRanges = {}
+    def computeAxisRanges(locations: list[dict[str, float]]) -> dict[str, tuple[float, float]]:
+        axisRanges: dict[str, tuple[float, float]] = {}
         allAxes = {axis for loc in locations for axis in loc.keys()}
         for loc in locations:
             for axis in allAxes:
