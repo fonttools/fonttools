@@ -147,6 +147,7 @@ Output options
 
 --flavor=<type>
   Specify flavor of output font file. May be 'woff' or 'woff2'.
+  By default, the flavor of the input font is preserved.
   Note that WOFF2 requires the Brotli Python extension, available
   at https://github.com/google/brotli
 
@@ -4053,6 +4054,9 @@ def main(args=None):
     font = load_font(
         fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames, lazy=lazy
     )
+
+    if options.flavor is None:
+        options.flavor = font.flavor
 
     if outfile is None:
         ext = "." + options.flavor.lower() if options.flavor is not None else None

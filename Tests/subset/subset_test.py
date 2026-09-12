@@ -1038,6 +1038,22 @@ class SubsetTest:
 
         assert ttf.flavor is None
 
+    @pytest.mark.parametrize("flavor", ["woff", "woff2"])
+    def test_subset_inherits_flavor(self, flavor):
+        if flavor == "woff2":
+            pytest.importorskip("brotli")
+
+        ttf_path = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        input_path = self.temp_path(f".{flavor}")
+        font = TTFont(ttf_path)
+        font.flavor = flavor
+        font.save(input_path)
+
+        subset.main([input_path, "*"])
+        output_path = os.path.splitext(input_path)[0] + f".subset.{flavor}"
+
+        assert TTFont(output_path).flavor == flavor
+
     def test_subset_context_subst_format_3(self):
         # https://github.com/fonttools/fonttools/issues/1879
         # Test font contains 'calt' feature with Format 3 ContextSubst lookup subtables
