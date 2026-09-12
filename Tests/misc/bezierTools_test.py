@@ -8,6 +8,7 @@ from fontTools.misc.bezierTools import (
     calcCubicArcLength,
     curveLineIntersections,
     curveCurveIntersections,
+    lineLineIntersections,
     segmentPointAtT,
     splitLine,
     splitQuadratic,
@@ -192,6 +193,10 @@ def test_intersections_straight_line():
     e = (110, 0)
     pt = (109.05194805194802, 0.0)
     assert bezierTools._line_t_of_pt(s, e, pt) == pytest.approx(0.98958184)
+
+
+def test_collinear_vertical_lines_do_not_intersect():
+    assert not lineLineIntersections((310, 0), (310, 10), (310, 800), (310, 810))
 
 
 def test_calcQuadraticArcLength():
