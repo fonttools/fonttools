@@ -2783,8 +2783,8 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         Respect the data stored by others.
         """
 
-        self.default: Optional[str] = None
-        """Name of the default master.
+        self.default: Optional[SourceDescriptor] = None
+        """The source descriptor for the default master.
 
         This attribute is updated by the :meth:`findDefault`
         """
