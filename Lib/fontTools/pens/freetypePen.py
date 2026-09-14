@@ -42,6 +42,9 @@ class FreeTypePen(BasePen):
     For ``image()``, `Pillow` is required. Each module is lazily loaded when the
     corresponding method is called.
 
+    Make sure to get a dedicated pen per glyph via ``with`` statement when you
+    draw a large amount of glyphs onto a bitmap to prevent integer overflow.
+
     Args:
         glyphSet: a dictionary of drawable glyph objects keyed by name
             used to resolve component references in composite glyphs.
@@ -69,16 +72,17 @@ class FreeTypePen(BasePen):
             from fontTools.misc.transform import Offset
 
             en1, en2, ar, ja = 'Typesetting', 'Jeff', 'صف الحروف', 'たいぷせっと'
-            for text, font_path, direction, typo_ascender, typo_descender, vhea_ascender, vhea_descender, contain, features in (
-                (en1, 'NotoSans-Regular.ttf',       'ltr', 2189, -600, None, None, False, {"kern": True, "liga": True}),
-                (en2, 'NotoSans-Regular.ttf',       'ltr', 2189, -600, None, None, True,  {"kern": True, "liga": True}),
-                (ar,  'NotoSansArabic-Regular.ttf', 'rtl', 1374, -738, None, None, False, {"kern": True, "liga": True}),
-                (ja,  'NotoSansJP-Regular.otf',     'ltr', 880,  -120, 500,  -500, False, {"palt": True, "kern": True}),
-                (ja,  'NotoSansJP-Regular.otf',     'ttb', 880,  -120, 500,  -500, False, {"vert": True, "vpal": True, "vkrn": True})
+            for text, font_path, direction, contain, features in (
+                (en1, 'NotoSans-Regular.ttf',       'ltr', False, {"kern": True, "liga": True}),
+                (en2, 'NotoSans-Regular.ttf',       'ltr', True,  {"kern": True, "liga": True}),
+                (ar,  'NotoSansArabic-Regular.ttf', 'rtl', False, {"kern": True, "liga": True}),
+                (ja,  'NotoSansJP-Regular.otf',     'ltr', False, {"palt": True, "kern": True}),
+                (ja,  'NotoSansJP-Regular.otf',     'ttb', False, {"vert": True, "vpal": True, "vkrn": True})
             ):
                 blob = hb.Blob.from_file_path(font_path)
                 face = hb.Face(blob)
                 font = hb.Font(face)
+                extents = font.get_font_extents(direction)
                 buf = hb.Buffer()
                 buf.direction = direction
                 buf.add_str(text)
@@ -89,19 +93,20 @@ class FreeTypePen(BasePen):
                 pen = FreeTypePen(None)
                 for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
                     gid = info.codepoint
-                    transformed = TransformPen(pen, Offset(x + pos.x_offset, y + pos.y_offset))
-                    font.draw_glyph_with_pen(gid, transformed)
+                    with pen as sub_pen:
+                        transformed = TransformPen(sub_pen, Offset(x + pos.x_offset, y + pos.y_offset))
+                        font.draw_glyph_with_pen(gid, transformed)
                     x += pos.x_advance
                     y += pos.y_advance
 
                 offset, width, height = None, None, None
                 if direction in ('ltr', 'rtl'):
-                    offset = (0, -typo_descender)
+                    offset = (0, -extents.descender)
                     width  = x
-                    height = typo_ascender - typo_descender
+                    height = extents.ascender - extents.descender
                 else:
-                    offset = (-vhea_descender, -y)
-                    width  = vhea_ascender - vhea_descender
+                    offset = (-extents.descender, -y)
+                    width  = extents.ascender - extents.descender
                     height = -y
                 pen.show(width=width, height=height, transform=Offset(*offset), contain=contain)
 
@@ -112,23 +117,19 @@ class FreeTypePen(BasePen):
     def __init__(self, glyphSet):
         BasePen.__init__(self, glyphSet)
         self.contours = []
+        self.sub_contours_list = []
+        self.sub_contours_pen = None
 
-    def outline(self, transform=None, evenOdd=False):
-        """Converts the current contours to ``FT_Outline``.
-
-        Args:
-            transform: An optional 6-tuple containing an affine transformation,
-                or a ``Transform`` object from the ``fontTools.misc.transform``
-                module.
-            evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
-        """
+    def _outline(self, contours, transform=None, evenOdd=False):
         transform = transform or Transform()
         if not hasattr(transform, "transformPoint"):
             transform = Transform(*transform)
-        n_contours = len(self.contours)
-        n_points = sum((len(contour.points) for contour in self.contours))
+        n_contours = len(contours)
+        n_points = sum((len(contour.points) for contour in contours))
+        if n_points > 32767:
+            raise PenError("Contains too many points to draw all at once.")
         points = []
-        for contour in self.contours:
+        for contour in contours:
             for point in contour.points:
                 point = transform.transformPoint(point)
                 points.append(
@@ -137,23 +138,37 @@ class FreeTypePen(BasePen):
                     )
                 )
         tags = []
-        for contour in self.contours:
+        for contour in contours:
             for tag in contour.tags:
                 tags.append(tag)
-        contours = []
+        contours_buf = []
         contours_sum = 0
-        for contour in self.contours:
+        for contour in contours:
             contours_sum += len(contour.points)
-            contours.append(contours_sum - 1)
+            contours_buf.append(contours_sum - 1)
         flags = FT_OUTLINE_EVEN_ODD_FILL if evenOdd else FT_OUTLINE_NONE
         return FT_Outline(
             (ctypes.c_short)(n_contours),
             (ctypes.c_short)(n_points),
             (FT_Vector * n_points)(*points),
             (ctypes.c_ubyte * n_points)(*tags),
-            (ctypes.c_short * n_contours)(*contours),
+            (ctypes.c_short * n_contours)(*contours_buf),
             (ctypes.c_int)(flags),
         )
+
+    def outlines(self, transform=None, evenOdd=False):
+        """Converts the current contours to ``FT_Outline``.
+
+        Args:
+            transform: An optional 6-tuple containing an affine transformation,
+                or a ``Transform`` object from the ``fontTools.misc.transform``
+                module.
+            evenOdd: Pass ``True`` for even-odd fill instead of non-zero.
+        """
+        yield self._outline(self.contours, transform, evenOdd)
+        if len(self.sub_contours_list) > 0:
+            for sub_contours in self.sub_contours_list:
+                yield self._outline(sub_contours, transform, evenOdd)
 
     def buffer(
         self, width=None, height=None, transform=None, contain=False, evenOdd=False
@@ -239,12 +254,12 @@ class FreeTypePen(BasePen):
             (ctypes.c_char)(0),
             (ctypes.c_void_p)(None),
         )
-        outline = self.outline(transform=transform, evenOdd=evenOdd)
-        err = FT_Outline_Get_Bitmap(
-            freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap)
-        )
-        if err != 0:
-            raise FT_Exception(err)
+        for outline in self.outlines(transform=transform, evenOdd=evenOdd):
+            err = FT_Outline_Get_Bitmap(
+                freetype.get_handle(), ctypes.byref(outline), ctypes.byref(bitmap)
+            )
+            if err != 0:
+                raise FT_Exception(err)
         return buf.raw, (width, height)
 
     def array(
@@ -413,9 +428,17 @@ class FreeTypePen(BasePen):
         Returns:
             A tuple of ``(xMin, yMin, xMax, yMax)``.
         """
-        bbox = FT_BBox()
-        outline = self.outline()
-        FT_Outline_Get_BBox(ctypes.byref(outline), ctypes.byref(bbox))
+        bbox = None
+        for outline in self.outlines():
+            outline_bbox = FT_BBox()
+            FT_Outline_Get_BBox(ctypes.byref(outline), ctypes.byref(outline_bbox))
+            if bbox is not None:
+                bbox.xMin = min(bbox.xMin, outline_bbox.xMin)
+                bbox.yMin = min(bbox.yMin, outline_bbox.yMin)
+                bbox.xMax = max(bbox.xMax, outline_bbox.xMax)
+                bbox.yMax = max(bbox.yMax, outline_bbox.yMax)
+            else:
+                bbox = outline_bbox
         return (bbox.xMin / 64.0, bbox.yMin / 64.0, bbox.xMax / 64.0, bbox.yMax / 64.0)
 
     @property
@@ -425,10 +448,28 @@ class FreeTypePen(BasePen):
         Returns:
             A tuple of ``(xMin, yMin, xMax, yMax)``.
         """
-        cbox = FT_BBox()
-        outline = self.outline()
-        FT_Outline_Get_CBox(ctypes.byref(outline), ctypes.byref(cbox))
+        cbox = None
+        for outline in self.outlines():
+            outline_cbox = FT_BBox()
+            FT_Outline_Get_CBox(ctypes.byref(outline), ctypes.byref(outline_cbox))
+            if cbox is not None:
+                cbox.xMin = min(cbox.xMin, outline_cbox.xMin)
+                cbox.yMin = min(cbox.yMin, outline_cbox.yMin)
+                cbox.xMax = max(cbox.xMax, outline_cbox.xMax)
+                cbox.yMax = max(cbox.yMax, outline_cbox.yMax)
+            else:
+                cbox = outline_cbox
         return (cbox.xMin / 64.0, cbox.yMin / 64.0, cbox.xMax / 64.0, cbox.yMax / 64.0)
+
+    def __enter__(self):
+        self.sub_contours_pen = FreeTypePen(self.glyphSet)
+        return self.sub_contours_pen
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        contours = self.sub_contours_pen.contours
+        if len(contours) > 0:
+            self.sub_contours_list.append(contours)
+        self.sub_contours_pen = None
 
     def _moveTo(self, pt):
         contour = Contour([], [])
