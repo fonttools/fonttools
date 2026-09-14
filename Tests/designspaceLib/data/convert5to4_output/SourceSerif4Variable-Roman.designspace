@@ -196,7 +196,7 @@
       <kerning/>
       <info/>
     </instance>
-    <instance name="Source Serif 4 Bold" familyname="Source Serif 4" stylename="Bold" filename="Source Serif 4-Bold.ttf" postscriptfontname="SourceSerif4Roman-Bold" stylemapfamilyname="Source Serif 4 Bold" stylemapstylename="regular">
+    <instance name="Source Serif 4 Bold" familyname="Source Serif 4" stylename="Bold" filename="Source Serif 4-Bold.ttf" postscriptfontname="SourceSerif4Roman-Bold" stylemapfamilyname="Source Serif 4" stylemapstylename="regular">
       <location>
         <dimension name="weight" xvalue="823"/>
         <dimension name="optical" xvalue="20"/>
