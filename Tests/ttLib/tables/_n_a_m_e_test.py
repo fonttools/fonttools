@@ -3,7 +3,7 @@ from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont
 from fontTools.misc.textTools import bytesjoin, tostr, Tag
 from fontTools.misc.xmlWriter import XMLWriter
-from io import BytesIO
+from io import BytesIO, StringIO
 import struct
 import unittest
 from fontTools.ttLib import TTFont, newTable
@@ -468,6 +468,25 @@ class NameRecordTest(unittest.TestCase):
                 "</namerecord>",
             ],
             self.toXML(name),
+        )
+
+    def test_XML_roundtrip_keeps_trailing_whitespace(self):
+        font = TTFont()
+        font["name"] = table = newTable("name")
+        table.names = [
+            makeName("Trailing CR\r", 111, 3, 1, 0x409),
+            makeName("Trailing CRLF\r\n", 112, 3, 1, 0x409),
+            makeName("Trailing spaces  ", 113, 3, 1, 0x409),
+            makeName("Multi\r\nline\r\n", 114, 3, 1, 0x409),
+            makeName("Plain", 115, 3, 1, 0x409),
+        ]
+        buf = StringIO()
+        font.saveXML(buf, tables=["name"])
+        font2 = TTFont()
+        font2.importXML(StringIO(buf.getvalue()))
+        self.assertEqual(
+            [n.toUnicode() for n in table.names],
+            [n.toUnicode() for n in font2["name"].names],
         )
 
     def test_toXML_macroman_actual_utf16be(self):
