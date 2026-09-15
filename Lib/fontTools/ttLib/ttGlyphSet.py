@@ -17,6 +17,26 @@ from fontTools.pens.recordingPen import (
 )
 
 
+def _getVariationAxes(font):
+    if "fvar" in font:
+        return font["fvar"].axes
+
+    # VARC permits static fonts to retain gvar or CFF2 variation data for
+    # component-internal coordinates without exposing axes through fvar.
+    axisCount = 0
+    gvar = font.get("gvar")
+    if gvar is not None:
+        axisCount = gvar.axisCount
+    if "CFF2" in font:
+        cff = next(iter(font["CFF2"].cff.values()))
+        varStore = getattr(cff.CharStrings, "varStore", None)
+        if varStore is not None:
+            axisCount = max(
+                axisCount, varStore.otVarStore.VarRegionList.RegionAxisCount
+            )
+    return [SimpleNamespace(axisTag=i) for i in range(axisCount)]
+
+
 class _TTGlyphSet(Mapping):
     """Generic dict-like GlyphSet class that pulls metrics from hmtx and
     glyph shape from TrueType or CFF.
@@ -25,11 +45,8 @@ class _TTGlyphSet(Mapping):
     def __init__(self, font, location, glyphsMapping, *, recalcBounds=True):
         self.recalcBounds = recalcBounds
         self.font = font
-        self.defaultLocationNormalized = (
-            {axis.axisTag: 0 for axis in self.font["fvar"].axes}
-            if "fvar" in self.font
-            else {}
-        )
+        self.axes = _getVariationAxes(font)
+        self.defaultLocationNormalized = {axis.axisTag: 0 for axis in self.axes}
         self.location = location if location is not None else {}
         self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
@@ -46,7 +63,7 @@ class _TTGlyphSet(Mapping):
             self.hvarTable = getattr(font.get("HVAR"), "table", None)
             if self.hvarTable is not None:
                 self.hvarInstancer = VarStoreInstancer(
-                    self.hvarTable.VarStore, font["fvar"].axes, location
+                    self.hvarTable.VarStore, self.axes, location
                 )
             # TODO VVAR, VORG
 
@@ -123,9 +140,7 @@ class _TTGlyphSetCFF(_TTGlyphSet):
 
             varStore = getattr(self.charStrings, "varStore", None)
             if varStore is not None:
-                instancer = VarStoreInstancer(
-                    varStore.otVarStore, self.font["fvar"].axes, location
-                )
+                instancer = VarStoreInstancer(varStore.otVarStore, self.axes, location)
                 self.blender = instancer.interpolateFromDeltas
         else:
             self.blender = None
@@ -282,11 +297,11 @@ class _TTGlyphCFF(_TTGlyph):
         self.glyphSet.charStrings[self.name].draw(pen, self.glyphSet.blender)
 
 
-def _evaluateCondition(condition, fvarAxes, location, instancer):
+def _evaluateCondition(condition, axes, location, instancer):
     if condition.Format == 1:
         # ConditionAxisRange
         axisIndex = condition.AxisIndex
-        axisTag = fvarAxes[axisIndex].axisTag
+        axisTag = axes[axisIndex].axisTag
         axisValue = location.get(axisTag, 0)
         minValue = condition.FilterRangeMinValue
         maxValue = condition.FilterRangeMaxValue
@@ -299,19 +314,19 @@ def _evaluateCondition(condition, fvarAxes, location, instancer):
     elif condition.Format == 3:
         # ConditionAnd
         for subcondition in condition.ConditionTable:
-            if not _evaluateCondition(subcondition, fvarAxes, location, instancer):
+            if not _evaluateCondition(subcondition, axes, location, instancer):
                 return False
         return True
     elif condition.Format == 4:
         # ConditionOr
         for subcondition in condition.ConditionTable:
-            if _evaluateCondition(subcondition, fvarAxes, location, instancer):
+            if _evaluateCondition(subcondition, axes, location, instancer):
                 return True
         return False
     elif condition.Format == 5:
         # ConditionNegate
         return not _evaluateCondition(
-            condition.conditionTable, fvarAxes, location, instancer
+            condition.conditionTable, axes, location, instancer
         )
     else:
         return False  # Unkonwn condition format
@@ -335,16 +350,16 @@ class _TTGlyphVARC(_TTGlyph):
         from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
         from fontTools.varLib.varStore import VarStoreInstancer
 
-        fvarAxes = glyphSet.font["fvar"].axes
+        axes = glyphSet.axes
         instancer = MultiVarStoreInstancer(
-            varc.MultiVarStore, fvarAxes, self.glyphSet.location
+            varc.MultiVarStore, axes, self.glyphSet.location
         )
 
         for comp in glyph.components:
             if comp.flags & VarComponentFlags.HAVE_CONDITION:
                 condition = varc.ConditionList.ConditionTable[comp.conditionIndex]
                 if not _evaluateCondition(
-                    condition, fvarAxes, self.glyphSet.location, instancer
+                    condition, axes, self.glyphSet.location, instancer
                 ):
                     continue
 
@@ -358,9 +373,7 @@ class _TTGlyphVARC(_TTGlyph):
                     len(axisIndices),
                     len(axisValues),
                 )
-                location = {
-                    fvarAxes[i].axisTag: v for i, v in zip(axisIndices, axisValues)
-                }
+                location = {axes[i].axisTag: v for i, v in zip(axisIndices, axisValues)}
 
             if comp.transformVarIndex != NO_VARIATION_INDEX:
                 deltas = instancer[comp.transformVarIndex]

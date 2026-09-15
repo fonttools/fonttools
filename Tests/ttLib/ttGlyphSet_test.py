@@ -8,6 +8,7 @@ from fontTools.pens.recordingPen import (
 )
 from fontTools.misc.roundTools import otRound
 from fontTools.misc.transform import DecomposedTransform
+from io import BytesIO, StringIO
 import os
 import pytest
 
@@ -673,3 +674,36 @@ class TTGlyphSetTest(object):
         glyphset["four"].drawPoints(pen)
         print(pen.value)
         assert pen.value == expectedPoints
+
+    def test_varc_gvar_axes_without_fvar(self, tmp_path):
+        font = TTFont(self.getpath("varc-static-gvar.ttf"))
+        assert "fvar" not in font
+
+        expected = [
+            ("moveTo", ((50, 0),)),
+            ("lineTo", ((450, 0),)),
+            ("lineTo", ((250, 500),)),
+            ("closePath", ()),
+        ]
+
+        def check_outline(font):
+            pen = RecordingPen()
+            font.getGlyphSet()["a"].draw(pen)
+            assert pen.value == expected
+
+        check_outline(font)
+
+        # The hidden numeric axes also survive binary round-tripping.
+        output = tmp_path / "varc-static-gvar.ttf"
+        font.save(output)
+        check_outline(TTFont(output))
+
+        xml = StringIO()
+        font.saveXML(xml)
+        xml.seek(0)
+        roundtripped = TTFont()
+        roundtripped.importXML(xml)
+        data = BytesIO()
+        roundtripped.save(data)
+        data.seek(0)
+        check_outline(TTFont(data))
