@@ -1177,9 +1177,7 @@ def lineLineIntersections(s1, e1, s2, e2):
     e1x, e1y = e1
     s2x, s2y = s2
     e2x, e2y = e2
-    if (
-        math.isclose(s2x, e2x) and math.isclose(s1x, e1x) and not math.isclose(s1x, s2x)
-    ):  # Parallel vertical
+    if math.isclose(s2x, e2x) and math.isclose(s1x, e1x):  # Parallel vertical
         return []
     if (
         math.isclose(s2y, e2y) and math.isclose(s1y, e1y) and not math.isclose(s1y, s2y)
