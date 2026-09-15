@@ -351,6 +351,20 @@ def _merge_and_recompile(fontfiles, options=None):
     return ttLib.TTFont(buf)
 
 
+def test_merge_head_different_units_per_em():
+    heads = []
+    for units_per_em in (1000, 2048):
+        head = ttLib.newTable("head")
+        head.unitsPerEm = units_per_em
+        heads.append(head)
+
+    with pytest.raises(
+        ValueError,
+        match=r"Cannot merge fonts with different unitsPerEm values: \[1000, 2048\]",
+    ):
+        ttLib.newTable("head").merge(Merger(), heads)
+
+
 @pytest.mark.parametrize("v1, v2", list(itertools.permutations(range(5 + 1), 2)))
 def test_merge_OS2_mixed_versions(v1, v2):
     # https://github.com/fonttools/fonttools/issues/1865
