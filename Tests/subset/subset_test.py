@@ -1038,6 +1038,64 @@ class SubsetTest:
 
         assert ttf.flavor is None
 
+    @pytest.mark.parametrize("flavor", ["woff", "woff2"])
+    def test_subset_inherits_flavor(self, flavor):
+        if flavor == "woff2":
+            pytest.importorskip("brotli")
+
+        ttf_path = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        input_path = self.temp_path(f".{flavor}")
+        font = TTFont(ttf_path)
+        font.flavor = flavor
+        font.save(input_path)
+
+        subset.main([input_path, "*"])
+        output_path = os.path.splitext(input_path)[0] + f".subset.{flavor}"
+
+        assert TTFont(output_path).flavor == flavor
+
+    @pytest.mark.parametrize("token", ["none", "None", "NONE", ""])
+    @pytest.mark.parametrize("flavor", ["woff", "woff2"])
+    def test_subset_flavor_none_from_woff(self, token, flavor):
+        if flavor == "woff2":
+            pytest.importorskip("brotli")
+
+        ttf_path = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        input_path = self.temp_path(f".{flavor}")
+        font = TTFont(ttf_path)
+        font.flavor = flavor
+        font.save(input_path)
+
+        subset.main([input_path, "*", f"--flavor={token}"])
+        output_path = os.path.splitext(input_path)[0] + ".subset.ttf"
+
+        assert os.path.isfile(output_path)
+        assert TTFont(output_path).flavor is None
+
+    def test_subset_flavor_none_from_cff_woff_uses_otf_extension(self):
+        otf_path = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
+        input_path = self.temp_path(".woff")
+        font = TTFont(otf_path)
+        font.flavor = "woff"
+        font.save(input_path)
+
+        subset.main([input_path, "*", "--flavor=none"])
+        output_path = os.path.splitext(input_path)[0] + ".subset.otf"
+
+        assert os.path.isfile(output_path)
+        out = TTFont(output_path)
+        assert out.flavor is None
+        assert out.sfntVersion == "OTTO"
+
+    def test_subset_flavor_invalid(self, capsys):
+        fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+
+        rc = subset.main([fontpath, "*", "--flavor=ttf"])
+
+        assert rc == 2
+        err = capsys.readouterr().err
+        assert "Invalid --flavor" in err
+
     def test_subset_context_subst_format_3(self):
         # https://github.com/fonttools/fonttools/issues/1879
         # Test font contains 'calt' feature with Format 3 ContextSubst lookup subtables

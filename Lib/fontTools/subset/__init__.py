@@ -146,7 +146,9 @@ Output options
   will be saved in as font-file.subset.
 
 --flavor=<type>
-  Specify flavor of output font file. May be 'woff' or 'woff2'.
+  Specify flavor of output font file. May be 'woff' or 'woff2', or
+  'none' (case-insensitive) for uncompressed OpenType. By default,
+  the flavor of the input font is preserved.
   Note that WOFF2 requires the Brotli Python extension, available
   at https://github.com/google/brotli
 
@@ -3446,7 +3448,7 @@ class Options(object):
         self.recalc_average_width = False  # update 'xAvgCharWidth'
         self.recalc_max_context = False  # update 'usMaxContext'
         self.canonical_order = None  # Order tables as recommended
-        self.flavor = None  # May be 'woff' or 'woff2'
+        self.flavor = None  # 'woff', 'woff2', or None (unspecified / uncompressed)
         self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
         self.desubroutinize = False  # Desubroutinize CFF CharStrings
         self.harfbuzz_repacker = USE_HARFBUZZ_REPACKER.default
@@ -3900,6 +3902,26 @@ def load_font(fontFile, options, checkChecksums=0, dontLoadGlyphNames=False, laz
     return font
 
 
+def _normalize_output_flavor(flavor):
+    """Map an explicit --flavor value to TTFont.flavor.
+
+    Empty string and 'none' (any case) mean uncompressed OpenType.
+    """
+    if isinstance(flavor, str):
+        key = flavor.lower()
+        if key in ("", "none"):
+            return None
+        if key in ("woff", "woff2"):
+            return key
+    raise Options.OptionError(
+        "Invalid --flavor %r (use 'woff', 'woff2', or 'none')" % (flavor,)
+    )
+
+
+def _sfnt_extension(font):
+    return ".otf" if font.sfntVersion == "OTTO" else ".ttf"
+
+
 @timer("compile and save font")
 def save_font(font, outfile, options):
     if options.with_zopfli and options.flavor == "woff":
@@ -4054,8 +4076,22 @@ def main(args=None):
         fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames, lazy=lazy
     )
 
+    requested_flavor = options.flavor
+    if requested_flavor is None:
+        options.flavor = font.flavor
+    else:
+        try:
+            options.flavor = _normalize_output_flavor(requested_flavor)
+        except Options.OptionError as e:
+            usage()
+            print("ERROR:", e, file=sys.stderr)
+            return 2
+
     if outfile is None:
-        ext = "." + options.flavor.lower() if options.flavor is not None else None
+        if options.flavor is not None:
+            ext = "." + options.flavor
+        else:
+            ext = _sfnt_extension(font)
         outfile = makeOutputFileName(
             fontfile, extension=ext, overWrite=True, suffix=".subset"
         )
