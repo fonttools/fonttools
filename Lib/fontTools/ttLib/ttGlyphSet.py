@@ -326,7 +326,7 @@ def _evaluateCondition(condition, axes, location, instancer):
     elif condition.Format == 5:
         # ConditionNegate
         return not _evaluateCondition(
-            condition.conditionTable, axes, location, instancer
+            condition.ConditionTable, axes, location, instancer
         )
     else:
         return False  # Unkonwn condition format
