@@ -1,6 +1,9 @@
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
-from fontTools.ttLib import TTLibError, getTableClass, getTableModule, newTable
+from fontTools.ttLib import TTFont, TTLibError, getTableClass, getTableModule, newTable
+import io
+import os
+import re
 import unittest
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
@@ -74,6 +77,20 @@ GVAR_VARIATIONS = {
             [(-8, -88), (7, 77), None, None, (-4, 44), (3, 33), (-2, -22), (1, 11)],
         ),
     ],
+}
+
+# The same data, but with the axes numbered instead of tagged: the form a 'gvar'
+# without 'fvar' uses, as permitted for static VARC fonts.
+NUMERIC_AXES = {"wght": 0, "wdth": 1}
+GVAR_NUMERIC_VARIATIONS = {
+    glyph: [
+        TupleVariation(
+            {NUMERIC_AXES[tag]: support for tag, support in v.axes.items()},
+            v.coordinates,
+        )
+        for v in variations
+    ]
+    for glyph, variations in GVAR_VARIATIONS.items()
 }
 
 
@@ -190,6 +207,14 @@ class GVARTableTest(unittest.TestCase):
         gvar.decompile(GVAR_DATA_EMPTY_VARIATIONS, font)
         self.assertEqual(gvar.variations, {".notdef": [], "space": [], "I": []})
 
+    def makeStaticFont(self, variations):
+        # A static VARC font keeps 'gvar' but has no 'fvar'; its axes are then
+        # numbered instead of tagged.
+        # https://github.com/harfbuzz/boring-expansion-spec/blob/main/VARC.md
+        font, gvar = self.makeFont(variations)
+        del font.tables["fvar"]
+        return font, gvar
+
     def test_fromXML(self):
         font, gvar = self.makeFont({})
         for name, attrs, content in parseXML(GVAR_XML):
@@ -197,6 +222,44 @@ class GVARTableTest(unittest.TestCase):
         self.assertVariationsAlmostEqual(
             gvar.variations, {g: v for g, v in GVAR_VARIATIONS.items() if v}
         )
+
+    def test_fromXML_numberedAxes(self):
+        font, gvar = self.makeStaticFont({})
+        xml = []
+        for element in GVAR_XML:
+            xml.append(
+                element.replace('axis="wght"', 'axis="0"').replace(
+                    'axis="wdth"', 'axis="1"'
+                )
+            )
+            if element == '<reserved value="0"/>':
+                xml.append('<axisCount value="2"/>')
+        for name, attrs, content in parseXML(xml):
+            gvar.fromXML(name, attrs, content, ttFont=font)
+        self.assertEqual(gvar.axisCount, 2)
+        self.assertVariationsAlmostEqual(
+            gvar.variations, {g: v for g, v in GVAR_NUMERIC_VARIATIONS.items() if v}
+        )
+
+    def test_importXML_gvarBeforeFvar(self):
+        # fontTools writes 'fvar' before 'gvar', but a TTX can list them in
+        # any order; reading 'gvar' first must still give back the same table.
+        # This font also has numeric-looking axis tags ('0000'..'0028').
+        path = os.path.join(os.path.dirname(__file__), "..", "data", "varc-6868.ttf")
+        font = TTFont(path)
+        expected = font.getTableData("gvar")
+        buf = io.StringIO()
+        font.saveXML(buf)
+        xml = buf.getvalue()
+        gvarBlock = re.search(r"\n  <gvar>.*?</gvar>\n", xml, re.S)
+        xml = xml[: gvarBlock.start()] + "\n" + xml[gvarBlock.end() :]
+        fvarStart = xml.index("\n  <fvar>")
+        xml = xml[:fvarStart] + gvarBlock.group(0).rstrip("\n") + xml[fvarStart:]
+        self.assertLess(xml.index("<gvar>"), xml.index("<fvar>"))
+
+        font = TTFont()
+        font.importXML(io.StringIO(xml))
+        self.assertEqual(font.getTableData("gvar"), expected)
 
     def test_toXML(self):
         font, gvar = self.makeFont(GVAR_VARIATIONS)
