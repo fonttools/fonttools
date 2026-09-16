@@ -63,6 +63,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         self.version, self.reserved = 1, 0
         self.axisCount = 0
         self.variations = {}
+        # Set when the TTX declares an axis count, i.e. this is the no-'fvar'
+        # form whose axes are numbered rather than tagged. Deciding this from
+        # the element rather than from 'fvar' keeps the read side independent
+        # of the order in which the tables are deserialized.
+        self._numericAxisTags = False
 
     def getAxisTags_(self, ttFont):
         if "fvar" in ttFont:
@@ -271,6 +276,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
             self.reserved = safeEval(attrs["value"])
         elif name == "axisCount":
             self.axisCount = safeEval(attrs["value"])
+            self._numericAxisTags = True
         elif name == "glyphVariations":
             if not hasattr(self, "variations"):
                 self.variations = {}
@@ -288,7 +294,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
                             if isinstance(tupleElement, tuple):
                                 tupleName, tupleAttrs, tupleContent = tupleElement
                                 gvar.fromXML(tupleName, tupleAttrs, tupleContent)
-                        if "fvar" not in ttFont:
+                        if self._numericAxisTags:
                             gvar.axes = {
                                 safeEval(axis): value
                                 for axis, value in gvar.axes.items()
