@@ -1,6 +1,7 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
 from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
+from fontTools.ttLib.tables.otTables import ConditionTable
 from fontTools.pens.recordingPen import (
     RecordingPen,
     RecordingPointPen,
@@ -278,6 +279,30 @@ class TTGlyphSetTest(object):
         glyph = glyphset["uniAC01"]
         glyph.draw(pen)
         assert len(pen.value) == 3
+
+    @pytest.mark.parametrize(
+        "location, negations, expected_components",
+        [({}, 1, 3), ({"wght": 800}, 1, 2), ({}, 2, 2), ({"wght": 800}, 2, 3)],
+    )
+    def test_glyphset_varComposite_negated_condition(
+        self, location, negations, expected_components
+    ):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        conditions = font["VARC"].table.ConditionList.ConditionTable
+        for _ in range(negations):
+            negated = ConditionTable()
+            negated.Format = 5
+            negated.ConditionTable = conditions[0]
+            conditions[0] = negated
+
+        stream = BytesIO()
+        font.save(stream)
+        stream.seek(0)
+        font = TTFont(stream)
+        glyphset = font.getGlyphSet(location=location)
+        pen = RecordingPen()
+        glyphset["uniAC01"].draw(pen)
+        assert len(pen.value) == expected_components
 
     def test_glyphset_varComposite1(self):
         font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
