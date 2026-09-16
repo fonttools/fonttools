@@ -514,12 +514,43 @@ class OverlapMode(IntEnum):
     REMOVE_AND_IGNORE_ERRORS = 3
 
 
+def _getVARCAxisIndexRecords(varc):
+    """Yield variation-region and condition records containing an AxisIndex."""
+    if varc.MultiVarStore:
+        for region in varc.MultiVarStore.SparseVarRegionList.Region:
+            yield from region.SparseVarRegionAxis
+
+    conditions = list(varc.ConditionList.ConditionTable) if varc.ConditionList else []
+    seen = set()
+    while conditions:
+        condition = conditions.pop()
+        if id(condition) in seen:
+            continue
+        seen.add(id(condition))
+        if condition.Format == 1:
+            yield condition
+        elif condition.Format in (3, 4):
+            conditions.extend(condition.ConditionTable)
+        elif condition.Format == 5:
+            conditions.append(condition.ConditionTable)
+
+
+def _checkVARCAxisLimits(varfont, axisLimits):
+    varc = varfont["VARC"].table
+    fvarAxes = varfont["fvar"].axes if "fvar" in varfont else []
+    referencedAxes = {record.AxisIndex for record in _getVARCAxisIndexRecords(varc)}
+    if varc.AxisIndicesList:
+        for indices in varc.AxisIndicesList.Item:
+            referencedAxes.update(indices)
+    if any(fvarAxes[i].axisTag in axisLimits for i in referencedAxes):
+        raise NotImplementedError(
+            "Instancing across VarComponent axes is not supported."
+        )
+
+
 def instantiateVARC(varfont, axisLimits):
     log.info("Instantiating VARC tables")
-
-    # TODO(behdad) My confidence in this function is rather low;
-    # It needs more testing. Specially with partial-instancing,
-    # I don't think it currently works.
+    _checkVARCAxisLimits(varfont, axisLimits)
 
     varc = varfont["VARC"].table
     fvarAxes = varfont["fvar"].axes if "fvar" in varfont else []
@@ -531,23 +562,10 @@ def instantiateVARC(varfont, axisLimits):
     if varc.AxisIndicesList:
         axisIndicesList = varc.AxisIndicesList.Item
         for i, axisIndices in enumerate(axisIndicesList):
-            if any(fvarAxes[j].axisTag in axisLimits for j in axisIndices):
-                raise NotImplementedError(
-                    "Instancing across VarComponent axes is not supported."
-                )
             axisIndicesList[i] = [reverseAxisMap[j] for j in axisIndices]
 
-    store = varc.MultiVarStore
-    if store:
-        for region in store.SparseVarRegionList.Region:
-            newRegionAxis = []
-            for regionRecord in region.SparseVarRegionAxis:
-                tag = fvarAxes[regionRecord.AxisIndex].axisTag
-                if tag in axisLimits:
-                    raise NotImplementedError(
-                        "Instancing across VarComponent axes is not supported."
-                    )
-                regionRecord.AxisIndex = reverseAxisMap[regionRecord.AxisIndex]
+    for record in _getVARCAxisIndexRecords(varc):
+        record.AxisIndex = reverseAxisMap[record.AxisIndex]
 
 
 def instantiateTupleVariationStore(
@@ -2605,6 +2623,11 @@ def instantiateVariableFont(
 
     axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
 
+    # Keep the limited VARC support consistent even when avar2 partial
+    # instancing bypasses _instantiateVariationTables.
+    if "VARC" in varfont:
+        _checkVARCAxisLimits(varfont, axisLimits)
+
     log.info("Restricted limits: %s", axisLimits)
 
     normalizedLimits = axisLimits.normalize(varfont)
@@ -2726,7 +2749,9 @@ def instantiateVariableFont(
         # bounds via getExtremes on the instanced avar v2 VarStore).
         _computeReachableRangesForAvar2(varfont, axisLimits, reachableRanges)
 
-        if reachableRanges:
+        # Component overrides can reach outside the font-level ranges.
+        # Preserve variation data used at those internal coordinates.
+        if reachableRanges and "VARC" not in varfont:
             _cullVariationsForAvar2(varfont, reachableRanges)
 
     if "OS/2" in varfont:
