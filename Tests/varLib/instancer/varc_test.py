@@ -8,6 +8,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
+from fontTools.varLib import builder
 from fontTools.varLib.instancer import instantiateVariableFont
 
 
@@ -162,3 +163,41 @@ def test_remap_negated_condition(varc_font):
         "COND",
         "COND",
     ]
+
+
+@pytest.mark.parametrize("varc_font", [True], indirect=True, ids=["avar2"])
+def test_avar2_preserves_component_internal_variation(varc_font):
+    # Drive hidden axis 0000 from DUMY through avar2. A hidden axis has no
+    # identity term, so its font-level reachable range is just the delta range,
+    # here [0, 1]. A VARC component still overrides 0000 to about -0.54 and
+    # therefore reaches the negative gvar tuple added by the fixture.
+    axes = varc_font["fvar"].axes
+    axis_tags = [axis.axisTag for axis in axes]
+    region_list = builder.buildVarRegionList([{"DUMY": (0, 1, 1)}], axis_tags)
+    var_data = builder.buildVarData([0], [[16384]], optimize=False)
+    avar = varc_font["avar"]
+    avar.table.VarStore = builder.buildVarStore(region_list, [var_data])
+    mapping = [otTables.NO_VARIATION_INDEX] * len(axes)
+    mapping[axis_tags.index("0000")] = 0
+    avar.table.VarIdxMap = builder.buildDeltaSetIndexMap(mapping)
+    varc_font = _roundtrip(varc_font)
+
+    location = {"DUMY": 0, "wght": 356.5, "opsz": 0, "COND": 0}
+    expected = _draw(varc_font, location)
+    assert expected
+    # DUMY already has this full range, so this instancing request is a no-op.
+    result = _roundtrip(instantiateVariableFont(varc_font, {"DUMY": (-1, 0, 1)}))
+    actual = _draw(result, location)
+
+    assert any(
+        variation.axes.get("0000") == (-1, -0.5, -0.25)
+        for variation in result["gvar"].variations["glyph00003"]
+    )
+    assert len(actual) == len(expected)
+    for (actual_op, actual_points), (expected_op, expected_points) in zip(
+        actual, expected
+    ):
+        assert actual_op == expected_op
+        assert len(actual_points) == len(expected_points)
+        for actual_point, expected_point in zip(actual_points, expected_points):
+            assert actual_point == pytest.approx(expected_point, abs=0.5)
