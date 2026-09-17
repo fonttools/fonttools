@@ -606,7 +606,14 @@ def splitQuadraticAtT(pt1, pt2, pt3, *ts):
         ((75, 37.5), (87.5, 25), (100, 0))
     """
     a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
-    return _splitQuadraticAtT(a, b, c, *ts)
+    split = _splitQuadraticAtT(a, b, c, *ts)
+
+    # the split impl can introduce floating point errors; we know the first
+    # segment should always start at pt1 and the last segment should end at pt3,
+    # so we set those values directly before returning.
+    split[0] = (pt1, *split[0][1:])
+    split[-1] = (*split[-1][:-1], pt3)
+    return split
 
 
 def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
@@ -661,7 +668,18 @@ def splitCubicAtTC(pt1, pt2, pt3, pt4, *ts):
         Curve segments (each curve segment being four complex numbers).
     """
     a, b, c, d = calcCubicParametersC(pt1, pt2, pt3, pt4)
-    yield from _splitCubicAtTC(a, b, c, d, *ts)
+
+    # the split impl can introduce floating point errors; we know the first
+    # segment should always start at pt1 and the last segment should end at pt4,
+    # so we set those values directly. One segment is held back so that the last
+    # one can be fixed up without materialising the whole sequence.
+    segments = _splitCubicAtTC(a, b, c, d, *ts)
+    held = next(segments)
+    held = (pt1, *held[1:])
+    for segment in segments:
+        yield held
+        held = segment
+    yield (*held[:-1], pt4)
 
 
 @cython.returns(cython.complex)
