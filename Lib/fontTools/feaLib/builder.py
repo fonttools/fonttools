@@ -1168,16 +1168,15 @@ class Builder(object):
         self.cur_lookup_ = None
 
         key = (self.script_, language, self.cur_feature_name_)
-        lookups = self.features_.get((key[0], "dflt", key[2]))
-        if (language == "dflt" or include_default) and lookups:
-            self.features_[key] = lookups[:]
+        lookups = self.features_.get((key[0], "dflt", key[2]), [])
+        # Only ever add or remove the default lookups, never replace the list:
+        # duplicate script/lang statements are allowed, and must not drop the
+        # lookups already registered for this language system;
+        # see https://github.com/fonttools/fonttools/issues/3748
+        cur_lookups = self.features_.setdefault(key, [])
+        if language == "dflt" or include_default:
+            cur_lookups.extend([x for x in lookups if x not in cur_lookups])
         else:
-            # if we aren't including default we need to manually remove the
-            # default lookups, which were added to all declared langsystems
-            # as they were encountered (we don't remove all lookups because
-            # we want to allow duplicate script/lang statements;
-            # see https://github.com/fonttools/fonttools/issues/3748
-            cur_lookups = self.features_.get(key, [])
             self.features_[key] = [x for x in cur_lookups if x not in lookups]
         self.language_systems = frozenset([(self.script_, language)])
         self.language_ = language

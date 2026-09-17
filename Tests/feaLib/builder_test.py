@@ -87,7 +87,7 @@ class BuilderTest(unittest.TestCase):
         contextual_inline_multi_sub_format_2
         contextual_inline_format_4
         chain_context_multi_subst_class
-        duplicate_language_stmt
+        duplicate_language_stmt duplicate_language_stmt_include_dflt
         script_language_tracking script_language_tracking_DFLT
         script_language_tracking_multi script_language_tracking_redundant
         CursivePosSubtable
