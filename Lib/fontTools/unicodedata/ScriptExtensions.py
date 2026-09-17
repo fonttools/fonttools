@@ -4,9 +4,9 @@
 # Source: https://unicode.org/Public/UNIDATA/ScriptExtensions.txt
 # License: http://unicode.org/copyright.html#License
 #
-# ScriptExtensions-17.0.0.txt
-# Date: 2025-08-01, 21:42:00 GMT
-# © 2025 Unicode®, Inc.
+# ScriptExtensions-18.0.0.txt
+# Date: 2026-08-06, 18:14:47 GMT
+# © 2026 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use and license, see https://www.unicode.org/terms_of_use.html
 #
@@ -127,7 +127,9 @@ RANGES = [
     0x0A66,  # .. 0x0A6F ; {'Guru', 'Mult'}
     0x0A70,  # .. 0x0AE5 ; None
     0x0AE6,  # .. 0x0AEF ; {'Gujr', 'Khoj'}
-    0x0AF0,  # .. 0x0BE5 ; None
+    0x0AF0,  # .. 0x0B82 ; None
+    0x0B83,  # .. 0x0B83 ; {'Knda', 'Mlym', 'Taml', 'Telu'}
+    0x0B84,  # .. 0x0BE5 ; None
     0x0BE6,  # .. 0x0BF3 ; {'Gran', 'Taml'}
     0x0BF4,  # .. 0x0CE5 ; None
     0x0CE6,  # .. 0x0CEF ; {'Knda', 'Nand', 'Tutg'}
@@ -171,8 +173,7 @@ RANGES = [
     0x1CF2,  # .. 0x1CF2 ; {'Beng', 'Deva', 'Gran', 'Knda', 'Mlym', 'Nand', 'Orya', 'Sinh', 'Telu', 'Tirh', 'Tutg'}
     0x1CF3,  # .. 0x1CF3 ; {'Deva', 'Gran'}
     0x1CF4,  # .. 0x1CF4 ; {'Deva', 'Gran', 'Knda', 'Tutg'}
-    0x1CF5,  # .. 0x1CF6 ; {'Beng', 'Deva'}
-    0x1CF7,  # .. 0x1CF7 ; {'Beng'}
+    0x1CF5,  # .. 0x1CF7 ; {'Beng'}
     0x1CF8,  # .. 0x1CF9 ; {'Deva', 'Gran'}
     0x1CFA,  # .. 0x1CFA ; {'Nand'}
     0x1CFB,  # .. 0x1DBF ; None
@@ -308,7 +309,13 @@ RANGES = [
     0x11FD0,  # .. 0x11FD1 ; {'Gran', 'Taml'}
     0x11FD2,  # .. 0x11FD2 ; None
     0x11FD3,  # .. 0x11FD3 ; {'Gran', 'Taml'}
-    0x11FD4,  # .. 0x1BC9F ; None
+    0x11FD4,  # .. 0x1254F ; None
+    0x12550,  # .. 0x12586 ; {'Pcun', 'Xsux'}
+    0x12587,  # .. 0x1258B ; None
+    0x1258C,  # .. 0x1258D ; {'Pcun', 'Xsux'}
+    0x1258E,  # .. 0x12599 ; None
+    0x1259A,  # .. 0x125A7 ; {'Pcun', 'Xsux'}
+    0x125A8,  # .. 0x1BC9F ; None
     0x1BCA0,  # .. 0x1BCA3 ; {'Dupl'}
     0x1BCA4,  # .. 0x1D35F ; None
     0x1D360,  # .. 0x1D371 ; {'Hani'}
@@ -549,7 +556,9 @@ VALUES = [
     {"Guru", "Mult"},  # 0A66..0A6F
     None,  # 0A70..0AE5
     {"Gujr", "Khoj"},  # 0AE6..0AEF
-    None,  # 0AF0..0BE5
+    None,  # 0AF0..0B82
+    {"Knda", "Mlym", "Taml", "Telu"},  # 0B83..0B83
+    None,  # 0B84..0BE5
     {"Gran", "Taml"},  # 0BE6..0BF3
     None,  # 0BF4..0CE5
     {"Knda", "Nand", "Tutg"},  # 0CE6..0CEF
@@ -605,8 +614,7 @@ VALUES = [
     },  # 1CF2..1CF2
     {"Deva", "Gran"},  # 1CF3..1CF3
     {"Deva", "Gran", "Knda", "Tutg"},  # 1CF4..1CF4
-    {"Beng", "Deva"},  # 1CF5..1CF6
-    {"Beng"},  # 1CF7..1CF7
+    {"Beng"},  # 1CF5..1CF7
     {"Deva", "Gran"},  # 1CF8..1CF9
     {"Nand"},  # 1CFA..1CFA
     None,  # 1CFB..1DBF
@@ -822,7 +830,13 @@ VALUES = [
     {"Gran", "Taml"},  # 11FD0..11FD1
     None,  # 11FD2..11FD2
     {"Gran", "Taml"},  # 11FD3..11FD3
-    None,  # 11FD4..1BC9F
+    None,  # 11FD4..1254F
+    {"Pcun", "Xsux"},  # 12550..12586
+    None,  # 12587..1258B
+    {"Pcun", "Xsux"},  # 1258C..1258D
+    None,  # 1258E..12599
+    {"Pcun", "Xsux"},  # 1259A..125A7
+    None,  # 125A8..1BC9F
     {"Dupl"},  # 1BCA0..1BCA3
     None,  # 1BCA4..1D35F
     {"Hani"},  # 1D360..1D371
