@@ -1,22 +1,11 @@
-"""Enum-related utilities, including backports for older Python versions."""
+"""Enum-related utilities.
+
+Deprecated: this module only re-exports enum.StrEnum for backward compatibility;
+import it from the standard library enum module instead.
+"""
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 __all__ = ["StrEnum"]
-
-# StrEnum is only available in Python 3.11+
-try:
-    from enum import StrEnum
-except ImportError:
-
-    class StrEnum(str, Enum):
-        """
-        Minimal backport of Python 3.11's StrEnum for older versions.
-
-        An Enum where all members are also strings.
-        """
-
-        def __str__(self) -> str:
-            return self.value
