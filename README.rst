@@ -109,7 +109,7 @@ are required to unlock the extra features named "ufo", etc.
 
   * `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
     ``unicodedata`` backport for Python 3.x updated to the latest Unicode
-    version 17.0.
+    version 18.0.
 
   *Extra:* ``unicode``
 
