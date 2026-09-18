@@ -531,7 +531,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 25, True))
         ((0, 0), (7.32233, 14.6447), (14.6447, 25))
         ((14.6447, 25), (50, 75), (85.3553, 25))
-        ((85.3553, 25), (92.6777, 14.6447), (100, -7.10543e-15))
+        ((85.3553, 25), (92.6777, 14.6447), (100, 0))
         >>> # XXX I'm not at all sure if the following behavior is desirable:
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 50, True))
         ((0, 0), (25, 50), (50, 50))
@@ -545,7 +545,10 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
     solutions = sorted(t for t in solutions if 0 <= t < 1)
     if not solutions:
         return [(pt1, pt2, pt3)]
-    return _splitQuadraticAtT(a, b, c, *solutions)
+    split = _splitQuadraticAtT(a, b, c, *solutions)
+    # as in splitQuadraticAtT, the last segment must end exactly at pt3
+    split[-1] = (*split[-1][:-1], pt3)
+    return split
 
 
 def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
@@ -573,7 +576,7 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
         >>> printSegments(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 25, True))
         ((0, 0), (2.29379, 9.17517), (4.79804, 17.5085), (7.47414, 25))
         ((7.47414, 25), (31.2886, 91.6667), (68.7114, 91.6667), (92.5259, 25))
-        ((92.5259, 25), (95.202, 17.5085), (97.7062, 9.17517), (100, 1.77636e-15))
+        ((92.5259, 25), (95.202, 17.5085), (97.7062, 9.17517), (100, 0))
     """
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     solutions = solveCubic(
@@ -582,7 +585,10 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
     solutions = sorted(t for t in solutions if 0 <= t < 1)
     if not solutions:
         return [(pt1, pt2, pt3, pt4)]
-    return _splitCubicAtT(a, b, c, d, *solutions)
+    split = _splitCubicAtT(a, b, c, d, *solutions)
+    # as in splitCubicAtT, the last segment must end exactly at pt4
+    split[-1] = (*split[-1][:-1], pt4)
+    return split
 
 
 def splitQuadraticAtT(pt1, pt2, pt3, *ts):
@@ -606,7 +612,13 @@ def splitQuadraticAtT(pt1, pt2, pt3, *ts):
         ((75, 37.5), (87.5, 25), (100, 0))
     """
     a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
-    return _splitQuadraticAtT(a, b, c, *ts)
+    split = _splitQuadraticAtT(a, b, c, *ts)
+
+    # the split impl can introduce floating point errors; we know the last segment
+    # should end at pt3, so we set that value directly before returning. The first
+    # segment needs no such fixup: t1 is 0.0 for it, so it already starts at pt1.
+    split[-1] = (*split[-1][:-1], pt3)
+    return split
 
 
 def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
@@ -632,10 +644,9 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     split = _splitCubicAtT(a, b, c, d, *ts)
 
-    # the split impl can introduce floating point errors; we know the first
-    # segment should always start at pt1 and the last segment should end at pt4,
-    # so we set those values directly before returning.
-    split[0] = (pt1, *split[0][1:])
+    # the split impl can introduce floating point errors; we know the last segment
+    # should end at pt4, so we set that value directly before returning. The first
+    # segment needs no such fixup: t1 is 0.0 for it, so it already starts at pt1.
     split[-1] = (*split[-1][:-1], pt4)
     return split
 
@@ -649,6 +660,19 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
     b=cython.complex,
     c=cython.complex,
     d=cython.complex,
+    t1=cython.double,
+    t2=cython.double,
+    delta=cython.double,
+    delta_2=cython.double,
+    delta_3=cython.double,
+    a1=cython.complex,
+    b1=cython.complex,
+    c1=cython.complex,
+    d1=cython.complex,
+    p1=cython.complex,
+    p2=cython.complex,
+    p3=cython.complex,
+    p4=cython.complex,
 )
 def splitCubicAtTC(pt1, pt2, pt3, pt4, *ts):
     """Split a cubic Bezier curve at one or more values of t.
@@ -661,7 +685,29 @@ def splitCubicAtTC(pt1, pt2, pt3, pt4, *ts):
         Curve segments (each curve segment being four complex numbers).
     """
     a, b, c, d = calcCubicParametersC(pt1, pt2, pt3, pt4)
-    yield from _splitCubicAtTC(a, b, c, d, *ts)
+    ts = list(ts)
+    ts.insert(0, 0.0)
+    ts.append(1.0)
+    for i in range(len(ts) - 1):
+        t1 = ts[i]
+        t2 = ts[i + 1]
+        delta = t2 - t1
+
+        delta_2 = delta * delta
+        delta_3 = delta * delta_2
+        t1_2 = t1 * t1
+        t1_3 = t1 * t1_2
+
+        # calc new a, b, c and d
+        a1 = a * delta_3
+        b1 = (3 * a * t1 + b) * delta_2
+        c1 = (2 * b * t1 + c + 3 * a * t1_2) * delta
+        d1 = a * t1_3 + b * t1_2 + c * t1 + d
+        p1, p2, p3, p4 = calcCubicPointsC(a1, b1, c1, d1)
+        # the reparametrisation can introduce floating point errors, so a segment
+        # that ends at t == 1 is made to end exactly at pt4. The first segment
+        # already starts exactly at pt1, since d1 == d when t1 == 0.
+        yield (p1, p2, p3, pt4 if t2 == 1.0 else p4)
 
 
 @cython.returns(cython.complex)
@@ -764,44 +810,6 @@ def _splitCubicAtT(a, b, c, d, *ts):
         )
         segments.append((pt1, pt2, pt3, pt4))
     return segments
-
-
-@cython.locals(
-    a=cython.complex,
-    b=cython.complex,
-    c=cython.complex,
-    d=cython.complex,
-    t1=cython.double,
-    t2=cython.double,
-    delta=cython.double,
-    delta_2=cython.double,
-    delta_3=cython.double,
-    a1=cython.complex,
-    b1=cython.complex,
-    c1=cython.complex,
-    d1=cython.complex,
-)
-def _splitCubicAtTC(a, b, c, d, *ts):
-    ts = list(ts)
-    ts.insert(0, 0.0)
-    ts.append(1.0)
-    for i in range(len(ts) - 1):
-        t1 = ts[i]
-        t2 = ts[i + 1]
-        delta = t2 - t1
-
-        delta_2 = delta * delta
-        delta_3 = delta * delta_2
-        t1_2 = t1 * t1
-        t1_3 = t1 * t1_2
-
-        # calc new a, b, c and d
-        a1 = a * delta_3
-        b1 = (3 * a * t1 + b) * delta_2
-        c1 = (2 * b * t1 + c + 3 * a * t1_2) * delta
-        d1 = a * t1_3 + b * t1_2 + c * t1 + d
-        pt1, pt2, pt3, pt4 = calcCubicPointsC(a1, b1, c1, d1)
-        yield (pt1, pt2, pt3, pt4)
 
 
 #
