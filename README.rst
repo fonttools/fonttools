@@ -3,7 +3,7 @@
     <a href="https://github.com/fonttools/fonttools/actions?query=workflow%3ATest"><img src="https://github.com/fonttools/fonttools/workflows/Test/badge.svg" alt="CI Build Status"></a>
     <a href="https://codecov.io/gh/fonttools/fonttools"><img src="https://codecov.io/gh/fonttools/fonttools/branch/main/graph/badge.svg" alt="Coverage Status"></a>
     <a href="https://pypi.org/project/FontTools"><img src="https://img.shields.io/pypi/v/fonttools.svg" alt="PyPI"></a>
-    <a href="https://gitter.im/fonttools-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/fonttools-dev/Lobby.svg" alt="Join   the chat at https://gitter.im/fonttools-dev/Lobby"></a>
+    <a href="https://gitter.im/fonttools-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/fonttools-dev/Lobby.svg" alt="Join the chat at https://gitter.im/fonttools-dev/Lobby"></a>
 
 What is this?
 ~~~~~~~~~~~~~
