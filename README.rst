@@ -18,9 +18,9 @@ are available at `Read the Docs <https://fonttools.readthedocs.io/>`_.
 Installation
 ~~~~~~~~~~~~
 
-FontTools requires `Python <http://www.python.org/download/>`__ 3.10
-or later. We try to follow the same schedule of minimum Python version support as
-NumPy (see `NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__).
+FontTools requires `Python <http://www.python.org/download/>`__ 3.11
+or later. We try to support the Python versions that are still supported upstream
+(see `Status of Python versions <https://devguide.python.org/versions/>`__).
 
 The package is listed in the Python Package Index (PyPI), so you can
 install it with `pip <https://pip.pypa.io>`__:
