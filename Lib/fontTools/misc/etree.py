@@ -42,25 +42,22 @@ __all__ = [
 
 try:
     from lxml.etree import *
-    from lxml.etree import LXML_VERSION
 
     _have_lxml = True
 
-    if LXML_VERSION < (5, 0):
-        # Until lxml 5.0, 'resolve_entities' defaulted to True, so an untrusted
-        # document declaring an external entity could pull in local files. 5.0+
-        # defaults to "internal" (external refused, internal still expanded), so
-        # the bare lxml XMLParser is already safe there and we only override on
-        # older lxml. False is the closest older lxml offers; it also stops
-        # internal entities, but that errs on the safe side.
-        _XMLParser = XMLParser
+    # lxml resolves external entities by default, and up to 6.1.2 it also
+    # fetched external parameter entities with resolve_entities="internal"
+    # (https://bugs.launchpad.net/lxml/+bug/2165901). The ElementTree backend
+    # never resolves entities at all, so default to False and keep the two
+    # backends in agreement, rather than depend on the installed lxml version.
+    _XMLParser = XMLParser
 
-        class XMLParser(_XMLParser):
-            """XMLParser subclass that doesn't resolve external entities."""
+    class XMLParser(_XMLParser):
+        """XMLParser subclass that doesn't resolve entities."""
 
-            def __init__(self, *args, **kwargs):
-                kwargs.setdefault("resolve_entities", False)
-                super(XMLParser, self).__init__(*args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            kwargs.setdefault("resolve_entities", False)
+            super(XMLParser, self).__init__(*args, **kwargs)
 
 except ImportError:
     try:

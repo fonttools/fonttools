@@ -55,9 +55,6 @@ def test_pretty_print():
 
 
 def test_no_external_entity_expansion(tmp_path):
-    # NOTE: only lxml < 5.0 ever resolved these, so on a newer lxml (and on the
-    # ElementTree backend) this passes either way; it guards the old versions
-    # that setup.py still allows.
     secret = tmp_path / "secret.txt"
     secret.write_text("s3cr3t")
     xml = (
@@ -68,8 +65,35 @@ def test_no_external_entity_expansion(tmp_path):
 
     try:
         root = etree.fromstring(xml, parser=etree.XMLParser())
-    except etree.ParseError:
-        # the undefined entity is rejected outright
-        return
+    except etree.ParseError as e:
+        # the undefined entity is rejected outright; the file must not have
+        # been read into the error message either
+        assert "s3cr3t" not in str(e)
+    else:
+        assert "s3cr3t" not in etree.tostring(root, encoding="unicode")
 
-    assert "s3cr3t" not in etree.tostring(root, encoding="unicode")
+
+def test_no_external_parameter_entity_expansion(tmp_path):
+    # lxml 5.0-6.1.2 still fetched external *parameter* entities with the
+    # default resolve_entities="internal", which let an external DTD fragment
+    # define a general entity holding the contents of a local file.
+    secret = tmp_path / "secret.txt"
+    secret.write_text("s3cr3t")
+    dtd = tmp_path / "evil.dtd"
+    dtd.write_text(
+        '<!ENTITY %% sec SYSTEM "%s">\n<!ENTITY leak "%%sec;">\n' % secret.as_uri()
+    )
+    xml = (
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE root [<!ENTITY %% dtd SYSTEM "%s"> %%dtd;]>'
+        "<root>&leak;</root>" % dtd.as_uri()
+    ).encode("utf-8")
+
+    try:
+        root = etree.fromstring(xml, parser=etree.XMLParser())
+    except etree.ParseError as e:
+        # the undefined entity is rejected outright; the file must not have
+        # been read into the error message either
+        assert "s3cr3t" not in str(e)
+    else:
+        assert "s3cr3t" not in etree.tostring(root, encoding="unicode")
