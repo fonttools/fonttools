@@ -531,7 +531,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 25, True))
         ((0, 0), (7.32233, 14.6447), (14.6447, 25))
         ((14.6447, 25), (50, 75), (85.3553, 25))
-        ((85.3553, 25), (92.6777, 14.6447), (100, -7.10543e-15))
+        ((85.3553, 25), (92.6777, 14.6447), (100, 0))
         >>> # XXX I'm not at all sure if the following behavior is desirable:
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 50, True))
         ((0, 0), (25, 50), (50, 50))
@@ -545,7 +545,10 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
     solutions = sorted(t for t in solutions if 0 <= t < 1)
     if not solutions:
         return [(pt1, pt2, pt3)]
-    return _splitQuadraticAtT(a, b, c, *solutions)
+    split = _splitQuadraticAtT(a, b, c, *solutions)
+    # as in splitQuadraticAtT, the last segment must end exactly at pt3
+    split[-1] = (*split[-1][:-1], pt3)
+    return split
 
 
 def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
@@ -573,7 +576,7 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
         >>> printSegments(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 25, True))
         ((0, 0), (2.29379, 9.17517), (4.79804, 17.5085), (7.47414, 25))
         ((7.47414, 25), (31.2886, 91.6667), (68.7114, 91.6667), (92.5259, 25))
-        ((92.5259, 25), (95.202, 17.5085), (97.7062, 9.17517), (100, 1.77636e-15))
+        ((92.5259, 25), (95.202, 17.5085), (97.7062, 9.17517), (100, 0))
     """
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     solutions = solveCubic(
@@ -582,7 +585,10 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
     solutions = sorted(t for t in solutions if 0 <= t < 1)
     if not solutions:
         return [(pt1, pt2, pt3, pt4)]
-    return _splitCubicAtT(a, b, c, d, *solutions)
+    split = _splitCubicAtT(a, b, c, d, *solutions)
+    # as in splitCubicAtT, the last segment must end exactly at pt4
+    split[-1] = (*split[-1][:-1], pt4)
+    return split
 
 
 def splitQuadraticAtT(pt1, pt2, pt3, *ts):

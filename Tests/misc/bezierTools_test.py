@@ -171,6 +171,24 @@ def test_splitQuadraticAtT_robustness():
     assert tail[-1] == segment[-1]
 
 
+def test_splitQuadratic_robustness():
+    # Without the fixup the tail ends at (-143.85999999999996, -158.18399999999994).
+    segment = ((69.996, 92.927), (286.522, 231.449), (-143.86, -158.184))
+    split = splitQuadratic(*segment, -120.0, False)
+    assert len(split) == 2
+    assert split[0][0] == segment[0]
+    assert split[-1][-1] == segment[-1]
+
+
+def test_splitCubic_robustness():
+    # Without the fixup the tail ends at (5.999999999999993, -245.0).
+    segment = ((-103, -231), (-61, -240), (-31.009, -245), (6, -245))
+    split = splitCubic(*segment, -98.8, False)
+    assert len(split) == 2
+    assert split[0][0] == segment[0]
+    assert split[-1][-1] == segment[-1]
+
+
 def test_solveCubic():
     assert solveCubic(1, 1, -6, 0) == [-3.0, -0.0, 2.0]
     assert solveCubic(-10.0, -9.0, 48.0, -29.0) == [-2.9, 1.0, 1.0]
