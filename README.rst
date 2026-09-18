@@ -1,4 +1,9 @@
-|CI Build Status| |Coverage Status| |PyPI| |Gitter Chat|
+.. raw:: html
+
+    <a href="https://github.com/fonttools/fonttools/actions?query=workflow%3ATest"><img src="https://github.com/fonttools/fonttools/workflows/Test/badge.svg" alt="CI Build Status"></a>
+    <a href="https://codecov.io/gh/fonttools/fonttools"><img src="https://codecov.io/gh/fonttools/fonttools/branch/main/graph/badge.svg" alt="Coverage Status"></a>
+    <a href="https://pypi.org/project/FontTools"><img src="https://img.shields.io/pypi/v/fonttools.svg" alt="PyPI"></a>
+    <a href="https://gitter.im/fonttools-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/fonttools-dev/Lobby.svg" alt="Join   the chat at https://gitter.im/fonttools-dev/Lobby"></a>
 
 What is this?
 ~~~~~~~~~~~~~
@@ -292,13 +297,3 @@ Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam. All
 Rights Reserved.
 
 Have fun!
-
-.. |CI Build Status| image:: https://github.com/fonttools/fonttools/workflows/Test/badge.svg
-   :target: https://github.com/fonttools/fonttools/actions?query=workflow%3ATest
-.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/main/graph/badge.svg
-   :target: https://codecov.io/gh/fonttools/fonttools
-.. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
-   :target: https://pypi.org/project/FontTools
-.. |Gitter Chat| image:: https://badges.gitter.im/fonttools-dev/Lobby.svg
-   :alt: Join the chat at https://gitter.im/fonttools-dev/Lobby
-   :target: https://gitter.im/fonttools-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
