@@ -614,10 +614,9 @@ def splitQuadraticAtT(pt1, pt2, pt3, *ts):
     a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
     split = _splitQuadraticAtT(a, b, c, *ts)
 
-    # the split impl can introduce floating point errors; we know the first
-    # segment should always start at pt1 and the last segment should end at pt3,
-    # so we set those values directly before returning.
-    split[0] = (pt1, *split[0][1:])
+    # the split impl can introduce floating point errors; we know the last segment
+    # should end at pt3, so we set that value directly before returning. The first
+    # segment needs no such fixup: t1 is 0.0 for it, so it already starts at pt1.
     split[-1] = (*split[-1][:-1], pt3)
     return split
 
@@ -645,10 +644,9 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     split = _splitCubicAtT(a, b, c, d, *ts)
 
-    # the split impl can introduce floating point errors; we know the first
-    # segment should always start at pt1 and the last segment should end at pt4,
-    # so we set those values directly before returning.
-    split[0] = (pt1, *split[0][1:])
+    # the split impl can introduce floating point errors; we know the last segment
+    # should end at pt4, so we set that value directly before returning. The first
+    # segment needs no such fixup: t1 is 0.0 for it, so it already starts at pt1.
     split[-1] = (*split[-1][:-1], pt4)
     return split
 
