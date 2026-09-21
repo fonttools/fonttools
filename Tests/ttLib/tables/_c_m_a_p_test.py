@@ -248,6 +248,137 @@ class CmapSubtableTest(unittest.TestCase):
         font.setGlyphOrder([])
         subtable.decompile(b"\0" * 7 + b"\x10" + b"\0" * 8, font)
 
+    @staticmethod
+    def _decompile_12_or_13(format, groups):
+        subtable = CmapSubtable.newSubtable(format)
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b", "c"])
+        body = b"".join(struct.pack(">LLL", *group) for group in groups)
+        header = struct.pack(">HHLLL", format, 0, 16 + len(body), 0, len(groups))
+        subtable.decompile(header + body, font)
+        return subtable.cmap
+
+    def test_decompile_12_or_13_clamps_to_max_unicode(self):
+        # a single group claiming the whole 32-bit range used to be expanded
+        # into a list of 2**32 code points.
+        for format in (12, 13):
+            with self.subTest(format=format):
+                with self.assertLogs(
+                    "fontTools.ttLib.tables._c_m_a_p", "WARNING"
+                ) as logs:
+                    cmap = self._decompile_12_or_13(format, [(0x10FFFE, 0xFFFFFFFF, 1)])
+                self.assertEqual(
+                    cmap,
+                    {
+                        0x10FFFE: "a",
+                        0x10FFFF: "b" if format == 12 else "a",
+                    },
+                )
+                self.assertIn("beyond U+10FFFF", logs.output[0])
+
+    def test_decompile_12_or_13_many_overlapping_groups(self):
+        # clamping alone is not enough: repeated full-range groups would
+        # still add up to far more code points than exist.
+        for format in (12, 13):
+            with self.subTest(format=format):
+                with self.assertLogs("fontTools.ttLib.tables._c_m_a_p", "WARNING"):
+                    cmap = self._decompile_12_or_13(format, [(0, 0xFFFFFFFF, 1)] * 1000)
+                self.assertEqual(len(cmap), 0x110000)
+
+    def test_decompile_12_or_13_bad_groups_skipped(self):
+        # like HarfBuzz, a group that is inverted or starts before the
+        # previous one ends is dropped whole, so the first group in subtable
+        # order wins.
+        cases = [
+            (12, [(0x41, 0x43, 1), (0x42, 0x44, 2)], {0x41: "a", 0x42: "b", 0x43: "c"}),
+            (12, [(0x43, 0x43, 3), (0x41, 0x42, 1)], {0x43: "c"}),
+            (12, [(0x42, 0x41, 1), (0x200000, 0x200001, 1)], {}),
+            (13, [(0x42, 0x41, 1), (0x200000, 0x200001, 1)], {}),
+        ]
+        for format, groups, expected in cases:
+            with self.subTest(format=format, groups=groups):
+                with self.assertLogs(
+                    "fontTools.ttLib.tables._c_m_a_p", "WARNING"
+                ) as logs:
+                    cmap = self._decompile_12_or_13(format, groups)
+                self.assertEqual(cmap, expected)
+                self.assertTrue(
+                    any("unsorted or overlapping" in m for m in logs.output)
+                )
+
+    def test_decompile_12_or_13_shared_endpoint(self):
+        # like HarfBuzz, a group may start on the previous group's last code
+        # point; the later nonzero mapping wins there, the missing glyph
+        # erases nothing.
+        cases = [
+            (12, [(0x41, 0x42, 2), (0x42, 0x43, 1)], {0x41: "b", 0x42: "a", 0x43: "b"}),
+            (13, [(0x41, 0x42, 1), (0x42, 0x43, 2)], {0x41: "a", 0x42: "b", 0x43: "b"}),
+            (12, [(0x41, 0x42, 1), (0x42, 0x43, 0)], {0x41: "a", 0x42: "b", 0x43: "a"}),
+            (13, [(0x41, 0x42, 1), (0x42, 0x43, 0)], {0x41: "a", 0x42: "a"}),
+        ]
+        for format, groups, expected in cases:
+            with self.subTest(format=format, groups=groups):
+                with self.assertNoLogs("fontTools.ttLib.tables._c_m_a_p", "WARNING"):
+                    cmap = self._decompile_12_or_13(format, groups)
+                self.assertEqual(cmap, expected)
+
+    def test_decompile_13_full_range_missing_glyph(self):
+        # maps nothing, so it is not expanded either
+        cmap = self._decompile_12_or_13(13, [(0, 0x10FFFF, 0)])
+        self.assertEqual(cmap, {})
+
+    def test_decompile_12_starting_missing_glyph(self):
+        cmap = self._decompile_12_or_13(12, [(0x41, 0x43, 0)])
+        self.assertEqual(cmap, {0x42: "a", 0x43: "b"})
+
+    def test_decompile_12_sorted_groups_no_warning(self):
+        # adjacent groups, ending exactly at U+10FFFF
+        with self.assertNoLogs("fontTools.ttLib.tables._c_m_a_p", "WARNING"):
+            cmap = self._decompile_12_or_13(
+                12, [(0x41, 0x42, 1), (0x43, 0x43, 3), (0x10FFFF, 0x10FFFF, 1)]
+            )
+        self.assertEqual(cmap, {0x41: "a", 0x42: "b", 0x43: "c", 0x10FFFF: "a"})
+
+    @staticmethod
+    def _decompile_4(segments, glyphIndexArray=()):
+        # segments: (start, end, delta, rangeOffset); the 0xFFFF sentinel
+        # segment is appended here.
+        segments = list(segments) + [(0xFFFF, 0xFFFF, 1, 0)]
+        n = len(segments)
+        starts, ends, deltas, offsets = zip(*segments)
+        body = (
+            struct.pack(">4H", n * 2, 0, 0, 0)
+            + struct.pack(f">{n}H", *ends)
+            + struct.pack(">H", 0)
+            + struct.pack(f">{n}H", *starts)
+            + struct.pack(f">{n}H", *(d & 0xFFFF for d in deltas))
+            + struct.pack(f">{n}H", *offsets)
+            + struct.pack(f">{len(glyphIndexArray)}H", *glyphIndexArray)
+        )
+        subtable = CmapSubtable.newSubtable(4)
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b", "c", "d"])
+        subtable.decompile(struct.pack(">3H", 4, 6 + len(body), 0) + body, font)
+        return subtable.cmap
+
+    def test_decompile_4_overlapping_segments(self):
+        # every segment covers the whole BMP: each one used to be expanded
+        # in full before deduplication
+        cmap = self._decompile_4([(0, 0xFFFE, 1, 0)] * 8)
+        self.assertEqual(len(cmap), 0xFFFF)
+
+    def test_decompile_4_later_segment_wins(self):
+        # overlapping segments keep the previous behavior (and HarfBuzz's):
+        # the last nonzero mapping wins, a missing glyph erases nothing.
+        # rangeOffset is in bytes from the segment's own idRangeOffset entry:
+        # with 3 segments, segment 0 is 6 bytes before glyphIndexArray[0],
+        # and segment 1 is 4 bytes before it, plus 6 to start at [3].
+        cmap = self._decompile_4(
+            [(0x41, 0x43, 0, 6), (0x42, 0x43, 0, 4 + 6)],
+            glyphIndexArray=[1, 2, 3, 4, 0],
+        )
+        self.assertEqual(cmap, {0x41: "a", 0x42: "d", 0x43: "c"})
+
     def test_buildReversed(self):
         c4 = self.makeSubtable(4, 3, 1, 0)
         c4.cmap = {0x0041: "A", 0x0391: "A"}
