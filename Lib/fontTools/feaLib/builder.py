@@ -1152,7 +1152,14 @@ class Builder(object):
         self.fontRevision_ = revision
 
     def set_language(self, location, language, include_default, required):
-        assert len(language) == 4
+        if isinstance(language, str):
+            languages = [language]
+        else:
+            languages = list(language)
+        assert languages and all(len(language) == 4 for language in languages)
+        # Repeated tags in a single statement do not designate distinct
+        # language systems.
+        languages = list(dict.fromkeys(languages))
         if self.cur_feature_name_ in ("aalt", "size"):
             raise FeatureLibError(
                 "Language statements are not allowed "
@@ -1167,23 +1174,11 @@ class Builder(object):
             )
         self.cur_lookup_ = None
 
-        key = (self.script_, language, self.cur_feature_name_)
-        lookups = self.features_.get((key[0], "dflt", key[2]), [])
-        # Only ever add or remove the default lookups, never replace the list:
-        # duplicate script/lang statements are allowed, and must not drop the
-        # lookups already registered for this language system;
-        # see https://github.com/fonttools/fonttools/issues/3748
-        cur_lookups = self.features_.setdefault(key, [])
-        if language == "dflt" or include_default:
-            cur_lookups.extend([x for x in lookups if x not in cur_lookups])
-        else:
-            self.features_[key] = [x for x in cur_lookups if x not in lookups]
-        self.language_systems = frozenset([(self.script_, language)])
-        self.language_ = language
-
         if required:
-            key = (self.script_, language)
-            if key in self.required_features_:
+            for language in languages:
+                key = (self.script_, language)
+                if key not in self.required_features_:
+                    continue
                 raise FeatureLibError(
                     "Language %s (script %s) has already "
                     "specified feature %s as its required feature"
@@ -1194,7 +1189,29 @@ class Builder(object):
                     ),
                     location,
                 )
-            self.required_features_[key] = self.cur_feature_name_
+
+        for language in languages:
+            key = (self.script_, language, self.cur_feature_name_)
+            lookups = self.features_.get((key[0], "dflt", key[2]), [])
+            # Only ever add or remove the default lookups, never replace the
+            # list: duplicate script/lang statements are allowed, and must not
+            # drop the lookups already registered for this language system;
+            # see https://github.com/fonttools/fonttools/issues/3748
+            cur_lookups = self.features_.setdefault(key, [])
+            if language == "dflt" or include_default:
+                cur_lookups.extend([x for x in lookups if x not in cur_lookups])
+            else:
+                self.features_[key] = [x for x in cur_lookups if x not in lookups]
+
+            if required:
+                self.required_features_[(self.script_, language)] = (
+                    self.cur_feature_name_
+                )
+
+        self.language_systems = frozenset(
+            (self.script_, language) for language in languages
+        )
+        self.language_ = languages[0] if len(languages) == 1 else None
 
     def getMarkAttachClass_(self, location, glyphs):
         glyphs = frozenset(glyphs)
