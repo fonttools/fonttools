@@ -34,7 +34,7 @@ def AddFontVariations(font):
 
     weight = Axis()
     weight.axisTag = "wght"
-    weight.nameID = AddName(font, "Weight").nameID
+    weight.axisNameID = AddName(font, "Weight").nameID
     weight.minValue, weight.defaultValue, weight.maxValue = (100, 400, 900)
     fvar.axes.append(weight)
 
@@ -47,7 +47,7 @@ def AddFontVariations(font):
         ("Black", 900),
     ):
         inst = NamedInstance()
-        inst.nameID = AddName(font, name).nameID
+        inst.subfamilyNameID = AddName(font, name).nameID
         inst.coordinates = {"wght": wght}
         fvar.instances.append(inst)
 
