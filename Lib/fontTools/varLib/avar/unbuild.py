@@ -1,6 +1,7 @@
 from fontTools.varLib.models import VariationModel
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl
+from fontTools.misc.xmlWriter import escapeattr
 from itertools import product
 import sys
 
@@ -183,14 +184,17 @@ def unbuild(font, f=sys.stdout):
     axes = fvar.axes
     segments, mappings = mappings_from_avar(font)
 
+    # Axis names come from the font's (untrusted) 'name' table and are written
+    # verbatim into XML attribute values below, so escape them; likewise the
+    # axis tags, which are attacker-controlled bytes in a malformed font.
     if "name" in font:
         name = font["name"]
         axisNames = {
-            axis.axisTag: name.getDebugName(axis.axisNameID) or axis.axisTag
+            axis.axisTag: escapeattr(name.getDebugName(axis.axisNameID) or axis.axisTag)
             for axis in axes
         }
     else:
-        axisNames = {a.axisTag: a.axisTag for a in axes}
+        axisNames = {a.axisTag: escapeattr(a.axisTag) for a in axes}
 
     print("<?xml version='1.0' encoding='UTF-8'?>", file=f)
     print('<designspace format="5.1">', file=f)
@@ -206,7 +210,7 @@ def unbuild(font, f=sys.stdout):
         closing = "/>" if axisMap is None else ">"
 
         print(
-            f'    <axis tag="{axis.axisTag}" name="{axisName}" minimum="{triplet[0]}" maximum="{triplet[2]}" default="{triplet[1]}"{closing}',
+            f'    <axis tag="{escapeattr(axis.axisTag)}" name="{axisName}" minimum="{triplet[0]}" maximum="{triplet[2]}" default="{triplet[1]}"{closing}',
             file=f,
         )
         if axisMap is not None:
