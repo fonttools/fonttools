@@ -959,22 +959,22 @@ class cmap_format_4(CmapSubtable):
         glyphIndexArray = allCodes[segCount:]
         lenGIArray = len(glyphIndexArray)
 
-        # build 2-byte character mapping
-        charCodes = []
-        gids = []
+        # build 2-byte character mapping; later segments override earlier
+        # ones, but a missing glyph does not erase an earlier mapping.
+        # Deduplicate as we go: overlapping segments can claim far more
+        # code points than the BMP holds.
+        codeToGID = {}
         for i in range(len(startCode) - 1):  # don't do 0xffff!
             start = startCode[i]
             delta = idDelta[i]
             rangeOffset = idRangeOffset[i]
             partial = rangeOffset // 2 - start + i - len(idRangeOffset)
 
-            rangeCharCodes = list(range(startCode[i], endCode[i] + 1))
-            charCodes.extend(rangeCharCodes)
+            rangeCharCodes = range(startCode[i], endCode[i] + 1)
             if rangeOffset == 0:
-                gids.extend(
-                    [(charCode + delta) & 0xFFFF for charCode in rangeCharCodes]
-                )
+                gids = [(charCode + delta) & 0xFFFF for charCode in rangeCharCodes]
             else:
+                gids = []
                 for charCode in rangeCharCodes:
                     index = charCode + partial
                     assert index < lenGIArray, (
@@ -986,8 +986,11 @@ class cmap_format_4(CmapSubtable):
                     else:
                         glyphID = 0  # missing glyph
                     gids.append(glyphID & 0xFFFF)
+            codeToGID.update(
+                (charCode, gid) for charCode, gid in zip(rangeCharCodes, gids) if gid
+            )
 
-        self.cmap = _make_map(self.ttFont, charCodes, gids)
+        self.cmap = _make_map(self.ttFont, list(codeToGID), list(codeToGID.values()))
 
     def compile(self, ttFont):
         if self.data:
@@ -1229,21 +1232,52 @@ class cmap_format_12_or_13(CmapSubtable):
         data = (
             self.data
         )  # decompileHeader assigns the data after the header to self.data
-        charCodes = []
-        gids = []
-        pos = 0
         groups = array.array("I", data[: self.nGroups * 12])
         if sys.byteorder != "big":
             groups.byteswap()
-        for i in range(self.nGroups):
-            startCharCode = groups[i * 3]
-            endCharCode = groups[i * 3 + 1]
-            glyphID = groups[i * 3 + 2]
+        # Group ranges come straight from the font, so follow HarfBuzz's
+        # cmap12 collect_mapping to keep the expansion within the code space:
+        # clamp each group to U+10FFFF and skip any group that is inverted or
+        # starts before the previous one ends. A group may still start on the
+        # previous one's last code point, which it then overrides, so
+        # deduplicate as we go. Well-formed subtables are unaffected.
+        codeToGID = {}
+        clamped = skipped = False
+        lastEnd = 0
+        for startCharCode, endCharCode, glyphID in zip(*[iter(groups)] * 3):
+            if endCharCode > 0x10FFFF:
+                endCharCode = 0x10FFFF
+                clamped = True
+            if startCharCode > endCharCode or startCharCode < lastEnd:
+                skipped = True
+                continue
+            lastEnd = endCharCode
+            if glyphID == 0:
+                # the missing glyph maps nothing: all of a format 13 group,
+                # only the first code point of a format 12 one
+                if self._format_step == 0:
+                    continue
+                startCharCode += 1
+                glyphID += 1
             lenGroup = 1 + endCharCode - startCharCode
-            charCodes.extend(range(startCharCode, endCharCode + 1))
-            gids.extend(self._computeGIDs(glyphID, lenGroup))
+            codeToGID.update(
+                zip(
+                    range(startCharCode, endCharCode + 1),
+                    self._computeGIDs(glyphID, lenGroup),
+                )
+            )
+        if clamped:
+            log.warning(
+                "cmap subtable format %d: group ranges beyond U+10FFFF were truncated",
+                self.format,
+            )
+        if skipped:
+            log.warning(
+                "cmap subtable format %d: skipped unsorted or overlapping groups",
+                self.format,
+            )
         self.data = data = None
-        self.cmap = _make_map(self.ttFont, charCodes, gids)
+        self.cmap = _make_map(self.ttFont, list(codeToGID), list(codeToGID.values()))
 
     def compile(self, ttFont):
         if self.data:
