@@ -1,3 +1,6 @@
+4.66.0 (released 2026-09-23)
+----------------------------
+
 - Drop support for EOL Python 3.10; fontTools now requires Python 3.11 or later.
   ``fontTools.misc.enumTools`` now only re-exports ``enum.StrEnum`` and is
   deprecated. Explicitly test and declare support for Python 3.15 (#4183, #4196).
