@@ -2,6 +2,7 @@ from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import stripVariableItemsFromTTX
 from fontTools.misc.textTools import Tag
+from fontTools.pens.recordingPen import RecordingPen
 from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
@@ -171,6 +172,28 @@ class InstantiateCFF2Test(object):
         assert private.BlueValues == expected
         # The store emptied; the dict's vsindex must be gone with it.
         assert not hasattr(private, "vsindex")
+
+    def test_instance_of_saved_font(self):
+        # Saving before instancing used to leave a compiled VarStore behind
+        # that the second save then wrote out in place of the pruned one.
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-2.ttx"))
+        varfont.save(BytesIO())
+
+        instancer.instantiateVariableFont(varfont, {"wdth": 100}, inplace=True)
+
+        s = BytesIO()
+        varfont.save(s)
+        s.seek(0)
+        instance = ttLib.TTFont(s)
+
+        topDict = instance["CFF2"].cff.topDictIndex[0]
+        regionList = topDict.VarStore.otVarStore.VarRegionList
+        assert regionList.RegionAxisCount == len(instance["fvar"].axes) == 1
+
+        pen = RecordingPen()
+        instance.getGlyphSet()["A"].draw(pen)
+        assert pen.value
 
     @pytest.mark.parametrize(
         "source_ttx, expected_ttx",
