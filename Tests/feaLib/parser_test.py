@@ -639,7 +639,9 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU ")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
 
@@ -649,7 +651,10 @@ class ParserTest(unittest.TestCase):
         )
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "])
+        self.assertEqual(s.languages, ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "])
+        with self.assertWarnsRegex(UserWarning, "use .languages") as cm:
+            self.assertEqual(s.language, "AZE ")
+        self.assertEqual(cm.filename, __file__)
         self.assertFalse(s.include_default)
         self.assertTrue(s.required)
         self.assertEqual(
