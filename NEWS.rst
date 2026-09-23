@@ -1,3 +1,66 @@
+- Drop support for EOL Python 3.10; fontTools now requires Python 3.11 or later.
+  ``fontTools.misc.enumTools`` now only re-exports ``enum.StrEnum`` and is
+  deprecated. Explicitly test and declare support for Python 3.15 (#4183, #4196).
+- [unicodedata] Update the bundled script, script extension, block and
+  bidi-mirroring tables to Unicode 18.0.0, and require ``unicodedata2`` 18.0.0
+  when it is used (#4192, #4197).
+- [feaLib] Support ``language`` statements listing multiple language tags, e.g.
+  ``language AZE CRT;``, as Glyphs does and as proposed for the spec
+  (adobe-type-tools/feature_file_workshops#8): the following rules and lookup
+  references are registered under every listed language. ``dflt`` cannot be
+  combined with other tags. ``LanguageStatement.language`` is still the first
+  tag; all of them are in the new ``languages`` attribute (#4201, #4202).
+- [feaLib] Fix lookups being dropped when a ``script``/``language`` pair is
+  repeated within a feature block: the repeated statement replaced the language
+  system's lookups with a fresh copy of the default ones (#4189).
+- [feaLib] Raise ``FeatureLibError`` instead of ``UnboundLocalError`` when a
+  ``STAT`` table block lacks ``ElidedFallbackName`` or ``ElidedFallbackNameID``
+  (#3834, #4179).
+- [cffLib] Always recompile the CFF2 ``VarStore`` when saving. Previously the
+  bytes compiled by an earlier save were reused, so a CFF2 variable font that
+  was saved and then modified in place, e.g. by the instancer, was written with
+  a stale ``VarStore`` next to its updated charstrings (#4199).
+- [ttLib] Support static ``VARC`` fonts that omit ``fvar`` while retaining
+  ``gvar`` or CFF2 variation data for component-internal axes: hidden axes are
+  addressed by index and ``gvar`` can compile, decompile and round-trip through
+  TTX without ``fvar``, reading the axis count from a new ``axisCount``
+  element (#4187, #4188).
+- [ttLib] Fix drawing ``VARC`` components whose condition is negated
+  (format 5), which raised ``AttributeError`` (#4191).
+- [instancer] Fix ``VARC`` axis references left stale when removing an
+  unrelated axis, reject pinning or restricting axes referenced by ``VARC``
+  components, and stop culling avar2 ranges for component-internal variations,
+  which can reach outside the font-level ranges (#4190, #4193).
+- [bezierTools] Preserve exact endpoints in ``splitQuadraticAtT`` and
+  ``splitCubicAtTC`` as well, like ``splitCubicAtT`` since 4.55.4
+  (#3742, #4194).
+- [bezierTools] Fix ``ZeroDivisionError`` in ``lineLineIntersections`` for
+  collinear vertical lines; they are now treated as parallel like horizontal
+  ones (#3515, #4181).
+- [subset] ``pyftsubset`` now preserves the input font's flavor (WOFF, WOFF2)
+  when ``--flavor`` is omitted, instead of writing uncompressed sfnt data under
+  the same extension; pass ``--flavor=none`` to force uncompressed output
+  (#3630, #4182).
+- [merge] Report incompatible ``unitsPerEm`` values by name, with the input
+  values, instead of a bare assertion (#2844, #4184).
+- [designspaceLib] Fix the type annotation and documentation of
+  ``DesignSpaceDocument.default``, which holds a ``SourceDescriptor``, not a
+  source name (#2994, #4186).
+- [ttLib.sfnt] Raise ``TTLibError`` instead of ``AssertionError`` for
+  inconsistent WOFF table, metadata and private-data lengths, so the checks
+  also hold under ``python -O`` (#4178).
+- [misc.etree] Disable entity resolution altogether on lxml >= 5.0 as well:
+  lxml's ``resolve_entities="internal"`` still fetched external parameter
+  entities before lxml 6.1.3, so a crafted DTD could read local files into
+  parsed XML content (#4195).
+- [cmap] Bound the expansion of format 4 segments and format 12/13 groups when
+  decompiling, like HarfBuzz does: groups are clamped to U+10FFFF, inverted or
+  overlapping groups are skipped with a warning, and groups mapped to the
+  missing glyph are not expanded. A crafted font could previously exhaust
+  memory with a single group ending at 0xFFFFFFFF (#4204).
+- [varLib.avar] Escape axis names and tags when ``varLib.avar.unbuild`` emits
+  its designspace snippet, so a crafted font cannot inject markup (#4203).
+
 4.65.0 (released 2026-09-10)
 ----------------------------
 
