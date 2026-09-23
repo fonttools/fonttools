@@ -968,12 +968,8 @@ class LanguageStatement(Statement):
         )
 
     def asFea(self, indent=""):
-        languages = (
-            [self.language] if isinstance(self.language, str) else self.language
-        )
-        res = "language {}".format(
-            " ".join(language.strip() for language in languages)
-        )
+        languages = [self.language] if isinstance(self.language, str) else self.language
+        res = "language {}".format(" ".join(language.strip() for language in languages))
         if not self.include_default:
             res += " exclude_dflt"
         if self.required:

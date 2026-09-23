@@ -667,9 +667,7 @@ class BuilderTest(unittest.TestCase):
         )
 
     def test_language_multiple_equivalent_to_lookup_references(self):
-        multiple_languages = self.build(
-            dedent(
-                """
+        multiple_languages = self.build(dedent("""
                 feature locl {
                     script latn;
                     language AZE CRT;
@@ -677,12 +675,8 @@ class BuilderTest(unittest.TestCase):
                         substitute i by idotaccent;
                     } idot;
                 } locl;
-                """
-            )
-        )
-        separate_languages = self.build(
-            dedent(
-                """
+                """))
+        separate_languages = self.build(dedent("""
                 feature locl {
                     script latn;
                     language AZE;
@@ -693,9 +687,7 @@ class BuilderTest(unittest.TestCase):
                     language CRT;
                     lookup idot;
                 } locl;
-                """
-            )
-        )
+                """))
 
         self.assertEqual(
             multiple_languages["GSUB"].compile(multiple_languages),
