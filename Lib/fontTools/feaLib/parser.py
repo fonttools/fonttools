@@ -613,6 +613,10 @@ class Parser(object):
             and self.next_token_ not in self.extensions
         ):
             languages.append(self.expect_language_tag_())
+        if len(languages) > 1 and "dflt" in languages:
+            raise FeatureLibError(
+                '"dflt" must be the only tag in a language statement', location
+            )
         include_default, required = (True, False)
         if self.next_token_ in {"exclude_dflt", "include_dflt"}:
             include_default = self.expect_name_() == "include_dflt"
