@@ -572,17 +572,51 @@ class Parser(object):
         # self.expect_symbol_(";")
         return ast.IncludeStatement(filename, location=location)
 
+    # Keywords that can start a statement in a feature block. A multi-tag
+    # language statement ends before them, so that a missing semicolon is
+    # reported instead of the next statement being read as language tags.
+    _statement_keywords = frozenset(
+        {
+            "anchorDef",
+            "cvParameters",
+            "enum",
+            "enumerate",
+            "feature",
+            "featureNames",
+            "ignore",
+            "language",
+            "lookup",
+            "lookupflag",
+            "markClass",
+            "parameters",
+            "pos",
+            "position",
+            "reversesub",
+            "rsub",
+            "script",
+            "sizemenuname",
+            "sub",
+            "substitute",
+            "subtable",
+            "valueRecordDef",
+        }
+    )
+
     def parse_language_(self):
         assert self.is_cur_keyword_("language")
         location = self.cur_token_location_
         languages = [self.expect_language_tag_()]
-        while self.next_token_ not in {
-            ";",
-            "exclude_dflt",
-            "include_dflt",
-            "required",
-        }:
+        while (
+            self.next_token_type_ is Lexer.NAME
+            and self.next_token_ not in {"exclude_dflt", "include_dflt", "required"}
+            and self.next_token_ not in self._statement_keywords
+            and self.next_token_ not in self.extensions
+        ):
             languages.append(self.expect_language_tag_())
+        if len(languages) > 1 and "dflt" in languages:
+            raise FeatureLibError(
+                '"dflt" must be the only tag in a language statement', location
+            )
         include_default, required = (True, False)
         if self.next_token_ in {"exclude_dflt", "include_dflt"}:
             include_default = self.expect_name_() == "include_dflt"
@@ -590,9 +624,8 @@ class Parser(object):
             self.expect_keyword_("required")
             required = True
         self.expect_symbol_(";")
-        language = languages[0] if len(languages) == 1 else languages
         return self.ast.LanguageStatement(
-            language, include_default, required, location=location
+            languages, include_default, required, location=location
         )
 
     def parse_ligatureCaretByIndex_(self):

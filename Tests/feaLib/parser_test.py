@@ -5,7 +5,10 @@ from fontTools.feaLib.parser import Parser, SymbolTable
 from io import StringIO
 import warnings
 import fontTools.feaLib.ast as ast
+import ast as pyast
+import inspect
 import os
+import textwrap
 import unittest
 
 
@@ -639,7 +642,9 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU ")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
 
@@ -649,12 +654,68 @@ class ParserTest(unittest.TestCase):
         )
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "])
+        self.assertEqual(s.languages, ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "])
+        with self.assertWarnsRegex(UserWarning, "use .languages") as cm:
+            self.assertEqual(s.language, "AZE ")
+        self.assertEqual(cm.filename, __file__)
         self.assertFalse(s.include_default)
         self.assertTrue(s.required)
         self.assertEqual(
             s.asFea(),
             "language AZE CRT KAZ TAT TRK exclude_dflt required;",
+        )
+
+    def test_language_multiple_missing_semicolon(self):
+        # The next statement must not be read as more language tags.
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE CRT\n sub a by b;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE\n lookup foo;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE CRT\n @foo = [a b];} test;",
+        )
+
+    def test_language_statement_keywords_up_to_date(self):
+        # parse_language_ ends a multi-tag statement at the keywords that
+        # start a block statement; this fails when parse_block_ learns a new
+        # one that _statement_keywords does not list.
+        source = textwrap.dedent(inspect.getsource(Parser.parse_block_))
+        keywords = set()
+        for node in pyast.walk(pyast.parse(source)):
+            if (
+                isinstance(node, pyast.Call)
+                and isinstance(node.func, pyast.Attribute)
+                and node.func.attr == "is_cur_keyword_"
+            ):
+                for arg in pyast.walk(node.args[0]):
+                    if isinstance(arg, pyast.Constant) and isinstance(arg.value, str):
+                        keywords.add(arg.value)
+        self.assertIn("sub", keywords)  # the walk found the calls
+        self.assertEqual(keywords - Parser._statement_keywords, set())
+
+    def test_language_multiple_dflt(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" must be the only tag in a language statement',
+            self.parse,
+            "feature test {language dflt AZE;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" must be the only tag in a language statement',
+            self.parse,
+            "feature test {language AZE dflt;} test;",
         )
 
     def test_language_exclude_dflt(self):
