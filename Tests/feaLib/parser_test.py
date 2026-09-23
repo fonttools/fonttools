@@ -643,6 +643,20 @@ class ParserTest(unittest.TestCase):
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
 
+    def test_language_multiple(self):
+        doc = self.parse(
+            "feature test {language AZE CRT KAZ TAT TRK exclude_dflt required;} test;"
+        )
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.LanguageStatement)
+        self.assertEqual(s.language, ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "])
+        self.assertFalse(s.include_default)
+        self.assertTrue(s.required)
+        self.assertEqual(
+            s.asFea(),
+            "language AZE CRT KAZ TAT TRK exclude_dflt required;",
+        )
+
     def test_language_exclude_dflt(self):
         doc = self.parse("feature test {language DEU exclude_dflt;} test;")
         s = doc.statements[0].statements[0]

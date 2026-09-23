@@ -575,7 +575,14 @@ class Parser(object):
     def parse_language_(self):
         assert self.is_cur_keyword_("language")
         location = self.cur_token_location_
-        language = self.expect_language_tag_()
+        languages = [self.expect_language_tag_()]
+        while self.next_token_ not in {
+            ";",
+            "exclude_dflt",
+            "include_dflt",
+            "required",
+        }:
+            languages.append(self.expect_language_tag_())
         include_default, required = (True, False)
         if self.next_token_ in {"exclude_dflt", "include_dflt"}:
             include_default = self.expect_name_() == "include_dflt"
@@ -583,6 +590,7 @@ class Parser(object):
             self.expect_keyword_("required")
             required = True
         self.expect_symbol_(";")
+        language = languages[0] if len(languages) == 1 else languages
         return self.ast.LanguageStatement(
             language, include_default, required, location=location
         )

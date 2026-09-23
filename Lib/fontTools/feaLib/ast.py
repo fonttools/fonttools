@@ -940,12 +940,21 @@ class IncludeStatement(Statement):
 
 
 class LanguageStatement(Statement):
-    """A ``language`` statement within a feature."""
+    """A ``language`` statement within a feature.
+
+    ``language`` may be either a single four-character language tag or an
+    iterable of tags. The latter represents the multiple-languages syntax,
+    e.g. ``language AZE CRT KAZ TAT TRK;``.
+    """
 
     def __init__(self, language, include_default=True, required=False, location=None):
         Statement.__init__(self, location)
-        assert len(language) == 4
-        self.language = language  #: A four-character language tag
+        if isinstance(language, str):
+            languages = [language]
+        else:
+            languages = list(language)
+        assert languages and all(len(language) == 4 for language in languages)
+        self.language = languages[0] if len(languages) == 1 else languages
         self.include_default = include_default  #: If false, "exclude_dflt"
         self.required = required
 
@@ -959,7 +968,8 @@ class LanguageStatement(Statement):
         )
 
     def asFea(self, indent=""):
-        res = "language {}".format(self.language.strip())
+        languages = [self.language] if isinstance(self.language, str) else self.language
+        res = "language {}".format(" ".join(language.strip() for language in languages))
         if not self.include_default:
             res += " exclude_dflt"
         if self.required:

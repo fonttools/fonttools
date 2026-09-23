@@ -49,7 +49,8 @@ def makeTTFont():
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
-        idotbelow idotless iogonek acutecomb brevecomb ogonekcomb dotbelowcomb
+        idotaccent idotbelow idotless iogonek acutecomb brevecomb ogonekcomb
+        dotbelowcomb
     """.split()
     glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
     font = TTFont()
@@ -623,6 +624,75 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(builder.language_systems, {("cyrl", "BGR ")})
         builder.start_feature(location=None, name="test2")
         self.assertEqual(builder.language_systems, {("latn", "FRA ")})
+
+    def test_language_multiple(self):
+        builder = Builder(makeTTFont(), (None, None))
+        builder.start_feature(location=None, name="test")
+        builder.set_script(location=None, script="latn")
+        builder.set_language(
+            location=None,
+            language=["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "],
+            include_default=False,
+            required=True,
+        )
+        languages = {"AZE ", "CRT ", "KAZ ", "TAT ", "TRK "}
+        self.assertEqual(
+            builder.language_systems,
+            {("latn", language) for language in languages},
+        )
+        self.assertEqual(
+            builder.required_features_,
+            {("latn", language): "test" for language in languages},
+        )
+
+    def test_language_multiple_build(self):
+        font = self.build(
+            "feature locl {"
+            "  script latn;"
+            "  language AZE CRT KAZ TAT TRK exclude_dflt;"
+            "  sub i by idotaccent;"
+            "} locl;"
+        )
+        script_record = font["GSUB"].table.ScriptList.ScriptRecord[0]
+        self.assertEqual(script_record.ScriptTag, "latn")
+        script = script_record.Script
+        self.assertIsNone(script.DefaultLangSys)
+        self.assertEqual(
+            [record.LangSysTag for record in script.LangSysRecord],
+            ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "],
+        )
+        self.assertEqual(
+            [record.LangSys.FeatureIndex for record in script.LangSysRecord],
+            [[0], [0], [0], [0], [0]],
+        )
+
+    def test_language_multiple_equivalent_to_lookup_references(self):
+        multiple_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language AZE CRT;
+                    lookup idot {
+                        substitute i by idotaccent;
+                    } idot;
+                } locl;
+                """))
+        separate_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language AZE;
+                    lookup idot {
+                        substitute i by idotaccent;
+                    } idot;
+
+                    language CRT;
+                    lookup idot;
+                } locl;
+                """))
+
+        self.assertEqual(
+            multiple_languages["GSUB"].compile(multiple_languages),
+            separate_languages["GSUB"].compile(separate_languages),
+        )
 
     def test_language_in_aalt_feature(self):
         self.assertRaisesRegex(
