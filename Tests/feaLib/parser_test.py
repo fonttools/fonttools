@@ -662,6 +662,27 @@ class ParserTest(unittest.TestCase):
             "language AZE CRT KAZ TAT TRK exclude_dflt required;",
         )
 
+    def test_language_multiple_missing_semicolon(self):
+        # The next statement must not be read as more language tags.
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE CRT\n sub a by b;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE\n lookup foo;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE CRT\n @foo = [a b];} test;",
+        )
+
     def test_language_exclude_dflt(self):
         doc = self.parse("feature test {language DEU exclude_dflt;} test;")
         s = doc.statements[0].statements[0]
