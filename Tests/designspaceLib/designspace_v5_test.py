@@ -3,11 +3,13 @@ import shutil
 from pathlib import Path
 
 import pytest
+from fontTools import designspaceLib
 from fontTools.designspaceLib import (
     AxisDescriptor,
     AxisLabelDescriptor,
     DesignSpaceDocument,
     DiscreteAxisDescriptor,
+    getVFUserRegion,
     InstanceDescriptor,
     LocationLabelDescriptor,
     RangeAxisSubsetDescriptor,
@@ -16,7 +18,7 @@ from fontTools.designspaceLib import (
     VariableFontDescriptor,
     posix,
 )
-from fontTools.designspaceLib.types import Range, getVFUserRegion
+from fontTools.designspaceLib.types import Range
 
 from .fixtures import datadir
 
@@ -367,6 +369,10 @@ def test_partial_axis_subset_attributes(attributes, expected_region):
     region = getVFUserRegion(doc, doc.variableFonts[0])
 
     assert region["Weight"] == expected_region
+
+
+def test_get_vf_user_region_is_public():
+    assert "getVFUserRegion" in designspaceLib.__all__
 
 
 def test_read_v5_document_decovar(datadir):

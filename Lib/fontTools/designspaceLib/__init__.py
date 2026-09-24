@@ -21,6 +21,8 @@ from fontTools.misc import plistlib
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.textTools import tobytes, tostr
 
+from .types import getVFUserRegion
+
 __all__ = [
     "AxisDescriptor",
     "AxisLabelDescriptor",
@@ -30,6 +32,7 @@ __all__ = [
     "DesignSpaceDocument",
     "DesignSpaceDocumentError",
     "DiscreteAxisDescriptor",
+    "getVFUserRegion",
     "InstanceDescriptor",
     "LocationLabelDescriptor",
     "RangeAxisSubsetDescriptor",
@@ -2359,8 +2362,8 @@ class BaseDocReader(LogMixin):
             userMinimum = element.get("userminimum")
             userDefault = element.get("userdefault")
             userMaximum = element.get("usermaximum")
-            # Leave omitted fields at the descriptor defaults; consumers resolve
-            # these against the full axis bounds and default.
+            # Leave omitted fields at the descriptor defaults; getVFUserRegion
+            # resolves them against the full axis bounds and default.
             kwargs: Dict[str, Any] = {"name": name}
             if userMinimum is not None:
                 kwargs["userMinimum"] = float(userMinimum)
