@@ -306,19 +306,21 @@ class CmapSubtable(object):
 
     headerFormat = ">HHH"
 
+    cmap: dict[int, str]  #: Maps character codepoints to glyph names.
+
     @staticmethod
-    def getSubtableClass(format):
+    def getSubtableClass(format: int) -> "type[CmapSubtable]":
         """Return the subtable class for a format."""
         return cmap_classes.get(format, cmap_format_unknown)
 
     @staticmethod
-    def newSubtable(format):
+    def newSubtable(format: int) -> "CmapSubtable":
         """Return a new instance of a subtable for the given format
         ."""
         subtableClass = CmapSubtable.getSubtableClass(format)
         return subtableClass(format)
 
-    def __init__(self, format):
+    def __init__(self, format: int) -> None:
         self.format = format
         self.data = None
         self.ttFont = None
@@ -1188,7 +1190,7 @@ class cmap_format_6(CmapSubtable):
 class cmap_format_12_or_13(CmapSubtable):
     headerFormat = ">HHLLL"
 
-    def __init__(self, format):
+    def __init__(self, format: int) -> None:
         self.format = format
         self.reserved = 0
         self.data = None
@@ -1641,7 +1643,7 @@ class cmap_format_14(CmapSubtable):
 class cmap_format_unknown(CmapSubtable):
     headerFormat = ""  # the body is kept verbatim, nothing is unpacked
 
-    def __init__(self, format):
+    def __init__(self, format: int) -> None:
         CmapSubtable.__init__(self, format)
         # We can't read the subtable, so there are no mappings to offer. The raw
         # data is kept instead, and written back out as-is. fromXML() does the

@@ -1,6 +1,11 @@
+from typing import TYPE_CHECKING
+
 from fontTools import ttLib
 
-superclass = ttLib.getTableClass("hmtx")
+if TYPE_CHECKING:
+    from ._h_m_t_x import table__h_m_t_x as superclass
+else:
+    superclass = ttLib.getTableClass("hmtx")
 
 
 class table__v_m_t_x(superclass):

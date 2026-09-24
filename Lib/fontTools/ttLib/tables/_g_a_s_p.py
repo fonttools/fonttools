@@ -17,6 +17,8 @@ class table__g_a_s_p(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/gasp
     """
 
+    version: int
+
     def decompile(self, data, ttFont):
         self.version, numRanges = struct.unpack(">HH", data[:4])
         assert 0 <= self.version <= 1, "unknown 'gasp' format: %s" % self.version
