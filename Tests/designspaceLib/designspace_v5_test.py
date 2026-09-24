@@ -16,6 +16,7 @@ from fontTools.designspaceLib import (
     VariableFontDescriptor,
     posix,
 )
+from fontTools.designspaceLib.types import Range, getVFUserRegion
 
 from .fixtures import datadir
 
@@ -335,6 +336,37 @@ def test_read_v5_document_simple(datadir):
             ),
         ],
     )
+
+
+@pytest.mark.parametrize(
+    "attributes, expected_region",
+    [
+        ("", Range(100, 900, 400)),
+        ('userminimum="700"', Range(700, 900, 700)),
+        ('usermaximum="300"', Range(100, 300, 300)),
+        ('userminimum="200" usermaximum="800"', Range(200, 800, 400)),
+        ('userdefault="500"', Range(100, 900, 500)),
+    ],
+)
+def test_partial_axis_subset_attributes(attributes, expected_region):
+    doc = DesignSpaceDocument.fromstring(f"""\
+        <designspace format="5.0">
+          <axes>
+            <axis name="Weight" tag="wght" minimum="100" default="400" maximum="900"/>
+          </axes>
+          <variable-fonts>
+            <variable-font name="WeightSubset">
+              <axis-subsets>
+                <axis-subset name="Weight" {attributes}/>
+              </axis-subsets>
+            </variable-font>
+          </variable-fonts>
+        </designspace>
+        """)
+
+    region = getVFUserRegion(doc, doc.variableFonts[0])
+
+    assert region["Weight"] == expected_region
 
 
 def test_read_v5_document_decovar(datadir):

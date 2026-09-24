@@ -2359,23 +2359,16 @@ class BaseDocReader(LogMixin):
             userMinimum = element.get("userminimum")
             userDefault = element.get("userdefault")
             userMaximum = element.get("usermaximum")
-            if (
-                userMinimum is not None
-                and userDefault is not None
-                and userMaximum is not None
-            ):
-                return self.rangeAxisSubsetDescriptorClass(
-                    name=name,
-                    userMinimum=float(userMinimum),
-                    userDefault=float(userDefault),
-                    userMaximum=float(userMaximum),
-                )
-            if all(v is None for v in (userMinimum, userDefault, userMaximum)):
-                return self.rangeAxisSubsetDescriptorClass(name=name)
-
-            raise DesignSpaceDocumentError(
-                "axis-subset element must have min/max/default values or none at all."
-            )
+            # Leave omitted fields at the descriptor defaults; consumers resolve
+            # these against the full axis bounds and default.
+            kwargs: Dict[str, Any] = {"name": name}
+            if userMinimum is not None:
+                kwargs["userMinimum"] = float(userMinimum)
+            if userDefault is not None:
+                kwargs["userDefault"] = float(userDefault)
+            if userMaximum is not None:
+                kwargs["userMaximum"] = float(userMaximum)
+            return self.rangeAxisSubsetDescriptorClass(**kwargs)
 
     def readSources(self):
         for sourceCount, sourceElement in enumerate(
