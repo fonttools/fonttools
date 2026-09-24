@@ -213,7 +213,7 @@ def _extractSubSpace(
                     hidden=axis.hidden,
                     # Subset range
                     minimum=max(range.minimum, axis.minimum),
-                    default=range.default or axis.default,
+                    default=range.default,
                     maximum=min(range.maximum, axis.maximum),
                     map=[
                         (user, design)
