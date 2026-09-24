@@ -132,7 +132,11 @@ def getVFUserRegion(doc: DesignSpaceDocument, vf: VariableFontDescriptor) -> Reg
             vfUserRegion[axis.name] = Range(
                 max(axisSubset.userMinimum, axis.minimum),
                 min(axisSubset.userMaximum, axis.maximum),
-                axisSubset.userDefault or axis.default,
+                (
+                    axisSubset.userDefault
+                    if axisSubset.userDefault is not None
+                    else axis.default
+                ),
             )
         else:
             axisSubset = cast(ValueAxisSubsetDescriptor, axisSubset)
