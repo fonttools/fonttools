@@ -31,11 +31,17 @@ endofthingRE = re.compile(endofthingPat)
 commentRE = re.compile(b"%[^\n\r]*")
 
 # XXX This not entirely correct as it doesn't allow *nested* embedded parens:
+# The first alternative matches an escaped parenthesis, i.e. a backslash
+# followed by "(" or ")". The backslash has to be doubled (\\) so the regex
+# matches a literal backslash; a single backslash here reads as "\[" (an
+# escaped "[") which both mis-parses "\(" / "\)" escapes and, because "[" and
+# "]" then overlap with the surrounding [^()]* runs, makes the (a|b)* loop
+# backtrack catastrophically on an unterminated string.
 stringPat = rb"""
 	\(
 		(
 			(
-				[^()]*   \   [()]
+				[^()]*   \\   [()]
 			)
 			|
 			(
