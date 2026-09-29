@@ -1,3 +1,9 @@
+- [designspaceLib] When splitting a DesignSpace v5 document with ``makeNames=True``
+  (as ``varLib.build_many`` does), family and style names set explicitly on an
+  instance now take precedence over the ones computed from the STAT labels, in
+  all languages, and a PostScript name is no longer made up from the labels for
+  an instance that has its own style name (#4206, #3131).
+
 4.66.0 (released 2026-09-23)
 ----------------------------
 

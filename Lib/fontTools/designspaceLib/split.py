@@ -7,7 +7,7 @@ from __future__ import annotations
 import itertools
 import logging
 import math
-from typing import Any, Callable, Dict, Iterator, List, Tuple, cast
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, cast
 
 from fontTools.designspaceLib import (
     AxisDescriptor,
@@ -49,6 +49,11 @@ def defaultMakeInstanceFilename(
     familyName = instance.familyName or statNames.familyNames.get("en")
     styleName = instance.styleName or statNames.styleNames.get("en")
     return f"{familyName}-{styleName}.ttf"
+
+
+def _localisedNames(statNames: Dict[str, str], name: Optional[str]) -> Dict[str, str]:
+    """Return the localised STAT names if they translate ``name``, else nothing."""
+    return statNames if statNames.get("en") == name else {}
 
 
 def splitInterpolable(
@@ -327,8 +332,24 @@ def _extractSubSpace(
 
         if makeNames:
             statNames = getStatNames(doc, instance.getFullUserLocation(doc))
+            # Names set explicitly on the instance take precedence over the
+            # ones computed from the STAT labels, in every language: the
+            # localised STAT names only apply when they translate the English
+            # name that is actually used, and a PostScript name is only made
+            # up for an instance that has no style name of its own.
             familyName = instance.familyName or statNames.familyNames.get("en")
             styleName = instance.styleName or statNames.styleNames.get("en")
+            localisedFamilyName = instance.localisedFamilyName or _localisedNames(
+                statNames.familyNames, familyName
+            )
+            localisedStyleName = instance.localisedStyleName or _localisedNames(
+                statNames.styleNames, styleName
+            )
+            postScriptFontName = instance.postScriptFontName
+            if postScriptFontName is None and not (
+                instance.styleName or instance.localisedStyleName
+            ):
+                postScriptFontName = statNames.postScriptFontName
             subDoc.addInstance(
                 InstanceDescriptor(
                     filename=instance.filename
@@ -342,16 +363,13 @@ def _extractSubSpace(
                     ),
                     familyName=familyName,
                     styleName=styleName,
-                    postScriptFontName=instance.postScriptFontName
-                    or statNames.postScriptFontName,
+                    postScriptFontName=postScriptFontName,
                     styleMapFamilyName=instance.styleMapFamilyName
                     or statNames.styleMapFamilyNames.get("en"),
                     styleMapStyleName=instance.styleMapStyleName
                     or statNames.styleMapStyleName,
-                    localisedFamilyName=instance.localisedFamilyName
-                    or statNames.familyNames,
-                    localisedStyleName=instance.localisedStyleName
-                    or statNames.styleNames,
+                    localisedFamilyName=localisedFamilyName,
+                    localisedStyleName=localisedStyleName,
                     localisedStyleMapFamilyName=instance.localisedStyleMapFamilyName
                     or statNames.styleMapFamilyNames,
                     localisedStyleMapStyleName=instance.localisedStyleMapStyleName
