@@ -1,3 +1,6 @@
+4.66.1 (released 2026-09-29)
+----------------------------
+
 - [designspaceLib] When splitting a DesignSpace v5 document with ``makeNames=True``
   (as ``varLib.build_many`` does), family and style names set explicitly on an
   instance now take precedence over the ones computed from the STAT labels, in
