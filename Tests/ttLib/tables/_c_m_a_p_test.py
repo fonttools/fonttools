@@ -190,6 +190,20 @@ class CmapSubtableTest(unittest.TestCase):
             font.setGlyphOrder([".notdef"])
             data = subtable.compile(font)
 
+    def test_compile_2_high_gids(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef"] + ["glyph%05d" % i for i in range(1, 65536)])
+        for gids in [(32767,), (32768,), (32769,), (40000, 40001), (65535,)]:
+            with self.subTest(gids=gids):
+                subtable = self.makeSubtable(2, 1, 1, 0)
+                subtable.cmap = {
+                    0x8140 + i: "glyph%05d" % gid for i, gid in enumerate(gids)
+                }
+                data = subtable.compile(font)
+                subtable2 = CmapSubtable.newSubtable(2)
+                subtable2.decompile(data, font)
+                self.assertEqual(subtable2.cmap, subtable.cmap)
+
     def test_compile_decompile_4_empty(self):
         subtable = self.makeSubtable(4, 3, 1, 0)
         subtable.cmap = {}

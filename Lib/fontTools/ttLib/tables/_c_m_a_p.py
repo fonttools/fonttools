@@ -508,7 +508,7 @@ class cmap_format_2(CmapSubtable):
         # negative number to an unsigned short.
 
         if minGI > 1:
-            if minGI > 0x7FFF:
+            if minGI > 0x8000:
                 subHeader.idDelta = -(0x10000 - minGI) - 1
             else:
                 subHeader.idDelta = minGI - 1
@@ -516,7 +516,7 @@ class cmap_format_2(CmapSubtable):
             for i in range(subHeader.entryCount):
                 gid = subHeader.glyphIndexArray[i]
                 if gid > 0:
-                    subHeader.glyphIndexArray[i] = gid - idDelta
+                    subHeader.glyphIndexArray[i] = (gid - idDelta) & 0xFFFF
 
     def decompile(self, data, ttFont):
         # we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
