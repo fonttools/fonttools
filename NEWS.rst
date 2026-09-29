@@ -2,7 +2,13 @@
   (as ``varLib.build_many`` does), family and style names set explicitly on an
   instance now take precedence over the ones computed from the STAT labels, in
   all languages, and a PostScript name is no longer made up from the labels for
-  an instance that has its own style name (#4206, #3131).
+  an instance that has its own style name (#3131, #4206, #4208).
+- [cmap] Decompiling a format 4 subtable whose ``idRangeOffset`` points outside
+  ``glyphIndexArray`` now raises ``TTLibError``. A negative index used to silently
+  map the code point to the wrong glyph, and one past the end raised a bare
+  ``AssertionError`` (#4209).
+- [cmap] Fix compiling a format 2 subtable when the lowest glyph ID in a lead-byte
+  row is 32768 or higher, which failed with ``struct.error`` (#4210).
 
 4.66.0 (released 2026-09-23)
 ----------------------------
