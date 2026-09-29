@@ -977,10 +977,13 @@ class cmap_format_4(CmapSubtable):
                 gids = []
                 for charCode in rangeCharCodes:
                     index = charCode + partial
-                    assert index < lenGIArray, (
-                        "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array is not less than the length of the array (%d) !"
-                        % (i, index, lenGIArray)
-                    )
+                    # a negative index would wrap around to the end of the array
+                    if not 0 <= index < lenGIArray:
+                        raise TTLibError(
+                            "cmap format 4 subtable: glyph index array offset %d "
+                            "out of range [0, %d) in segment %d"
+                            % (index, lenGIArray, i)
+                        )
                     if glyphIndexArray[index] != 0:  # if not missing glyph
                         glyphID = glyphIndexArray[index] + delta
                     else:
