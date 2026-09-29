@@ -977,13 +977,7 @@ class cmap_format_4(CmapSubtable):
                 gids = []
                 for charCode in rangeCharCodes:
                     index = charCode + partial
-                    # A too-small idRangeOffset points before glyphIndexArray
-                    # (into idRangeOffset itself) and makes index negative; a
-                    # too-large one points past the end. The former used to
-                    # index the array from the wrong end and silently mapped
-                    # the code point to an attacker-chosen glyph, the latter
-                    # tripped a bare assert (dropped under python -O). Reject
-                    # both, like the header checks above.
+                    # a negative index would wrap around to the end of the array
                     if not 0 <= index < lenGIArray:
                         raise TTLibError(
                             "cmap format 4 subtable: glyph index array offset %d "

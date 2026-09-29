@@ -381,12 +381,8 @@ class CmapSubtableTest(unittest.TestCase):
         self.assertEqual(cmap, {0x41: "a", 0x42: "d", 0x43: "c"})
 
     def test_decompile_4_idRangeOffset_out_of_bounds(self):
-        # rangeOffset points into glyphIndexArray from the segment's own
-        # idRangeOffset entry; too small a value lands before the array (the
-        # computed index goes negative and used to wrap round to map the code
-        # point to an arbitrary glyph), too large a value lands past the end
-        # (which used to trip a bare assert, dropped under python -O). Both
-        # are rejected now.
+        # rangeOffset is in bytes from the segment's own idRangeOffset entry:
+        # 2 lands before glyphIndexArray, 0xFFF0 lands past its end.
         for rangeOffset in (2, 0xFFF0):
             with self.subTest(rangeOffset=rangeOffset):
                 with self.assertRaises(TTLibError):
