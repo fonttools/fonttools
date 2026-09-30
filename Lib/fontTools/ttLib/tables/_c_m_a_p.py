@@ -740,6 +740,10 @@ class cmap_format_2(CmapSubtable):
 
         # fix GI's and iDelta of last subheader that we we added to the subheader array.
         self.setIDDelta(subHeader)
+        if lastFirstByte == 0:
+            for index in range(subHeader.entryCount):
+                charCode = subHeader.firstCode + index
+                subHeaderKeys[charCode] = 0
 
         # Now we add a final subheader for the subHeaderKeys which maps to empty two byte charcode ranges.
         subHeader = SubHeader()
