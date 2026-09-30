@@ -30,19 +30,21 @@ endofthingPat = bytesjoin([b"[^][(){}<>/%", whitespace, b"]*"])
 endofthingRE = re.compile(endofthingPat)
 commentRE = re.compile(b"%[^\n\r]*")
 
+# A backslash consumes whatever byte follows it (a newline included, since
+# backslash-newline is a line continuation inside a string), so "\(" and "\)"
+# neither open nor close a paren pair and "\\" is a literal backslash that
+# doesn't escape the next byte. One level of balanced embedded parens is
+# allowed.
 # XXX This not entirely correct as it doesn't allow *nested* embedded parens:
 stringPat = rb"""
 	\(
-		(
-			(
-				[^()]*   \   [()]
-			)
+		(?:
+			[^()\\]
 			|
-			(
-				[^()]*  \(   [^()]*  \)
-			)
+			\\[\s\S]
+			|
+			\(  (?: [^()\\] | \\[\s\S] )*  \)
 		)*
-		[^()]*
 	\)
 """
 stringPat = b"".join(stringPat.split())
