@@ -186,6 +186,31 @@ def test_optional_min_max(unbounded_condition):
     assert len(list(splitVariableFonts(doc))) == 1
 
 
+def test_split_variable_font_preserves_zero_axis_default():
+    doc = DesignSpaceDocument.fromstring("""\
+        <designspace format="5.0">
+          <axes>
+            <axis name="Weight" tag="wght" minimum="-100" default="50" maximum="100"/>
+          </axes>
+          <variable-fonts>
+            <variable-font name="WeightSubset">
+              <axis-subsets>
+                <axis-subset name="Weight" userminimum="-20" userdefault="0" usermaximum="20"/>
+              </axis-subsets>
+            </variable-font>
+          </variable-fonts>
+        </designspace>
+        """)
+
+    name, subDoc = next(splitVariableFonts(doc))
+
+    assert name == "WeightSubset"
+    axis = subDoc.getAxis("Weight")
+    assert axis.minimum == -20
+    assert axis.default == 0
+    assert axis.maximum == 20
+
+
 @pytest.mark.parametrize(
     ["condition", "expected_set"],
     [

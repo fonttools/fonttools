@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, cast
 
-from fontTools.designspaceLib import (
-    AxisDescriptor,
-    DesignSpaceDocument,
-    DesignSpaceDocumentError,
-    RangeAxisSubsetDescriptor,
-    SimpleLocationDict,
-    ValueAxisSubsetDescriptor,
-    VariableFontDescriptor,
-)
+if TYPE_CHECKING:
+    from fontTools.designspaceLib import (
+        AxisDescriptor,
+        DesignSpaceDocument,
+        RangeAxisSubsetDescriptor,
+        SimpleLocationDict,
+        ValueAxisSubsetDescriptor,
+        VariableFontDescriptor,
+    )
 
 
 def clamp(value, minimum, maximum):
@@ -89,6 +89,8 @@ def regionInRegion(region: Region, superRegion: Region) -> bool:
 
 
 def userRegionToDesignRegion(doc: DesignSpaceDocument, userRegion: Region) -> Region:
+    from fontTools.designspaceLib import DesignSpaceDocumentError
+
     designRegion = {}
     for name, value in userRegion.items():
         axis = doc.getAxis(name)
@@ -108,6 +110,23 @@ def userRegionToDesignRegion(doc: DesignSpaceDocument, userRegion: Region) -> Re
 
 
 def getVFUserRegion(doc: DesignSpaceDocument, vf: VariableFontDescriptor) -> Region:
+    """Return the user-space region covered by a variable font.
+
+    Omitted bounds inherit the axis limits. An omitted default inherits the
+    axis default; inherited or explicit defaults are clamped to the subset.
+    Axes not listed in ``vf.axisSubsets`` are fixed at their default location.
+    Value subsets resolve to a single location.
+
+    Raises :class:`DesignSpaceDocumentError` if a subset refers to a missing
+    axis or selects a range on a discrete axis.
+    """
+    from fontTools.designspaceLib import (
+        AxisDescriptor,
+        DesignSpaceDocumentError,
+        RangeAxisSubsetDescriptor,
+        ValueAxisSubsetDescriptor,
+    )
+
     vfUserRegion: Region = {}
     # For each axis, 2 cases:
     #  - it has a range = it's an axis in the VF DS
@@ -132,7 +151,11 @@ def getVFUserRegion(doc: DesignSpaceDocument, vf: VariableFontDescriptor) -> Reg
             vfUserRegion[axis.name] = Range(
                 max(axisSubset.userMinimum, axis.minimum),
                 min(axisSubset.userMaximum, axis.maximum),
-                axisSubset.userDefault or axis.default,
+                (
+                    axisSubset.userDefault
+                    if axisSubset.userDefault is not None
+                    else axis.default
+                ),
             )
         else:
             axisSubset = cast(ValueAxisSubsetDescriptor, axisSubset)
