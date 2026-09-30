@@ -36,6 +36,18 @@ class PSStringTokenTest:
         # close it. The whole literal is returned as a single string token.
         assert tokenize(buf) == [("do_string", buf.decode("ascii"))]
 
+    def test_even_backslash_run_before_open_paren(self):
+        # "\\" is an escaped backslash, so the "(" after it is a real paren
+        # that opens a nested pair; the whole literal is one string token.
+        assert tokenize(rb"(a\\(b)c)") == [("do_string", r"(a\\(b)c)")]
+
+    def test_even_backslash_run_before_close_paren(self):
+        # Likewise the ")" after "\\" is the real closing paren, so the
+        # tokenizer must stop there rather than read on to the next ")".
+        tokenizer = PSTokenizer(rb"(a\\) rest)")
+        assert tokenizer.getnexttoken() == ("do_string", r"(a\\)")
+        assert tokenizer.getnexttoken() == ("", "rest")
+
     def test_unterminated_string_is_rejected_quickly(self):
         # A string that is never closed used to make the tokenizer regex
         # backtrack catastrophically; make sure it fails fast instead.
