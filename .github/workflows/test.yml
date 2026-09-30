@@ -98,7 +98,8 @@ jobs:
     - name: Set up Python pypy3
       uses: actions/setup-python@v7
       with:
-        python-version: "pypy-3.11"
+        # PyPy 8 has no lxml and uharfbuzz wheels yet
+        python-version: "pypy-3.11-v7.3.x"
     - name: Install packages
       run: pip install tox
     - name: Run Tox
