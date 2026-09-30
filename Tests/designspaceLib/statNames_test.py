@@ -16,6 +16,19 @@ def test_instance_getStatNames(datadir):
     )
 
 
+def test_instance_getStatNames_no_style_links(datadir):
+    """Tests that without style linking in the DS, all styleMapStyleNames are
+    `regular`.
+
+    This is not necessarily a feature, just the code following orders.
+    """
+    doc = DesignSpaceDocument.fromfile(datadir / "test_v5_sourceserif.designspace")
+
+    for instance in doc.instances:
+        location = instance.getFullUserLocation(doc)
+        assert getStatNames(doc, location).styleMapStyleName == "regular"
+
+
 def test_not_all_ordering_specified_and_translations(datadir):
     doc = DesignSpaceDocument.fromfile(datadir / "test_v5.designspace")
 
@@ -44,12 +57,30 @@ def test_not_all_ordering_specified_and_translations(datadir):
 def test_detect_ribbi_aktiv(datadir):
     doc = DesignSpaceDocument.fromfile(datadir / "test_v5_aktiv.designspace")
 
+    # The default location has all names elided, so getStatNames must fall back
+    # to the fallback.
+    assert getStatNames(doc, doc.newDefaultLocation()) == StatNames(
+        familyNames={"en": "Aktiv Grotesk"},
+        styleNames={"en": "Regular"},
+        postScriptFontName="AktivGrotesk-Regular",
+        styleMapFamilyNames={"en": "Aktiv Grotesk"},
+        styleMapStyleName="regular",
+    )
+
     assert getStatNames(doc, {"Weight": 600, "Width": 125, "Italic": 1}) == StatNames(
         familyNames={"en": "Aktiv Grotesk"},
         styleNames={"en": "Ex SemiBold Italic"},
         postScriptFontName="AktivGrotesk-ExSemiBoldItalic",
         styleMapFamilyNames={"en": "Aktiv Grotesk Ex SemiBold"},
         styleMapStyleName="italic",
+    )
+
+    assert getStatNames(doc, {"Weight": 700, "Width": 100, "Italic": 0}) == StatNames(
+        familyNames={"en": "Aktiv Grotesk"},
+        styleNames={"en": "Bold"},
+        postScriptFontName="AktivGrotesk-Bold",
+        styleMapFamilyNames={"en": "Aktiv Grotesk"},
+        styleMapStyleName="bold",
     )
 
     assert getStatNames(doc, {"Weight": 700, "Width": 75, "Italic": 1}) == StatNames(
