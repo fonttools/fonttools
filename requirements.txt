@@ -19,5 +19,6 @@ pyobjc==12.2.2; sys_platform == "darwin"
 freetype-py==2.5.1
 uharfbuzz==0.52.0
 glyphsLib==6.12.4 # this is only required to run Tests/varLib/interpolatable_test.py
-lxml==6.1.3
+# lxml has no PyPy 8 wheels yet, and tox refuses to build it from source
+lxml==6.1.3; platform_python_implementation != "PyPy" or implementation_version < "8"
 sympy==1.14.0
