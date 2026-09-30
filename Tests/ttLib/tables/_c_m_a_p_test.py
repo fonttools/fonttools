@@ -205,6 +205,19 @@ class CmapSubtableTest(unittest.TestCase):
                 subtable2.decompile(data, font)
                 self.assertEqual(subtable2.cmap, subtable.cmap)
 
+    def test_compile_2_single_byte_only(self):
+        # https://github.com/fonttools/fonttools/issues/1524
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b"])
+        for cmap in [{0x20: "a"}, {0x41: "a", 0x42: "b"}, {0xFF: "b"}]:
+            with self.subTest(cmap=cmap):
+                subtable = self.makeSubtable(2, 1, 1, 0)
+                subtable.cmap = cmap
+                data = subtable.compile(font)
+                subtable2 = CmapSubtable.newSubtable(2)
+                subtable2.decompile(data, font)
+                self.assertEqual(subtable2.cmap, subtable.cmap)
+
     def test_compile_decompile_4_empty(self):
         subtable = self.makeSubtable(4, 3, 1, 0)
         subtable.cmap = {}
