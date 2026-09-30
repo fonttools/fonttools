@@ -778,7 +778,9 @@ class FontBuilder(object):
         for glyph in glyphTable.glyphs.values():
             glyph.recalcBounds(glyphTable)
 
-    def setupHorizontalMetrics(self, metrics: Mapping[str, tuple[float, float]]) -> None:
+    def setupHorizontalMetrics(
+        self, metrics: Mapping[str, tuple[float, float]]
+    ) -> None:
         """Create a new `hmtx` table, for horizontal metrics.
 
         The `metrics` argument must be a dict, mapping glyph names to
@@ -794,7 +796,9 @@ class FontBuilder(object):
         """
         self.setupMetrics("vmtx", metrics)
 
-    def setupMetrics(self, tableTag: str, metrics: Mapping[str, tuple[float, float]]) -> None:
+    def setupMetrics(
+        self, tableTag: str, metrics: Mapping[str, tuple[float, float]]
+    ) -> None:
         """See `setupHorizontalMetrics()` and `setupVerticalMetrics()`."""
         assert tableTag in ("hmtx", "vmtx")
         mtxTable = self.font[tableTag] = newTable(tableTag)

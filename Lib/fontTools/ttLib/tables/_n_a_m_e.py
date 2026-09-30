@@ -192,7 +192,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
                     return name
         return None
 
-    def setName(self, string: str | bytes,
+    def setName(
+        self,
+        string: str | bytes,
         nameID: int,
         platformID: int,
         platEncID: int,

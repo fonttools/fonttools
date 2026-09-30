@@ -369,7 +369,9 @@ def cleanupBox(box):
 #
 
 
-def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag: str | Iterable[str] = "rvrn"):
+def addFeatureVariationsRaw(
+    font, table, conditionalSubstitutions, featureTag: str | Iterable[str] = "rvrn"
+):
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 

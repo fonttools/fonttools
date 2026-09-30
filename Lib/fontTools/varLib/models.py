@@ -328,7 +328,9 @@ class VariationModel(object):
         return subModel, subList(key, items)
 
     @staticmethod
-    def computeAxisRanges(locations: list[dict[str, float]]) -> dict[str, tuple[float, float]]:
+    def computeAxisRanges(
+        locations: list[dict[str, float]],
+    ) -> dict[str, tuple[float, float]]:
         axisRanges: dict[str, tuple[float, float]] = {}
         allAxes = {axis for loc in locations for axis in loc.keys()}
         for loc in locations:
