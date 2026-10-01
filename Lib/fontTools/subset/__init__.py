@@ -2962,7 +2962,7 @@ def subset_glyphs(self, s):
 
 
 @_add_method(ttLib.getTableModule("glyf").Glyph)
-def remapComponentsFast(self, glyphidmap):
+def remapComponentsFast(self, glyphidmap, extended=False):
     if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
         return  # Not composite
     data = self.data = bytearray(self.data)
@@ -2970,12 +2970,14 @@ def remapComponentsFast(self, glyphidmap):
     more = 1
     while more:
         flags = (data[i] << 8) | data[i + 1]
-        glyphID = (data[i + 2] << 8) | data[i + 3]
+        glyphIDSize = 3 if extended and flags & 0x2000 else 2  # GID_IS_24_BIT
+        glyphIDStart = i + 2
+        glyphIDEnd = glyphIDStart + glyphIDSize
+        glyphID = int.from_bytes(data[glyphIDStart:glyphIDEnd], "big")
         # Remap
         glyphID = glyphidmap[glyphID]
-        data[i + 2] = glyphID >> 8
-        data[i + 3] = glyphID & 0xFF
-        i += 4
+        data[glyphIDStart:glyphIDEnd] = glyphID.to_bytes(glyphIDSize, "big")
+        i = glyphIDEnd
         flags = int(flags)
 
         if flags & 0x0001:
@@ -3026,7 +3028,7 @@ def subset_glyphs(self, s):
         glyphmap = {o: n for n, o in enumerate(indices)}
         for v in self.glyphs.values():
             if hasattr(v, "data"):
-                v.remapComponentsFast(glyphmap)
+                v.remapComponentsFast(glyphmap, extended=self.extended)
     Glyph = ttLib.getTableModule("glyf").Glyph
     for g in s.glyphs_emptied:
         self.glyphs[g] = Glyph()

@@ -8,6 +8,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.subset.svg import etree
@@ -1524,6 +1525,35 @@ def test_subset_empty_glyf(tmp_path, ttf_path):
 
     loca = subset_font["loca"]
     assert all(loc == 0 for loc in loca)
+
+
+def test_subset_remaps_24bit_glyf_component():
+    glyph_order = [".notdef"] + [None] * 0xFFFF + ["component", "composite"]
+    glyf = newTable("GLYF")
+    glyf.glyphOrder = glyph_order
+    glyf.glyphs = {}
+
+    for name in (".notdef", "component"):
+        glyph = glyf.glyphs[name] = Glyph()
+        glyph.data = b""
+    composite = glyf.glyphs["composite"] = Glyph()
+    composite.data = (
+        b"\xff\xff"  # numberOfContours
+        b"\0\0\0\0\0\0\0\0"  # bounds
+        b"\x20\x02"  # GID_IS_24_BIT | ARGS_ARE_XY_VALUES
+        b"\x01\x00\x00"  # component glyph ID 0x10000
+        b"\0\0"  # x, y
+    )
+
+    subsetter = subset.Subsetter()
+    subsetter.glyphs = {".notdef", "component", "composite"}
+    subsetter.glyphs_emptied = frozenset()
+
+    glyf.subset_glyphs(subsetter)
+
+    assert glyf.glyphOrder == [".notdef", "component", "composite"]
+    assert composite.data[12:15] == b"\0\0\x01"
+    assert composite.getComponentNames(glyf) == ["component"]
 
 
 @pytest.fixture
