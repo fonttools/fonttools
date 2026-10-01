@@ -322,7 +322,8 @@ class FontBuilder(object):
         with existing TrueType implementations.
 
         If `beyond64k` is True, FontBuilder will create the uppercase companion
-        table family where the OpenType beyond-64k specification defines one.
+        table family where the Open Font Format beyond-64k specification defines
+        one.
 
         If `font` is given, it must be a `TTFont` instance and `unitsPerEm`
         must _not_ be given. The `isTTF` argument will be ignored.

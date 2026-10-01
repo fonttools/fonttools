@@ -1,6 +1,6 @@
-"""Convert between OpenType beyond-64k companion tables.
+"""Convert between Open Font Format beyond-64k companion tables.
 
-The OpenType beyond-64k specification adds uppercase companion tables and
+The Open Font Format beyond-64k specification adds uppercase companion tables and
 extended Layout formats that can address glyph IDs above 65535. This module
 provides helpers to convert a :class:`fontTools.ttLib.TTFont` in place between
 the compact lowercase table family and the extended uppercase table family.
