@@ -822,7 +822,7 @@ class FontBuilder(object):
             dict(VOriginRecords={}, defaultVertOriginY=defaultVerticalOrigin),
         )
         vorgTable = self.font["VORG"]
-        vorgTable.majorVersion = 1
+        vorgTable.majorVersion = 2 if self.beyond64k else 1
         vorgTable.minorVersion = 0
         for gn in verticalOrigins:
             vorgTable[gn] = verticalOrigins[gn]

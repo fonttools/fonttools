@@ -49,7 +49,14 @@ _TABLE_IDENTITIES = {
     tag: lower for lower, upper in _TABLE_PAIRS.items() for tag in (lower, upper)
 }
 _TABLE_IDENTITIES.update(
-    {"BASE": "BASE", "GDEF": "GDEF", "GPOS": "GPOS", "GSUB": "GSUB", "JSTF": "JSTF"}
+    {
+        "BASE": "BASE",
+        "GDEF": "GDEF",
+        "GPOS": "GPOS",
+        "GSUB": "GSUB",
+        "JSTF": "JSTF",
+        "VORG": "VORG",
+    }
 )
 
 
@@ -447,6 +454,16 @@ def _lower_layout_header(font, table, overwrite):
     _convert_layout_formats(table, False)
 
 
+def _upper_vorg(font, table, overwrite):
+    table.majorVersion = 2
+    table.minorVersion = 0
+
+
+def _lower_vorg(font, table, overwrite):
+    table.majorVersion = 1
+    table.minorVersion = 0
+
+
 _UPPER_TABLES = {
     **{
         source: _TableConversion(destination)
@@ -457,6 +474,7 @@ _UPPER_TABLES = {
     "GSUB": _TableConversion("GSUB", _upper_layout_header),
     "GPOS": _TableConversion("GPOS", _upper_layout_header),
     "JSTF": _TableConversion("JSTF", _upper_jstf),
+    "VORG": _TableConversion("VORG", _upper_vorg),
 }
 _LOWER_TABLES = {
     **{upper: _TableConversion(lower) for lower, upper in _TABLE_PAIRS.items()},
@@ -465,6 +483,7 @@ _LOWER_TABLES = {
     "GSUB": _TableConversion("GSUB", _lower_layout_header),
     "GPOS": _TableConversion("GPOS", _lower_layout_header),
     "JSTF": _TableConversion("JSTF", _lower_jstf),
+    "VORG": _TableConversion("VORG", _lower_vorg),
 }
 
 
@@ -514,6 +533,13 @@ def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -
     if "VHEA" in conversions and "VHEA" in font:
         if font["VHEA"].numberOfVMetrics > 0xFFFF:
             raise ValueError("VHEA.numberOfVMetrics does not fit in vhea")
+    if "VORG" in conversions and "VORG" in font:
+        vorg = font["VORG"]
+        if len(vorg.VOriginRecords) > 0xFFFF:
+            raise ValueError("VORG record count does not fit in version 1")
+        for glyph_name in vorg.VOriginRecords:
+            if font.getGlyphID(glyph_name) > 0xFFFF:
+                raise ValueError(f"VORG glyph {glyph_name!r} does not fit in version 1")
     _validate_cmap_uvs_lowering(font)
 
 

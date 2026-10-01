@@ -894,6 +894,35 @@ def test_lower_rejects_large_component_glyph_id():
         lower_tables(font, tables={"glyf"}, validate=False)
 
 
+def test_vorg_version_conversion():
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "glyph"])
+    font["VORG"] = newTable("VORG")
+    font["VORG"].majorVersion = 1
+    font["VORG"].minorVersion = 0
+    font["VORG"].defaultVertOriginY = 880
+    font["VORG"].VOriginRecords = {"glyph": 861}
+
+    upper_tables(font, tables={"VORG"})
+    assert (font["VORG"].majorVersion, font["VORG"].minorVersion) == (2, 0)
+
+    lower_tables(font, tables={"VORG"})
+    assert (font["VORG"].majorVersion, font["VORG"].minorVersion) == (1, 0)
+
+
+def test_lower_rejects_large_vorg_glyph_id():
+    font = TTFont()
+    font["VORG"] = newTable("VORG")
+    font["VORG"].majorVersion = 2
+    font["VORG"].minorVersion = 0
+    font["VORG"].defaultVertOriginY = 880
+    font["VORG"].VOriginRecords = {"highGlyph": 861}
+    font.getGlyphID = lambda glyph_name: 0x10000
+
+    with pytest.raises(ValueError, match="does not fit"):
+        lower_tables(font, tables={"VORG"})
+
+
 def test_layout_header_round_trip():
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
