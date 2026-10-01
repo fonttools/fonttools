@@ -33,7 +33,7 @@ def test_extended_layout_header_fields():
 
 def test_extended_context_count_exceptions():
     # These counts remain 16-bit despite the surrounding extended offsets and
-    # glyph IDs. This matches the corrected model implemented by HarfBuzz.
+    # glyph IDs.
     for name in (
         "BacktrackGlyphCount",
         "InputGlyphCount",

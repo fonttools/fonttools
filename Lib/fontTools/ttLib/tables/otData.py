@@ -227,10 +227,7 @@ otData = [
             ),
         ],
     ),
-    # As of June 2026, the proposed GSUB/GPOS v1.2 spec points LookupList2 to
-    # a LookupList. With feedback, we widen the per-lookup offsets from
-    # Offset16 to Offset32 as well; otherwise, LookupList2 is not suitable for
-    # beyond-64k fonts.
+    # LookupList2 widens its per-lookup offsets from Offset16 to Offset32.
     (
         "LookupList2",
         [
@@ -515,7 +512,7 @@ otData = [
             FieldSpec(
                 "Version",
                 "Version",
-                description="Version of the GPOS table- 0x00010000 or 0x00010001",
+                description="Version of the GPOS table- 0x00010000, 0x00010001, or 0x00010002",
             ),
             FieldSpec(
                 "Offset",
@@ -1808,7 +1805,7 @@ otData = [
             FieldSpec(
                 "Version",
                 "Version",
-                description="Version of the GSUB table- 0x00010000 or 0x00010001",
+                description="Version of the GSUB table- 0x00010000, 0x00010001, or 0x00010002",
             ),
             FieldSpec(
                 "Offset",
@@ -3076,8 +3073,7 @@ otData = [
                 aux=0,
                 description="Offset to Coverage table-from beginning of Substitution table",
             ),
-            # The published spec says uint24. Keep this uint16 to match the
-            # corrected chained-coverage count model implemented by HarfBuzz.
+            # Sequence counts remain 16-bit in the extended format.
             FieldSpec(
                 "uint16",
                 "BacktrackGlyphCount",
@@ -3125,7 +3121,7 @@ otData = [
             FieldSpec(
                 "Version",
                 "Version",
-                description="Version of the GDEF table- 0x00010000, 0x00010002, or 0x00010003",
+                description="Version of the GDEF table- 0x00010000, 0x00010002, 0x00010003, or 0x00010004",
             ),
             FieldSpec(
                 "Offset",
