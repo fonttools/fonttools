@@ -140,7 +140,16 @@ class ClassDefTest(unittest.TestCase):
         rawTable = table.preWrite(self.font)
         self.assertEqual(table.Format, 3)
         self.assertEqual(rawTable["ClassValueArray"], [1, 2])
-        self.assertEqual(compileTable(table, self.font), "000301000000000200010002")
+        self.assertEqual(compileTable(table, self.font), "0003010000000002000001000002")
+
+    def test_preWrite_format3_large_classes(self):
+        font = FakeFont(["a", "b"])
+        table = otTables.ClassDef()
+        table.classDefs = {"a": 0x10000, "b": 0xFFFFFF}
+        rawTable = table.preWrite(font)
+        self.assertEqual(table.Format, 3)
+        self.assertEqual(rawTable["ClassValueArray"], [0x10000, 0xFFFFFF])
+        self.assertEqual(compileTable(table, font), "0003000000000002010000ffffff")
 
     def test_preWrite_format4(self):
         table = otTables.ClassDef()

@@ -438,7 +438,7 @@ otData = [
                 "uint24", "GlyphCount", description="Size of the ClassValueArray"
             ),
             FieldSpec(
-                "uint16",
+                "uint24",
                 "ClassValueArray",
                 repeat="GlyphCount",
                 aux=0,

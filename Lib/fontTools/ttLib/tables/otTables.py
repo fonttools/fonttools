@@ -1435,14 +1435,22 @@ class ClassDef(FormatSwitchingBaseTable):
             startGlyph = ranges[0][1]
             endGlyph = ranges[-1][3]
             glyphCount = endGlyph - startGlyph + 1
-            extended = font.hasExtendedGlyphIDs() and (
+            maxClass = max(cls for cls, *_ in ranges)
+            extended = (
                 startGlyph > 0xFFFF
                 or endGlyph > 0xFFFF
                 or glyphCount > 0xFFFF
                 or len(ranges) > 0xFFFF
+                or maxClass > 0xFFFF
             )
-            rangeSize = (5 + len(ranges) * 8) if extended else (4 + len(ranges) * 6)
-            arraySize = (8 + glyphCount * 2) if extended else (6 + glyphCount * 2)
+            rangeSize = 4 + len(ranges) * 6
+            if extended:
+                rangeSize = (
+                    5 + len(ranges) * 8
+                    if maxClass <= 0xFFFF
+                    else float("inf")
+                )
+            arraySize = (8 + glyphCount * 3) if extended else (6 + glyphCount * 2)
             if rangeSize < arraySize:
                 # Range format is more compact.
                 for i, (cls, start, startName, end, endName) in enumerate(ranges):
