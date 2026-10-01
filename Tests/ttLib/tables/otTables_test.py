@@ -180,6 +180,59 @@ def test_VarIdxMap_format0_roundtrip():
     assert not hasattr(table2, "Format")
 
 
+def test_FeatureVariations_version_1_1_roundtrip():
+    condition = otTables.ConditionTable()
+    condition.Format = 1
+    condition.AxisIndex = 1
+    condition.FilterRangeMinValue = -0.5
+    condition.FilterRangeMaxValue = 0.75
+
+    lookupIndices = otTables.LookupIndexList()
+    lookupIndices.LookupIndex = [3, 5]
+    lookupIndices.LookupIndexCount = len(lookupIndices.LookupIndex)
+
+    lookupCondition = otTables.LookupConditionRecord()
+    lookupCondition.ConditionTable = condition
+    lookupCondition.LookupIndexList = lookupIndices
+
+    featureLookups = otTables.FeatureLookupsTable()
+    featureLookups.Version = 0x00010000
+    featureLookups.Flags = 1
+    featureLookups.LookupConditionRecord = [lookupCondition]
+    featureLookups.LookupConditionCount = len(featureLookups.LookupConditionRecord)
+
+    lookupVariation = otTables.LookupVariationRecord()
+    lookupVariation.FeatureIndex = 2
+    lookupVariation.FeatureLookupsTable = featureLookups
+
+    table = otTables.FeatureVariations()
+    table.Version = 0x00010001
+    table.FeatureVariationRecord = []
+    table.FeatureVariationCount = 0
+    table.LookupVariationRecord = [lookupVariation]
+    table.LookupVariationCount = len(table.LookupVariationRecord)
+
+    data = compileTable(table, FakeFont([]))
+    assert data == (
+        "000100010000000000000001000200000012"
+        "00010000000100000001000000120000001a"
+        "00010001e0003000000200030005"
+    )
+
+    roundtripped = decompileTable(otTables.FeatureVariations(), data, FakeFont([]))
+    assert roundtripped.Version == 0x00010001
+    assert roundtripped.FeatureVariationCount == 0
+    assert roundtripped.LookupVariationCount == 1
+    record = roundtripped.LookupVariationRecord[0]
+    assert record.FeatureIndex == 2
+    assert record.FeatureLookupsTable.Flags == 1
+    lookupCondition = record.FeatureLookupsTable.LookupConditionRecord[0]
+    assert lookupCondition.ConditionTable.AxisIndex == 1
+    assert lookupCondition.ConditionTable.FilterRangeMinValue == -0.5
+    assert lookupCondition.ConditionTable.FilterRangeMaxValue == 0.75
+    assert lookupCondition.LookupIndexList.LookupIndex == [3, 5]
+
+
 def test_VarIdxMap_format1_beyond_64k():
     # 65537 glyphs; only the highest (gid 0x10000 > 0xFFFF) varies, so the map
     # cannot be trimmed below 65536 entries and must use Format 1.

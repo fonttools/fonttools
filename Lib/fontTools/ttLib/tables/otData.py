@@ -4090,6 +4090,20 @@ otData = [
                 aux=0,
                 description="Array of FeatureVariationRecord",
             ),
+            FieldSpec(
+                "uint32",
+                "LookupVariationCount",
+                aux="Version >= 0x00010001",
+                description="Number of records in the LookupVariationRecord array",
+            ),
+            FieldSpec(
+                "struct",
+                "LookupVariationRecord",
+                repeat="LookupVariationCount",
+                aux=0,
+                condition="Version >= 0x00010001",
+                description="Sorted array of LookupVariationRecord",
+            ),
         ],
     ),
     (
@@ -4104,6 +4118,76 @@ otData = [
                 "LOffset",
                 "FeatureTableSubstitution",
                 description="Offset to a FeatureTableSubstitution table, from beginning of the FeatureVariations table",
+            ),
+        ],
+    ),
+    (
+        "LookupVariationRecord",
+        [
+            FieldSpec(
+                "uint16",
+                "FeatureIndex",
+                description="The feature table index to match.",
+            ),
+            FieldSpec(
+                "LOffset",
+                "FeatureLookupsTable",
+                description="Offset to a FeatureLookupsTable.",
+            ),
+        ],
+    ),
+    (
+        "FeatureLookupsTable",
+        [
+            FieldSpec("Version", "Version", description="Version, = 0x00010000"),
+            FieldSpec(
+                "uint16",
+                "Flags",
+                description="FeatureLookups qualifiers.",
+            ),
+            FieldSpec(
+                "uint32",
+                "LookupConditionCount",
+                description="Number of LookupConditionRecord entries.",
+            ),
+            FieldSpec(
+                "struct",
+                "LookupConditionRecord",
+                repeat="LookupConditionCount",
+                aux=0,
+                description="Array of LookupConditionRecord entries.",
+            ),
+        ],
+    ),
+    (
+        "LookupConditionRecord",
+        [
+            FieldSpec(
+                "LOffset",
+                "ConditionTable",
+                description="Offset to a condition table.",
+            ),
+            FieldSpec(
+                "LOffset",
+                "LookupIndexList",
+                description="Offset to a LookupIndexList table.",
+            ),
+        ],
+    ),
+    (
+        "LookupIndexList",
+        [
+            FieldSpec(
+                "uint16",
+                "LookupIndexCount",
+                description="Number of lookup-list indices.",
+            ),
+            FieldSpec(
+                "uint16",
+                "LookupIndex",
+                repeat="LookupIndexCount",
+                aux=0,
+                description="Array of indices into the lookup list.",
             ),
         ],
     ),
