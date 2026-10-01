@@ -245,7 +245,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     ],
                 )
                 glyphWriter.newline()
-                glyph.toXML(glyphWriter, ttFont)
+                if type(glyph).toXML is Glyph.toXML:
+                    glyph.toXML(glyphWriter, ttFont, extended=self.extended)
+                else:
+                    glyph.toXML(glyphWriter, ttFont)
                 glyphWriter.endtag("TTGlyph")
                 glyphWriter.newline()
                 if splitGlyphs:
@@ -278,7 +281,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             if not isinstance(element, tuple):
                 continue
             name, attrs, content = element
-            glyph.fromXML(name, attrs, content, ttFont)
+            glyph.fromXML(name, attrs, content, ttFont, extended=self.extended)
         if not ttFont.recalcBBoxes:
             glyph.compact(self, 0)
 
@@ -738,7 +741,9 @@ class Glyph(object):
         if self.isComposite():
             self.decompileComponents(data, glyfTable)
         else:
-            self.decompileCoordinates(data)
+            self.decompileCoordinates(
+                data, extended=glyfTable is None or glyfTable.extended
+            )
 
     def compile(
         self, glyfTable, recalcBBoxes=True, *, boundsDone=None, optimizeSize=True
@@ -759,10 +764,13 @@ class Glyph(object):
         if self.isComposite():
             data = data + self.compileComponents(glyfTable)
         else:
-            data = data + self.compileCoordinates(optimizeSize=optimizeSize)
+            data = data + self.compileCoordinates(
+                optimizeSize=optimizeSize,
+                extended=glyfTable is None or glyfTable.extended,
+            )
         return data
 
-    def toXML(self, writer, ttFont):
+    def toXML(self, writer, ttFont, extended=True):
         if self.isComposite():
             for compo in self.components:
                 compo.toXML(writer, ttFont)
@@ -781,7 +789,7 @@ class Glyph(object):
                     if self.flags[j] & flagOverlapSimple:
                         # Apple's rasterizer uses flagOverlapSimple in the first contour/first pt to flag glyphs that contain overlapping contours
                         attrs.append(("overlap", 1))
-                    if self.flags[j] & flagCubic:
+                    if extended and self.flags[j] & flagCubic:
                         attrs.append(("cubic", 1))
                     writer.simpletag("pt", attrs)
                     writer.newline()
@@ -799,7 +807,7 @@ class Glyph(object):
                 writer.simpletag("instructions")
             writer.newline()
 
-    def fromXML(self, name, attrs, content, ttFont):
+    def fromXML(self, name, attrs, content, ttFont, extended=True):
         if name == "contour":
             if self.numberOfContours < 0:
                 raise ttLib.TTLibError("can't mix composites and contours in glyph")
@@ -816,7 +824,11 @@ class Glyph(object):
                 flag = bool(safeEval(attrs["on"]))
                 if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
                     flag |= flagOverlapSimple
-                if "cubic" in attrs and bool(safeEval(attrs["cubic"])):
+                if (
+                    extended
+                    and "cubic" in attrs
+                    and bool(safeEval(attrs["cubic"]))
+                ):
                     flag |= flagCubic
                 flags.append(flag)
             if not hasattr(self, "coordinates"):
@@ -889,7 +901,7 @@ class Glyph(object):
                     len(data),
                 )
 
-    def decompileCoordinates(self, data):
+    def decompileCoordinates(self, data, extended=True):
         endPtsOfContours = array.array("H")
         endPtsOfContours.frombytes(data[: 2 * self.numberOfContours])
         if sys.byteorder != "big":
@@ -941,8 +953,9 @@ class Glyph(object):
         assert yIndex == len(yCoordinates)
         coordinates.relativeToAbsolute()
         # discard all flags except "keepFlags"
+        keptFlags = keepFlags if extended else keepFlags & ~flagCubic
         for i in range(len(flags)):
-            flags[i] &= keepFlags
+            flags[i] &= keptFlags
         self.flags = flags
 
     def decompileCoordinatesRaw(self, nCoordinates, data, pos=0):
@@ -1004,7 +1017,7 @@ class Glyph(object):
             data = data + struct.pack(">h", len(instructions)) + instructions
         return data
 
-    def compileCoordinates(self, *, optimizeSize=True):
+    def compileCoordinates(self, *, optimizeSize=True, extended=True):
         assert len(self.coordinates) == len(self.flags)
         data = []
         endPtsOfContours = array.array("H", self.endPtsOfContours)
@@ -1019,12 +1032,16 @@ class Glyph(object):
         deltas.toInt()
         deltas.absoluteToRelative()
 
+        flags = self.flags
+        if not extended:
+            flags = [flag & ~flagCubic for flag in flags]
+
         if optimizeSize:
             # TODO(behdad): Add a configuration option for this?
-            deltas = self.compileDeltasGreedy(self.flags, deltas)
-            # deltas = self.compileDeltasOptimal(self.flags, deltas)
+            deltas = self.compileDeltasGreedy(flags, deltas)
+            # deltas = self.compileDeltasOptimal(flags, deltas)
         else:
-            deltas = self.compileDeltasForSpeed(self.flags, deltas)
+            deltas = self.compileDeltasForSpeed(flags, deltas)
 
         data.extend(deltas)
         return b"".join(data)
@@ -1510,6 +1527,7 @@ class Glyph(object):
 
         self.expand(glyfTable)
         coordinates, endPts, flags = self.getCoordinates(glyfTable)
+        extended = glyfTable is None or glyfTable.extended
         if offset:
             coordinates = coordinates.copy()
             coordinates.translate((offset, 0))
@@ -1519,7 +1537,7 @@ class Glyph(object):
             end = end + 1
             contour = coordinates[start:end]
             cFlags = [flagOnCurve & f for f in flags[start:end]]
-            cuFlags = [flagCubic & f for f in flags[start:end]]
+            cuFlags = [flagCubic & f if extended else 0 for f in flags[start:end]]
             start = end
             if 1 not in cFlags:
                 assert all(cuFlags) or not any(cuFlags)
@@ -1608,6 +1626,7 @@ class Glyph(object):
             return
 
         coordinates, endPts, flags = self.getCoordinates(glyfTable)
+        extended = glyfTable is None or glyfTable.extended
         if offset:
             coordinates = coordinates.copy()
             coordinates.translate((offset, 0))
@@ -1615,7 +1634,7 @@ class Glyph(object):
         for end in endPts:
             end = end + 1
             contour = coordinates[start:end]
-            cFlags = flags[start:end]
+            cFlags = [f if extended else f & ~flagCubic for f in flags[start:end]]
             start = end
             pen.beginPath()
             # Start with the appropriate segment type based on the final segment

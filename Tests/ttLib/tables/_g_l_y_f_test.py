@@ -6,6 +6,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.tables._g_l_y_f import (
     Glyph,
     GlyphCoordinates,
@@ -1038,6 +1039,10 @@ class GlyphCubicTest:
     def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
         font = TTFont(font_path)
+        upper_tables(
+            font,
+            tables={"glyf", "loca", "maxp", "hhea", "hmtx", "gvar"},
+        )
         tables = [table_tag for table_tag in font.keys() if table_tag not in {"head"}]
         xml = StringIO()
         font.saveXML(xml)

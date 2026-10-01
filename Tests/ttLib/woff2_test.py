@@ -1526,6 +1526,10 @@ class CubicTest(unittest.TestCase):
             data_dir, "..", "tables", "data", "NotoSans-VF-cubic.subset.ttf"
         )
         ttf = ttLib.TTFont(input_path)
+        upper_tables(
+            ttf,
+            tables={"glyf", "loca", "maxp", "hhea", "hmtx", "gvar"},
+        )
         pen1 = RecordingPen()
         ttf.getGlyphSet()["a"].draw(pen1)
         ttf.flavor = "woff2"

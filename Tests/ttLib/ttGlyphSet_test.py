@@ -1,5 +1,6 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 from fontTools.ttLib.tables.otTables import ConditionTable
 from fontTools.pens.recordingPen import (
@@ -593,6 +594,7 @@ class TTGlyphSetTest(object):
 
     def test_cubic_glyf(self):
         font = TTFont(self.getpath("dot-cubic.ttf"))
+        upper_tables(font, tables={"glyf", "loca", "maxp", "hhea", "hmtx"})
         glyphset = font.getGlyphSet()
 
         expected = [

@@ -4,8 +4,38 @@ from fontTools.ttLib.tables._g_l_y_f import (
     ARGS_ARE_XY_VALUES,
     GID_IS_24_BIT,
     Glyph,
+    GlyphCoordinates,
     GlyphComponent,
+    flagCubic,
 )
+from fontTools.ttLib.tables import ttProgram
+
+
+def cubic_glyph():
+    glyph = Glyph()
+    glyph.numberOfContours = 1
+    glyph.coordinates = GlyphCoordinates([(0, 0), (1, 0), (1, 1), (0, 1)])
+    glyph.endPtsOfContours = [3]
+    glyph.flags = bytearray([flagCubic] * 4)
+    glyph.program = ttProgram.Program()
+    return glyph
+
+
+def test_cubic_flag_is_uppercase_only():
+    data = cubic_glyph().compile(newTable("GLYF"))
+
+    upper_glyph = Glyph(data)
+    upper_glyph.expand(newTable("GLYF"))
+    assert all(flag & flagCubic for flag in upper_glyph.flags)
+
+    lower_glyph = Glyph(data)
+    lower_glyph.expand(newTable("glyf"))
+    assert not any(flag & flagCubic for flag in lower_glyph.flags)
+
+    data = cubic_glyph().compile(newTable("glyf"))
+    recompiled_glyph = Glyph(data)
+    recompiled_glyph.expand(newTable("GLYF"))
+    assert not any(flag & flagCubic for flag in recompiled_glyph.flags)
 
 
 def test_component_24bit_glyph_id():
