@@ -689,7 +689,9 @@ class cmap_format_2(CmapSubtable):
         # with the result that the subhead 0 would not get created just by processing the item list.
         # The same is true for an entirely empty (all-notdef) cmap, where there
         # are no char codes to process at all.
-        if not charCodes or charCodes[0] > 255:
+        # Char codes mapped to .notdef are left unencoded.
+        items = [(code, gid) for code, gid in zip(charCodes, gids) if gid != 0]
+        if not items or items[0][0] > 255:
             subHeader = SubHeader()
             subHeader.firstCode = 0
             subHeader.entryCount = 0
@@ -698,10 +700,7 @@ class cmap_format_2(CmapSubtable):
             subHeaderList.append(subHeader)
 
         lastFirstByte = -1
-        items = zip(charCodes, gids)
         for charCode, gid in items:
-            if gid == 0:
-                continue
             firstbyte = charCode >> 8
             secondByte = charCode & 0x00FF
 
