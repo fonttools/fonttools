@@ -220,15 +220,7 @@ class Builder(object):
             table = self.makeTable(tag)
             if self.feature_variations_:
                 self.makeFeatureVariations(table, tag)
-            if self.font.hasExtendedGlyphIDs():
-                self.promoteLayoutTable_(table)
-                scriptList = table.ScriptList2
-                featureList = table.FeatureList2
-                lookupList = table.LookupList2
-            else:
-                scriptList = table.ScriptList
-                featureList = table.FeatureList
-                lookupList = table.LookupList
+            scriptList, featureList, lookupList = self.promoteLayoutTable_(table)
             if (
                 scriptList.ScriptCount > 0
                 or featureList.FeatureCount > 0
@@ -831,9 +823,9 @@ class Builder(object):
                 gdef.MarkGlyphSetsDef,
             )
         ) or hasattr(gdef, "VarStore")
-        if self.font.hasExtendedGlyphIDs():
-            self.promoteGDEF_(gdef)
         if has_data:
+            if self.font.hasExtendedGlyphIDs():
+                self.promoteGDEF_(gdef)
             result = newTable("GDEF")
             result.table = gdef
             return result
@@ -1032,12 +1024,16 @@ class Builder(object):
         return table
 
     def promoteLayoutTable_(self, table):
+        if not self.font.hasExtendedGlyphIDs():
+            return table.ScriptList, table.FeatureList, table.LookupList
+
         table.Version = 0x00010002
         table.ScriptList2, table.ScriptList = table.ScriptList, None
         table.FeatureList2, table.FeatureList = table.FeatureList, None
         table.LookupList2 = otTables.LookupList2()
         table.LookupList2.__dict__.update(table.LookupList.__dict__)
         table.LookupList = None
+        return table.ScriptList2, table.FeatureList2, table.LookupList2
 
     def makeFeatureVariations(self, table, table_tag):
         feature_vars = {}

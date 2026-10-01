@@ -1260,6 +1260,8 @@ class SingleSubst(FormatSwitchingBaseTable):
         rawTable["Coverage"] = cov
         if format in (1, 3):
             assert delta is not None
+            # DeltaGlyphID is computed modulo the glyph-ID space, but its
+            # on-disk representation is signed.
             if format == 3 and delta >= 0x800000:
                 delta -= 0x1000000
             rawTable["DeltaGlyphID"] = delta
@@ -1654,6 +1656,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
             ligSet = LigatureSet2() if extended else LigatureSet()
             ligs = ligSet.Ligature = []
             for lig in set:
+                # Convert between the 16- and 24-bit record classes as needed.
                 ligatureClass = Ligature2 if extended else Ligature
                 if isinstance(lig, ligatureClass):
                     out = lig

@@ -2731,15 +2731,15 @@ def buildSinglePosSubtable(values, glyphMap):
         ValueRecord(src=values[g], valueFormat=valueFormat)
         for g in self.Coverage.glyphs
     ]
-    formatOffset = 2 if _glyphMapHasExtendedGlyphIDs(glyphMap) else 0
+    extended = _glyphMapHasExtendedGlyphIDs(glyphMap)
     if all(v == valueRecords[0] for v in valueRecords):
-        self.Format = 1 + formatOffset
+        self.Format = 3 if extended else 1
         if self.ValueFormat != 0:
             self.Value = valueRecords[0]
         else:
             self.Value = None
     else:
-        self.Format = 2 + formatOffset
+        self.Format = 4 if extended else 2
         self.Value = valueRecords
         self.ValueCount = len(self.Value)
     return self

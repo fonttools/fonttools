@@ -278,12 +278,12 @@ otData = [
             FieldSpec(
                 "uint16",
                 "SequenceIndex",
-                description="Index into current glyph sequence-first glyph = 0",
+                description="Index (zero-based) into the input glyph sequence",
             ),
             FieldSpec(
                 "uint16",
                 "LookupListIndex",
-                description="Lookup to apply to that position-zero-based",
+                description="Index (zero-based) into the LookupList",
             ),
         ],
     ),
