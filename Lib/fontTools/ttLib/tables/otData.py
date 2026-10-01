@@ -3262,7 +3262,7 @@ otData = [
                 "uint24", "LigGlyphCount", description="Number of ligature glyphs"
             ),
             FieldSpec(
-                "LOffsetTo(LigGlyph)",
+                "Offset24To(LigGlyph)",
                 "LigGlyph",
                 repeat="LigGlyphCount",
                 aux=0,
