@@ -35,15 +35,15 @@ The TTX file format
 
 The following tables are currently supported::
 
-    BASE, CBDT, CBLC, CFF, CFF2, COLR, CPAL, DSIG, Debg, EBDT, EBLC,
-    EBSC, FFTM, Feat, GDEF, GLYF, GPOS, GSUB, GVAR, Glat, Gloc, HHEA, HMTX,
-    HVAR, IFT, IFTX, JSTF, LOCA, LTSH, MATH, MAXP, MVAR, OS/2, STAT,
-    SVG, Silf, Sill, TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSIC, TSID,
-    TSIJ, TSIP, TSIS, TSIV, TTFA, VARC, VDMX, VHEA, VMTX, VORG, VVAR,
-    ankr, avar, bdat, bgcl, bhed, bloc, bsln, cidg, cmap, cvar, cvt, feat, fpgm, fvar,
-    gasp, gcid, glyf, gvar, hdmx, head, hhea, hmtx, kern, lcar, loca,
-    ltag, maxp, meta, mort, morx, name, opbd, post, prep, prop, sbix,
-    trak, vhea and vmtx
+    BASE, CBDT, CBLC, CFF, CFF2, COLR, CPAL, DMAP, DSIG, Debg, EBDT,
+    EBLC, EBSC, FFTM, Feat, GDEF, GLYF, GPOS, GSUB, GVAR, Glat, Gloc,
+    HHEA, HMTX, HVAR, IFT, IFTX, JSTF, LOCA, LTSH, MATH, MAXP, MVAR,
+    OS/2, STAT, SVG, Silf, Sill, TSI0, TSI1, TSI2, TSI3, TSI5, TSIB,
+    TSIC, TSID, TSIJ, TSIP, TSIS, TSIV, TTFA, VARC, VDMX, VHEA, VMTX,
+    VORG, VVAR, ankr, avar, bdat, bgcl, bhed, bloc, bsln, cidg, cmap,
+    cvar, cvt, feat, fpgm, fvar, gasp, gcid, glyf, gvar, hdmx, head,
+    hhea, hmtx, kern, lcar, loca, ltag, maxp, meta, mort, morx, name,
+    opbd, post, prep, prop, sbix, trak, vhea and vmtx
 
 .. end table list
 

@@ -36,6 +36,7 @@ if TYPE_CHECKING:
         C_F_F__2,
         C_O_L_R_,
         C_P_A_L_,
+        D_M_A_P_,
         D_S_I_G_,
         E_B_D_T_,
         E_B_L_C_,
@@ -653,6 +654,8 @@ class TTFont(object):
     @overload
     def __getitem__(self, tag: Literal["CPAL"]) -> C_P_A_L_.table_C_P_A_L_: ...
     @overload
+    def __getitem__(self, tag: Literal["DMAP"]) -> D_M_A_P_.table_D_M_A_P_: ...
+    @overload
     def __getitem__(self, tag: Literal["DSIG"]) -> D_S_I_G_.table_D_S_I_G_: ...
     @overload
     def __getitem__(self, tag: Literal["EBDT"]) -> E_B_D_T_.table_E_B_D_T_: ...
@@ -904,6 +907,8 @@ class TTFont(object):
     def get(self, tag: Literal["COLR"]) -> C_O_L_R_.table_C_O_L_R_ | None: ...
     @overload
     def get(self, tag: Literal["CPAL"]) -> C_P_A_L_.table_C_P_A_L_ | None: ...
+    @overload
+    def get(self, tag: Literal["DMAP"]) -> D_M_A_P_.table_D_M_A_P_ | None: ...
     @overload
     def get(self, tag: Literal["DSIG"]) -> D_S_I_G_.table_D_S_I_G_ | None: ...
     @overload
@@ -1162,18 +1167,13 @@ class TTFont(object):
         # - extract the unicode values, build the "real" glyph names
         # - unload the temporary cmap table
         #
-        if self.isLoaded("cmap"):
-            # Bootstrapping: we're getting called by the cmap parser
-            # itself. This means self.tables['cmap'] contains a partially
-            # loaded cmap, making it impossible to get at a unicode
-            # subtable here. We remove the partially loaded cmap and
-            # restore it later.
-            # This only happens if the cmap table is loaded before any
-            # other table that does f.getGlyphOrder()  or f.getGlyphName().
-            cmapLoading = self.tables["cmap"]
-            del self.tables["cmap"]
-        else:
-            cmapLoading = None
+        loadingTables = {}
+        for tag in ("cmap", "DMAP"):
+            if self.isLoaded(tag):
+                # Bootstrapping: we're getting called by a character-map
+                # parser itself. Its partially loaded table cannot be used to
+                # derive names, so remove it and restore it later.
+                loadingTables[tag] = self.tables.pop(tag)
         # Make up glyph names based on glyphID, which will be used by the
         # temporary cmap and by the real cmap in case we don't find a unicode
         # cmap.
@@ -1184,14 +1184,27 @@ class TTFont(object):
         # to work with (so we don't get called recursively).
         self.glyphOrder = glyphOrder
 
-        # Make up glyph names based on the reversed cmap table. Because some
-        # glyphs (eg. ligatures or alternates) may not be reachable via cmap,
-        # this naming table will usually not cover all glyphs in the font.
-        # If the font has no Unicode cmap table, reversecmap will be empty.
-        if "cmap" in self:
-            reversecmap = self["cmap"].buildReversedMin()
-        else:
-            reversecmap = {}
+        # Make up glyph names based on the effective character map. DMAP
+        # mappings override cmap mappings for the same Unicode codepoint.
+        reversecmap = {}
+        dmapCodepoints = set()
+        if "DMAP" in self:
+            for table in self["DMAP"].tables:
+                if table.isUnicode():
+                    dmapCodepoints.update(table.cmap)
+        for tag in ("cmap", "DMAP"):
+            if tag not in self:
+                continue
+            for table in self[tag].tables:
+                if not table.isUnicode():
+                    continue
+                for codepoint, name in table.cmap.items():
+                    if tag == "cmap" and codepoint in dmapCodepoints:
+                        continue
+                    if name in reversecmap:
+                        reversecmap[name] = min(reversecmap[name], codepoint)
+                    else:
+                        reversecmap[name] = codepoint
         useCount = {}
         for i, tempName in enumerate(glyphOrder):
             if tempName in reversecmap:
@@ -1204,15 +1217,13 @@ class TTFont(object):
                     glyphName = "%s.alt%d" % (glyphName, numUses - 1)
                 glyphOrder[i] = glyphName
 
-        if "cmap" in self:
-            # Delete the temporary cmap table from the cache, so it can
-            # be parsed again with the right names.
-            del self.tables["cmap"]
-            self.glyphOrder = glyphOrder
-            if cmapLoading:
-                # restore partially loaded cmap, so it can continue loading
-                # using the proper names.
-                self.tables["cmap"] = cmapLoading
+        # Delete temporary character-map tables from the cache, so they can be
+        # parsed again with the right names. Restore any partially loaded table
+        # so it can continue loading using the proper names.
+        for tag in ("cmap", "DMAP"):
+            self.tables.pop(tag, None)
+        self.glyphOrder = glyphOrder
+        self.tables.update(loadingTables)
 
     @staticmethod
     def _makeGlyphName(codepoint: int) -> str:
@@ -1421,8 +1432,8 @@ class TTFont(object):
             (0, 0),
         ),
     ) -> dict[int, str] | None:
-        """Returns the 'best' Unicode cmap dictionary available in the font
-        or ``None``, if no Unicode cmap subtable is available.
+        """Returns the effective 'best' Unicode character map for the font,
+        or ``None`` if neither cmap nor DMAP has a Unicode subtable.
 
         By default it will search for the following (platformID, platEncID)
         pairs in order::
@@ -1443,7 +1454,21 @@ class TTFont(object):
 
         This order can be customized via the ``cmapPreferences`` argument.
         """
-        return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
+        cmap = (
+            self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
+            if "cmap" in self
+            else None
+        )
+        dmap = (
+            self["DMAP"].getBestCmap(cmapPreferences=cmapPreferences)
+            if "DMAP" in self
+            else None
+        )
+        if dmap is None:
+            return cmap
+        if cmap is None:
+            return dmap
+        return {**cmap, **dmap}
 
     def reorderGlyphs(self, new_glyph_order: list[str]) -> None:
         from .reorderGlyphs import reorderGlyphs
@@ -1677,6 +1702,7 @@ TTFTableOrder = [
     "LTSH",
     "VDMX",
     "hdmx",
+    "DMAP",
     "cmap",
     "fpgm",
     "prep",
@@ -1690,7 +1716,17 @@ TTFTableOrder = [
     "PCLT",
 ]
 
-OTFTableOrder = ["head", "hhea", "maxp", "OS/2", "name", "cmap", "post", "CFF "]
+OTFTableOrder = [
+    "head",
+    "hhea",
+    "maxp",
+    "OS/2",
+    "name",
+    "DMAP",
+    "cmap",
+    "post",
+    "CFF ",
+]
 
 
 def sortedTagList(

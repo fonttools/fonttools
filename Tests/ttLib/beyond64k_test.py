@@ -664,6 +664,40 @@ def test_upper_tables_converts_high_uvs_format14_to_format15():
     )
 
 
+def test_upper_tables_converts_DMAP_formats():
+    font = TTFont()
+    font.setGlyphOrder(
+        [".notdef"] + [f"glyph{i}" for i in range(1, 0x10000)] + ["highGlyph"]
+    )
+
+    dmap4 = CmapSubtable.newSubtable(4)
+    dmap4.platformID = 3
+    dmap4.platEncID = 1
+    dmap4.language = 0
+    dmap4.cmap = {0x41: "highGlyph"}
+    dmap14 = CmapSubtable.newSubtable(14)
+    dmap14.platformID = 0
+    dmap14.platEncID = 5
+    dmap14.language = 0xFF
+    dmap14.cmap = {}
+    dmap14.uvsDict = {0xFE00: [(0x42, "highGlyph")]}
+
+    font["DMAP"] = newTable("DMAP")
+    font["DMAP"].tableVersion = 0
+    font["DMAP"].tables = [dmap4, dmap14]
+
+    upper_tables(font)
+
+    assert {subtable.format for subtable in font["DMAP"].tables} == {12, 15}
+    assert next(t for t in font["DMAP"].tables if t.format == 12).cmap == {
+        0x41: "highGlyph"
+    }
+    assert next(t for t in font["DMAP"].tables if t.format == 15).uvsDict == {
+        0xFE00: [(0x42, "highGlyph")]
+    }
+    font["DMAP"].compile(font)
+
+
 def test_upper_tables_keeps_low_uvs_format14():
     font = TTFont()
     font.setGlyphOrder(
@@ -711,6 +745,30 @@ def test_lower_tables_converts_format15_to_format14_when_safe():
         0xFE00: [(0x41, "lowGlyph"), (0x42, None)]
     }
     font["cmap"].tables[0].compile(font)
+
+
+def test_lower_tables_converts_DMAP_format15_to_format14_when_safe():
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "lowGlyph"])
+
+    dmap15 = CmapSubtable.newSubtable(15)
+    dmap15.platformID = 0
+    dmap15.platEncID = 5
+    dmap15.language = 0xFF
+    dmap15.cmap = {}
+    dmap15.uvsDict = {0xFE00: [(0x41, "lowGlyph"), (0x42, None)]}
+
+    font["DMAP"] = newTable("DMAP")
+    font["DMAP"].tableVersion = 0
+    font["DMAP"].tables = [dmap15]
+
+    lower_tables(font, validate=False)
+
+    assert [subtable.format for subtable in font["DMAP"].tables] == [14]
+    assert font["DMAP"].tables[0].uvsDict == {
+        0xFE00: [(0x41, "lowGlyph"), (0x42, None)]
+    }
+    font["DMAP"].compile(font)
 
 
 def test_lower_tables_rejects_high_format15_uvs():

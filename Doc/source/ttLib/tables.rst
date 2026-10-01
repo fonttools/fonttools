@@ -146,6 +146,7 @@ Tables currently supported
    tables/_c_m_a_p
    tables/C_O_L_R_
    tables/C_P_A_L_
+   tables/D_M_A_P_
    tables/_c_v_a_r
    tables/_c_v_t
    tables/D__e_b_g

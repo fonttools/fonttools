@@ -610,94 +610,97 @@ def _uvs_has_high_glyph_id(font: TTFont, subtable) -> bool:
     return False
 
 
-def _validate_cmap_uvs_lowering(font: TTFont) -> None:
-    if "cmap" not in font:
-        return
+def _character_map_tables(font: TTFont):
+    for tag in ("cmap", "DMAP"):
+        if tag in font:
+            yield tag, font[tag]
 
-    for subtable in font["cmap"].tables:
-        if subtable.format == 15 and _uvs_has_high_glyph_id(font, subtable):
-            raise ValueError("cmap format 15 glyph IDs do not fit in format 14")
+
+def _validate_cmap_uvs_lowering(font: TTFont) -> None:
+    for tag, character_map in _character_map_tables(font):
+        for subtable in character_map.tables:
+            if subtable.format == 15 and _uvs_has_high_glyph_id(font, subtable):
+                raise ValueError(f"{tag} format 15 glyph IDs do not fit in format 14")
 
 
 def _upper_beyond64k_cmap_uvs(font: TTFont) -> None:
-    if "cmap" not in font:
-        return
-
-    cmap = font["cmap"]
-    format15_by_key = {
-        _cmap_subtable_key(subtable): subtable
-        for subtable in cmap.tables
-        if subtable.format == 15
-    }
-    tables = []
-    for subtable in cmap.tables:
-        if subtable.format == 14 and _uvs_has_high_glyph_id(font, subtable):
-            key = _cmap_subtable_key(subtable)
-            format15 = format15_by_key.get(key)
-            if format15 is None:
-                format15 = _copy_uvs_subtable(15, subtable)
-                format15_by_key[key] = format15
-                tables.append(format15)
-            else:
-                format15.ensureDecompiled()
-                _merge_uvs_dict(format15.uvsDict, subtable.uvsDict)
-            continue
-        tables.append(subtable)
-    cmap.tables = tables
+    for _, character_map in _character_map_tables(font):
+        format15_by_key = {
+            _cmap_subtable_key(subtable): subtable
+            for subtable in character_map.tables
+            if subtable.format == 15
+        }
+        tables = []
+        for subtable in character_map.tables:
+            if subtable.format == 14 and _uvs_has_high_glyph_id(font, subtable):
+                key = _cmap_subtable_key(subtable)
+                format15 = format15_by_key.get(key)
+                if format15 is None:
+                    format15 = _copy_uvs_subtable(15, subtable)
+                    format15_by_key[key] = format15
+                    tables.append(format15)
+                else:
+                    format15.ensureDecompiled()
+                    _merge_uvs_dict(format15.uvsDict, subtable.uvsDict)
+                continue
+            tables.append(subtable)
+        character_map.tables = tables
 
 
 def _lower_beyond64k_cmap_uvs(font: TTFont) -> None:
-    if "cmap" not in font:
-        return
-
-    cmap = font["cmap"]
-    format14_by_key = {
-        _cmap_subtable_key(subtable): subtable
-        for subtable in cmap.tables
-        if subtable.format == 14
-    }
-    tables = []
-    for subtable in cmap.tables:
-        if subtable.format == 15:
-            if _uvs_has_high_glyph_id(font, subtable):
-                raise ValueError("cmap format 15 glyph IDs do not fit in format 14")
-            key = _cmap_subtable_key(subtable)
-            format14 = format14_by_key.get(key)
-            if format14 is None:
-                format14 = _copy_uvs_subtable(14, subtable)
-                format14_by_key[key] = format14
-                tables.append(format14)
-            else:
-                format14.ensureDecompiled()
-                _merge_uvs_dict(format14.uvsDict, subtable.uvsDict)
-            continue
-        tables.append(subtable)
-    cmap.tables = tables
+    for tag, character_map in _character_map_tables(font):
+        format14_by_key = {
+            _cmap_subtable_key(subtable): subtable
+            for subtable in character_map.tables
+            if subtable.format == 14
+        }
+        tables = []
+        for subtable in character_map.tables:
+            if subtable.format == 15:
+                if _uvs_has_high_glyph_id(font, subtable):
+                    raise ValueError(
+                        f"{tag} format 15 glyph IDs do not fit in format 14"
+                    )
+                key = _cmap_subtable_key(subtable)
+                format14 = format14_by_key.get(key)
+                if format14 is None:
+                    format14 = _copy_uvs_subtable(14, subtable)
+                    format14_by_key[key] = format14
+                    tables.append(format14)
+                else:
+                    format14.ensureDecompiled()
+                    _merge_uvs_dict(format14.uvsDict, subtable.uvsDict)
+                continue
+            tables.append(subtable)
+        character_map.tables = tables
 
 
 def _drop_beyond64k_cmap_format4(font: TTFont) -> None:
-    if "cmap" not in font or len(font.getGlyphOrder()) <= 0x10000:
+    if (
+        not any(tag in font for tag in ("cmap", "DMAP"))
+        or len(font.getGlyphOrder()) <= 0x10000
+    ):
         return
 
-    cmap = font["cmap"]
-    if not any(subtable.format == 12 for subtable in cmap.tables):
-        cmap12 = {}
-        for subtable in cmap.tables:
-            if subtable.format == 4 and subtable.isUnicode():
-                cmap12.update(subtable.cmap)
-        if cmap12:
-            from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+    for _, character_map in _character_map_tables(font):
+        if not any(subtable.format == 12 for subtable in character_map.tables):
+            cmap12 = {}
+            for subtable in character_map.tables:
+                if subtable.format == 4 and subtable.isUnicode():
+                    cmap12.update(subtable.cmap)
+            if cmap12:
+                from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 
-            subtable = CmapSubtable.newSubtable(12)
-            subtable.platformID = 3
-            subtable.platEncID = 10
-            subtable.language = 0
-            subtable.cmap = cmap12
-            cmap.tables.append(subtable)
+                subtable = CmapSubtable.newSubtable(12)
+                subtable.platformID = 3
+                subtable.platEncID = 10
+                subtable.language = 0
+                subtable.cmap = cmap12
+                character_map.tables.append(subtable)
 
-    font["cmap"].tables = [
-        subtable for subtable in font["cmap"].tables if subtable.format != 4
-    ]
+        character_map.tables = [
+            subtable for subtable in character_map.tables if subtable.format != 4
+        ]
 
 
 def _drop_beyond64k_post_glyph_names(font: TTFont) -> None:

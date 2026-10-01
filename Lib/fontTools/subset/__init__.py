@@ -3049,10 +3049,7 @@ def prune_post_subset(self, font, options):
     return True
 
 
-@_add_method(ttLib.getTableClass("cmap"))
-def closure_glyphs(self, s):
-    tables = [t for t in self.tables if t.isUnicode()]
-
+def _cmap_add_bidi_mirroring(s):
     # Closure unicodes, which for now is pulling in bidi mirrored variants
     if s.options.bidi_closure:
         additional_unicodes = set()
@@ -3062,25 +3059,67 @@ def closure_glyphs(self, s):
                 additional_unicodes.add(mirror_u)
         s.unicodes_requested.update(additional_unicodes)
 
+
+def _cmap_closure_glyphs(self, s, excluded_unicodes=(), excluded_uvs=()):
+    tables = [t for t in self.tables if t.isUnicode()]
+    matched_unicodes = set()
+    matched_uvs = set()
+
     # Close glyphs
     for table in tables:
         if table.format in (14, 15):
             for varSelector, cmap in table.uvsDict.items():
                 if varSelector not in s.unicodes_requested:
                     continue
-                glyphs = {g for u, g in cmap if u in s.unicodes_requested}
+                matches = [
+                    (u, g)
+                    for u, g in cmap
+                    if u in s.unicodes_requested
+                    and (varSelector, u) not in excluded_uvs
+                ]
+                matched_uvs.update((varSelector, u) for u, _ in matches)
+                glyphs = {g for _, g in matches}
                 if None in glyphs:
                     glyphs.remove(None)
                 s.glyphs.update(glyphs)
         else:
             cmap = table.cmap
             intersection = s.unicodes_requested.intersection(cmap.keys())
+            intersection.difference_update(excluded_unicodes)
+            matched_unicodes.update(intersection)
             s.glyphs.update(cmap[u] for u in intersection)
+    return matched_unicodes, matched_uvs
+
+
+@_add_method(ttLib.getTableClass("cmap"))
+def closure_glyphs(self, s):
+    _cmap_add_bidi_mirroring(s)
+    matched_unicodes, _ = _cmap_closure_glyphs(self, s)
 
     # Calculate unicodes_missing
-    s.unicodes_missing = s.unicodes_requested.copy()
-    for table in tables:
-        s.unicodes_missing.difference_update(table.cmap)
+    s.unicodes_missing = s.unicodes_requested.difference(matched_unicodes)
+
+
+def _closure_glyphs_cmap_and_dmap(font, s):
+    _cmap_add_bidi_mirroring(s)
+
+    dmap_unicodes = set()
+    dmap_uvs = set()
+    if "DMAP" in font:
+        dmap_unicodes, dmap_uvs = _cmap_closure_glyphs(font["DMAP"], s)
+
+    cmap_unicodes = set()
+    if "cmap" in font:
+        cmap_unicodes, _ = _cmap_closure_glyphs(
+            font["cmap"],
+            s,
+            excluded_unicodes=dmap_unicodes,
+            excluded_uvs=dmap_uvs,
+        )
+
+    s.unicodes_dmaped = dmap_unicodes
+    s.uvs_dmaped = dmap_uvs
+    s.unicodes_missing = s.unicodes_requested.difference(dmap_unicodes | cmap_unicodes)
 
 
 @_add_method(ttLib.getTableClass("cmap"))
@@ -3094,12 +3133,15 @@ def prune_pre_subset(self, font, options):
     # For now, drop format=0 which can't be subset_glyphs easily?
     self.tables = [t for t in self.tables if t.format != 0]
     self.numSubTables = len(self.tables)
-    return True  # Required table
+    return self.tableTag == "cmap" or bool(self.tables)
 
 
 @_add_method(ttLib.getTableClass("cmap"))
 def subset_glyphs(self, s):
     s.glyphs = None  # We use s.glyphs_requested and s.unicodes_requested only
+    is_cmap = self.tableTag == "cmap"
+    excluded_unicodes = getattr(s, "unicodes_dmaped", ()) if is_cmap else ()
+    excluded_uvs = getattr(s, "uvs_dmaped", ()) if is_cmap else ()
 
     tables_format12_bmp = []
     table_plat0_enc3 = {}  # Unicode platform, Unicode BMP only, keyed by language
@@ -3119,7 +3161,8 @@ def subset_glyphs(self, s):
                 v: [
                     (u, g)
                     for u, g in l
-                    if g in s.glyphs_requested or u in s.unicodes_requested
+                    if g in s.glyphs_requested
+                    or (u in s.unicodes_requested and (v, u) not in excluded_uvs)
                 ]
                 for v, l in t.uvsDict.items()
                 if v in s.unicodes_requested
@@ -3129,7 +3172,8 @@ def subset_glyphs(self, s):
             t.cmap = {
                 u: g
                 for u, g in t.cmap.items()
-                if g in s.glyphs_requested or u in s.unicodes_requested
+                if g in s.glyphs_requested
+                or (u in s.unicodes_requested and u not in excluded_unicodes)
             }
             # Collect format 12 tables that hold only basic multilingual plane
             # codepoints.
@@ -3163,7 +3207,7 @@ def subset_glyphs(self, s):
     # TODO(behdad) Convert formats when needed.
     # In particular, if we have a format=12 without non-BMP
     # characters, convert it to format=4 if there's not one.
-    return True  # Required table
+    return self.tableTag == "cmap" or bool(self.tables)
 
 
 @_add_method(ttLib.getTableClass("DSIG"))
@@ -3632,9 +3676,9 @@ class Subsetter(object):
         self.glyphs = self.glyphs_requested.copy()
 
         self.unicodes_missing = set()
-        if "cmap" in font:
-            with timer("close glyph list over 'cmap'"):
-                font["cmap"].closure_glyphs(self)
+        if "cmap" in font or "DMAP" in font:
+            with timer("close glyph list over character maps"):
+                _closure_glyphs_cmap_and_dmap(font, self)
                 self.glyphs.intersection_update(realGlyphs)
         self.glyphs_cmaped = frozenset(self.glyphs)
         if self.unicodes_missing:
@@ -4105,11 +4149,14 @@ def main(args=None):
         if wildcard_glyphs:
             glyphs.extend(font.getGlyphOrder())
         if wildcard_unicodes:
-            for t in font["cmap"].tables:
-                if t.isUnicode():
-                    unicodes.extend(t.cmap.keys())
-                    if t.format in (14, 15):
-                        unicodes.extend(t.uvsDict.keys())
+            for tag in ("cmap", "DMAP"):
+                if tag not in font:
+                    continue
+                for t in font[tag].tables:
+                    if t.isUnicode():
+                        unicodes.extend(t.cmap.keys())
+                        if t.format in (14, 15):
+                            unicodes.extend(t.uvsDict.keys())
         assert "" not in glyphs
 
     log.info("Text: '%s'" % text)

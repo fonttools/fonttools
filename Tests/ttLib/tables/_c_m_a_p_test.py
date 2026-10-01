@@ -11,6 +11,7 @@ from fontTools.ttLib.tables._c_m_a_p import (
     cmap_format_unknown,
     table__c_m_a_p,
 )
+from fontTools.ttLib.tables._g_l_y_f import Glyph
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")
@@ -456,6 +457,56 @@ class CmapSubtableTest(unittest.TestCase):
             font.getBestCmap(cmapPreferences=[(3, 1)]), {0x0041: "A", 0x0391: "A"}
         )
         self.assertEqual(font.getBestCmap(cmapPreferences=[(0, 4)]), None)
+
+    def test_font_getBestCmap_applies_DMAP_first(self):
+        cmap4 = self.makeSubtable(4, 3, 1, 0)
+        cmap4.cmap = {0x0041: "A", 0x0042: "B"}
+        dmap4 = self.makeSubtable(4, 3, 1, 0)
+        dmap4.cmap = {0x0041: "A.alt", 0x0043: "C"}
+
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "A", "A.alt", "B", "C"])
+        font["cmap"] = table__c_m_a_p("cmap")
+        font["cmap"].tableVersion = 0
+        font["cmap"].tables = [cmap4]
+        font["DMAP"] = ttLib.newTable("DMAP")
+        font["DMAP"].tableVersion = 0
+        font["DMAP"].tables = [dmap4]
+
+        self.assertIsInstance(font["DMAP"], table__c_m_a_p)
+        self.assertEqual(
+            font.getBestCmap(), {0x0041: "A.alt", 0x0042: "B", 0x0043: "C"}
+        )
+
+        data = font["DMAP"].compile(font)
+        dmap = ttLib.newTable("DMAP")
+        dmap.decompile(data, font)
+        self.assertEqual(dmap.getBestCmap(), dmap4.cmap)
+
+    def test_glyph_order_applies_DMAP_first(self):
+        glyphOrder = [".notdef", "cmapA", "dmapA", "cmapB", "dmapC"]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyphOrder)
+        fb.setupCharacterMap({0x0041: "cmapA", 0x0042: "cmapB"})
+        fb.setupGlyf({name: Glyph() for name in glyphOrder})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyphOrder})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost(keepGlyphNames=False)
+
+        dmap4 = self.makeSubtable(4, 3, 1, 0)
+        dmap4.cmap = {0x0041: "dmapA", 0x0043: "dmapC"}
+        fb.font["DMAP"] = ttLib.newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [dmap4]
+
+        data = io.BytesIO()
+        fb.font.save(data)
+        data.seek(0)
+        font = ttLib.TTFont(data)
+
+        self.assertEqual(font.getGlyphOrder(), [".notdef", "glyph00001", "A", "B", "C"])
 
     def test_format_14(self):
         subtable = self.makeSubtable(14, 0, 5, 0)

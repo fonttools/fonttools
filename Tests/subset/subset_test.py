@@ -1168,6 +1168,68 @@ class SubsetTest:
 
         assert cmap15.uvsDict == {0xE0100: [(0x4E10, "g25")]}
 
+    def test_DMAP_precedes_cmap(self):
+        glyph_order = [
+            ".notdef",
+            "cmapA",
+            "dmapA",
+            "baseB",
+            "cmapB.var",
+            "dmapB.var",
+        ]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupCharacterMap(
+            {0x41: "cmapA", 0x42: "baseB"},
+            uvs=[(0x42, 0xFE00, "cmapB.var")],
+        )
+        fb.setupGlyf({name: Glyph() for name in glyph_order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyph_order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+
+        dmap4 = CmapSubtable.newSubtable(4)
+        dmap4.platformID = 3
+        dmap4.platEncID = 1
+        dmap4.language = 0
+        dmap4.cmap = {0x41: "dmapA"}
+        dmap14 = CmapSubtable.newSubtable(14)
+        dmap14.platformID = 0
+        dmap14.platEncID = 5
+        dmap14.language = 0xFF
+        dmap14.cmap = {}
+        dmap14.uvsDict = {0xFE00: [(0x42, "dmapB.var")]}
+        fb.font["DMAP"] = newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [dmap4, dmap14]
+
+        subsetter = subset.Subsetter()
+        subsetter.populate(unicodes=[0x41, 0x42, 0xFE00])
+        subsetter.subset(fb.font)
+
+        assert fb.font.getGlyphOrder() == [
+            ".notdef",
+            "dmapA",
+            "baseB",
+            "dmapB.var",
+        ]
+        assert fb.font["cmap"].getBestCmap() == {0x42: "baseB"}
+        assert not any(t.format in (14, 15) for t in fb.font["cmap"].tables)
+        assert fb.font["DMAP"].getBestCmap() == {0x41: "dmapA"}
+        assert next(
+            t for t in fb.font["DMAP"].tables if t.format in (14, 15)
+        ).uvsDict == {0xFE00: [(0x42, "dmapB.var")]}
+
+        data = io.BytesIO()
+        fb.font.save(data)
+        data.seek(0)
+        font = TTFont(data)
+        assert font.getBestCmap() == {0x41: "A", 0x42: "B"}
+        assert font.getGlyphID(font.getBestCmap()[0x41]) == 1
+        assert font.getGlyphID(font.getBestCmap()[0x42]) == 2
+
     @pytest.mark.parametrize("text, n", [("!", 1), ("#", 2)])
     def test_GPOS_PairPos_Format2_useClass0(self, text, n):
         # Check two things related to class 0 ('every other glyph'):
