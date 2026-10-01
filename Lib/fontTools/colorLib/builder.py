@@ -34,7 +34,6 @@ from .errors import ColorLibError
 from .geometry import round_start_circle_stable_containment
 from .table_builder import BuildCallback, TableBuilder
 
-
 # TODO move type aliases to colorLib.types?
 T = TypeVar("T")
 _Kwargs = Mapping[str, Any]
@@ -170,6 +169,10 @@ def populateCOLRv0(
         baseGlyphRecords.append(baseRec)
 
         for layerGlyph, paletteIndex in layers:
+            if glyphMap is not None and layerGlyph not in glyphMap:
+                raise ColorLibError(
+                    f"populateCOLRv0: layer glyph not found in glyphMap: {layerGlyph!r}"
+                )
             layerRec = ot.LayerRecord()
             layerRec.LayerGlyph = layerGlyph
             layerRec.PaletteIndex = paletteIndex
@@ -525,7 +528,8 @@ class LayerListBuilder:
     cache: LayerReuseCache
     allowLayerReuse: bool
 
-    def __init__(self, *, allowLayerReuse=True):
+    def __init__(self, *, glyphMap=None, allowLayerReuse=True):
+        self.glyphMap = glyphMap
         self.layers = []
         if allowLayerReuse:
             self.cache = LayerReuseCache()
@@ -541,7 +545,28 @@ class LayerListBuilder:
                 ot.PaintFormat.PaintColrLayers,
             )
         ] = self._beforeBuildPaintColrLayers
+        # When a glyphMap is available, sanity check that glyphs referenced by
+        # PaintGlyph and PaintColrGlyph actually exist, so a missing glyph raises
+        # a legible error here instead of failing obscurely later (e.g. a
+        # struct.error at compile time).
+        # https://github.com/fonttools/fonttools/issues/2629
+        if glyphMap is not None:
+            for paintFormat in (
+                ot.PaintFormat.PaintGlyph,
+                ot.PaintFormat.PaintColrGlyph,
+            ):
+                callbacks[(BuildCallback.AFTER_BUILD, ot.Paint, paintFormat)] = (
+                    self._checkPaintGlyphExists
+                )
         self.tableBuilder = TableBuilder(callbacks)
+
+    def _checkPaintGlyphExists(self, paint: ot.Paint) -> ot.Paint:
+        if paint.Glyph not in self.glyphMap:
+            paintName = ot.PaintFormat(paint.Format).name
+            raise ColorLibError(
+                f"{paintName}: glyph not found in glyphMap: {paint.Glyph!r}"
+            )
+        return paint
 
     # COLR layers is unusual in that it modifies shared state
     # so we need a callback into an object
@@ -663,7 +688,7 @@ def buildColrV1(
 
     errors = {}
     baseGlyphs = []
-    layerBuilder = LayerListBuilder(allowLayerReuse=allowLayerReuse)
+    layerBuilder = LayerListBuilder(glyphMap=glyphMap, allowLayerReuse=allowLayerReuse)
     for baseGlyph, paint in colorGlyphItems:
         try:
             baseGlyphs.append(buildBaseGlyphPaintRecord(baseGlyph, layerBuilder, paint))

@@ -62,10 +62,21 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
     def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.version, self.reserved = 1, 0
+        self.axisCount = 0
         self.variations = {}
+        # Set when the TTX declares an axis count, i.e. this is the no-'fvar'
+        # form whose axes are numbered rather than tagged. Deciding this from
+        # the element rather than from 'fvar' keeps the read side independent
+        # of the order in which the tables are deserialized.
+        self._numericAxisTags = False
+
+    def getAxisTags_(self, ttFont):
+        if "fvar" in ttFont:
+            return [axis.axisTag for axis in ttFont["fvar"].axes]
+        return list(range(self.axisCount))
 
     def compile(self, ttFont):
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        axisTags = self.getAxisTags_(ttFont)
         sharedTuples = tv.compileSharedTuples(
             axisTags, itertools.chain(*self.variations.values())
         )
@@ -126,7 +137,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         return result
 
     def decompile(self, data, ttFont):
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         glyphs = ttFont.getGlyphOrder()
 
         # Parse the header
@@ -140,6 +150,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
             data[GVAR_HEADER_SIZE_HEAD + self.gid_size : GVAR_HEADER_SIZE],
             self,
         )
+        axisTags = self.getAxisTags_(ttFont)
 
         assert len(glyphs) == self.glyphCount, (len(glyphs), self.glyphCount)
         assert len(axisTags) == self.axisCount, (
@@ -244,7 +255,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
         writer.newline()
         writer.simpletag("reserved", value=self.reserved)
         writer.newline()
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        if "fvar" not in ttFont:
+            writer.simpletag("axisCount", value=self.axisCount)
+            writer.newline()
+        axisTags = self.getAxisTags_(ttFont)
         for glyphName in ttFont.getGlyphNames():
             variations = self.variations.get(glyphName)
             if not variations:
@@ -261,6 +275,9 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
             self.version = safeEval(attrs["value"])
         elif name == "reserved":
             self.reserved = safeEval(attrs["value"])
+        elif name == "axisCount":
+            self.axisCount = safeEval(attrs["value"])
+            self._numericAxisTags = True
         elif name == "glyphVariations":
             if not hasattr(self, "variations"):
                 self.variations = {}
@@ -278,6 +295,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
                             if isinstance(tupleElement, tuple):
                                 tupleName, tupleAttrs, tupleContent = tupleElement
                                 gvar.fromXML(tupleName, tupleAttrs, tupleContent)
+                        if self._numericAxisTags:
+                            gvar.axes = {
+                                safeEval(axis): value
+                                for axis, value in gvar.axes.items()
+                            }
             self.variations[glyphName] = glyphVariations
 
     @staticmethod

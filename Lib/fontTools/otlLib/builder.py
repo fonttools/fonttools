@@ -25,7 +25,6 @@ from functools import reduce
 import logging
 import copy
 
-
 log = logging.getLogger(__name__)
 
 
@@ -397,7 +396,11 @@ class ChainContextualBuilder(LookupBuilder):
         # We need to make a copy here because compiling
         # modifies the subtable (finalizing formats etc.)
         table = self.buildLookup_(copy.deepcopy(subtables))
-        w = OTTableWriter()
+        w = OTTableWriter(tableTag=self.table)
+        # This standalone lookup has no LookupList parent to set its metadata.
+        # Overflow reporting still needs a lookup name and index.
+        w.name = "Lookup"
+        w.repeatIndex = 0
         table.compile(w, self.font)
         size = len(w.getAllData())
         return size
@@ -428,7 +431,9 @@ class ChainContextualBuilder(LookupBuilder):
         if not write_gpos7 and self.subtable_type == "Pos":
             chaining = True
 
-        for ruleset in rulesets:
+        pending_rulesets = list(reversed(rulesets))
+        while pending_rulesets:
+            ruleset = pending_rulesets.pop()
             # Determine format strategy. We try to build formats 1, 2 and 3
             # subtables and then work out which is best. candidates list holds
             # the subtables in each format for this ruleset (including a dummy
@@ -468,7 +473,16 @@ class ChainContextualBuilder(LookupBuilder):
                         candidates_by_size.append((size, candidates[i]))
 
             if not candidates_by_size:
-                raise OpenTypeLibError("All candidates overflowed", self.location)
+                if len(ruleset.rules) <= 1:
+                    raise OpenTypeLibError("All candidates overflowed", self.location)
+                # Retry smaller consecutive groups in the same lookup. Keeping
+                # their order preserves the first-matching-rule semantics.
+                midpoint = len(ruleset.rules) // 2
+                for rules in (ruleset.rules[midpoint:], ruleset.rules[:midpoint]):
+                    part = ChainContextualRuleset()
+                    part.rules = rules
+                    pending_rulesets.append(part)
+                continue
 
             _min_size, winner = min(candidates_by_size, key=lambda x: x[0])
             subtables.extend(winner)

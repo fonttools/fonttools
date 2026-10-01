@@ -1993,8 +1993,7 @@ class FDSelectCompiler(object):
 class VarStoreCompiler(object):
     def __init__(self, varStoreData, parent):
         self.parent = parent
-        if not varStoreData.data:
-            varStoreData.compile()
+        varStoreData.compile()
         varStoreDataLen = min(0xFFFF, len(varStoreData.data))
         data = [packCard16(varStoreDataLen), varStoreData.data]
         self.data = bytesjoin(data)

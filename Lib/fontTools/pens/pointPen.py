@@ -15,9 +15,9 @@ For instance, whether or not a point is smooth, and its name.
 from __future__ import annotations
 
 import math
+from enum import StrEnum
 from typing import Any, Dict, List, Optional, Tuple
 
-from fontTools.misc.enumTools import StrEnum
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.transform import DecomposedTransform, Identity
 from fontTools.pens.basePen import AbstractPen, MissingComponentError, PenError

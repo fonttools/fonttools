@@ -85,8 +85,7 @@ def _lines(s):
             simple_svg_table_glyph_ids_on_children,
             "2,4-6",
             False,
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="1" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph1" d="M2,2"/></svg>]]>
                 </svgDoc>
@@ -99,8 +98,7 @@ def _lines(s):
                 <svgDoc endGlyphID="4" startGlyphID="4">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph4" d="M6,6"/></svg>]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         # same as above but with glyph id attribute in the root <svg> element itself
         # https://github.com/fonttools/fonttools/issues/2548
@@ -108,8 +106,7 @@ def _lines(s):
             simple_svg_table_glyph_ids_on_roots,
             "2,4-6",
             False,
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="1" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph1"><path d="M2,2"/></svg>]]>
                 </svgDoc>
@@ -122,16 +119,14 @@ def _lines(s):
                 <svgDoc endGlyphID="4" startGlyphID="4">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph4"><path d="M6,6"/></svg>]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         # same four glyphs, but we now retain gids
         (
             simple_svg_table_glyph_ids_on_children,
             "2,4-6",
             True,
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="2" startGlyphID="2">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph2" d="M2,2"/></svg>]]>
                 </svgDoc>
@@ -144,8 +139,7 @@ def _lines(s):
                 <svgDoc endGlyphID="6" startGlyphID="6">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg"><path id="glyph6" d="M6,6"/></svg>]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         # retain gids like above but with glyph id attribute in the root <svg> element itself
         # https://github.com/fonttools/fonttools/issues/2548
@@ -153,8 +147,7 @@ def _lines(s):
             simple_svg_table_glyph_ids_on_roots,
             "2,4-6",
             True,
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="2" startGlyphID="2">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph2"><path d="M2,2"/></svg>]]>
                 </svgDoc>
@@ -167,8 +160,7 @@ def _lines(s):
                 <svgDoc endGlyphID="6" startGlyphID="6">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" id="glyph6"><path d="M6,6"/></svg>]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
     ],
 )
@@ -273,8 +265,7 @@ COMPLEX_SVG = """\
         # is kept (as it contains 'glyph2') but renamed '.glyph1' to avoid clash
         (
             "2",
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="1" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <g id=".glyph1">
@@ -285,15 +276,13 @@ COMPLEX_SVG = """\
                 </svg>
                 ]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         # we keep both gid 1 and 2: the glyph elements' ids stay as they are (only the
         # range endGlyphID change); a gradient is kept since it's referenced by glyph1
         (
             "1,2",
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="2" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <defs>
@@ -314,15 +303,13 @@ COMPLEX_SVG = """\
                 </svg>
                 ]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         (
             # both gid 3 and 6 refer (via <use xlink:href="#...") to path 'p1', which
             # is thus kept in <defs>; the glyph ids and range start/end are renumbered.
             "3,6",
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="2" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <defs>
@@ -337,15 +324,13 @@ COMPLEX_SVG = """\
                 </svg>
                 ]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         (
             # 'glyph4' uses the whole 'glyph1' element (translated); we keep the latter
             # renamed to avoid clashes with new gids
             "3-4",
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="2" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <defs>
@@ -371,8 +356,7 @@ COMPLEX_SVG = """\
                 </svg>
                 ]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         (
             # 'glyph9' uses a path 'p2' defined inside 'glyph7', the latter is excluded
@@ -382,8 +366,7 @@ COMPLEX_SVG = """\
             # from subset and prefixed with '.'. But since an id=".glyph8" is already
             # used in the doc, we append a .{digit} suffix to disambiguate.
             "9,10",
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="2" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <g id="group1">
@@ -405,15 +388,13 @@ COMPLEX_SVG = """\
                 </svg>
                 ]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         (
             # 'glyph11' uses gradient 'rg4' which inherits from 'rg3', which inherits
             # from 'rg2', etc.
             "11",
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="1" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <defs>
@@ -430,15 +411,13 @@ COMPLEX_SVG = """\
                 </svg>
                 ]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
         (
             # 'glyph12' contains a style attribute with inline CSS declarations that
             # contains references to a gradient fill and a clipPath: we keep those
             "12",
-            _lines(
-                """\
+            _lines("""\
                 <svgDoc endGlyphID="1" startGlyphID="1">
                   <![CDATA[<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
                   <defs>
@@ -456,8 +435,7 @@ COMPLEX_SVG = """\
                 </svg>
                 ]]>
                 </svgDoc>
-                """
-            ),
+                """),
         ),
     ],
 )

@@ -1,0 +1,51 @@
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem latn TRK;
+
+# Entering latn/TRK a second time must not drop the lookups already
+# registered for it (smcp_3): latn/TRK gets all four lookups, latn/dflt
+# only the first two. This is the shape of aminabedi68/Estedad's smcp.
+feature smcp {
+    lookup smcp_1 {
+        script latn;
+        language dflt;
+        sub a by A.sc;
+    } smcp_1;
+
+    lookup smcp_2 {
+        script latn;
+        language dflt;
+        sub b by B.sc;
+    } smcp_2;
+
+    lookup smcp_3 {
+        script latn;
+        language TRK;
+        sub c by C.sc;
+    } smcp_3;
+
+    lookup smcp_4 {
+        script latn;
+        language TRK;
+        sub d by D.sc;
+    } smcp_4;
+} smcp;
+
+# The same with script default rules added between the two TRK sections;
+# the second "language TRK" includes the defaults current at that point,
+# so latn/TRK gets all four lookups and latn/dflt the first and third.
+feature c2sc {
+    sub A by A.sc;
+
+    script latn;
+    language TRK;
+    sub B by B.sc;
+
+    script latn;
+    language dflt;
+    sub C by C.sc;
+
+    script latn;
+    language TRK;
+    sub D by D.sc;
+} c2sc;

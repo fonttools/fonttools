@@ -146,7 +146,9 @@ Output options
   will be saved in as font-file.subset.
 
 --flavor=<type>
-  Specify flavor of output font file. May be 'woff' or 'woff2'.
+  Specify flavor of output font file. May be 'woff' or 'woff2', or
+  'none' (case-insensitive) for uncompressed OpenType. By default,
+  the flavor of the input font is preserved.
   Note that WOFF2 requires the Brotli Python extension, available
   at https://github.com/google/brotli
 
@@ -1106,7 +1108,7 @@ def __subset_classify_context(self):
                     (r.GlyphCount,) = (len(x) + 1 for x in d)
 
                 def ChainSetRuleData(r, d):
-                    (r.Backtrack, r.Input, r.LookAhead) = d
+                    r.Backtrack, r.Input, r.LookAhead = d
                     (
                         r.BacktrackGlyphCount,
                         r.InputGlyphCount,
@@ -1127,7 +1129,7 @@ def __subset_classify_context(self):
                     (r.ClassDef,) = d
 
                 def SetChainContextData(r, d):
-                    (r.BacktrackClassDef, r.InputClassDef, r.LookAheadClassDef) = d
+                    r.BacktrackClassDef, r.InputClassDef, r.LookAheadClassDef = d
 
                 RuleData = lambda r: (r.Class,)
                 ChainRuleData = lambda r: (r.Backtrack, r.Input, r.LookAhead)
@@ -1137,7 +1139,7 @@ def __subset_classify_context(self):
                     (r.GlyphCount,) = (len(x) + 1 for x in d)
 
                 def ChainSetRuleData(r, d):
-                    (r.Backtrack, r.Input, r.LookAhead) = d
+                    r.Backtrack, r.Input, r.LookAhead = d
                     (
                         r.BacktrackGlyphCount,
                         r.InputGlyphCount,
@@ -1161,7 +1163,7 @@ def __subset_classify_context(self):
                     (r.GlyphCount,) = (len(x) for x in d)
 
                 def ChainSetRuleData(r, d):
-                    (r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage) = d
+                    r.BacktrackCoverage, r.InputCoverage, r.LookAheadCoverage = d
                     (
                         r.BacktrackGlyphCount,
                         r.InputGlyphCount,
@@ -2101,9 +2103,7 @@ def prune_features(self):
         feature_indices = self.table.ScriptList.collect_features()
     else:
         feature_indices = []
-    (feature_indices, feature_index_map) = self.remap_duplicate_features(
-        feature_indices
-    )
+    feature_indices, feature_index_map = self.remap_duplicate_features(feature_indices)
 
     if self.table.FeatureList:
         self.table.FeatureList.subset_features(feature_indices)
@@ -2842,27 +2842,24 @@ def closure_glyphs(self, s):
 def prune_post_subset(self, font, options):
     table = self.table
 
-    store = table.MultiVarStore
-    if store is not None:
-        usedVarIdxes = set()
-        table.collect_varidxes(usedVarIdxes)
-        varidx_map = store.subset_varidxes(usedVarIdxes)
-        table.remap_varidxes(varidx_map)
-
-    axisIndicesList = table.AxisIndicesList.Item
+    axisIndicesList = table.AxisIndicesList
     if axisIndicesList is not None:
+        items = axisIndicesList.Item
         usedIndices = set()
         for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
             for comp in glyph.components:
                 if comp.axisIndicesIndex is not None:
                     usedIndices.add(comp.axisIndicesIndex)
         usedIndices = sorted(usedIndices)
-        table.AxisIndicesList.Item = _list_subset(axisIndicesList, usedIndices)
-        mapping = {old: new for new, old in enumerate(usedIndices)}
-        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
-            for comp in glyph.components:
-                if comp.axisIndicesIndex is not None:
-                    comp.axisIndicesIndex = mapping[comp.axisIndicesIndex]
+        if usedIndices:
+            axisIndicesList.Item = _list_subset(items, usedIndices)
+            mapping = {old: new for new, old in enumerate(usedIndices)}
+            for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+                for comp in glyph.components:
+                    if comp.axisIndicesIndex is not None:
+                        comp.axisIndicesIndex = mapping[comp.axisIndicesIndex]
+        else:
+            table.AxisIndicesList = None
 
     conditionList = table.ConditionList
     if conditionList is not None:
@@ -2873,12 +2870,25 @@ def prune_post_subset(self, font, options):
                 if comp.conditionIndex is not None:
                     usedIndices.add(comp.conditionIndex)
         usedIndices = sorted(usedIndices)
-        conditionList.ConditionTable = _list_subset(conditionTables, usedIndices)
-        mapping = {old: new for new, old in enumerate(usedIndices)}
-        for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
-            for comp in glyph.components:
-                if comp.conditionIndex is not None:
-                    comp.conditionIndex = mapping[comp.conditionIndex]
+        if usedIndices:
+            conditionList.ConditionTable = _list_subset(conditionTables, usedIndices)
+            mapping = {old: new for new, old in enumerate(usedIndices)}
+            for glyph in table.VarCompositeGlyphs.VarCompositeGlyph:
+                for comp in glyph.components:
+                    if comp.conditionIndex is not None:
+                        comp.conditionIndex = mapping[comp.conditionIndex]
+        else:
+            table.ConditionList = None
+
+    # Conditions can reference the variation store, so subset them first.
+    store = table.MultiVarStore
+    if store is not None:
+        usedVarIdxes = set()
+        table.collect_varidxes(usedVarIdxes)
+        varidx_map = store.subset_varidxes(usedVarIdxes)
+        table.remap_varidxes(varidx_map)
+        if not store:
+            table.MultiVarStore = None
 
     return True
 
@@ -3438,7 +3448,7 @@ class Options(object):
         self.recalc_average_width = False  # update 'xAvgCharWidth'
         self.recalc_max_context = False  # update 'usMaxContext'
         self.canonical_order = None  # Order tables as recommended
-        self.flavor = None  # May be 'woff' or 'woff2'
+        self.flavor = None  # 'woff', 'woff2', or None (unspecified / uncompressed)
         self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
         self.desubroutinize = False  # Desubroutinize CFF CharStrings
         self.harfbuzz_repacker = USE_HARFBUZZ_REPACKER.default
@@ -3892,6 +3902,26 @@ def load_font(fontFile, options, checkChecksums=0, dontLoadGlyphNames=False, laz
     return font
 
 
+def _normalize_output_flavor(flavor):
+    """Map an explicit --flavor value to TTFont.flavor.
+
+    Empty string and 'none' (any case) mean uncompressed OpenType.
+    """
+    if isinstance(flavor, str):
+        key = flavor.lower()
+        if key in ("", "none"):
+            return None
+        if key in ("woff", "woff2"):
+            return key
+    raise Options.OptionError(
+        "Invalid --flavor %r (use 'woff', 'woff2', or 'none')" % (flavor,)
+    )
+
+
+def _sfnt_extension(font):
+    return ".otf" if font.sfntVersion == "OTTO" else ".ttf"
+
+
 @timer("compile and save font")
 def save_font(font, outfile, options):
     if options.with_zopfli and options.flavor == "woff":
@@ -4046,8 +4076,22 @@ def main(args=None):
         fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames, lazy=lazy
     )
 
+    requested_flavor = options.flavor
+    if requested_flavor is None:
+        options.flavor = font.flavor
+    else:
+        try:
+            options.flavor = _normalize_output_flavor(requested_flavor)
+        except Options.OptionError as e:
+            usage()
+            print("ERROR:", e, file=sys.stderr)
+            return 2
+
     if outfile is None:
-        ext = "." + options.flavor.lower() if options.flavor is not None else None
+        if options.flavor is not None:
+            ext = "." + options.flavor
+        else:
+            ext = _sfnt_extension(font)
         outfile = makeOutputFileName(
             fontfile, extension=ext, overWrite=True, suffix=".subset"
         )

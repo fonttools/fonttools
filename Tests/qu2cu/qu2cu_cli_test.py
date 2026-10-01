@@ -9,7 +9,6 @@ from fontTools.qu2cu.cli import _main as main
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.beyond64k import upper_tables
 
-
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
 
 TEST_TTFS = [

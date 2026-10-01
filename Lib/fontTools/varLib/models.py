@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING
 from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
 
-
 if TYPE_CHECKING:
     from typing import Mapping, Sequence
 

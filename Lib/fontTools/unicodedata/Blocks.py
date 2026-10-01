@@ -4,9 +4,9 @@
 # Source: https://unicode.org/Public/UNIDATA/Blocks.txt
 # License: http://unicode.org/copyright.html#License
 #
-# Blocks-17.0.0.txt
-# Date: 2025-08-01
-# © 2025 Unicode®, Inc.
+# Blocks-18.0.0.txt
+# Date: 2026-07-08
+# © 2026 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use and license, see https://www.unicode.org/terms_of_use.html
 #
@@ -288,7 +288,8 @@ RANGES = [
     0x11D00,  # .. 0x11D5F ; Masaram Gondi
     0x11D60,  # .. 0x11DAF ; Gunjala Gondi
     0x11DB0,  # .. 0x11DEF ; Tolong Siki
-    0x11DF0,  # .. 0x11EDF ; No_Block
+    0x11DF0,  # .. 0x11DFF ; Bengali Supplement
+    0x11E00,  # .. 0x11EDF ; No_Block
     0x11EE0,  # .. 0x11EFF ; Makasar
     0x11F00,  # .. 0x11F5F ; Kawi
     0x11F60,  # .. 0x11FAF ; No_Block
@@ -297,7 +298,8 @@ RANGES = [
     0x12000,  # .. 0x123FF ; Cuneiform
     0x12400,  # .. 0x1247F ; Cuneiform Numbers and Punctuation
     0x12480,  # .. 0x1254F ; Early Dynastic Cuneiform
-    0x12550,  # .. 0x12F8F ; No_Block
+    0x12550,  # .. 0x1268F ; Archaic Cuneiform Numerals
+    0x12690,  # .. 0x12F8F ; No_Block
     0x12F90,  # .. 0x12FFF ; Cypro-Minoan
     0x13000,  # .. 0x1342F ; Egyptian Hieroglyphs
     0x13430,  # .. 0x1345F ; Egyptian Hieroglyph Format Controls
@@ -325,7 +327,9 @@ RANGES = [
     0x18B00,  # .. 0x18CFF ; Khitan Small Script
     0x18D00,  # .. 0x18D7F ; Tangut Supplement
     0x18D80,  # .. 0x18DFF ; Tangut Components Supplement
-    0x18E00,  # .. 0x1AFEF ; No_Block
+    0x18E00,  # .. 0x1919F ; Jurchen
+    0x191A0,  # .. 0x191DF ; Jurchen Radicals
+    0x191E0,  # .. 0x1AFEF ; No_Block
     0x1AFF0,  # .. 0x1AFFF ; Kana Extended-B
     0x1B000,  # .. 0x1B0FF ; Kana Supplement
     0x1B100,  # .. 0x1B12F ; Kana Extended-A
@@ -342,7 +346,8 @@ RANGES = [
     0x1D000,  # .. 0x1D0FF ; Byzantine Musical Symbols
     0x1D100,  # .. 0x1D1FF ; Musical Symbols
     0x1D200,  # .. 0x1D24F ; Ancient Greek Musical Notation
-    0x1D250,  # .. 0x1D2BF ; No_Block
+    0x1D250,  # .. 0x1D28F ; Musical Symbols Supplement
+    0x1D290,  # .. 0x1D2BF ; No_Block
     0x1D2C0,  # .. 0x1D2DF ; Kaktovik Numerals
     0x1D2E0,  # .. 0x1D2FF ; Mayan Numerals
     0x1D300,  # .. 0x1D35F ; Tai Xuan Jing Symbols
@@ -350,7 +355,9 @@ RANGES = [
     0x1D380,  # .. 0x1D3FF ; No_Block
     0x1D400,  # .. 0x1D7FF ; Mathematical Alphanumeric Symbols
     0x1D800,  # .. 0x1DAAF ; Sutton SignWriting
-    0x1DAB0,  # .. 0x1DEFF ; No_Block
+    0x1DAB0,  # .. 0x1DAFF ; No_Block
+    0x1DB00,  # .. 0x1DBFF ; Miscellaneous Symbols and Arrows Extended
+    0x1DC00,  # .. 0x1DEFF ; No_Block
     0x1DF00,  # .. 0x1DFFF ; Latin Extended-G
     0x1E000,  # .. 0x1E02F ; Glagolitic Supplement
     0x1E030,  # .. 0x1E08F ; Cyrillic Extended-D
@@ -407,7 +414,9 @@ RANGES = [
     0x30000,  # .. 0x3134F ; CJK Unified Ideographs Extension G
     0x31350,  # .. 0x323AF ; CJK Unified Ideographs Extension H
     0x323B0,  # .. 0x3347F ; CJK Unified Ideographs Extension J
-    0x33480,  # .. 0xDFFFF ; No_Block
+    0x33480,  # .. 0x3CFFF ; No_Block
+    0x3D000,  # .. 0x3FC3F ; Seal
+    0x3FC40,  # .. 0xDFFFF ; No_Block
     0xE0000,  # .. 0xE007F ; Tags
     0xE0080,  # .. 0xE00FF ; No_Block
     0xE0100,  # .. 0xE01EF ; Variation Selectors Supplement
@@ -688,7 +697,8 @@ VALUES = [
     "Masaram Gondi",  # 11D00..11D5F
     "Gunjala Gondi",  # 11D60..11DAF
     "Tolong Siki",  # 11DB0..11DEF
-    "No_Block",  # 11DF0..11EDF
+    "Bengali Supplement",  # 11DF0..11DFF
+    "No_Block",  # 11E00..11EDF
     "Makasar",  # 11EE0..11EFF
     "Kawi",  # 11F00..11F5F
     "No_Block",  # 11F60..11FAF
@@ -697,7 +707,8 @@ VALUES = [
     "Cuneiform",  # 12000..123FF
     "Cuneiform Numbers and Punctuation",  # 12400..1247F
     "Early Dynastic Cuneiform",  # 12480..1254F
-    "No_Block",  # 12550..12F8F
+    "Archaic Cuneiform Numerals",  # 12550..1268F
+    "No_Block",  # 12690..12F8F
     "Cypro-Minoan",  # 12F90..12FFF
     "Egyptian Hieroglyphs",  # 13000..1342F
     "Egyptian Hieroglyph Format Controls",  # 13430..1345F
@@ -725,7 +736,9 @@ VALUES = [
     "Khitan Small Script",  # 18B00..18CFF
     "Tangut Supplement",  # 18D00..18D7F
     "Tangut Components Supplement",  # 18D80..18DFF
-    "No_Block",  # 18E00..1AFEF
+    "Jurchen",  # 18E00..1919F
+    "Jurchen Radicals",  # 191A0..191DF
+    "No_Block",  # 191E0..1AFEF
     "Kana Extended-B",  # 1AFF0..1AFFF
     "Kana Supplement",  # 1B000..1B0FF
     "Kana Extended-A",  # 1B100..1B12F
@@ -742,7 +755,8 @@ VALUES = [
     "Byzantine Musical Symbols",  # 1D000..1D0FF
     "Musical Symbols",  # 1D100..1D1FF
     "Ancient Greek Musical Notation",  # 1D200..1D24F
-    "No_Block",  # 1D250..1D2BF
+    "Musical Symbols Supplement",  # 1D250..1D28F
+    "No_Block",  # 1D290..1D2BF
     "Kaktovik Numerals",  # 1D2C0..1D2DF
     "Mayan Numerals",  # 1D2E0..1D2FF
     "Tai Xuan Jing Symbols",  # 1D300..1D35F
@@ -750,7 +764,9 @@ VALUES = [
     "No_Block",  # 1D380..1D3FF
     "Mathematical Alphanumeric Symbols",  # 1D400..1D7FF
     "Sutton SignWriting",  # 1D800..1DAAF
-    "No_Block",  # 1DAB0..1DEFF
+    "No_Block",  # 1DAB0..1DAFF
+    "Miscellaneous Symbols and Arrows Extended",  # 1DB00..1DBFF
+    "No_Block",  # 1DC00..1DEFF
     "Latin Extended-G",  # 1DF00..1DFFF
     "Glagolitic Supplement",  # 1E000..1E02F
     "Cyrillic Extended-D",  # 1E030..1E08F
@@ -807,7 +823,9 @@ VALUES = [
     "CJK Unified Ideographs Extension G",  # 30000..3134F
     "CJK Unified Ideographs Extension H",  # 31350..323AF
     "CJK Unified Ideographs Extension J",  # 323B0..3347F
-    "No_Block",  # 33480..DFFFF
+    "No_Block",  # 33480..3CFFF
+    "Seal",  # 3D000..3FC3F
+    "No_Block",  # 3FC40..DFFFF
     "Tags",  # E0000..E007F
     "No_Block",  # E0080..E00FF
     "Variation Selectors Supplement",  # E0100..E01EF

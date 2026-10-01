@@ -1,7 +1,6 @@
 from fontTools.misc.arrayTools import pairwise
 from fontTools.pens.filterPen import ContourFilterPen
 
-
 __all__ = ["reversedContour", "ReverseContourPen"]
 
 

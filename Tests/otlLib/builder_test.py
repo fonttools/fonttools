@@ -2019,6 +2019,29 @@ class ChainContextualRulesetTest(object):
             assert format3.SeqLookupCount == 1
             assert format3.SeqLookupRecord[0].LookupListIndex == 3
 
+    @pytest.mark.parametrize(
+        "builder_class",
+        [builder.ChainContextPosBuilder, builder.ChainContextSubstBuilder],
+    )
+    @pytest.mark.parametrize("extension", [False, True])
+    def test_format2_overflow_falls_back_to_format3(self, builder_class, extension):
+        font = ttLib.TTFont()
+        glyphs = [f"g{i}" for i in range(44000)]
+        font.setGlyphOrder(glyphs)
+        lookup_builder = builder_class(font, None)
+        lookup_builder.extension = extension
+        # Alternating glyph IDs make the format-2 ClassDef too large, while
+        # the equivalent format-3 Coverage fits in a single subtable.
+        lookup_builder.rules.append(
+            builder.ChainContextualRule([], [glyphs[::2]], [], [None])
+        )
+        lookup = lookup_builder.build()
+        assert len(lookup.SubTable) == 1
+        subtable = lookup.SubTable[0]
+        if extension:
+            subtable = subtable.ExtSubTable
+        assert subtable.Format == 3
+
     def test_makeRulesets(self):
         font = ttLib.TTFont()
         font.setGlyphOrder(["a", "b", "c", "d", "A", "B", "C", "D", "E"])

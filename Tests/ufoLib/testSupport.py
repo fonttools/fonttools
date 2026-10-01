@@ -543,7 +543,7 @@ fontInfoVersion3 = {
         dict(x=100, y=200, angle=45, identifier="guide1"),
         dict(x=100, y=200, angle=45, identifier="guide2"),
         dict(x=100, y=200, angle=45, identifier="\x20"),
-        dict(x=100, y=200, angle=45, identifier="\x7E"),
+        dict(x=100, y=200, angle=45, identifier="\x7e"),
         # colors
         dict(x=100, y=200, angle=45, color="0,0,0,0"),
         dict(x=100, y=200, angle=45, color="1,0,0,0"),

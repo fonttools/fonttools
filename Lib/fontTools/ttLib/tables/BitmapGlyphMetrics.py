@@ -4,7 +4,6 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 import logging
 
-
 log = logging.getLogger(__name__)
 
 bigGlyphMetricsFormat = """

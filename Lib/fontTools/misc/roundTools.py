@@ -5,6 +5,8 @@ Various round-to-integer helpers.
 import math
 import functools
 import logging
+from collections.abc import Callable
+from typing import TypeAlias
 
 log = logging.getLogger(__name__)
 
@@ -16,12 +18,24 @@ __all__ = [
     "nearestMultipleShortestRepr",
 ]
 
+RoundingFunction: TypeAlias = Callable[[float], float]
+"""A rounding strategy for numbers; can return a float as well as an int, as in
+some strategies rounding is conditional."""
 
-def noRound(value):
+
+def noRound(value: float) -> float:
+    """Return float value unmodified; do not round.
+
+    Args:
+            value (float): The input floating-point value.
+
+    Returns
+            float: The same value.
+    """
     return value
 
 
-def otRound(value):
+def otRound(value: float) -> int:
     """Round float value to nearest integer towards ``+Infinity``.
 
     The OpenType spec (in the section on `"normalization" of OpenType Font Variations <https://docs.microsoft.com/en-us/typography/opentype/spec/otvaroverview#coordinate-scales-and-normalization>`_)
@@ -38,19 +52,46 @@ def otRound(value):
             value (float): The input floating-point value.
 
     Returns
-            float: The rounded value.
+            int: The rounded value.
     """
     # See this thread for how we ended up with this implementation:
     # https://github.com/fonttools/fonttools/issues/1248#issuecomment-383198166
     return int(math.floor(value + 0.5))
 
 
-def maybeRound(v, tolerance, round=otRound):
+def maybeRound(v: float, tolerance: float, round: RoundingFunction = otRound) -> float:
+    """Round only if rounding changes the value by no more than a given amount.
+
+    Args:
+            value (float): The input floating-point value.
+            tolerance (float): The maximum absolute difference permitted.
+            round (function): The rounding strategy, taking and giving a float.
+
+    Returns
+            float: A rounded value if within tolerance, otherwise the original.
+    """
     rounded = round(v)
     return rounded if abs(rounded - v) <= tolerance else v
 
 
-def roundFunc(tolerance, round=otRound):
+def roundFunc(tolerance: float, round: RoundingFunction = otRound) -> RoundingFunction:
+    """Make a conditional rounding strategy from a base strategy and tolerance.
+
+    This preconfigures :func:`maybeRound` with fixed arguments, allowing it to be
+    used anywhere a simple rounding function is accepted.
+
+    The tolerance is validated to ensure it is absolute, and the cases where
+    rounding would never or always occur are optimized. Rounding must never
+    change a value by more than 0.5 for this to be sound (e.g.  :py:func:`ceil`
+    could change by too much).
+
+    Args:
+            tolerance (float): The maximum absolute difference permitted.
+            round (function): The rounding strategy, taking and giving a float.
+
+    Returns
+            function: A strategy that conditionally rounds based on tolerance.
+    """
     if tolerance < 0:
         raise ValueError("Rounding tolerance must be positive")
 

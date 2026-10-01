@@ -2,7 +2,6 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import readHex, safeEval
 import struct
 
-
 sbixGlyphHeaderFormat = """
 	>
 	originOffsetX: h	# The x-value of the point in the glyph relative to its

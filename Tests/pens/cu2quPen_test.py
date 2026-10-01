@@ -326,14 +326,12 @@ pen.endPath()""".splitlines(),
 
         self.assertEqual(
             str(pen),
-            dedent(
-                """\
+            dedent("""\
                 pen.beginPath()
                 pen.addPoint((1, 1), name=None, segmentType=None, smooth=False)
                 pen.addPoint((2, 2), name=None, segmentType=None, smooth=False)
                 pen.addPoint((3, 3), name=None, segmentType=None, smooth=False)
-                pen.endPath()"""
-            ),
+                pen.endPath()"""),
         )
 
 

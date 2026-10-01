@@ -3,7 +3,6 @@ from fontTools.colorLib.builder import buildColrV1
 from fontTools.colorLib.unbuilder import unbuildColrV1
 import pytest
 
-
 TEST_COLOR_GLYPHS = {
     "glyph00010": {
         "Format": int(ot.PaintFormat.PaintColrLayers),

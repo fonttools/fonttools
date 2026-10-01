@@ -17,7 +17,6 @@ from fontTools.cu2qu.errors import (
 
 import pytest
 
-
 ufoLib2 = pytest.importorskip("ufoLib2")
 
 DATADIR = os.path.join(os.path.dirname(__file__), "data")

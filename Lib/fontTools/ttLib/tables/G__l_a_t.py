@@ -8,7 +8,6 @@ from . import DefaultTable
 from . import grUtils
 import struct
 
-
 Glat_format_0 = """
     >        # big endian
     version: 16.16F
@@ -79,7 +78,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
         elif self.version <= 2.9:
             decoder = partial(self.decompileAttributes12, fmt=Glat_format_23_entry)
         elif self.version >= 3.0:
-            (data, self.scheme) = grUtils.decompress(data)
+            data, self.scheme = grUtils.decompress(data)
             sstruct.unpack2(Glat_format_3, data, self)
             self.hasOctaboxes = (self.compression & 1) == 1
             decoder = self.decompileAttributes3
@@ -226,7 +225,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                 for element in subcontent:
                     if not isinstance(element, tuple):
                         continue
-                    (tag, attrs, subcontent) = element
+                    tag, attrs, subcontent = element
                     so = _Object()
                     for k, v in attrs.items():
                         setattr(so, k, int(float(v[:-1]) * 255.0 / 100.0 + 0.5))

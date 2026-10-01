@@ -49,7 +49,8 @@ def makeTTFont():
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
-        idotbelow idotless iogonek acutecomb brevecomb ogonekcomb dotbelowcomb
+        idotaccent idotbelow idotless iogonek acutecomb brevecomb ogonekcomb
+        dotbelowcomb
     """.split()
     glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
     font = TTFont()
@@ -100,7 +101,9 @@ class BuilderTest(unittest.TestCase):
         contextual_inline_multi_sub_format_2
         contextual_inline_format_4
         chain_context_multi_subst_class
-        duplicate_language_stmt
+        duplicate_language_stmt duplicate_language_stmt_include_dflt
+        script_language_tracking script_language_tracking_DFLT
+        script_language_tracking_multi script_language_tracking_redundant
         CursivePosSubtable
         MarkBasePosSubtable
         MarkLigPosSubtable
@@ -423,9 +426,7 @@ class BuilderTest(unittest.TestCase):
         )
 
     def test_mixed_singleSubst_multipleSubst_aalt(self):
-        font = self.build(
-            dedent(
-                """
+        font = self.build(dedent("""
                 feature aalt {
                   feature ccmp;
                 } aalt;
@@ -437,9 +438,7 @@ class BuilderTest(unittest.TestCase):
                   sub [A A.sc] by A;
                   sub [B B.sc] by [B B.sc];
                 } ccmp;
-                """
-            )
-        )
+                """))
 
         assert "GSUB" in font
         st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
@@ -481,9 +480,7 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(len(st.ligatures["A"][0].Component), 0)
 
     def test_mixed_singleSubst_ligatureSubst_aalt(self):
-        font = self.build(
-            dedent(
-                """
+        font = self.build(dedent("""
                 feature aalt {
                   feature liga;
                 } aalt;
@@ -493,9 +490,7 @@ class BuilderTest(unittest.TestCase):
                   sub f f i by f_f_i;
                   sub A     by A.sc;
                 } liga;
-                """
-            )
-        )
+                """))
 
         assert "GSUB" in font
         st = font["GSUB"].table.LookupList.Lookup[0].SubTable[0]
@@ -516,17 +511,13 @@ class BuilderTest(unittest.TestCase):
         )
 
     def test_mixed_singleSubst_multipleSubst_ligatureSubst_feature(self):
-        font = self.build(
-            dedent(
-                """
+        font = self.build(dedent("""
                 feature test {
                   sub A     by A.sc;
                   sub f_f   by f f;
                   sub f f i by f_f_i;
                 } test;
-                """
-            )
-        )
+                """))
 
         assert "GSUB" in font
         lookups = font["GSUB"].table.LookupList.Lookup
@@ -664,6 +655,19 @@ class BuilderTest(unittest.TestCase):
         builder.set_script(location=None, script="cyrl")
         self.assertEqual(builder.language_systems, {("cyrl", "dflt")})
 
+    def test_script_matching_current_script(self):
+        # The current script starts out as the first declared language system,
+        # so this script statement is a no-op and, in particular, does not
+        # reset the lookupflag.
+        # https://github.com/fonttools/fonttools/issues/1824
+        builder = Builder(makeTTFont(), (None, None))
+        builder.add_language_system(None, "latn", "dflt")
+        builder.start_feature(location=None, name="test")
+        builder.set_lookup_flag(None, 8, None, None)
+        builder.set_script(location=None, script="latn")
+        self.assertEqual(builder.language_systems, {("latn", "dflt")})
+        self.assertEqual(builder.lookupflag_, 8)
+
     def test_script_in_aalt_feature(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -703,6 +707,75 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(builder.language_systems, {("cyrl", "BGR ")})
         builder.start_feature(location=None, name="test2")
         self.assertEqual(builder.language_systems, {("latn", "FRA ")})
+
+    def test_language_multiple(self):
+        builder = Builder(makeTTFont(), (None, None))
+        builder.start_feature(location=None, name="test")
+        builder.set_script(location=None, script="latn")
+        builder.set_language(
+            location=None,
+            language=["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "],
+            include_default=False,
+            required=True,
+        )
+        languages = {"AZE ", "CRT ", "KAZ ", "TAT ", "TRK "}
+        self.assertEqual(
+            builder.language_systems,
+            {("latn", language) for language in languages},
+        )
+        self.assertEqual(
+            builder.required_features_,
+            {("latn", language): "test" for language in languages},
+        )
+
+    def test_language_multiple_build(self):
+        font = self.build(
+            "feature locl {"
+            "  script latn;"
+            "  language AZE CRT KAZ TAT TRK exclude_dflt;"
+            "  sub i by idotaccent;"
+            "} locl;"
+        )
+        script_record = font["GSUB"].table.ScriptList.ScriptRecord[0]
+        self.assertEqual(script_record.ScriptTag, "latn")
+        script = script_record.Script
+        self.assertIsNone(script.DefaultLangSys)
+        self.assertEqual(
+            [record.LangSysTag for record in script.LangSysRecord],
+            ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "],
+        )
+        self.assertEqual(
+            [record.LangSys.FeatureIndex for record in script.LangSysRecord],
+            [[0], [0], [0], [0], [0]],
+        )
+
+    def test_language_multiple_equivalent_to_lookup_references(self):
+        multiple_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language AZE CRT;
+                    lookup idot {
+                        substitute i by idotaccent;
+                    } idot;
+                } locl;
+                """))
+        separate_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language AZE;
+                    lookup idot {
+                        substitute i by idotaccent;
+                    } idot;
+
+                    language CRT;
+                    lookup idot;
+                } locl;
+                """))
+
+        self.assertEqual(
+            multiple_languages["GSUB"].compile(multiple_languages),
+            separate_languages["GSUB"].compile(separate_languages),
+        )
 
     def test_language_in_aalt_feature(self):
         self.assertRaisesRegex(
@@ -809,6 +882,20 @@ class BuilderTest(unittest.TestCase):
             "feature test {"
             "    pos a' lookup dummy b;"
             "} test;",
+        )
+
+    def test_STAT_elidedfallbackname_missing(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "STAT table requires an ElidedFallbackName or ElidedFallbackNameID",
+            self.build,
+            "table STAT {"
+            '    DesignAxis wght 0 { name "Weight"; };'
+            "    AxisValue {"
+            "        location wght 400;"
+            '        name "Regular";'
+            "    };"
+            "} STAT;",
         )
 
     def test_STAT_elidedfallbackname_already_defined(self):
@@ -1438,6 +1525,28 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError, "Failed to compute deltas for variable scalar"
         ):
             addOpenTypeFeaturesFromString(font, features)
+
+    def test_variable_scalar_default(self):
+        """Test that missing axis name(s) in variable scalar means default location."""
+
+        features = """
+            feature kern {
+                pos two <0 (wght=900:22 12 wdth=150,wght=900:42) 0 0>;
+            } kern;
+        """
+
+        font = self.make_mock_vf()
+        addOpenTypeFeaturesFromString(font, features)
+
+        var_region_list = font.tables["GDEF"].table.VarStore.VarRegionList
+        var_region_axis_wght = var_region_list.Region[0].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[0].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.0, 0.0)
+        var_region_axis_wght = var_region_list.Region[1].VarRegionAxis[0]
+        var_region_axis_wdth = var_region_list.Region[1].VarRegionAxis[1]
+        assert self.get_region(var_region_axis_wght) == (0.0, 0.875, 1.0)
+        assert self.get_region(var_region_axis_wdth) == (0.0, 0.5, 1.0)
 
     def test_ligatureCaretByPos_variable_scalar(self):
         """Test that the `avar` table is consulted when normalizing user-space

@@ -110,7 +110,7 @@ def woff_size(font: TTFont, path: Path) -> int:
 
 def write_csv(rows: List[Tuple[Any]]) -> None:
     sys.stdout.reconfigure(encoding="utf-8")
-    sys.stdout.write("\uFEFF")
+    sys.stdout.write("\ufeff")
     writer = csv.writer(sys.stdout, lineterminator="\n")
     writer.writerow(
         [

@@ -7,7 +7,6 @@ from fontTools.misc.fixedTools import (
 from . import DefaultTable
 import math
 
-
 hheaFormat = """
 		>  # big endian
 		tableVersion:           L

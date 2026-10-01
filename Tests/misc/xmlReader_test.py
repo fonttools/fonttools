@@ -21,8 +21,7 @@ class TestXMLReader(unittest.TestCase):
                 super(DebugXMLReader, self)._endElementHandler(name)
 
         expected = "fôôbär"
-        data = (
-            """\
+        data = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <ttFont>
   <name>
@@ -31,9 +30,7 @@ class TestXMLReader(unittest.TestCase):
     </namerecord>
   </name>
 </ttFont>
-"""
-            % expected
-        )
+""" % expected
 
         with BytesIO(data.encode("utf-8")) as tmp:
             reader = DebugXMLReader(tmp, TTFont())

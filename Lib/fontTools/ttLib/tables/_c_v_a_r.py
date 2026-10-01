@@ -7,7 +7,6 @@ from fontTools.ttLib.tables.TupleVariation import (
     TupleVariation,
 )
 
-
 # https://www.microsoft.com/typography/otspec/cvar.htm
 # https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6cvar.html

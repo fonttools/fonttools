@@ -6,15 +6,15 @@ The XML format is:
 
 .. code-block:: xml
 
-	<SVG>
-		<svgDoc endGlyphID="1" startGlyphID="1">
-			<![CDATA[ <complete SVG doc> ]]
-		</svgDoc>
-	...
-		<svgDoc endGlyphID="n" startGlyphID="m">
-			<![CDATA[ <complete SVG doc> ]]
-		</svgDoc>
-	</SVG>
+        <SVG>
+                <svgDoc endGlyphID="1" startGlyphID="1">
+                        <![CDATA[ <complete SVG doc> ]]
+                </svgDoc>
+        ...
+                <svgDoc endGlyphID="n" startGlyphID="m">
+                        <![CDATA[ <complete SVG doc> ]]
+                </svgDoc>
+        </SVG>
 """
 
 from fontTools.misc.textTools import bytesjoin, safeEval, strjoin, tobytes, tostr
@@ -25,7 +25,6 @@ from dataclasses import dataclass, astuple
 from io import BytesIO
 import struct
 import logging
-
 
 log = logging.getLogger(__name__)
 

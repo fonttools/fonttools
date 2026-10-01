@@ -1,6 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from collections import namedtuple
+from collections.abc import ItemsView, ValuesView
 from fontTools.misc import sstruct
 from fontTools import ttLib
 from fontTools import version
@@ -326,6 +327,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
     def keys(self):
         return self.glyphs.keys()
+
+    def __iter__(self):
+        return self.glyphs.__iter__()
+
+    def values(self):
+        return ValuesView(self)
+
+    def items(self):
+        return ItemsView(self)
 
     def has_key(self, glyphName):
         return glyphName in self.glyphs
@@ -1230,7 +1240,13 @@ class Glyph(object):
             g = glyfTable[glyphName]
 
             if boundsDone is None or glyphName not in boundsDone:
-                g.recalcBounds(glyfTable, boundsDone=boundsDone)
+                try:
+                    g.recalcBounds(glyfTable, boundsDone=boundsDone)
+                except RecursionError:
+                    raise ttLib.TTLibError(
+                        "glyph '%s' contains a recursive component reference"
+                        % glyphName
+                    )
                 if boundsDone is not None:
                     boundsDone.add(glyphName)
             # empty components shouldn't update the bounds of the parent glyph
@@ -1824,7 +1840,7 @@ class GlyphComponent(object):
             ]  # fixed 2.14
             data = data[4:]
         elif self.flags & WE_HAVE_A_TWO_BY_TWO:
-            (xscale, scale01, scale10, yscale) = struct.unpack(">hhhh", data[:8])
+            xscale, scale01, scale10, yscale = struct.unpack(">hhhh", data[:8])
             self.transform = [
                 [fi2fl(xscale, 14), fi2fl(scale01, 14)],
                 [fi2fl(scale10, 14), fi2fl(yscale, 14)],

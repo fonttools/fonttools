@@ -8,7 +8,6 @@ from fontTools.ttLib.beyond64k import upper_tables
 
 import pytest
 
-
 TEST_DATA = Path(__file__).parent / "data"
 
 

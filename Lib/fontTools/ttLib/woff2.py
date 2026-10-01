@@ -27,7 +27,6 @@ from fontTools.ttLib.sfnt import (
 from fontTools.ttLib.tables import ttProgram, _g_l_y_f
 import logging
 
-
 log = logging.getLogger("fontTools.ttLib.woff2")
 
 haveBrotli = False

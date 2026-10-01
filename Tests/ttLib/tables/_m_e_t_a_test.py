@@ -6,7 +6,6 @@ from fontTools.ttLib.tables._m_e_t_a import table__m_e_t_a
 from io import BytesIO
 import unittest
 
-
 # From a real font on MacOS X, but substituted 'bild' tag by 'TEST',
 # and shortened the payload.
 META_DATA = deHexStr(
@@ -30,11 +29,11 @@ class MetaTableTest(unittest.TestCase):
     def test_decompile(self):
         table = table__m_e_t_a()
         table.decompile(META_DATA, ttFont={"meta": table})
-        self.assertEqual({"TEST": b"\xCA\xFE\xBE\xEF"}, table.data)
+        self.assertEqual({"TEST": b"\xca\xfe\xbe\xef"}, table.data)
 
     def test_compile(self):
         table = table__m_e_t_a()
-        table.data["TEST"] = b"\xCA\xFE\xBE\xEF"
+        table.data["TEST"] = b"\xca\xfe\xbe\xef"
         self.assertEqual(META_DATA, table.compile(ttFont={"meta": table}))
 
     def test_decompile_text(self):
@@ -52,7 +51,7 @@ class MetaTableTest(unittest.TestCase):
 
     def test_toXML(self):
         table = table__m_e_t_a()
-        table.data["TEST"] = b"\xCA\xFE\xBE\xEF"
+        table.data["TEST"] = b"\xca\xfe\xbe\xef"
         writer = XMLWriter(BytesIO())
         table.toXML(writer, {"meta": table})
         xml = writer.file.getvalue().decode("utf-8")
@@ -83,7 +82,7 @@ class MetaTableTest(unittest.TestCase):
             '<hexdata tag="TEST">' "    cafebeef" "</hexdata>"
         ):
             table.fromXML(name, attrs, content, ttFont=None)
-        self.assertEqual({"TEST": b"\xCA\xFE\xBE\xEF"}, table.data)
+        self.assertEqual({"TEST": b"\xca\xfe\xbe\xef"}, table.data)
 
     def test_toXML_text(self):
         table = table__m_e_t_a()

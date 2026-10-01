@@ -1,7 +1,7 @@
 """
-    designSpaceDocument
+designSpaceDocument
 
-    - Read and write designspace files
+- Read and write designspace files
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from fontTools.misc import plistlib
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.misc.textTools import tobytes, tostr
 
+from .types import getVFUserRegion
 
 __all__ = [
     "AxisDescriptor",
@@ -31,6 +32,7 @@ __all__ = [
     "DesignSpaceDocument",
     "DesignSpaceDocumentError",
     "DiscreteAxisDescriptor",
+    "getVFUserRegion",
     "InstanceDescriptor",
     "LocationLabelDescriptor",
     "RangeAxisSubsetDescriptor",
@@ -941,6 +943,31 @@ class AbstractAxisDescriptor(SimpleDescriptor):
         .. versionadded:: 5.0
         """
 
+    def get_validated_map(self) -> list[tuple[float, float]]:
+        """Return a new list with exact duplicate pairs collapsed.
+
+        The stored :attr:`map` is not modified.
+        Multiple distinct input coordinates may map to the same output;
+        duplicate outputs (many-to-one mappings) are valid.
+
+        This validates only ambiguity in the input coordinates: an input
+        coordinate mapping to different outputs raises
+        :class:`DesignSpaceDocumentError`. It does not validate axis endpoint
+        coverage or output monotonicity.
+        """
+        validated = {}
+        for input_value, output_value in self.map:
+            if input_value in validated:
+                previous_output = validated[input_value]
+                if previous_output != output_value:
+                    raise DesignSpaceDocumentError(
+                        f"Axis '{self.name}': mapping input value {input_value} "
+                        f"has conflicting outputs {previous_output} and {output_value}."
+                    )
+                continue
+            validated[input_value] = output_value
+        return list(validated.items())
+
 
 class AxisDescriptor(AbstractAxisDescriptor):
     """Simple container for the axis data.
@@ -1035,21 +1062,23 @@ class AxisDescriptor(AbstractAxisDescriptor):
         """Maps value from axis mapping's input (user) to output (design)."""
         from fontTools.varLib.models import piecewiseLinearMap
 
-        if not self.map:
+        axis_map = self.get_validated_map()
+        if not axis_map:
             return v
-        return piecewiseLinearMap(v, {k: v for k, v in self.map})
+        return piecewiseLinearMap(v, dict(axis_map))
 
     def map_backward(self, v):
         """Maps value from axis mapping's output (design) to input (user)."""
         if isinstance(v, tuple):
             v = v[0]
-        if not self.map:
+        axis_map = self.get_validated_map()
+        if not axis_map:
             return v
         # Build (design, user) pairs sorted by design then user, keeping
         # both endpoints of any many-to-one (flat) segments so we can
         # invert them and interpolation is correct on both sides.
         # https://github.com/googlefonts/ufo2ft/issues/978
-        backward = sorted((design, user) for user, design in self.map)
+        backward = sorted((design, user) for user, design in axis_map)
         design0, user0 = backward[0]
         if v <= design0:
             return v + user0 - design0
@@ -1141,7 +1170,7 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
         Note: for discrete axes, each value must have its mapping entry, if
         you intend that value to be mapped.
         """
-        return next((v for k, v in self.map if k == value), value)
+        return next((v for k, v in self.get_validated_map() if k == value), value)
 
     def map_backward(self, value):
         """Maps value from axis mapping's output to input.
@@ -1153,7 +1182,7 @@ class DiscreteAxisDescriptor(AbstractAxisDescriptor):
         """
         if isinstance(value, tuple):
             value = value[0]
-        return next((k for k, v in self.map if v == value), value)
+        return next((k for k, v in self.get_validated_map() if v == value), value)
 
 
 class AxisLabelDescriptor(SimpleDescriptor):
@@ -1994,7 +2023,7 @@ class BaseDocReader(LogMixin):
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
-        tree = ET.parse(self.path)
+        tree = ET.parse(self.path, parser=ET.XMLParser())
         self.root = tree.getroot()
         self.documentObject.formatVersion = self.root.attrib.get("format", "3.0")
         self._axes = []
@@ -2333,23 +2362,16 @@ class BaseDocReader(LogMixin):
             userMinimum = element.get("userminimum")
             userDefault = element.get("userdefault")
             userMaximum = element.get("usermaximum")
-            if (
-                userMinimum is not None
-                and userDefault is not None
-                and userMaximum is not None
-            ):
-                return self.rangeAxisSubsetDescriptorClass(
-                    name=name,
-                    userMinimum=float(userMinimum),
-                    userDefault=float(userDefault),
-                    userMaximum=float(userMaximum),
-                )
-            if all(v is None for v in (userMinimum, userDefault, userMaximum)):
-                return self.rangeAxisSubsetDescriptorClass(name=name)
-
-            raise DesignSpaceDocumentError(
-                "axis-subset element must have min/max/default values or none at all."
-            )
+            # Leave omitted fields at the descriptor defaults; getVFUserRegion
+            # resolves them against the full axis bounds and default.
+            kwargs: Dict[str, Any] = {"name": name}
+            if userMinimum is not None:
+                kwargs["userMinimum"] = float(userMinimum)
+            if userDefault is not None:
+                kwargs["userDefault"] = float(userDefault)
+            if userMaximum is not None:
+                kwargs["userMaximum"] = float(userMaximum)
+            return self.rangeAxisSubsetDescriptorClass(**kwargs)
 
     def readSources(self):
         for sourceCount, sourceElement in enumerate(
@@ -2561,6 +2583,9 @@ class BaseDocReader(LogMixin):
 
     def readLibElement(self, libElement, instanceObject):
         """Read the lib element for the given instance."""
+        if len(libElement) == 0:
+            # an empty <lib> element is equivalent to no lib at all
+            return
         instanceObject.lib = plistlib.fromtree(libElement[0])
 
     def readInfoElement(self, infoElement, instanceObject):
@@ -2638,6 +2663,9 @@ class BaseDocReader(LogMixin):
     def readLib(self):
         """Read the lib element for the whole document."""
         for libElement in self.root.findall(".lib"):
+            if len(libElement) == 0:
+                # an empty <lib> element is equivalent to no lib at all
+                continue
             self.documentObject.lib = plistlib.fromtree(libElement[0])
 
 
@@ -2751,8 +2779,8 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         Respect the data stored by others.
         """
 
-        self.default: Optional[str] = None
-        """Name of the default master.
+        self.default: Optional[SourceDescriptor] = None
+        """The source descriptor for the default master.
 
         This attribute is updated by the :meth:`findDefault`
         """

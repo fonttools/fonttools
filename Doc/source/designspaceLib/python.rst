@@ -105,6 +105,12 @@ VariableFontDescriptor
    :member-order: bysource
 
 
+Resolving variable-font axis subsets
+------------------------------------
+
+.. autofunction:: fontTools.designspaceLib::getVFUserRegion
+
+
 RangeAxisSubsetDescriptor
 -------------------------
 

@@ -5,7 +5,6 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
 import unittest
 
-
 CVAR_DATA = deHexStr(
     "0001 0000 "  #  0: majorVersion=1 minorVersion=0
     "8002 0018 "  #  4: tupleVariationCount=2|TUPLES_SHARE_POINT_NUMBERS offsetToData=24

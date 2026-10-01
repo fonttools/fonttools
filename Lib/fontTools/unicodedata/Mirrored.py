@@ -6,9 +6,9 @@
 # Source: http://www.unicode.org/Public/UNIDATA/BidiMirroring.txt
 # License: http://unicode.org/copyright.html#License
 #
-# BidiMirroring-16.0.0.txt
-# Date: 2024-01-30
-# © 2024 Unicode®, Inc.
+# BidiMirroring-18.0.0.txt
+# Date: 2026-02-03
+# © 2026 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use and license, see https://www.unicode.org/terms_of_use.html
 #
@@ -46,6 +46,7 @@ MIRRORED = {
     0x220C: 0x2209,
     0x220D: 0x220A,
     0x2215: 0x29F5,
+    0x221D: 0x1DB10,
     0x221F: 0x2BFE,
     0x2220: 0x29A3,
     0x2221: 0x299B,
@@ -405,6 +406,8 @@ MIRRORED = {
     0x2E5A: 0x2E59,
     0x2E5B: 0x2E5C,
     0x2E5C: 0x2E5B,
+    0x2E62: 0x2E63,
+    0x2E63: 0x2E62,
     0x3008: 0x3009,
     0x3009: 0x3008,
     0x300A: 0x300B,
@@ -443,4 +446,11 @@ MIRRORED = {
     0xFF60: 0xFF5F,
     0xFF62: 0xFF63,
     0xFF63: 0xFF62,
+    0x1DB03: 0x1DB04,
+    0x1DB04: 0x1DB03,
+    0x1DB05: 0x1DB06,
+    0x1DB06: 0x1DB05,
+    0x1DB08: 0x1DB09,
+    0x1DB09: 0x1DB08,
+    0x1DB10: 0x221D,
 }

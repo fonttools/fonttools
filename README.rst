@@ -18,9 +18,9 @@ are available at `Read the Docs <https://fonttools.readthedocs.io/>`_.
 Installation
 ~~~~~~~~~~~~
 
-FontTools requires `Python <http://www.python.org/download/>`__ 3.10
-or later. We try to follow the same schedule of minimum Python version support as
-NumPy (see `NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__).
+FontTools requires `Python <http://www.python.org/download/>`__ 3.11
+or later. We try to support the Python versions that are still supported upstream
+(see `Status of Python versions <https://devguide.python.org/versions/>`__).
 
 The package is listed in the Python Package Index (PyPI), so you can
 install it with `pip <https://pip.pypa.io>`__:
@@ -109,7 +109,7 @@ are required to unlock the extra features named "ufo", etc.
 
   * `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
     ``unicodedata`` backport for Python 3.x updated to the latest Unicode
-    version 17.0.
+    version 18.0.
 
   *Extra:* ``unicode``
 
@@ -269,8 +269,9 @@ Vincent Connare, David Corbett, Simon Cozens, Dave Crossland, Simon Daniels,
 Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes Famira, Sam Fishman,
 Matt Fontaine, Takaaki Fuji, Rob Hagemans, Yannis Haralambous, Greg Hitchcock,
 Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack Jansen,
-Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming, Liang Hai, Peter
-Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamura, Dave Opstad, Laurence Penney,
+Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming,
+Jushuanghui Li, Liang Hai, Peter Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamura,
+Dave Opstad, Laurence Penney,
 Roozbeh Pournader, Garret Rieger, Read Roberts, Colin Rofls, Guido van Rossum,
 Just van Rossum, Andreas Seidel, Georg Seifert, Chris Simpkins, Miguel Sousa,
 Adam Twardoch, Adrien Tétar, Vitaly Volkov, Paul Wise.

@@ -3,7 +3,6 @@ from fontTools.misc.textTools import bytechr, bytesjoin, deHexStr, hexStr
 from fontTools.ttLib import newTable
 import unittest
 
-
 # A simple 'morx' table with non-contextual glyph substitution.
 # Unfortunately, the Apple spec for 'morx' does not contain a complete example.
 # The test case has therefore been adapted from the example 'mort' table in

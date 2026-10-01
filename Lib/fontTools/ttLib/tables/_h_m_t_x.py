@@ -7,7 +7,6 @@ import struct
 import array
 import logging
 
-
 log = logging.getLogger(__name__)
 
 

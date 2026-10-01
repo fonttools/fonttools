@@ -163,8 +163,7 @@ class ToFeaTest(unittest.TestCase):
         )
 
     def test_def_group_groups_not_yet_defined_nested(self):
-        fea = self.parse(
-            """
+        fea = self.parse("""
             DEF_GROUP "Group1"
             ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM
             END_GROUP
@@ -180,18 +179,15 @@ class ToFeaTest(unittest.TestCase):
             DEF_GROUP "Group2"
             ENUM GLYPH "e" GLYPH "f" GLYPH "g" GLYPH "h" END_ENUM
             END_GROUP
-            """
-        )
+            """)
         self.assertEqual(
-            dedent(
-                """\
+            dedent("""\
                 # Glyph classes
                 @Group1 = [a b c d];
                 @Group2 = [e f g h];
                 @TestGroup1 = [@Group1 @Group2];
                 @TestGroup2 = [@Group2];
-                @TestGroup3 = [@Group2 @Group1];"""
-            ),
+                @TestGroup3 = [@Group2 @Group1];"""),
             fea,
         )
 
@@ -292,8 +288,7 @@ class ToFeaTest(unittest.TestCase):
         self.assertEqual("", fea)
 
     def test_langsys_short_tag(self):
-        fea = self.parse(
-            """
+        fea = self.parse("""
             DEF_SCRIPT NAME "Latin" TAG "latn"
             DEF_LANGSYS NAME "Romanian" TAG "ROM"
             DEF_FEATURE NAME "Fractions" TAG "frac"
@@ -309,11 +304,9 @@ class ToFeaTest(unittest.TestCase):
             WITH GLYPH "one_slash_two.frac"
             END_SUB
             END_SUBSTITUTION
-            """
-        )
+            """)
         self.assertEqual(
-            dedent(
-                """
+            dedent("""
                 # Lookups
                 lookup test {
                     sub one slash two by one_slash_two.frac;
@@ -325,8 +318,7 @@ class ToFeaTest(unittest.TestCase):
                     language ROM exclude_dflt;
                     lookup test;
                 } frac;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -484,8 +476,7 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            dedent(
-                """\
+            dedent("""\
                 # Glyph classes
                 @Denominators = [one.dnom two.dnom];
 
@@ -498,8 +489,7 @@ class ToFeaTest(unittest.TestCase):
                 lookup fracdnom {
                     sub [@Denominators fraction] [one two]' lookup fracdnom_chained;
                 } fracdnom;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -524,8 +514,7 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            dedent(
-                """\
+            dedent("""\
                 # Glyph classes
                 @Hebrew = [uni05D0 uni05D1];
 
@@ -538,8 +527,7 @@ class ToFeaTest(unittest.TestCase):
                     sub dollar' lookup HebrewCurrency_chained @Hebrew one.Hebr;
                     sub @Hebrew one.Hebr dollar' lookup HebrewCurrency_chained;
                 } HebrewCurrency;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -564,8 +552,7 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            dedent(
-                """\
+            dedent("""\
                 # Glyph classes
                 @Hebrew = [uni05D0 uni05D1];
 
@@ -578,8 +565,7 @@ class ToFeaTest(unittest.TestCase):
                     ignore sub dollar' @Hebrew one.Hebr;
                     sub @Hebrew one.Hebr dollar' lookup HebrewCurrency_chained;
                 } HebrewCurrency;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -803,8 +789,7 @@ class ToFeaTest(unittest.TestCase):
             "END_SUBSTITUTION"
         )
         self.assertEqual(
-            dedent(
-                """
+            dedent("""
                 # Lookups
                 lookup Lookup_chained {
                     sub a by a.alt;
@@ -813,8 +798,7 @@ class ToFeaTest(unittest.TestCase):
                 lookup Lookup {
                     sub a' lookup Lookup_chained [a b];
                 } Lookup;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -1401,8 +1385,7 @@ class ToFeaTest(unittest.TestCase):
         )
 
     def test_def_anchor_case_insensitive(self):
-        fea = self.parse(
-            """
+        fea = self.parse("""
             DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
             IN_CONTEXT
             END_CONTEXT
@@ -1415,11 +1398,9 @@ class ToFeaTest(unittest.TestCase):
             DEF_ANCHOR "TOP" ON 2 GLYPH f_i COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
             DEF_ANCHOR "Top" ON 2 GLYPH f_i COMPONENT 2 AT POS DX 350 DY 450 END_POS END_ANCHOR
             DEF_ANCHOR "MARK_Top" ON 3 GLYPH acutecomb COMPONENT 1 AT POS DX 0 DY 450 END_POS END_ANCHOR
-            """
-        )
+            """)
         self.assertEqual(
-            dedent(
-                """
+            dedent("""
                 # Mark classes
                 markClass acutecomb <anchor 0 450> @top.TestLookup;
 
@@ -1430,8 +1411,7 @@ class ToFeaTest(unittest.TestCase):
                     pos base f_i
                         <anchor 250 450> mark @top.TestLookup;
                 } TestLookup;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -1510,8 +1490,7 @@ class ToFeaTest(unittest.TestCase):
         )
 
     def test_def_anchor_ligature_in_base_lookup(self):
-        fea = self.parse(
-            """
+        fea = self.parse("""
             DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
             IN_CONTEXT
             END_CONTEXT
@@ -1526,11 +1505,9 @@ class ToFeaTest(unittest.TestCase):
             DEF_ANCHOR "top" ON 120 GLYPH f_f COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
             DEF_ANCHOR "top" ON 120 GLYPH f_f COMPONENT 2 AT POS DX 450 DY 450 END_POS END_ANCHOR
             DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS  END_POS END_ANCHOR
-            """
-        )
+            """)
         self.assertEqual(
-            dedent(
-                """
+            dedent("""
                 # Mark classes
                 markClass acutecomb <anchor 0 0> @top.TestLookup;
 
@@ -1547,14 +1524,12 @@ class ToFeaTest(unittest.TestCase):
                 table GDEF {
                     GlyphClassDef @GDEF_base, @GDEF_ligature, , ;
                 } GDEF;
-                """
-            ),
+                """),
             fea,
         )
 
     def test_def_anchor_mark_in_base_lookup(self):
-        fea = self.parse(
-            """
+        fea = self.parse("""
             DEF_LOOKUP "TestLookup" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR
             IN_CONTEXT
             END_CONTEXT
@@ -1568,11 +1543,9 @@ class ToFeaTest(unittest.TestCase):
             DEF_ANCHOR "top" ON 120 GLYPH f COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR
             DEF_ANCHOR "top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS  END_POS END_ANCHOR
             DEF_ANCHOR "MARK_top" ON 120 GLYPH acutecomb COMPONENT 1 AT POS  END_POS END_ANCHOR
-            """
-        )
+            """)
         self.assertEqual(
-            dedent(
-                """
+            dedent("""
                 # Mark classes
                 markClass acutecomb <anchor 0 0> @top.TestLookup;
 
@@ -1589,8 +1562,7 @@ class ToFeaTest(unittest.TestCase):
                 table GDEF {
                     GlyphClassDef @GDEF_base, , @GDEF_mark, ;
                 } GDEF;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -1622,8 +1594,7 @@ class ToFeaTest(unittest.TestCase):
         )
 
     def test_nested_enum(self):
-        fea = self.parse(
-            """
+        fea = self.parse("""
             DEF_GLYPH "a" ID 1 END_GLYPH
             DEF_GLYPH "b" ID 2 END_GLYPH
             DEF_GLYPH "c" ID 3 END_GLYPH
@@ -1653,11 +1624,9 @@ class ToFeaTest(unittest.TestCase):
               RANGE "m" TO "q" BY POS ADV -50 DX -60 END_POS
             END_ADJUST
             END_POSITION
-            """
-        )
+            """)
         self.assertEqual(
-            dedent(
-                """
+            dedent("""
                 # Lookups
                 lookup lookup_chained {
                     pos [a b] <-10 0 -10 0>;
@@ -1670,8 +1639,7 @@ class ToFeaTest(unittest.TestCase):
                     lookupflag RightToLeft IgnoreMarks;
                     pos [a b c d e f g h i j k l m n o p q]' lookup lookup_chained space;
                 } lookup;
-                """
-            ),
+                """),
             fea,
         )
 
@@ -1770,8 +1738,7 @@ class ToFeaTest(unittest.TestCase):
 
     def test_aalt_feature(self):
         with self.assertLogs(level="WARNING") as logs:
-            fea = self.parse(
-                """
+            fea = self.parse("""
                 DEF_SCRIPT NAME "Latin" TAG "latn"
                 DEF_LANGSYS NAME "English" TAG "ENG "
                 DEF_FEATURE NAME "Access All Alternates" TAG "aalt"
@@ -1815,11 +1782,9 @@ class ToFeaTest(unittest.TestCase):
                 WITH GLYPH "c.alt"
                 END_SUB
                 END_SUBSTITUTION
-                """
-            )
+                """)
         self.assertEqual(
-            dedent(
-                """
+            dedent("""
             # Lookups
             lookup test1 {
                 sub a by a.alt;
@@ -1837,8 +1802,7 @@ class ToFeaTest(unittest.TestCase):
             feature aalt {
                 lookup test3;
             } aalt;
-                """
-            ),
+                """),
             fea,
         )
         self.assertEqual(

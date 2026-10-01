@@ -186,6 +186,31 @@ def test_optional_min_max(unbounded_condition):
     assert len(list(splitVariableFonts(doc))) == 1
 
 
+def test_split_variable_font_preserves_zero_axis_default():
+    doc = DesignSpaceDocument.fromstring("""\
+        <designspace format="5.0">
+          <axes>
+            <axis name="Weight" tag="wght" minimum="-100" default="50" maximum="100"/>
+          </axes>
+          <variable-fonts>
+            <variable-font name="WeightSubset">
+              <axis-subsets>
+                <axis-subset name="Weight" userminimum="-20" userdefault="0" usermaximum="20"/>
+              </axis-subsets>
+            </variable-font>
+          </variable-fonts>
+        </designspace>
+        """)
+
+    name, subDoc = next(splitVariableFonts(doc))
+
+    assert name == "WeightSubset"
+    axis = subDoc.getAxis("Weight")
+    assert axis.minimum == -20
+    assert axis.default == 0
+    assert axis.maximum == 20
+
+
 @pytest.mark.parametrize(
     ["condition", "expected_set"],
     [
@@ -227,3 +252,107 @@ def test_avar2(datadir):
             assert len(subDoc.axisMappings) == 2
         else:
             assert len(subDoc.axisMappings) == 0
+
+
+def _makeNamesDoc(axes, instances):
+    return DesignSpaceDocument.fromstring(f"""<?xml version='1.0' encoding='UTF-8'?>
+        <designspace format="5.0">
+          <axes>{axes}</axes>
+          <sources>
+            <source filename="m400.ttf" familyname="Bug">
+              <location><dimension name="Weight" xvalue="400"/></location>
+            </source>
+            <source filename="m700.ttf">
+              <location><dimension name="Weight" xvalue="700"/></location>
+            </source>
+          </sources>
+          <instances>{instances}</instances>
+        </designspace>
+        """)
+
+
+WGHT_AXIS = '<axis tag="wght" name="Weight" minimum="400" default="400" maximum="700"/>'
+WGHT_AXIS_LABELS = """
+    <axis tag="wght" name="Weight" minimum="400" default="400" maximum="700">
+      <labels>
+        <label uservalue="400" name="Regular" elidable="true"/>
+        <label uservalue="700" name="Bold">
+          <labelname xml:lang="de">Fett</labelname>
+        </label>
+      </labels>
+    </axis>
+"""
+# an italic-only family: the STAT names compose to "Italic" and "Bold Italic"
+ITALIC_FAMILY_AXES_LABELS = """
+    <axis tag="wght" name="Weight" minimum="400" default="400" maximum="700">
+      <labels>
+        <label uservalue="400" name="Regular" elidable="true"/>
+        <label uservalue="700" name="Bold"/>
+      </labels>
+    </axis>
+    <axis tag="ital" name="Italic" values="1" default="1">
+      <labels>
+        <label uservalue="1" name="Italic"/>
+      </labels>
+    </axis>
+"""
+
+
+def _namedInstances(styleNames):
+    return "".join(f"""
+    <instance familyname="Bug" stylename="{styleName}">
+      <location><dimension name="Weight" xvalue="{xvalue}"/></location>
+    </instance>
+    """ for styleName, xvalue in zip(styleNames, (400, 700)))
+
+
+@pytest.mark.parametrize(
+    "axes, styleNames",
+    [
+        # no STAT labels
+        (WGHT_AXIS, ["Italic", "Bold Italic"]),
+        # italic-only family with weight labels only: STAT would give "" and "Bold"
+        (WGHT_AXIS_LABELS, ["Italic", "Bold Italic"]),
+        # the elidable "Regular" is dropped from the STAT name, not from the
+        # instance's own: STAT would give "Italic" and "Bold Italic"
+        (ITALIC_FAMILY_AXES_LABELS, ["Regular Italic", "Bold Italic"]),
+    ],
+)
+def test_makeNames_explicit_instance_names_take_precedence(axes, styleNames):
+    # https://github.com/fonttools/fonttools/issues/4206
+    doc = _makeNamesDoc(axes, _namedInstances(styleNames))
+
+    (_, subDoc), *_ = splitVariableFonts(doc, makeNames=True)
+
+    assert [i.styleName for i in subDoc.instances] == styleNames
+    assert [i.familyName for i in subDoc.instances] == ["Bug", "Bug"]
+    # localised STAT names are only kept when they agree with the instance name
+    for instance in subDoc.instances:
+        assert instance.localisedStyleName.get("en", instance.styleName) == (
+            instance.styleName
+        )
+    # no PostScript names are made up for instances with their own style name
+    assert [i.postScriptFontName for i in subDoc.instances] == [None, None]
+
+
+def test_makeNames_from_stat_labels_when_instance_has_no_names():
+    instances = """
+    <instance>
+      <location><dimension name="Weight" xvalue="700"/></location>
+    </instance>
+    <instance stylename="Bold">
+      <location><dimension name="Weight" xvalue="700"/></location>
+    </instance>
+    """
+    doc = _makeNamesDoc(WGHT_AXIS_LABELS, instances)
+
+    (_, subDoc), *_ = splitVariableFonts(doc, makeNames=True)
+
+    unnamed, named = subDoc.instances
+    assert unnamed.familyName == named.familyName == "Bug"
+    assert unnamed.styleName == named.styleName == "Bold"
+    assert unnamed.postScriptFontName == "Bug-Bold"
+    assert named.postScriptFontName is None
+    # the localised STAT names apply when they translate the name in use
+    assert unnamed.localisedStyleName == {"en": "Bold", "de": "Fett"}
+    assert named.localisedStyleName == {"en": "Bold", "de": "Fett"}

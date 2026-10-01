@@ -4,7 +4,6 @@ from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.ttLib import newTable, TTFont
 import unittest
 
-
 MVAR_DATA = deHexStr(
     "0001 0000 "  # 0:   version=1.0
     "0000 0008 "  # 4:   reserved=0, valueRecordSize=8

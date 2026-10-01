@@ -32,6 +32,27 @@ import pytest
                 ("closePath", ()),
             ],
         ),
+        # a redundant Z after a subpath is already closed is a no-op
+        # (valid per the SVG path grammar); it must not crash nor emit
+        # a second closePath.
+        (
+            "M 100 100 L 300 100 L 200 300 z z",
+            [
+                ("moveTo", ((100.0, 100.0),)),
+                ("lineTo", ((300.0, 100.0),)),
+                ("lineTo", ((200.0, 300.0),)),
+                ("lineTo", ((100.0, 100.0),)),
+                ("closePath", ()),
+            ],
+        ),
+        # a redundant Z following an empty (moveto-only) closed subpath
+        (
+            "M 100 100 Z Z",
+            [
+                ("moveTo", ((100.0, 100.0),)),
+                ("closePath", ()),
+            ],
+        ),
         (
             "M100,200 C100,100 250,100 250,200 S400,300 400,200",
             [
@@ -196,6 +217,94 @@ import pytest
                 ("closePath", ()),
             ],
         ),
+        # a drawto command following a closepath starts a new subpath at the
+        # initial point of the just-closed subpath, i.e. there is an implicit
+        # moveto (SVG 1.1 sec 8.3.3); the new subpath is open, hence endPath
+        # https://github.com/fonttools/fonttools/issues/4154
+        (
+            "M0,0 L10,10 Z L5,5",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((5.0, 5.0),)),
+                ("endPath", ()),
+            ],
+        ),
+        # a redundant Z before the drawto must not emit a second closePath
+        # nor a spurious moveTo
+        (
+            "M0,0 L10,10 Z Z L5,5",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((5.0, 5.0),)),
+                ("endPath", ()),
+            ],
+        ),
+        # a relative drawto after closepath is relative to the initial point
+        # of the just-closed subpath
+        (
+            "M10,10 L20,20 Z l5,5",
+            [
+                ("moveTo", ((10.0, 10.0),)),
+                ("lineTo", ((20.0, 20.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("closePath", ()),
+                ("moveTo", ((10.0, 10.0),)),
+                ("lineTo", ((15.0, 15.0),)),
+                ("endPath", ()),
+            ],
+        ),
+        # the implicitly-opened subpath can itself be closed, back to the
+        # same initial point
+        (
+            "M0,0 L10,0 L10,10 Z L5,5 Z",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((10.0, 0.0),)),
+                ("lineTo", ((10.0, 10.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("lineTo", ((5.0, 5.0),)),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+            ],
+        ),
+        # S/T immediately after a closepath: the previous command (Z) is
+        # not a C/S or Q/T, so the reflected first control point falls
+        # back to the current point, i.e. the initial point of the
+        # just-closed subpath
+        (
+            "M0,0 C0,5 5,5 5,0 Z S10,5 10,0",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("curveTo", ((0.0, 5.0), (5.0, 5.0), (5.0, 0.0))),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("curveTo", ((0.0, 0.0), (10.0, 5.0), (10.0, 0.0))),
+                ("endPath", ()),
+            ],
+        ),
+        (
+            "M0,0 Q2.5,5 5,0 Z T10,0",
+            [
+                ("moveTo", ((0.0, 0.0),)),
+                ("qCurveTo", ((2.5, 5.0), (5.0, 0.0))),
+                ("lineTo", ((0.0, 0.0),)),
+                ("closePath", ()),
+                ("moveTo", ((0.0, 0.0),)),
+                ("qCurveTo", ((0.0, 0.0), (10.0, 0.0))),
+                ("endPath", ()),
+            ],
+        ),
     ],
 )
 def test_parse_path(pathdef, expected):
@@ -235,6 +344,34 @@ def test_equivalent_paths(pathdef1, pathdef2):
     assert pen1.value == pen2.value
 
 
+def test_closepath_ignores_floating_point_rounding():
+    pen = RecordingPen()
+    parse_path("M 0.1 0 l 0.2 0 l -0.2 0 z", pen)
+
+    assert [command for command, _ in pen.value] == [
+        "moveTo",
+        "lineTo",
+        "lineTo",
+        "closePath",
+    ]
+
+
+def test_implicit_moveto_after_drift_suppressed_closepath():
+    # a closepath returning to its start with floating-point drift emits no
+    # closing lineTo (see test above), but must still reset the current
+    # position to the exact initial point, so that the implicit moveto of a
+    # following drawto lands on it rather than on the drifted position
+    assert 0.1 + 0.2 - 0.2 != 0.1  # the drift this test relies on
+    pen = RecordingPen()
+    parse_path("M 0.1 0 l 0.2 0 l -0.2 0 z l 0.1 0.1", pen)
+
+    assert pen.value[3] == ("closePath", ())
+    assert pen.value[4] == ("moveTo", ((0.1, 0.0),))
+    # the relative lineTo resolves against the exact initial point too
+    assert pen.value[5] == ("lineTo", ((0.1 + 0.1, 0.1),))
+    assert pen.value[6] == ("endPath", ())
+
+
 def test_exponents():
     # It can be e or E, the plus is optional, and a minimum of +/-3.4e38 must be supported.
     pen = RecordingPen()
@@ -262,6 +399,48 @@ def test_invalid_implicit_command():
     with pytest.raises(ValueError) as exc_info:
         parse_path("M 100 100 L 200 200 Z 100 200", RecordingPen())
     assert exc_info.match("Unallowed implicit command")
+
+
+@pytest.mark.parametrize(
+    "pathdef",
+    [
+        "L 5 5",
+        "Z",
+        # bare coordinates aren't a moveto either
+        "5 5",
+        # a later moveto doesn't repair a bad start
+        "L 5 5 M 0 0",
+    ],
+)
+def test_path_must_start_with_moveto(pathdef):
+    # A path data segment must begin with a moveto command (SVG 1.1
+    # sec 8.3.2); raise before any pen call instead of inventing a
+    # start point for the malformed path.
+    # https://github.com/fonttools/fonttools/issues/4154
+    pen = RecordingPen()
+    with pytest.raises(ValueError, match="must start with a moveto"):
+        parse_path(pathdef, pen)
+    assert pen.value == []
+
+
+def test_initial_relative_moveto_with_current_pos():
+    # a caller-supplied current_pos affects an initial relative moveto...
+    pen = RecordingPen()
+    parse_path("m 5 5", pen, current_pos=(10, 20))
+    assert pen.value == [("moveTo", ((15.0, 25.0),)), ("endPath", ())]
+
+    # ...but does not legalize a leading drawto
+    pen = RecordingPen()
+    with pytest.raises(ValueError, match="must start with a moveto"):
+        parse_path("l 5 5", pen, current_pos=(10, 20))
+    assert pen.value == []
+
+
+def test_empty_path_is_noop():
+    pen = RecordingPen()
+    parse_path("", pen)
+    parse_path("   ", pen)
+    assert pen.value == []
 
 
 def test_arc_to_cubic_bezier():

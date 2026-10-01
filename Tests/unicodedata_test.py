@@ -154,8 +154,30 @@ def test_script():
     assert unicodedata.script(chr(0x11F00)) == "Kawi"
 
 
+@pytest.mark.parametrize(
+    "first, last, code, name, tag",
+    [
+        (0x125A8, 0x1264B, "Pcun", "Proto Cuneiform", "pcun"),
+        (0x18E00, 0x19191, "Jurc", "Jurchen", "jurc"),
+        (0x191A0, 0x191D2, "Jurc", "Jurchen", "jurc"),
+        (0x3D000, 0x3FC3F, "Seal", "Seal", "seal"),
+    ],
+)
+def test_unicode_18_scripts(first, last, code, name, tag):
+    assert unicodedata.script(chr(first)) == code
+    assert unicodedata.script(chr(last)) == code
+    assert unicodedata.script(chr(first - 1)) != code
+    assert unicodedata.script(chr(last + 1)) != code
+    assert unicodedata.script_extension(chr(first)) == {code}
+    assert unicodedata.script_name(code) == name
+    assert unicodedata.script_code(name) == code
+    assert unicodedata.script_horizontal_direction(code) == "LTR"
+    assert unicodedata.ot_tags_from_script(code) == [tag]
+    assert unicodedata.ot_tag_to_script(tag) == code
+
+
 def test_script_extension():
-    assert unicodedata.script_extension("\u00B7") == {
+    assert unicodedata.script_extension("\u00b7") == {
         "Avst",
         "Cari",
         "Copt",
@@ -173,7 +195,7 @@ def test_script_extension():
         "Perm",
         "Shaw",
     }
-    assert unicodedata.script_extension("\u02BC") == {
+    assert unicodedata.script_extension("\u02bc") == {
         "Beng",
         "Cyrl",
         "Deva",
@@ -212,6 +234,10 @@ def test_script_extension():
         "Onao",
     }
 
+    assert unicodedata.script_extension("\u0b83") == {"Knda", "Mlym", "Taml", "Telu"}
+    assert unicodedata.script_extension("\u1cf5") == {"Beng"}
+    assert unicodedata.script_extension("\U00012550") == {"Pcun", "Xsux"}
+
 
 def test_script_name():
     assert unicodedata.script_name("Latn") == "Latin"
@@ -242,11 +268,45 @@ def test_script_code():
 
 def test_block():
     assert unicodedata.block("\x00") == "Basic Latin"
-    assert unicodedata.block("\x7F") == "Basic Latin"
+    assert unicodedata.block("\x7f") == "Basic Latin"
     assert unicodedata.block("\x80") == "Latin-1 Supplement"
     assert unicodedata.block("\u1c90") == "Georgian Extended"
     assert unicodedata.block("\u0870") == "Arabic Extended-B"
-    assert unicodedata.block("\U00011B00") == "Devanagari Extended-A"
+    assert unicodedata.block("\U00011b00") == "Devanagari Extended-A"
+
+
+@pytest.mark.parametrize(
+    "first, last, name",
+    [
+        (0x11DF0, 0x11DFF, "Bengali Supplement"),
+        (0x12550, 0x1268F, "Archaic Cuneiform Numerals"),
+        (0x18E00, 0x1919F, "Jurchen"),
+        (0x191A0, 0x191DF, "Jurchen Radicals"),
+        (0x1D250, 0x1D28F, "Musical Symbols Supplement"),
+        (0x1DB00, 0x1DBFF, "Miscellaneous Symbols and Arrows Extended"),
+        (0x3D000, 0x3FC3F, "Seal"),
+    ],
+)
+def test_unicode_18_blocks(first, last, name):
+    assert unicodedata.block(chr(first)) == name
+    assert unicodedata.block(chr(last)) == name
+    assert unicodedata.block(chr(first - 1)) != name
+    assert unicodedata.block(chr(last + 1)) != name
+
+
+@pytest.mark.parametrize(
+    "char, mirrored",
+    [
+        (0x221D, 0x1DB10),
+        (0x2E62, 0x2E63),
+        (0x1DB03, 0x1DB04),
+        (0x1DB05, 0x1DB06),
+        (0x1DB08, 0x1DB09),
+    ],
+)
+def test_unicode_18_mirrored(char, mirrored):
+    assert unicodedata.mirrored(char) == mirrored
+    assert unicodedata.mirrored(mirrored) == char
 
 
 def test_ot_tags_from_script():

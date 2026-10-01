@@ -1179,6 +1179,7 @@ def main(args=None):
                     svg.draw_cupcake()
 
             import base64
+            import html
 
             with open(ensure_parent_dir(args.html), "wb") as f:
                 f.write(b"<!DOCTYPE html>\n")
@@ -1188,7 +1189,11 @@ def main(args=None):
                 f.write(b"<title>fonttools varLib.interpolatable report</title>\n")
                 for i, svg in enumerate(svgs):
                     if i in glyph_starts:
-                        f.write(f"<h1>Glyph {glyph_starts[i]}</h1>\n".encode("utf-8"))
+                        f.write(
+                            f"<h1>Glyph {html.escape(glyph_starts[i])}</h1>\n".encode(
+                                "utf-8"
+                            )
+                        )
                     f.write("<img src='data:image/svg+xml;base64,".encode("utf-8"))
                     f.write(base64.b64encode(svg))
                     f.write(b"' />\n")

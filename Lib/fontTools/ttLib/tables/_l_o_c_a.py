@@ -3,7 +3,6 @@ import sys
 import array
 import logging
 
-
 log = logging.getLogger(__name__)
 
 

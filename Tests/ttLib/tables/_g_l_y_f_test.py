@@ -23,8 +23,10 @@ from fontTools.ttLib.tables._g_l_y_f import (
 from fontTools.ttLib.tables import ttProgram
 import sys
 import array
+from collections.abc import ValuesView, ItemsView
 from copy import deepcopy
 from io import StringIO, BytesIO
+from pathlib import Path
 import itertools
 import pytest
 import re
@@ -269,6 +271,67 @@ class GlyfTableTest(unittest.TestCase):
             TTLibError, "glyph '.' contains a recursive component reference"
         ):
             glyph_A.getCoordinates(glyphSet)
+
+    def _makeComponentGlyph(self, glyphSet, name, ref, dx, dy):
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent(ref, (1, 0, 0, 1, dx, dy))
+        glyphSet[name] = pen.glyph()
+
+    def test_recalcBounds_recursiveComponent(self):
+        # Integer-translate-only components take the fast path
+        # (tryRecalcBoundsComposite); a recursive reference there must raise
+        # TTLibError just like the getCoordinates slow path, rather than let a
+        # raw RecursionError escape.
+        # https://github.com/fonttools/fonttools/issues/3899
+        # A -> B -> A cycle, all plain integer translates.
+        glyphSet = {}
+        glyphSet["A"] = glyphSet["B"] = TTGlyphPen(glyphSet).glyph()
+        self._makeComponentGlyph(glyphSet, "A", "B", 10, 0)
+        self._makeComponentGlyph(glyphSet, "B", "A", 0, 10)
+        # sanity check that this exercises the integer-translate fast path
+        self.assertTrue(glyphSet["A"].components[0]._hasOnlyIntegerTranslate())
+        with self.assertRaisesRegex(
+            TTLibError, "glyph '.' contains a recursive component reference"
+        ):
+            glyphSet["A"].recalcBounds(glyphSet)
+        # and via the boundsDone set that table__g_l_y_f.compile() passes
+        with self.assertRaisesRegex(
+            TTLibError, "glyph '.' contains a recursive component reference"
+        ):
+            glyphSet["A"].recalcBounds(glyphSet, boundsDone=set())
+
+    def test_recalcBounds_selfReferencingComponent(self):
+        glyphSet = {}
+        glyphSet["A"] = TTGlyphPen(glyphSet).glyph()
+        self._makeComponentGlyph(glyphSet, "A", "A", 5, 5)
+        with self.assertRaisesRegex(
+            TTLibError, "glyph 'A' contains a recursive component reference"
+        ):
+            glyphSet["A"].recalcBounds(glyphSet)
+
+    def test_recalcBounds_acyclicComposite(self):
+        # A valid acyclic integer-translate composite must still compute the
+        # correct bounds (the recursion guard must not affect normal glyphs).
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((5, 5))
+        pen.lineTo((10, 10))
+        pen.lineTo((10, 5))
+        pen.lineTo((5, 5))
+        pen.closePath()
+        glyphSet["base"] = pen.glyph()
+        self._makeComponentGlyph(glyphSet, "A", "base", 100, 200)
+        glyphSet["base"].recalcBounds(glyphSet)
+        glyphSet["A"].recalcBounds(glyphSet, boundsDone=set())
+        self.assertEqual(
+            (
+                glyphSet["A"].xMin,
+                glyphSet["A"].yMin,
+                glyphSet["A"].xMax,
+                glyphSet["A"].yMax,
+            ),
+            (105, 205, 110, 210),
+        )
 
     def test_trim_remove_hinting_composite_glyph(self):
         glyphSet = {"dummy": TTGlyphPen(None).glyph()}
@@ -891,6 +954,84 @@ class GlyphComponentTest:
         assert comp.flags == 0
         assert (comp.firstPt, comp.secondPt) == (1, 2)
         assert not hasattr(comp, "transform")
+
+    def test_items(self):
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in glyf.glyphOrder:
+            glyf[name] = Glyph()
+        assert isinstance(glyf.items(), ItemsView)
+        items = list(glyf.items())
+        assert items == [
+            (".notdef", glyf[".notdef"]),
+            ("a", glyf["a"]),
+            ("b", glyf["b"]),
+        ]
+
+    def test_items_lazy(self):
+        font = TTFont(
+            Path(__file__).parent.parent.parent / "ttx" / "data" / "TestTTF.ttf",
+            lazy=True,
+        )
+        glyf = font["glyf"]
+        assert isinstance(glyf.items(), ItemsView)
+        items = list(glyf.items())
+        assert items[0][1].numberOfContours == 2  # .notdef
+        assert items == [
+            (".notdef", glyf[".notdef"]),
+            (".null", glyf[".null"]),
+            ("CR", glyf["CR"]),
+            ("space", glyf["space"]),
+            ("period", glyf["period"]),
+            ("ellipsis", glyf["ellipsis"]),
+        ]
+
+    def test_iter(self):
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in glyf.glyphOrder:
+            glyf[name] = Glyph()
+        names = [name for name in glyf]
+        assert names == [".notdef", "a", "b"]
+
+    def test_iter_lazy(self):
+        font = TTFont(
+            Path(__file__).parent.parent.parent / "ttx" / "data" / "TestTTF.ttf",
+            lazy=True,
+        )
+        glyf = font["glyf"]
+        names = [name for name in glyf]
+        assert names == [".notdef", ".null", "CR", "space", "period", "ellipsis"]
+
+    def test_values(self):
+        glyf = newTable("glyf")
+        glyf.glyphs = {}
+        glyf.glyphOrder = [".notdef", "a", "b"]
+        for name in glyf.glyphOrder:
+            glyf[name] = Glyph()
+        assert isinstance(glyf.values(), ValuesView)
+        glyphs = list(glyf.values())
+        assert glyphs == [glyf[".notdef"], glyf["a"], glyf["b"]]
+
+    def test_values_lazy(self):
+        font = TTFont(
+            Path(__file__).parent.parent.parent / "ttx" / "data" / "TestTTF.ttf",
+            lazy=True,
+        )
+        glyf = font["glyf"]
+        assert isinstance(glyf.values(), ValuesView)
+        glyphs = list(glyf.values())
+        assert glyphs[0].numberOfContours == 2  # .notdef
+        assert glyphs == [
+            glyf[".notdef"],
+            glyf[".null"],
+            glyf["CR"],
+            glyf["space"],
+            glyf["period"],
+            glyf["ellipsis"],
+        ]
 
 
 class GlyphCubicTest:

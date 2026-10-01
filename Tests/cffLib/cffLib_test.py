@@ -21,8 +21,7 @@ class CffLibTest(DataFilesHandler):
         topDict.CharStrings.fromXML(
             None,
             None,
-            parseXML(
-                """
+            parseXML("""
             <CharString name=".notdef">
               endchar
             </CharString>
@@ -35,8 +34,7 @@ class CffLibTest(DataFilesHandler):
             <CharString name="baz"><!-- [-55.1, -55.1, 55.1, 55.1] -->
               -55.1 -55.1 rmoveto 110.2 hlineto 110.2 vlineto -110.2 hlineto endchar
             </CharString>
-        """
-            ),
+        """),
         )
 
         topDict.recalcFontBBox()
@@ -48,16 +46,14 @@ class CffLibTest(DataFilesHandler):
         topDict.CharStrings.fromXML(
             None,
             None,
-            parseXML(
-                """
+            parseXML("""
             <CharString name=".notdef">
               endchar
             </CharString>
             <CharString name="space">
               123 endchar
             </CharString>
-        """
-            ),
+        """),
         )
 
         topDict.recalcFontBBox()
@@ -95,6 +91,26 @@ class CffLibTest(DataFilesHandler):
         font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
         font.importXML(ttx_path)
         copy.deepcopy(font)
+
+    def test_CFF2_VarStore_recompiled_after_mutation(self):
+        """A VarStore changed after a save must be written out as changed."""
+        ttx_path = self.getpath("TestSparseCFF2VF.ttx")
+        font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        font.importXML(ttx_path)
+        font.save(BytesIO())
+
+        varStore = font["CFF2"].cff.topDictIndex[0].VarStore.otVarStore
+        varStore.VarRegionList.Region[0].VarRegionAxis[0].PeakCoord = 0.5
+
+        buf = BytesIO()
+        font.save(buf)
+        buf.seek(0)
+        font2 = TTFont(buf)
+
+        varStore2 = font2["CFF2"].cff.topDictIndex[0].VarStore.otVarStore
+        self.assertEqual(
+            varStore2.VarRegionList.Region[0].VarRegionAxis[0].PeakCoord, 0.5
+        )
 
     def test_FDSelect_format_4(self):
         ttx_path = self.getpath("TestFDSelect4.ttx")

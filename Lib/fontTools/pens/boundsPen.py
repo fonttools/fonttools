@@ -2,7 +2,6 @@ from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect
 from fontTools.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
 from fontTools.pens.basePen import BasePen
 
-
 __all__ = ["BoundsPen", "ControlBoundsPen"]
 
 

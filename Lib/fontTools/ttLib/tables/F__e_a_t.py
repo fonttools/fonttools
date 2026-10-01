@@ -29,7 +29,7 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
         self.features = {}
 
     def decompile(self, data, ttFont):
-        (_, data) = sstruct.unpack2(Feat_hdr_format, data, self)
+        _, data = sstruct.unpack2(Feat_hdr_format, data, self)
         self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         (numFeats,) = struct.unpack(">H", data[:2])
         data = data[8:]
@@ -37,12 +37,12 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
         maxsetting = 0
         for i in range(numFeats):
             if self.version >= 2.0:
-                (fid, nums, _, offset, flags, lid) = struct.unpack(
+                fid, nums, _, offset, flags, lid = struct.unpack(
                     ">LHHLHH", data[16 * i : 16 * (i + 1)]
                 )
                 offset = int((offset - 12 - 16 * numFeats) / 4)
             else:
-                (fid, nums, offset, flags, lid) = struct.unpack(
+                fid, nums, offset, flags, lid = struct.unpack(
                     ">HHLHH", data[12 * i : 12 * (i + 1)]
                 )
                 offset = int((offset - 12 - 12 * numFeats) / 4)
@@ -52,10 +52,10 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
         allsettings = []
         for i in range(maxsetting):
             if len(data) >= 4 * (i + 1):
-                (val, lid) = struct.unpack(">HH", data[4 * i : 4 * (i + 1)])
+                val, lid = struct.unpack(">HH", data[4 * i : 4 * (i + 1)])
                 allsettings.append((val, lid))
         for i, f in enumerate(allfeats):
-            (fid, nums, offset, flags, lid) = f
+            fid, nums, offset, flags, lid = f
             fobj = Feature()
             fobj.flags = flags
             fobj.label = lid
@@ -66,7 +66,7 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
             for i in range(offset, offset + nums):
                 if i >= len(allsettings):
                     continue
-                (vid, vlid) = allsettings[i]
+                vid, vlid = allsettings[i]
                 fobj.settings[vid] = vlid
                 if fobj.default is None:
                     fobj.default = vid

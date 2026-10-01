@@ -28,10 +28,10 @@ from collections import namedtuple
 import math
 from typing import (
     List,
+    Sequence,
     Tuple,
     Union,
 )
-
 
 __all__ = ["quadratic_to_curves"]
 
@@ -196,14 +196,14 @@ def _validate_positive_tolerance(max_err):
     is_complex=cython.int,
 )
 def quadratic_to_curves(
-    quads: List[List[Point]],
+    quads: List[Sequence[Point]],
     max_err: float = 0.5,
     all_cubic: bool = False,
 ) -> List[Tuple[Point, ...]]:
     """Converts a connecting list of quadratic splines to a list of quadratic
     and cubic curves.
 
-    A quadratic spline is specified as a list of points.  Either each point is
+    A quadratic spline is specified as a sequence of points.  Either each point is
     a 2-tuple of X,Y coordinates, or each point is a complex number with
     real/imaginary components representing X,Y coordinates.
 

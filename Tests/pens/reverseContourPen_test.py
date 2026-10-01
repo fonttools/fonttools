@@ -2,7 +2,6 @@ from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 import pytest
 
-
 TEST_DATA = [
     (
         [

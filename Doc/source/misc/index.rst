@@ -32,6 +32,7 @@ be more generally useful.
    psCharStrings
    psLib
    psOperators
+   roundTools
    sstruct
    symfont
    testTools

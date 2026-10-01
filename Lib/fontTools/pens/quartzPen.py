@@ -4,7 +4,6 @@ from Quartz.CoreGraphics import CGPathCreateMutable, CGPathMoveToPoint
 from Quartz.CoreGraphics import CGPathAddLineToPoint, CGPathAddCurveToPoint
 from Quartz.CoreGraphics import CGPathAddQuadCurveToPoint, CGPathCloseSubpath
 
-
 __all__ = ["QuartzPen"]
 
 

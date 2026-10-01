@@ -18,9 +18,15 @@ from .BitmapGlyphMetrics import (
 from . import DefaultTable
 import itertools
 import os
+import re
+from urllib.parse import quote
+
+# a glyph name is usable as a filename as-is unless it contains a path
+# separator (on any platform, not just this one) or the '%' that marks an
+# encoded name
+_UNSAFE_IN_FILENAME = re.compile(r"[%/\\]")
 import struct
 import logging
-
 
 log = logging.getLogger(__name__)
 
@@ -398,6 +404,21 @@ def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
     )
 
 
+def _extFileName(glyphName):
+    # Glyph names come straight from the font and may contain path separators
+    # (e.g. a crafted 'post' table), which would let the exported bitmap escape
+    # the output folder. Names that are usable as a filename verbatim -- i.e.
+    # every real glyph name -- are returned unchanged, so existing exports keep
+    # their filenames; the rest are percent-encoded and marked with a leading
+    # '%'. The mapping has to be injective, or two glyphs quietly share one
+    # file and the second overwrites the first: a plain name is never encoded
+    # and never contains '%', an encoded one always starts with '%', and
+    # percent-encoding is itself reversible, so no two names can meet.
+    if glyphName not in ("", ".", "..") and not _UNSAFE_IN_FILENAME.search(glyphName):
+        return glyphName
+    return "%" + quote(glyphName, safe="", encoding="utf-8", errors="surrogatepass")
+
+
 def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
     try:
         folder = os.path.dirname(writer.file.name)
@@ -405,7 +426,7 @@ def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont)
         # fall back to current directory if output file's directory isn't found
         folder = "."
     folder = os.path.join(folder, "bitmaps")
-    filename = glyphName + bitmapObject.fileExtension
+    filename = _extFileName(glyphName) + bitmapObject.fileExtension
     if not os.path.isdir(folder):
         os.makedirs(folder)
     folder = os.path.join(folder, "strike%d" % strikeIndex)

@@ -29,7 +29,6 @@ from .errors import (
     VarLibMergeError,
 )
 
-
 # Backwards compatibility
 MergeDictError = VarLibCFFDictMergeError
 MergeTypeError = VarLibCFFPointTypeMergeError

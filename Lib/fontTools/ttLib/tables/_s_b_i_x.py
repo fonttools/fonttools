@@ -3,7 +3,6 @@ from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from . import DefaultTable
 from .sbixStrike import Strike
 
-
 sbixHeaderFormat = """
 	>
 	version:       H	# Version number (set to 1)

@@ -1,3 +1,189 @@
+4.66.1 (released 2026-09-29)
+----------------------------
+
+- [designspaceLib] When splitting a DesignSpace v5 document with ``makeNames=True``
+  (as ``varLib.build_many`` does), family and style names set explicitly on an
+  instance now take precedence over the ones computed from the STAT labels, in
+  all languages, and a PostScript name is no longer made up from the labels for
+  an instance that has its own style name (#3131, #4206, #4208).
+- [cmap] Decompiling a format 4 subtable whose ``idRangeOffset`` points outside
+  ``glyphIndexArray`` now raises ``TTLibError``. A negative index used to silently
+  map the code point to the wrong glyph, and one past the end raised a bare
+  ``AssertionError`` (#4209).
+- [cmap] Fix compiling a format 2 subtable when the lowest glyph ID in a lead-byte
+  row is 32768 or higher, which failed with ``struct.error`` (#4210).
+
+4.66.0 (released 2026-09-23)
+----------------------------
+
+- Drop support for EOL Python 3.10; fontTools now requires Python 3.11 or later.
+  ``fontTools.misc.enumTools`` now only re-exports ``enum.StrEnum`` and is
+  deprecated. Explicitly test and declare support for Python 3.15 (#4183, #4196).
+- [unicodedata] Update the bundled script, script extension, block and
+  bidi-mirroring tables to Unicode 18.0.0, and require ``unicodedata2`` 18.0.0
+  when it is used (#4192, #4197).
+- [feaLib] Support ``language`` statements listing multiple language tags, e.g.
+  ``language AZE CRT;``, as Glyphs does and as proposed for the spec
+  (adobe-type-tools/feature_file_workshops#8): the following rules and lookup
+  references are registered under every listed language. ``dflt`` cannot be
+  combined with other tags. ``LanguageStatement.language`` is still the first
+  tag; all of them are in the new ``languages`` attribute (#4201, #4202).
+- [feaLib] Fix lookups being dropped when a ``script``/``language`` pair is
+  repeated within a feature block: the repeated statement replaced the language
+  system's lookups with a fresh copy of the default ones (#4189).
+- [feaLib] Raise ``FeatureLibError`` instead of ``UnboundLocalError`` when a
+  ``STAT`` table block lacks ``ElidedFallbackName`` or ``ElidedFallbackNameID``
+  (#3834, #4179).
+- [cffLib] Always recompile the CFF2 ``VarStore`` when saving. Previously the
+  bytes compiled by an earlier save were reused, so a CFF2 variable font that
+  was saved and then modified in place, e.g. by the instancer, was written with
+  a stale ``VarStore`` next to its updated charstrings (#4199).
+- [ttLib] Support static ``VARC`` fonts that omit ``fvar`` while retaining
+  ``gvar`` or CFF2 variation data for component-internal axes: hidden axes are
+  addressed by index and ``gvar`` can compile, decompile and round-trip through
+  TTX without ``fvar``, reading the axis count from a new ``axisCount``
+  element (#4187, #4188).
+- [ttLib] Fix drawing ``VARC`` components whose condition is negated
+  (format 5), which raised ``AttributeError`` (#4191).
+- [instancer] Fix ``VARC`` axis references left stale when removing an
+  unrelated axis, reject pinning or restricting axes referenced by ``VARC``
+  components, and stop culling avar2 ranges for component-internal variations,
+  which can reach outside the font-level ranges (#4190, #4193).
+- [bezierTools] Preserve exact endpoints in ``splitQuadraticAtT`` and
+  ``splitCubicAtTC`` as well, like ``splitCubicAtT`` since 4.55.4
+  (#3742, #4194).
+- [bezierTools] Fix ``ZeroDivisionError`` in ``lineLineIntersections`` for
+  collinear vertical lines; they are now treated as parallel like horizontal
+  ones (#3515, #4181).
+- [subset] ``pyftsubset`` now preserves the input font's flavor (WOFF, WOFF2)
+  when ``--flavor`` is omitted, instead of writing uncompressed sfnt data under
+  the same extension; pass ``--flavor=none`` to force uncompressed output
+  (#3630, #4182).
+- [merge] Report incompatible ``unitsPerEm`` values by name, with the input
+  values, instead of a bare assertion (#2844, #4184).
+- [designspaceLib] Fix the type annotation and documentation of
+  ``DesignSpaceDocument.default``, which holds a ``SourceDescriptor``, not a
+  source name (#2994, #4186).
+- [ttLib.sfnt] Raise ``TTLibError`` instead of ``AssertionError`` for
+  inconsistent WOFF table, metadata and private-data lengths, so the checks
+  also hold under ``python -O`` (#4178).
+- [misc.etree] Disable entity resolution altogether on lxml >= 5.0 as well:
+  lxml's ``resolve_entities="internal"`` still fetched external parameter
+  entities before lxml 6.1.3, so a crafted DTD could read local files into
+  parsed XML content (#4195).
+- [cmap] Bound the expansion of format 4 segments and format 12/13 groups when
+  decompiling, like HarfBuzz does: groups are clamped to U+10FFFF, inverted or
+  overlapping groups are skipped with a warning, and groups mapped to the
+  missing glyph are not expanded. A crafted font could previously exhaust
+  memory with a single group ending at 0xFFFFFFFF (#4204).
+- [varLib.avar] Escape axis names and tags when ``varLib.avar.unbuild`` emits
+  its designspace snippet, so a crafted font cannot inject markup (#4203).
+
+4.65.0 (released 2026-09-10)
+----------------------------
+
+- [glyf] Add ``__iter__``, ``items`` and ``values`` methods to the ``glyf`` table
+  to make it more dict-like (#4156).
+- [feaLib] Escape the anonymous block tag when scanning for its terminator, so tags
+  containing regex metacharacters are matched literally (#4167).
+- [varLib] Strip directory components from ``<variable-font name="..."/>`` when
+  deriving the output filename in the ``varLib`` command line, so a designspace
+  cannot write outside the output directory (#4168).
+- [feaLib] Fix tracking of the current script and language across redundant
+  ``script`` statements. Rules following a ``script`` statement that names the
+  first declared language system no longer end up under the ``DFLT`` script, and
+  a ``script`` statement naming the already-current script still narrows the
+  language systems and terminates the current lookup while leaving the
+  ``lookupflag`` alone, matching makeotf (#1824, #2522, #4169).
+- [varLib.interpolatable] Escape glyph names in the HTML report (#4172).
+- [otlLib] Fix overflow handling when building contextual lookups: offset overflows
+  now raise ``OTLOffsetOverflowError`` instead of ``AttributeError`` so another
+  contextual format can be tried (regression from #3439). When all formats
+  overflow, split the ruleset in halves until it fits (#4171).
+
+4.64.0 (released 2026-08-31)
+----------------------------
+
+- [feaLib] Fix name-table parsing for multibyte Mac encodings (#1196, #4092).
+- [ttProgram] Also indent TrueType assembly following ``IDEF[ ]``, like function
+  definitions (#4093).
+- [subset] Keep East Asian spacing ``palt`` by default (#4094).
+- [subset] Bug fix for MATH table in which constructions for glyphs that are only
+  added during MATH closure were kept (#4096).
+- [ufoLib] Make glyph-to-group construction accessible outside of lookup function
+  (#4102).
+- [glyf] Use reverse glyph map for O(1) ``__setitem__`` membership (#4103).
+- [ttLib] Fix ``fixLookupOverFlows()`` reporting success when it had not promoted
+  any lookup to Extension, masking unresolvable overflows.
+- [ttLib] Add support for TrueType Collection version 2 (#4100).
+- [ttLib] Pin a single head.modified timestamp across ``TTCollection.save`` (#4111).
+- [ttLib] Give an actionable error when LookupList overflow is unrecoverable (#4109).
+- [ttLib] Add support for the AAT bitmap tables ``bhed``, ``bdat``, ``bloc``,
+  variants of ``head``, ``EBDT``, ``EBLC`` used in legacy Apple bitmap-only fonts
+  (#4115).
+- [ttLib] Check ``OS/2`` fsSelection/macStyle consistency against ``bhed`` as well
+  as ``head`` (#4118, #4119).
+- [misc.roundTools] Add types and documentation (#4123).
+- [varLib.instancer] Instance the ``BASE`` table (#4137).
+- [varLib.instancer] Fix Private-dict ``vsindex`` handling in ``instantiateCFF2``
+  (#4129, #4132).
+- [varLib.instancer] Fix crash instancing CFF2 fonts without a VariationStore
+  (#4130, #4131).
+- [sfnt] Raise ``TTLibError`` instead of ``AssertionError`` or ``struct.error``
+  when reading a font truncated within the table directory or a table entry
+  (#4147, #4149).
+- [misc.xmlWriter] Escape the ``]]>`` terminator inside CDATA sections, so an SVG
+  document containing it can no longer smuggle markup past a TTX round trip
+  (#4139).
+- [varLib.instancer] Implement avar2 partial-instancing: the avar version 2
+  ItemVariationStore is adjusted so that remaining axes behave the same after
+  limiting the designspace (#4045).
+- [feaLib] Add shorthand for the value at the default location in a variable
+  scalar: ``(100 wght=900:120)`` means ``(wght=400:100 wght=900:120)`` when the
+  wght default is 400 (#4024).
+- [cmap] Raise ``TTLibError`` for a truncated or out-of-bounds cmap subtable
+  header (#4151).
+- [designspaceLib] Reject conflicting duplicate inputs in axis maps instead of
+  silently keeping the last one (#4153).
+- [designspaceLib] Read an empty ``<lib>`` element as an empty lib instead of
+  raising ``IndexError`` (#4142, #4144).
+- [colorLib] Raise a legible error when a COLRv0 layer, or a COLRv1 PaintGlyph or
+  PaintColrGlyph, references a glyph missing from the glyphMap, instead of failing
+  obscurely later (#2629, #4141).
+- [cmap] Don't drop subtables in unsupported formats when compiling or dumping a
+  font read from binary (#4136).
+- [ttLib] Implement ``splitSinglePos`` so GPOS lookup type 1 offset overflows can
+  be recovered by splitting the subtable (#4091, #4108).
+- [cmap] Round-trip empty Macintosh format 2 subtables (#3663, #4117).
+- [glyf] Raise ``TTLibError`` instead of ``RecursionError`` when ``recalcBounds()``
+  hits a composite-component reference cycle (#3899, #4116).
+- [svgLib] Fix crash parsing an SVG path with consecutive closepath commands
+  (``Z Z``) (#4122).
+- [ttLib] Fix ``DefaultTable`` type annotations (#4126).
+- [ttLib] Add support for the ``EBSC`` (Embedded Bitmap Scaling) table (#4113).
+- [svgLib] Suppress spurious close segments caused by floating-point drift in
+  relative path commands (#3860, #4127).
+- [qu2cu] Fix ``TypeError`` in the Cython-compiled build when ``Qu2CuPen`` passes
+  tuple splines (#4160).
+- [mort] Add semantic decompilation, TTX, and compilation support for
+  rearrangement, contextual-substitution, ligature, and insertion subtables
+  (#4158, #4159, #4161).
+- [svgLib] Start a new subpath at the just-closed subpath's initial point when a
+  drawto command follows a closepath, per SVG spec (#4154, #4155).
+- [misc.filesystem] **SECURITY** Reject paths that resolve outside the filesystem
+  root: a malicious UFO could read arbitrary files via ``..`` components in
+  ``contents.plist``, and a crafted ``.ufoz`` could create files outside its
+  temporary mirror (#4124).
+- [ttLib] **SECURITY** Sanitise glyph names used as filenames in EBDT/CBDT
+  ``ttx -z extfile`` export, preventing arbitrary file writes from untrusted
+  fonts (#4128).
+- [misc.etree] **SECURITY** Don't resolve external XML entities in ``XMLParser``
+  when lxml is used, preventing XXE file disclosure on lxml < 5.0 (#4145).
+- [subset] Fully prune ``VARC`` auxiliary data: collect and remap variation
+  indices referenced by condition tables when subsetting the ``MultiVarStore``,
+  and drop the ``AxisIndicesList``, ``ConditionList``, and ``MultiVarStore``
+  when they end up empty (#4162).
+
 4.63.0 (released 2026-05-14)
 ----------------------------
 

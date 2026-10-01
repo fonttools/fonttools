@@ -17,7 +17,7 @@ class Char64Test(unittest.TestCase):
         self.assertEqual(reader.pos, 64)
 
     def test_read_replace_not_ascii(self):
-        reader = OTTableReader(b"Hello \xE4 world" + 100 * b"\0")
+        reader = OTTableReader(b"Hello \xe4 world" + 100 * b"\0")
         with CapturingLogHandler(otConverters.log, "WARNING") as captor:
             data = self.converter.read(reader, self.font, {})
         self.assertEqual(data, "Hello � world")

@@ -11,7 +11,6 @@ from . import DefaultTable
 import struct
 from collections.abc import MutableMapping
 
-
 # Apple's documentation of 'trak':
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6trak.html
 

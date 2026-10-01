@@ -10,7 +10,7 @@ that drawings don't need to know the details of how outlines are stored.
 
 The most basic pattern is this::
 
-	outline.draw(pen)  # 'outline' draws itself onto 'pen'
+        outline.draw(pen)  # 'outline' draws itself onto 'pen'
 
 Pens can be used to render outlines to the screen, but also to construct
 new outlines. Eg. an outline object can be both a drawable object (it has a

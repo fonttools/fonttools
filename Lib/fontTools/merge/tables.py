@@ -10,7 +10,6 @@ from fontTools.merge.cmap import computeMegaCmap
 from fontTools.merge.util import *
 import logging
 
-
 log = logging.getLogger("fontTools.merge")
 
 
@@ -41,6 +40,16 @@ headFlagsMergeBitMap = {
     15: lambda bit: 0,  # Always set to zero
 }
 
+
+def mergeUnitsPerEm(lst):
+    lst = list(lst)
+    if any(item != lst[0] for item in lst[1:]):
+        raise ValueError(
+            "Cannot merge fonts with different unitsPerEm values: %s" % lst
+        )
+    return lst[0]
+
+
 ttLib.getTableClass("head").mergeMap = {
     "tableTag": equal,
     "tableVersion": max,
@@ -48,7 +57,7 @@ ttLib.getTableClass("head").mergeMap = {
     "checkSumAdjustment": lambda lst: 0,  # We need *something* here
     "magicNumber": equal,
     "flags": mergeBits(headFlagsMergeBitMap),
-    "unitsPerEm": equal,
+    "unitsPerEm": mergeUnitsPerEm,
     "created": current_time,
     "modified": current_time,
     "xMin": min,

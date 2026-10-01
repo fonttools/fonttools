@@ -5,6 +5,7 @@ from fontTools.misc.encodingTools import getEncoding
 from fontTools.misc.textTools import byteord, tobytes
 from collections import OrderedDict
 import itertools
+import warnings
 
 SHIFT = " " * 4
 
@@ -940,26 +941,54 @@ class IncludeStatement(Statement):
 
 
 class LanguageStatement(Statement):
-    """A ``language`` statement within a feature."""
+    """A ``language`` statement within a feature.
+
+    ``language`` may be either a single four-character language tag or an
+    iterable of tags. Several tags, e.g. ``language AZE CRT KAZ TAT TRK;``,
+    are a Glyphs.app extension not in the Adobe FEA spec; it is proposed in
+    https://github.com/adobe-type-tools/feature_file_workshops/pull/8.
+    """
 
     def __init__(self, language, include_default=True, required=False, location=None):
         Statement.__init__(self, location)
-        assert len(language) == 4
-        self.language = language  #: A four-character language tag
+        if isinstance(language, str):
+            language = [language]
+        self.languages = list(language)  #: A list of four-character language tags
+        assert self.languages and all(len(tag) == 4 for tag in self.languages)
         self.include_default = include_default  #: If false, "exclude_dflt"
         self.required = required
 
+    @property
+    def language(self):
+        """The first language tag; see ``languages`` for all of them.
+
+        Setting it replaces all the tags with the one given.
+        """
+        if len(self.languages) > 1:
+            warnings.warn(
+                "LanguageStatement has multiple language tags; .language only "
+                "returns the first one, use .languages for all of them",
+                stacklevel=2,
+            )
+        return self.languages[0]
+
+    @language.setter
+    def language(self, language):
+        self.languages = [language]
+
     def build(self, builder):
         """Call the builder object's ``set_language`` callback."""
+        # a single tag is passed as a string, as before multiple tags were
+        # allowed, so builders that only expect one keep working
         builder.set_language(
             location=self.location,
-            language=self.language,
+            language=self.languages[0] if len(self.languages) == 1 else self.languages,
             include_default=self.include_default,
             required=self.required,
         )
 
     def asFea(self, indent=""):
-        res = "language {}".format(self.language.strip())
+        res = "language {}".format(" ".join(tag.strip() for tag in self.languages))
         if not self.include_default:
             res += " exclude_dflt"
         if self.required:

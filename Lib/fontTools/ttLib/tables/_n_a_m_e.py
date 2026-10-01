@@ -21,7 +21,6 @@ from . import DefaultTable
 import struct
 import logging
 
-
 log = logging.getLogger(__name__)
 
 nameRecordFormat = """

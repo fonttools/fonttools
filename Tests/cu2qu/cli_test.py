@@ -8,7 +8,6 @@ ufoLib2 = pytest.importorskip("ufoLib2")
 from fontTools.cu2qu.ufo import CURVE_TYPE_LIB_KEY
 from fontTools.cu2qu.cli import _main as main
 
-
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
 
 TEST_UFOS = [

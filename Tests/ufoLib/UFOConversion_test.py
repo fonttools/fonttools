@@ -7,7 +7,6 @@ from fontTools.ufoLib import UFOReader, UFOWriter
 from fontTools.ufoLib import plistlib
 from .testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
-
 # the format version 1 lib.plist contains some data
 # that these tests shouldn't be concerned about.
 removeFromFormatVersion1Lib = [

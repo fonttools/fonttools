@@ -4,7 +4,6 @@ from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
 import unittest
 
-
 # This is the anchor points table of the first font file in
 # “/Library/Fonts/Devanagari Sangam MN.ttc” on macOS 10.12.6.
 # For testing, we’ve changed the GlyphIDs to smaller values.

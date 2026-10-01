@@ -800,6 +800,17 @@ The ``<variable-fonts>`` element contains one or more ``<variable-font>`` elemen
 
         <axis-subset name="Weight" userminimum="400" usermaximum="500" userdefault="400"/>
 
+     Each range attribute is optional. An omitted bound uses the corresponding
+     full-axis bound. An omitted ``userdefault`` uses the full-axis default,
+     unless that value falls outside the subset range. In that case, the subset
+     endpoint closest to the full-axis default becomes the default. For an axis
+     with bounds from 100 to 900 and default 400, this subset uses a default of
+     700:
+
+     .. code:: xml
+
+        <axis-subset name="Weight" userminimum="700"/>
+
   3. a specific value along that axis; then the axis is not functional in the VF
      but the design space is sliced at the given location. *Note:* While valid to have a
      specific value that doesn’t have a matching ``<source>`` at that value, currently there

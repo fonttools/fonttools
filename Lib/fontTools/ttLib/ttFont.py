@@ -39,6 +39,7 @@ if TYPE_CHECKING:
         D_S_I_G_,
         E_B_D_T_,
         E_B_L_C_,
+        E_B_S_C_,
         F_F_T_M_,
         G_D_E_F_,
         G_L_Y_F_,
@@ -86,7 +87,10 @@ if TYPE_CHECKING:
         S__i_l_l,
         _a_n_k_r,
         _a_v_a_r,
+        _b_d_a_t,
         _b_g_c_l,
+        _b_h_e_d,
+        _b_l_o_c,
         _b_s_l_n,
         _c_i_d_g,
         _c_m_a_p,
@@ -649,6 +653,8 @@ class TTFont(object):
     @overload
     def __getitem__(self, tag: Literal["EBLC"]) -> E_B_L_C_.table_E_B_L_C_: ...
     @overload
+    def __getitem__(self, tag: Literal["EBSC"]) -> E_B_S_C_.table_E_B_S_C_: ...
+    @overload
     def __getitem__(self, tag: Literal["FFTM"]) -> F_F_T_M_.table_F_F_T_M_: ...
     @overload
     def __getitem__(self, tag: Literal["GDEF"]) -> G_D_E_F_.table_G_D_E_F_: ...
@@ -745,7 +751,13 @@ class TTFont(object):
     @overload
     def __getitem__(self, tag: Literal["bsln"]) -> _b_s_l_n.table__b_s_l_n: ...
     @overload
+    def __getitem__(self, tag: Literal["bdat"]) -> _b_d_a_t.table__b_d_a_t: ...
+    @overload
+    def __getitem__(self, tag: Literal["bhed"]) -> _b_h_e_d.table__b_h_e_d: ...
+    @overload
     def __getitem__(self, tag: Literal["bgcl"]) -> _b_g_c_l.table__b_g_c_l: ...
+    @overload
+    def __getitem__(self, tag: Literal["bloc"]) -> _b_l_o_c.table__b_l_o_c: ...
     @overload
     def __getitem__(self, tag: Literal["cidg"]) -> _c_i_d_g.table__c_i_d_g: ...
     @overload
@@ -892,6 +904,8 @@ class TTFont(object):
     def get(self, tag: Literal["EBDT"]) -> E_B_D_T_.table_E_B_D_T_ | None: ...
     @overload
     def get(self, tag: Literal["EBLC"]) -> E_B_L_C_.table_E_B_L_C_ | None: ...
+    @overload
+    def get(self, tag: Literal["EBSC"]) -> E_B_S_C_.table_E_B_S_C_ | None: ...
     @overload
     def get(self, tag: Literal["FFTM"]) -> F_F_T_M_.table_F_F_T_M_ | None: ...
     @overload

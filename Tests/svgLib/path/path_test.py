@@ -1,10 +1,10 @@
+from fontTools.misc import etree
 from fontTools.misc.textTools import tobytes
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib import SVGPath
 
 import os
 from tempfile import NamedTemporaryFile
-
 
 SVG_DATA = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -15,9 +15,7 @@ SVG_DATA = """\
 <path d="M 100 100 L 300 100 L 200 300 z"/>
 <path d="M100,200 C100,100 250,100 250,200 S400,300 400,200"/>
 </svg>
-""".encode(
-    "utf-8"
-)
+""".encode("utf-8")
 
 EXPECTED_PEN_COMMANDS = [
     ("moveTo", ((100.0, 100.0),)),
@@ -83,3 +81,23 @@ class SVGPathTest(object):
             ("curveTo", ((250.0, 700.0), (400.0, 700.0), (400.0, 800.0))),
             ("endPath", ()),
         ]
+
+
+def test_no_external_entity_expansion(tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("s3cr3t")
+    svg = tmp_path / "test.svg"
+    svg.write_text(
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE svg [<!ENTITY xxe SYSTEM "%s">]>'
+        '<svg xmlns="http://www.w3.org/2000/svg"><desc>&xxe;</desc>'
+        '<path d="M 0 0 L 1 1 z"/></svg>' % secret.as_uri()
+    )
+
+    for load in (lambda: SVGPath(svg), lambda: SVGPath.fromstring(svg.read_bytes())):
+        try:
+            root = load().root
+        except etree.ParseError:
+            # the undefined entity is rejected outright
+            continue
+        assert all("s3cr3t" not in (el.text or "") for el in root.iter())

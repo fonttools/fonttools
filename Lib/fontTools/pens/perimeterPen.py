@@ -10,7 +10,6 @@ from fontTools.misc.bezierTools import (
 )
 import math
 
-
 __all__ = ["PerimeterPen"]
 
 

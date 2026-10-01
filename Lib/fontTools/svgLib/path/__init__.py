@@ -4,7 +4,6 @@ from fontTools.misc.textTools import tostr
 from .parser import parse_path
 from .shapes import PathBuilder
 
-
 __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
 
 
@@ -39,14 +38,14 @@ class SVGPath(object):
         if filename is None:
             self.root = etree.ElementTree()
         else:
-            tree = etree.parse(filename)
+            tree = etree.parse(filename, parser=etree.XMLParser())
             self.root = tree.getroot()
         self.transform = transform
 
     @classmethod
     def fromstring(cls, data, transform=None):
         self = cls(transform=transform)
-        self.root = etree.fromstring(data)
+        self.root = etree.fromstring(data, parser=etree.XMLParser())
         return self
 
     def draw(self, pen):

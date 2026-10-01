@@ -3,7 +3,6 @@ from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib import newTable
 import unittest
 
-
 STAT_DATA = deHexStr(
     "0001 0000 "  #   0: Version=1.0
     "0008 0002 "  #   4: DesignAxisSize=8, DesignAxisCount=2

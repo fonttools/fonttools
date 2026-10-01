@@ -181,6 +181,8 @@ def _add_avar(font, axes, mappings, axisTags):
     interesting = False
     vals_triples = {}
     for axis in axes.values():
+        axis_map = axis.get_validated_map()
+
         # Currently, some rasterizers require that the default value maps
         # (-1 to -1, 0 to 0, and 1 to 1) be present for all the segment
         # maps, even when the default normalization mapping for the axis
@@ -193,11 +195,12 @@ def _add_avar(font, axes, mappings, axisTags):
         keys_triple = (axis.minimum, axis.default, axis.maximum)
         vals_triple = tuple(axis.map_forward(v) for v in keys_triple)
         vals_triples[axis.tag] = vals_triple
-
-        if not axis.map:
+        if not axis_map:
             continue
 
-        items = sorted(axis.map)
+        # The validated view removes repeated pairs while preserving legal
+        # duplicate output values.
+        items = sorted(axis_map)
         keys = [item[0] for item in items]
         vals = [item[1] for item in items]
 
@@ -218,12 +221,6 @@ def _add_avar(font, axes, mappings, axisTags):
             raise VarLibValidationError(
                 f"Axis '{axis.name}': there must be a mapping for the axis default "
                 f"value {axis.default}."
-            )
-        # No duplicate input values (output values can be >= their preceeding value).
-        if len(set(keys)) != len(keys):
-            raise VarLibValidationError(
-                f"Axis '{axis.name}': All axis mapping input='...' values must be "
-                "unique, but we found duplicates."
             )
         # Ascending values
         if sorted(vals) != vals:
@@ -1596,7 +1593,9 @@ def main(args=None):
                 # Only use basename to prevent path traversal attacks
                 filename = os.path.basename(vf.filename)
             else:
-                filename = vf.name + ".{ext}"
+                # vf.name comes straight from the designspace and is equally
+                # attacker-controlled, so basename it too
+                filename = os.path.basename(vf.name) + ".{ext}"
             vf_name_to_output_path[vf.name] = os.path.join(output_dir, filename)
 
     vf_names_to_build = {vf.name for vf in vfs_to_build}

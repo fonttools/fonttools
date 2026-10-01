@@ -13,7 +13,6 @@ from fontTools.pens.boundsPen import BoundsPen
 import struct
 import logging
 
-
 log = logging.getLogger(__name__)
 
 

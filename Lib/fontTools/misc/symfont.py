@@ -133,8 +133,7 @@ class %s(BasePen):
 
 	def __init__(self, glyphset=None):
 		BasePen.__init__(self, glyphset)
-"""
-        % (penName, penName),
+""" % (penName, penName),
         file=file,
     )
     for name, f in funcs:
@@ -224,8 +223,7 @@ class %s(BasePen):
         """
 if __name__ == '__main__':
 	from fontTools.misc.symfont import x, y, printGreenPen
-	printGreenPen('%s', ["""
-        % penName,
+	printGreenPen('%s', [""" % penName,
         file=file,
     )
     for name, f in funcs:

@@ -241,13 +241,11 @@ class IncludingLexerTest(unittest.TestCase):
             with open(
                 os.path.join(tmpdir, "included.fea"), "w", encoding="utf-8"
             ) as included:
-                included.write(
-                    """
+                included.write("""
                     feature kern {
                         pos A B -40;
                     } kern;
-                    """
-                )
+                    """)
             # change current folder to the temporary dir
             os.chdir(tmpdir)
             # instantiate a new lexer that includes the above file

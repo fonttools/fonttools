@@ -3,7 +3,6 @@ from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib import getTableModule, newTable
 import unittest
 
-
 CPAL_DATA_V0 = deHexStr(
     "0000 0002 "  # version=0, numPaletteEntries=2
     "0002 0004 "  # numPalettes=2, numColorRecords=4

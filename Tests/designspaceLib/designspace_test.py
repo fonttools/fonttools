@@ -22,6 +22,7 @@ from fontTools.designspaceLib import (
     processRules,
 )
 from fontTools.designspaceLib.types import Range
+from fontTools.misc import etree as ET
 from fontTools.misc import plistlib
 
 from .fixtures import datadir
@@ -919,6 +920,32 @@ def test_documentLib(tmpdir):
     assert new.lib[dummyKey] == dummyData
 
 
+def test_emptyLib(tmpdir):
+    # an empty <lib> element should read as an empty lib, not raise IndexError
+    tmpdir = str(tmpdir)
+    testDocPath = os.path.join(tmpdir, "testEmptyLibTest.designspace")
+    with open(testDocPath, "w", encoding="utf-8") as f:
+        f.write(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<designspace format="4.1">\n'
+            "  <axes>\n"
+            '    <axis tag="TAGA" name="axisName_a" minimum="0" maximum="1000"'
+            ' default="0"/>\n'
+            "  </axes>\n"
+            "  <instances>\n"
+            '    <instance name="instance.a" filename="instance.a.ufo">\n'
+            "      <lib/>\n"
+            "    </instance>\n"
+            "  </instances>\n"
+            "  <lib/>\n"
+            "</designspace>\n"
+        )
+    doc = DesignSpaceDocument()
+    doc.read(testDocPath)
+    assert doc.lib == {}
+    assert doc.instances[0].lib == {}
+
+
 def test_updatePaths(tmpdir):
     doc = DesignSpaceDocument()
     doc.path = str(tmpdir / "foo" / "bar" / "MyDesignspace.designspace")
@@ -1234,6 +1261,88 @@ def test_map_backward_many_to_one():
     assert result == pytest.approx(expected)
 
 
+def test_axis_map_conflicting_duplicate_input_is_rejected_when_consumed():
+    raw_map = [(900, 1000), (400, 450), (100, 100), (400, 500)]
+    original_map = list(raw_map)
+    axis = AxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=100,
+        default=400,
+        maximum=900,
+        # Deliberately out of input order: validation must not depend on
+        # adjacent entries in the source list.
+        map=raw_map,
+    )
+
+    with pytest.raises(
+        DesignSpaceDocumentError,
+        match=r"Axis 'Weight': mapping input value 400 .* 450 and 500",
+    ):
+        axis.map_forward(400)
+    with pytest.raises(DesignSpaceDocumentError, match="Axis 'Weight'"):
+        axis.map_backward(450)
+    assert axis.map is raw_map
+    assert axis.map == original_map
+
+
+def test_axis_map_identical_duplicate_input_is_ignored_by_consumers():
+    raw_map = [(900, 1000), (400, 450), (100, 100), (400, 450)]
+    original_map = list(raw_map)
+    axis = AxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=100,
+        default=400,
+        maximum=900,
+        map=raw_map,
+    )
+
+    assert axis.get_validated_map() == [(900, 1000), (400, 450), (100, 100)]
+    assert axis.map_forward(400) == 450
+    assert axis.map_backward(450) == 400
+    assert axis.map is raw_map
+    assert axis.map == original_map
+
+
+def test_discrete_axis_map_rejects_conflicting_duplicate_inputs_when_consumed():
+    axis = DiscreteAxisDescriptor(
+        name="Style",
+        tag="STYL",
+        values=[0, 1],
+        default=0,
+        map=[(0, 10), (1, 20), (0, 11)],
+    )
+
+    with pytest.raises(DesignSpaceDocumentError, match="Axis 'Style'"):
+        axis.map_forward(0)
+    with pytest.raises(DesignSpaceDocumentError, match="Axis 'Style'"):
+        axis.map_backward(10)
+
+
+def test_parsed_axis_map_conflicting_duplicate_input_is_rejected_when_consumed():
+    designspace = """
+    <designspace format="5.0">
+      <axes>
+        <axis name="Weight" tag="wght" minimum="100" default="400" maximum="900">
+          <map input="900" output="1000"/>
+          <map input="400" output="450"/>
+          <map input="100" output="100"/>
+          <map input="400" output="500"/>
+        </axis>
+      </axes>
+    </designspace>
+    """
+
+    doc = DesignSpaceDocument.fromstring(designspace)
+    raw_map = [(900, 1000), (400, 450), (100, 100), (400, 500)]
+    assert doc.axes[0].map == raw_map
+
+    with pytest.raises(DesignSpaceDocumentError, match="Axis 'Weight'"):
+        doc.axes[0].map_forward(400)
+    assert doc.axes[0].map == raw_map
+
+
 def test_map_backward_many_to_one_mid_range():
     """Test map_backward with a flat segment in the middle of the axis range."""
     ax = AxisDescriptor()
@@ -1318,3 +1427,25 @@ def test_map_backward_single_entry():
     assert ax.map_backward(200) == 100
     assert ax.map_backward(300) == 200
     assert ax.map_backward(100) == 0
+
+
+def test_no_external_entity_expansion(tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("s3cr3t")
+    path = tmp_path / "test.designspace"
+    path.write_text(
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE designspace [<!ENTITY xxe SYSTEM "%s">]>'
+        '<designspace format="4.1"><axes>'
+        '<axis tag="wght" name="Weight" minimum="0" maximum="1" default="0">'
+        '<labelname xml:lang="en">x&xxe;</labelname>'
+        "</axis></axes></designspace>" % secret.as_uri()
+    )
+
+    try:
+        doc = DesignSpaceDocument.fromfile(path)
+    except ET.ParseError:
+        # the undefined entity is rejected outright
+        return
+
+    assert "s3cr3t" not in doc.axes[0].labelNames["en"]

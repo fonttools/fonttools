@@ -8,7 +8,6 @@ from functools import reduce
 import operator
 import logging
 
-
 log = logging.getLogger("fontTools.merge")
 
 

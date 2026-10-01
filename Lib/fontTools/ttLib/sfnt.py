@@ -25,7 +25,6 @@ import struct
 from collections import OrderedDict
 import logging
 
-
 log = logging.getLogger(__name__)
 
 
@@ -433,6 +432,18 @@ ttcHeaderFormat = """
 
 ttcHeaderSize = sstruct.calcsize(ttcHeaderFormat)
 
+ttcTailFormatV2 = """
+		> # big endian
+		ulDsigTag:               L  # version 2.0 only
+		ulDsigLength:            L  # version 2.0 only
+		ulDsigOffset:            L  # version 2.0 only
+"""
+
+ttcTailSizeV2 = sstruct.calcsize(ttcTailFormatV2)
+
+TTC_V1 = 0x00010000
+TTC_V2 = 0x00020000
+
 sfntDirectoryFormat = """
 		> # big endian
 		sfntVersion:    4s
@@ -490,7 +501,15 @@ class DirectoryEntry(object):
         self.uncompressed = False  # if True, always embed entry raw
 
     def fromFile(self, file):
-        sstruct.unpack(self.format, file.read(self.formatSize), self)
+        data = file.read(self.formatSize)
+        if len(data) != self.formatSize:
+            # A file truncated inside the table directory, or one whose
+            # numTables is corrupt, would otherwise fail with a struct.error.
+            raise TTLibError(
+                "unexpected end of table directory: expected %d bytes but got %d"
+                % (self.formatSize, len(data))
+            )
+        sstruct.unpack(self.format, data, self)
 
     def fromString(self, str):
         sstruct.unpack(self.format, str, self)
@@ -507,7 +526,21 @@ class DirectoryEntry(object):
     def loadData(self, file):
         file.seek(self.offset)
         data = file.read(self.length)
-        assert len(data) == self.length
+        if len(data) != self.length:
+            # A corrupt or truncated table directory entry can point past the
+            # end of the file; raise a TTLibError instead of a bare assertion
+            # (which is also silently skipped under `python -O`).
+            tag = getattr(self, "tag", None)
+            raise TTLibError(
+                "unexpected end of '%s' table data: expected %d bytes but got "
+                "%d at offset %d"
+                % (
+                    Tag(tag) if tag is not None else "????",
+                    self.length,
+                    len(data),
+                    self.offset,
+                )
+            )
         if hasattr(self.__class__, "decodeData"):
             data = self.decodeData(data)
         return data
@@ -552,9 +585,23 @@ class WOFFDirectoryEntry(DirectoryEntry):
         if self.length == self.origLength:
             data = rawData
         else:
-            assert self.length < self.origLength
+            # These lengths come straight from the (untrusted) WOFF table
+            # directory; a bare assertion is also silently skipped under
+            # `python -O`, so a corrupt WOFF would be accepted with wrong-sized
+            # table data instead of failing.
+            tag = Tag(getattr(self, "tag", None) or "????")
+            if self.length >= self.origLength:
+                raise TTLibError(
+                    "corrupt WOFF table '%s': compressed length %d is not "
+                    "smaller than original length %d"
+                    % (tag, self.length, self.origLength)
+                )
             data = zlib.decompress(rawData)
-            assert len(data) == self.origLength
+            if len(data) != self.origLength:
+                raise TTLibError(
+                    "unexpected size for decompressed WOFF table '%s': "
+                    "expected %d but got %d" % (tag, self.origLength, len(data))
+                )
         return data
 
     def encodeData(self, data):
@@ -582,17 +629,32 @@ class WOFFFlavorData:
         if reader:
             self.majorVersion = reader.majorVersion
             self.minorVersion = reader.minorVersion
+            # The metadata/private-data offsets and lengths are read from the
+            # (untrusted) WOFF header; validate them with real checks rather
+            # than bare assertions, which are silently skipped under `python -O`.
             if reader.metaLength:
                 reader.file.seek(reader.metaOffset)
                 rawData = reader.file.read(reader.metaLength)
-                assert len(rawData) == reader.metaLength
+                if len(rawData) != reader.metaLength:
+                    raise TTLibError(
+                        "unexpected end of WOFF metadata: expected %d bytes "
+                        "but got %d" % (reader.metaLength, len(rawData))
+                    )
                 data = self._decompress(rawData)
-                assert len(data) == reader.metaOrigLength
+                if len(data) != reader.metaOrigLength:
+                    raise TTLibError(
+                        "unexpected size for decompressed WOFF metadata: "
+                        "expected %d but got %d" % (reader.metaOrigLength, len(data))
+                    )
                 self.metaData = data
             if reader.privLength:
                 reader.file.seek(reader.privOffset)
                 data = reader.file.read(reader.privLength)
-                assert len(data) == reader.privLength
+                if len(data) != reader.privLength:
+                    raise TTLibError(
+                        "unexpected end of WOFF private data: expected %d "
+                        "bytes but got %d" % (reader.privLength, len(data))
+                    )
                 self.privData = data
 
     def _decompress(self, rawData):
@@ -634,26 +696,37 @@ def readTTCHeader(file):
     sstruct.unpack(ttcHeaderFormat, data, self)
     if self.TTCTag != "ttcf":
         raise TTLibError("Not a Font Collection")
-    assert self.Version == 0x00010000 or self.Version == 0x00020000, (
+    assert self.Version in (TTC_V1, TTC_V2), (
         "unrecognized TTC version 0x%08x" % self.Version
     )
     self.offsetTable = struct.unpack(
         ">%dL" % self.numFonts, file.read(self.numFonts * 4)
     )
-    if self.Version == 0x00020000:
-        pass  # ignoring version 2.0 signatures
+    if self.Version == TTC_V2:
+        # Unpack additional DSIG fields
+        data = file.read(ttcTailSizeV2)
+        if len(data) != ttcTailSizeV2:
+            raise TTLibError("Not a Font Collection (not enough data)")
+        sstruct.unpack(ttcTailFormatV2, data, self)
     return self
 
 
-def writeTTCHeader(file, numFonts):
+def writeTTCHeader(file, numFonts, version=TTC_V1):
     self = SimpleNamespace()
     self.TTCTag = "ttcf"
-    self.Version = 0x00010000
+    self.Version = version
+    assert self.Version in (TTC_V1, TTC_V2), (
+        "unrecognized TTC version 0x%08x" % self.Version
+    )
     self.numFonts = numFonts
     file.seek(0)
     file.write(sstruct.pack(ttcHeaderFormat, self))
     offset = file.tell()
     file.write(struct.pack(">%dL" % self.numFonts, *([0] * self.numFonts)))
+    if version == TTC_V2:
+        # write empty ulDsigTag, ulDsigLength, ulDsigOffset
+        # Actual values are be written in TTCollection.save()
+        file.write(struct.pack(">3L", 0, 0, 0))
     return offset
 
 

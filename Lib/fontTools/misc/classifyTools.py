@@ -1,5 +1,4 @@
-""" fontTools.misc.classifyTools.py -- tools for classifying things.
-"""
+"""fontTools.misc.classifyTools.py -- tools for classifying things."""
 
 
 class Classifier(object):

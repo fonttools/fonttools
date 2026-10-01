@@ -3,7 +3,6 @@ import math
 import operator
 import warnings
 
-
 __all__ = ["Vector"]
 
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-""" Convert SVG paths to UFO glyphs. """
-
+"""Convert SVG paths to UFO glyphs."""
 
 __requires__ = ["fontTools"]
 
@@ -9,7 +8,6 @@ from fontTools.svgLib import SVGPath
 
 from fontTools.pens.pointPen import SegmentToPointPen
 from fontTools.ufoLib.glifLib import writeGlyphToString
-
 
 __all__ = ["svg2glif"]
 

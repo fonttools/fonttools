@@ -5,7 +5,10 @@ from fontTools.feaLib.parser import Parser, SymbolTable
 from io import StringIO
 import warnings
 import fontTools.feaLib.ast as ast
+import ast as pyast
+import inspect
 import os
+import textwrap
 import unittest
 
 
@@ -31,9 +34,7 @@ def mapping(s):
     return dict(zip(b, c))
 
 
-GLYPHNAMES = (
-    (
-        """
+GLYPHNAMES = ("""
     .notdef space A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc
     N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc
@@ -51,11 +52,7 @@ GLYPHNAMES = (
     cid00111 cid00222
     comma endash emdash figuredash damma hamza
     c_d d.alt n.end s.end f_f
-"""
-    ).split()
-    + ["foo.%d" % i for i in range(1, 200)]
-    + ["G" * 600]
-)
+""").split() + ["foo.%d" % i for i in range(1, 200)] + ["G" * 600]
 
 
 class ParserTest(unittest.TestCase):
@@ -91,12 +88,10 @@ class ParserTest(unittest.TestCase):
             )
 
     def test_comments(self):
-        doc = self.parse(
-            """ # Initial
+        doc = self.parse(""" # Initial
                 feature test {
                     sub A by B; # simple
-                } test;"""
-        )
+                } test;""")
         c1 = doc.statements[0]
         c2 = doc.statements[1].statements[1]
         self.assertEqual(type(c1), ast.Comment)
@@ -107,11 +102,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(doc.statements[1].name, "test")
 
     def test_only_comments(self):
-        doc = self.parse(
-            """\
+        doc = self.parse("""\
             # Initial
-        """
-        )
+        """)
         c1 = doc.statements[0]
         self.assertEqual(type(c1), ast.Comment)
         self.assertEqual(c1.text, "# Initial")
@@ -242,6 +235,25 @@ class ParserTest(unittest.TestCase):
             "Expected '} TEST;' to terminate anonymous block",
             self.parse,
             "anon TEST { \n no end in sight",
+        )
+
+    def test_anon_regexMetacharacterTag(self):
+        # the closing tag is matched literally: regex metacharacters in the tag
+        # (all of ``. + * ^ ~ !`` are valid feature-file name characters) must
+        # not move where the block ends, so the inner "} X;" does not terminate it
+        anon = self.parse("anon .+.+ {\n} X;\n} .+.+;\n").statements[0]
+        self.assertIsInstance(anon, ast.AnonymousBlock)
+        self.assertEqual(anon.tag, ".+.+")
+        self.assertEqual(anon.content, "} X;\n")
+
+    def test_anon_invalidRegexTag(self):
+        # a tag that is not a valid regular expression must raise a
+        # FeatureLibError rather than leaking a re.error out of the parser
+        self.assertRaisesRegex(
+            FeatureLibError,
+            r"Expected '} \*;' to terminate anonymous block",
+            self.parse,
+            "anon * {\n no end in sight",
         )
 
     def test_attach(self):
@@ -630,9 +642,81 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {language DEU;} test;")
         s = doc.statements[0].statements[0]
         self.assertEqual(type(s), ast.LanguageStatement)
-        self.assertEqual(s.language, "DEU ")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            self.assertEqual(s.language, "DEU ")
         self.assertTrue(s.include_default)
         self.assertFalse(s.required)
+
+    def test_language_multiple(self):
+        doc = self.parse(
+            "feature test {language AZE CRT KAZ TAT TRK exclude_dflt required;} test;"
+        )
+        s = doc.statements[0].statements[0]
+        self.assertEqual(type(s), ast.LanguageStatement)
+        self.assertEqual(s.languages, ["AZE ", "CRT ", "KAZ ", "TAT ", "TRK "])
+        with self.assertWarnsRegex(UserWarning, "use .languages") as cm:
+            self.assertEqual(s.language, "AZE ")
+        self.assertEqual(cm.filename, __file__)
+        self.assertFalse(s.include_default)
+        self.assertTrue(s.required)
+        self.assertEqual(
+            s.asFea(),
+            "language AZE CRT KAZ TAT TRK exclude_dflt required;",
+        )
+
+    def test_language_multiple_missing_semicolon(self):
+        # The next statement must not be read as more language tags.
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE CRT\n sub a by b;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE\n lookup foo;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected ';'",
+            self.parse,
+            "feature test {language AZE CRT\n @foo = [a b];} test;",
+        )
+
+    def test_language_statement_keywords_up_to_date(self):
+        # parse_language_ ends a multi-tag statement at the keywords that
+        # start a block statement; this fails when parse_block_ learns a new
+        # one that _statement_keywords does not list.
+        source = textwrap.dedent(inspect.getsource(Parser.parse_block_))
+        keywords = set()
+        for node in pyast.walk(pyast.parse(source)):
+            if (
+                isinstance(node, pyast.Call)
+                and isinstance(node.func, pyast.Attribute)
+                and node.func.attr == "is_cur_keyword_"
+            ):
+                for arg in pyast.walk(node.args[0]):
+                    if isinstance(arg, pyast.Constant) and isinstance(arg.value, str):
+                        keywords.add(arg.value)
+        self.assertIn("sub", keywords)  # the walk found the calls
+        self.assertEqual(keywords - Parser._statement_keywords, set())
+
+    def test_language_multiple_dflt(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" must be the only tag in a language statement',
+            self.parse,
+            "feature test {language dflt AZE;} test;",
+        )
+        self.assertRaisesRegex(
+            FeatureLibError,
+            '"dflt" must be the only tag in a language statement',
+            self.parse,
+            "feature test {language AZE dflt;} test;",
+        )
 
     def test_language_exclude_dflt(self):
         doc = self.parse("feature test {language DEU exclude_dflt;} test;")
@@ -2143,6 +2227,24 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(len(caplog.records), 1)
         caplog.assertRegex(
             'Ambiguous "ignore sub", there should be least one marked glyph'
+        )
+
+    def test_variable_scalar_default(self):
+        doc = self.parse(
+            "feature test {valueRecordDef <0 (100 wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0> foo;} test;"
+        )
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(
+            value.asFea(),
+            "<0 (100 wght=200:-100 wght=900:-150 wdth=150,wght=900:-120) 0 0>",
+        )
+
+    def test_variable_scalar_duplicate_bare_value(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Duplicate value for the default location",
+            self.parse,
+            "feature test {pos a (10 20 wght=900:30);} test",
         )
 
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):

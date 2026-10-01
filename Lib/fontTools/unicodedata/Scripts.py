@@ -4,9 +4,9 @@
 # Source: https://unicode.org/Public/UNIDATA/Scripts.txt
 # License: http://unicode.org/copyright.html#License
 #
-# Scripts-17.0.0.txt
-# Date: 2025-07-24, 13:28:55 GMT
-# © 2025 Unicode®, Inc.
+# Scripts-18.0.0.txt
+# Date: 2026-06-29, 15:25:26 GMT
+# © 2026 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use and license, see https://www.unicode.org/terms_of_use.html
 #
@@ -66,13 +66,11 @@ RANGES = [
     0x0487,  # .. 0x052F ; Cyrillic
     0x0530,  # .. 0x0530 ; Unknown
     0x0531,  # .. 0x0556 ; Armenian
-    0x0557,  # .. 0x0558 ; Unknown
-    0x0559,  # .. 0x058A ; Armenian
-    0x058B,  # .. 0x058C ; Unknown
-    0x058D,  # .. 0x058F ; Armenian
+    0x0557,  # .. 0x0557 ; Unknown
+    0x0558,  # .. 0x058F ; Armenian
     0x0590,  # .. 0x0590 ; Unknown
-    0x0591,  # .. 0x05C7 ; Hebrew
-    0x05C8,  # .. 0x05CF ; Unknown
+    0x0591,  # .. 0x05C9 ; Hebrew
+    0x05CA,  # .. 0x05CF ; Unknown
     0x05D0,  # .. 0x05EA ; Hebrew
     0x05EB,  # .. 0x05EE ; Unknown
     0x05EF,  # .. 0x05F4 ; Hebrew
@@ -232,8 +230,8 @@ RANGES = [
     0x0B47,  # .. 0x0B48 ; Oriya
     0x0B49,  # .. 0x0B4A ; Unknown
     0x0B4B,  # .. 0x0B4D ; Oriya
-    0x0B4E,  # .. 0x0B54 ; Unknown
-    0x0B55,  # .. 0x0B57 ; Oriya
+    0x0B4E,  # .. 0x0B52 ; Unknown
+    0x0B53,  # .. 0x0B57 ; Oriya
     0x0B58,  # .. 0x0B5B ; Unknown
     0x0B5C,  # .. 0x0B5D ; Oriya
     0x0B5E,  # .. 0x0B5E ; Unknown
@@ -527,10 +525,8 @@ RANGES = [
     0x1A9A,  # .. 0x1A9F ; Unknown
     0x1AA0,  # .. 0x1AAD ; Tai_Tham
     0x1AAE,  # .. 0x1AAF ; Unknown
-    0x1AB0,  # .. 0x1ADD ; Inherited
-    0x1ADE,  # .. 0x1ADF ; Unknown
-    0x1AE0,  # .. 0x1AEB ; Inherited
-    0x1AEC,  # .. 0x1AFF ; Unknown
+    0x1AB0,  # .. 0x1AF0 ; Inherited
+    0x1AF1,  # .. 0x1AFF ; Unknown
     0x1B00,  # .. 0x1B4C ; Balinese
     0x1B4D,  # .. 0x1B4D ; Unknown
     0x1B4E,  # .. 0x1B7F ; Balinese
@@ -618,12 +614,10 @@ RANGES = [
     0x2072,  # .. 0x2073 ; Unknown
     0x2074,  # .. 0x207E ; Common
     0x207F,  # .. 0x207F ; Latin
-    0x2080,  # .. 0x208E ; Common
-    0x208F,  # .. 0x208F ; Unknown
-    0x2090,  # .. 0x209C ; Latin
-    0x209D,  # .. 0x209F ; Unknown
-    0x20A0,  # .. 0x20C1 ; Common
-    0x20C2,  # .. 0x20CF ; Unknown
+    0x2080,  # .. 0x208F ; Common
+    0x2090,  # .. 0x209F ; Latin
+    0x20A0,  # .. 0x20C4 ; Common
+    0x20C5,  # .. 0x20CF ; Unknown
     0x20D0,  # .. 0x20F0 ; Inherited
     0x20F1,  # .. 0x20FF ; Unknown
     0x2100,  # .. 0x2125 ; Common
@@ -683,7 +677,9 @@ RANGES = [
     0x2DDF,  # .. 0x2DDF ; Unknown
     0x2DE0,  # .. 0x2DFF ; Cyrillic
     0x2E00,  # .. 0x2E5D ; Common
-    0x2E5E,  # .. 0x2E7F ; Unknown
+    0x2E5E,  # .. 0x2E5F ; Unknown
+    0x2E60,  # .. 0x2E63 ; Common
+    0x2E64,  # .. 0x2E7F ; Unknown
     0x2E80,  # .. 0x2E99 ; Han
     0x2E9A,  # .. 0x2E9A ; Unknown
     0x2E9B,  # .. 0x2EF3 ; Han
@@ -747,8 +743,10 @@ RANGES = [
     0xA700,  # .. 0xA721 ; Common
     0xA722,  # .. 0xA787 ; Latin
     0xA788,  # .. 0xA78A ; Common
-    0xA78B,  # .. 0xA7DC ; Latin
-    0xA7DD,  # .. 0xA7F0 ; Unknown
+    0xA78B,  # .. 0xA7DD ; Latin
+    0xA7DE,  # .. 0xA7E1 ; Unknown
+    0xA7E2,  # .. 0xA7E2 ; Latin
+    0xA7E3,  # .. 0xA7F0 ; Unknown
     0xA7F1,  # .. 0xA7FF ; Latin
     0xA800,  # .. 0xA82C ; Syloti_Nagri
     0xA82D,  # .. 0xA82F ; Unknown
@@ -806,7 +804,8 @@ RANGES = [
     0xAB65,  # .. 0xAB65 ; Greek
     0xAB66,  # .. 0xAB69 ; Latin
     0xAB6A,  # .. 0xAB6B ; Common
-    0xAB6C,  # .. 0xAB6F ; Unknown
+    0xAB6C,  # .. 0xAB6D ; Latin
+    0xAB6E,  # .. 0xAB6F ; Unknown
     0xAB70,  # .. 0xABBF ; Cherokee
     0xABC0,  # .. 0xABED ; Meetei_Mayek
     0xABEE,  # .. 0xABEF ; Unknown
@@ -976,8 +975,8 @@ RANGES = [
     0x10786,  # .. 0x10786 ; Unknown
     0x10787,  # .. 0x107B0 ; Latin
     0x107B1,  # .. 0x107B1 ; Unknown
-    0x107B2,  # .. 0x107BA ; Latin
-    0x107BB,  # .. 0x107FF ; Unknown
+    0x107B2,  # .. 0x107BF ; Latin
+    0x107C0,  # .. 0x107FF ; Unknown
     0x10800,  # .. 0x10805 ; Cypriot
     0x10806,  # .. 0x10807 ; Unknown
     0x10808,  # .. 0x10808 ; Cypriot
@@ -1080,10 +1079,10 @@ RANGES = [
     0x10EB0,  # .. 0x10EB1 ; Yezidi
     0x10EB2,  # .. 0x10EC1 ; Unknown
     0x10EC2,  # .. 0x10EC7 ; Arabic
-    0x10EC8,  # .. 0x10ECF ; Unknown
-    0x10ED0,  # .. 0x10ED8 ; Arabic
-    0x10ED9,  # .. 0x10EF9 ; Unknown
-    0x10EFA,  # .. 0x10EFF ; Arabic
+    0x10EC8,  # .. 0x10EC8 ; Unknown
+    0x10EC9,  # .. 0x10EEE ; Arabic
+    0x10EEF,  # .. 0x10EEF ; Unknown
+    0x10EF0,  # .. 0x10EFF ; Arabic
     0x10F00,  # .. 0x10F27 ; Old_Sogdian
     0x10F28,  # .. 0x10F2F ; Unknown
     0x10F30,  # .. 0x10F59 ; Sogdian
@@ -1252,8 +1251,8 @@ RANGES = [
     0x11AB0,  # .. 0x11ABF ; Canadian_Aboriginal
     0x11AC0,  # .. 0x11AF8 ; Pau_Cin_Hau
     0x11AF9,  # .. 0x11AFF ; Unknown
-    0x11B00,  # .. 0x11B09 ; Devanagari
-    0x11B0A,  # .. 0x11B5F ; Unknown
+    0x11B00,  # .. 0x11B0A ; Devanagari
+    0x11B0B,  # .. 0x11B5F ; Unknown
     0x11B60,  # .. 0x11B67 ; Sharada
     0x11B68,  # .. 0x11BBF ; Unknown
     0x11BC0,  # .. 0x11BE1 ; Sunuwar
@@ -1303,7 +1302,9 @@ RANGES = [
     0x11DB0,  # .. 0x11DDB ; Tolong_Siki
     0x11DDC,  # .. 0x11DDF ; Unknown
     0x11DE0,  # .. 0x11DE9 ; Tolong_Siki
-    0x11DEA,  # .. 0x11EDF ; Unknown
+    0x11DEA,  # .. 0x11DEF ; Unknown
+    0x11DF0,  # .. 0x11DF1 ; Bengali
+    0x11DF2,  # .. 0x11EDF ; Unknown
     0x11EE0,  # .. 0x11EF8 ; Makasar
     0x11EF9,  # .. 0x11EFF ; Unknown
     0x11F00,  # .. 0x11F10 ; Kawi
@@ -1319,12 +1320,12 @@ RANGES = [
     0x11FFF,  # .. 0x11FFF ; Tamil
     0x12000,  # .. 0x12399 ; Cuneiform
     0x1239A,  # .. 0x123FF ; Unknown
-    0x12400,  # .. 0x1246E ; Cuneiform
-    0x1246F,  # .. 0x1246F ; Unknown
-    0x12470,  # .. 0x12474 ; Cuneiform
-    0x12475,  # .. 0x1247F ; Unknown
-    0x12480,  # .. 0x12543 ; Cuneiform
-    0x12544,  # .. 0x12F8F ; Unknown
+    0x12400,  # .. 0x12543 ; Cuneiform
+    0x12544,  # .. 0x1254F ; Unknown
+    0x12550,  # .. 0x125A7 ; Cuneiform
+    0x125A8,  # .. 0x1264B ; Proto_Cuneiform
+    0x1264C,  # .. 0x12686 ; Cuneiform
+    0x12687,  # .. 0x12F8F ; Unknown
     0x12F90,  # .. 0x12FF2 ; Cypro_Minoan
     0x12FF3,  # .. 0x12FFF ; Unknown
     0x13000,  # .. 0x13455 ; Egyptian_Hieroglyphs
@@ -1382,13 +1383,17 @@ RANGES = [
     0x16FF0,  # .. 0x16FF6 ; Han
     0x16FF7,  # .. 0x16FFF ; Unknown
     0x17000,  # .. 0x18AFF ; Tangut
-    0x18B00,  # .. 0x18CD5 ; Khitan_Small_Script
-    0x18CD6,  # .. 0x18CFE ; Unknown
+    0x18B00,  # .. 0x18CDA ; Khitan_Small_Script
+    0x18CDB,  # .. 0x18CFE ; Unknown
     0x18CFF,  # .. 0x18CFF ; Khitan_Small_Script
-    0x18D00,  # .. 0x18D1E ; Tangut
-    0x18D1F,  # .. 0x18D7F ; Unknown
+    0x18D00,  # .. 0x18D20 ; Tangut
+    0x18D21,  # .. 0x18D7F ; Unknown
     0x18D80,  # .. 0x18DF2 ; Tangut
-    0x18DF3,  # .. 0x1AFEF ; Unknown
+    0x18DF3,  # .. 0x18DFF ; Unknown
+    0x18E00,  # .. 0x19191 ; Jurchen
+    0x19192,  # .. 0x1919F ; Unknown
+    0x191A0,  # .. 0x191D2 ; Jurchen
+    0x191D3,  # .. 0x1AFEF ; Unknown
     0x1AFF0,  # .. 0x1AFF3 ; Katakana
     0x1AFF4,  # .. 0x1AFF4 ; Unknown
     0x1AFF5,  # .. 0x1AFFB ; Katakana
@@ -1398,15 +1403,17 @@ RANGES = [
     0x1B000,  # .. 0x1B000 ; Katakana
     0x1B001,  # .. 0x1B11F ; Hiragana
     0x1B120,  # .. 0x1B122 ; Katakana
-    0x1B123,  # .. 0x1B131 ; Unknown
+    0x1B123,  # .. 0x1B123 ; Hiragana
+    0x1B124,  # .. 0x1B128 ; Katakana
+    0x1B129,  # .. 0x1B131 ; Unknown
     0x1B132,  # .. 0x1B132 ; Hiragana
     0x1B133,  # .. 0x1B14F ; Unknown
     0x1B150,  # .. 0x1B152 ; Hiragana
     0x1B153,  # .. 0x1B154 ; Unknown
     0x1B155,  # .. 0x1B155 ; Katakana
     0x1B156,  # .. 0x1B163 ; Unknown
-    0x1B164,  # .. 0x1B167 ; Katakana
-    0x1B168,  # .. 0x1B16F ; Unknown
+    0x1B164,  # .. 0x1B168 ; Katakana
+    0x1B169,  # .. 0x1B16F ; Unknown
     0x1B170,  # .. 0x1B2FB ; Nushu
     0x1B2FC,  # .. 0x1BBFF ; Unknown
     0x1BC00,  # .. 0x1BC6A ; Duployan
@@ -1425,9 +1432,11 @@ RANGES = [
     0x1CD00,  # .. 0x1CEB3 ; Common
     0x1CEB4,  # .. 0x1CEB9 ; Unknown
     0x1CEBA,  # .. 0x1CED0 ; Common
-    0x1CED1,  # .. 0x1CEDF ; Unknown
-    0x1CEE0,  # .. 0x1CEF0 ; Common
-    0x1CEF1,  # .. 0x1CEFF ; Unknown
+    0x1CED1,  # .. 0x1CED1 ; Unknown
+    0x1CED2,  # .. 0x1CED4 ; Common
+    0x1CED5,  # .. 0x1CEDC ; Unknown
+    0x1CEDD,  # .. 0x1CEFD ; Common
+    0x1CEFE,  # .. 0x1CEFF ; Unknown
     0x1CF00,  # .. 0x1CF2D ; Inherited
     0x1CF2E,  # .. 0x1CF2F ; Unknown
     0x1CF30,  # .. 0x1CF46 ; Inherited
@@ -1437,7 +1446,7 @@ RANGES = [
     0x1D000,  # .. 0x1D0F5 ; Common
     0x1D0F6,  # .. 0x1D0FF ; Unknown
     0x1D100,  # .. 0x1D126 ; Common
-    0x1D127,  # .. 0x1D128 ; Unknown
+    0x1D127,  # .. 0x1D128 ; Inherited
     0x1D129,  # .. 0x1D166 ; Common
     0x1D167,  # .. 0x1D169 ; Inherited
     0x1D16A,  # .. 0x1D17A ; Common
@@ -1446,10 +1455,13 @@ RANGES = [
     0x1D185,  # .. 0x1D18B ; Inherited
     0x1D18C,  # .. 0x1D1A9 ; Common
     0x1D1AA,  # .. 0x1D1AD ; Inherited
-    0x1D1AE,  # .. 0x1D1EA ; Common
-    0x1D1EB,  # .. 0x1D1FF ; Unknown
+    0x1D1AE,  # .. 0x1D1FF ; Common
     0x1D200,  # .. 0x1D245 ; Greek
-    0x1D246,  # .. 0x1D2BF ; Unknown
+    0x1D246,  # .. 0x1D24F ; Unknown
+    0x1D250,  # .. 0x1D25A ; Common
+    0x1D25B,  # .. 0x1D25C ; Inherited
+    0x1D25D,  # .. 0x1D281 ; Common
+    0x1D282,  # .. 0x1D2BF ; Unknown
     0x1D2C0,  # .. 0x1D2D3 ; Common
     0x1D2D4,  # .. 0x1D2DF ; Unknown
     0x1D2E0,  # .. 0x1D2F3 ; Common
@@ -1494,8 +1506,8 @@ RANGES = [
     0x1D547,  # .. 0x1D549 ; Unknown
     0x1D54A,  # .. 0x1D550 ; Common
     0x1D551,  # .. 0x1D551 ; Unknown
-    0x1D552,  # .. 0x1D6A5 ; Common
-    0x1D6A6,  # .. 0x1D6A7 ; Unknown
+    0x1D552,  # .. 0x1D6A6 ; Common
+    0x1D6A7,  # .. 0x1D6A7 ; Unknown
     0x1D6A8,  # .. 0x1D7CB ; Common
     0x1D7CC,  # .. 0x1D7CD ; Unknown
     0x1D7CE,  # .. 0x1D7FF ; Common
@@ -1504,11 +1516,16 @@ RANGES = [
     0x1DA9B,  # .. 0x1DA9F ; SignWriting
     0x1DAA0,  # .. 0x1DAA0 ; Unknown
     0x1DAA1,  # .. 0x1DAAF ; SignWriting
-    0x1DAB0,  # .. 0x1DEFF ; Unknown
-    0x1DF00,  # .. 0x1DF1E ; Latin
-    0x1DF1F,  # .. 0x1DF24 ; Unknown
-    0x1DF25,  # .. 0x1DF2A ; Latin
-    0x1DF2B,  # .. 0x1DFFF ; Unknown
+    0x1DAB0,  # .. 0x1DAFF ; Unknown
+    0x1DB00,  # .. 0x1DB1C ; Common
+    0x1DB1D,  # .. 0x1DEFF ; Unknown
+    0x1DF00,  # .. 0x1DF81 ; Latin
+    0x1DF82,  # .. 0x1DF8F ; Unknown
+    0x1DF90,  # .. 0x1DF96 ; Latin
+    0x1DF97,  # .. 0x1DFCC ; Unknown
+    0x1DFCD,  # .. 0x1DFF2 ; Latin
+    0x1DFF3,  # .. 0x1DFF4 ; Greek
+    0x1DFF5,  # .. 0x1DFFF ; Latin
     0x1E000,  # .. 0x1E006 ; Glagolitic
     0x1E007,  # .. 0x1E007 ; Unknown
     0x1E008,  # .. 0x1E018 ; Glagolitic
@@ -1651,8 +1668,8 @@ RANGES = [
     0x1F0D0,  # .. 0x1F0D0 ; Unknown
     0x1F0D1,  # .. 0x1F0F5 ; Common
     0x1F0F6,  # .. 0x1F0FF ; Unknown
-    0x1F100,  # .. 0x1F1AD ; Common
-    0x1F1AE,  # .. 0x1F1E5 ; Unknown
+    0x1F100,  # .. 0x1F1AE ; Common
+    0x1F1AF,  # .. 0x1F1E5 ; Unknown
     0x1F1E6,  # .. 0x1F1FF ; Common
     0x1F200,  # .. 0x1F200 ; Hiragana
     0x1F201,  # .. 0x1F202 ; Common
@@ -1665,19 +1682,17 @@ RANGES = [
     0x1F252,  # .. 0x1F25F ; Unknown
     0x1F260,  # .. 0x1F265 ; Common
     0x1F266,  # .. 0x1F2FF ; Unknown
-    0x1F300,  # .. 0x1F6D8 ; Common
-    0x1F6D9,  # .. 0x1F6DB ; Unknown
+    0x1F300,  # .. 0x1F6D9 ; Common
+    0x1F6DA,  # .. 0x1F6DB ; Unknown
     0x1F6DC,  # .. 0x1F6EC ; Common
     0x1F6ED,  # .. 0x1F6EF ; Unknown
     0x1F6F0,  # .. 0x1F6FC ; Common
     0x1F6FD,  # .. 0x1F6FF ; Unknown
-    0x1F700,  # .. 0x1F7D9 ; Common
-    0x1F7DA,  # .. 0x1F7DF ; Unknown
+    0x1F700,  # .. 0x1F7DB ; Common
+    0x1F7DC,  # .. 0x1F7DF ; Unknown
     0x1F7E0,  # .. 0x1F7EB ; Common
     0x1F7EC,  # .. 0x1F7EF ; Unknown
-    0x1F7F0,  # .. 0x1F7F0 ; Common
-    0x1F7F1,  # .. 0x1F7FF ; Unknown
-    0x1F800,  # .. 0x1F80B ; Common
+    0x1F7F0,  # .. 0x1F80B ; Common
     0x1F80C,  # .. 0x1F80F ; Unknown
     0x1F810,  # .. 0x1F847 ; Common
     0x1F848,  # .. 0x1F84F ; Unknown
@@ -1699,26 +1714,24 @@ RANGES = [
     0x1FA6E,  # .. 0x1FA6F ; Unknown
     0x1FA70,  # .. 0x1FA7C ; Common
     0x1FA7D,  # .. 0x1FA7F ; Unknown
-    0x1FA80,  # .. 0x1FA8A ; Common
-    0x1FA8B,  # .. 0x1FA8D ; Unknown
-    0x1FA8E,  # .. 0x1FAC6 ; Common
+    0x1FA80,  # .. 0x1FAC6 ; Common
     0x1FAC7,  # .. 0x1FAC7 ; Unknown
     0x1FAC8,  # .. 0x1FAC8 ; Common
-    0x1FAC9,  # .. 0x1FACC ; Unknown
-    0x1FACD,  # .. 0x1FADC ; Common
-    0x1FADD,  # .. 0x1FADE ; Unknown
-    0x1FADF,  # .. 0x1FAEA ; Common
-    0x1FAEB,  # .. 0x1FAEE ; Unknown
-    0x1FAEF,  # .. 0x1FAF8 ; Common
-    0x1FAF9,  # .. 0x1FAFF ; Unknown
+    0x1FAC9,  # .. 0x1FACB ; Unknown
+    0x1FACC,  # .. 0x1FADD ; Common
+    0x1FADE,  # .. 0x1FADE ; Unknown
+    0x1FADF,  # .. 0x1FAEB ; Common
+    0x1FAEC,  # .. 0x1FAEE ; Unknown
+    0x1FAEF,  # .. 0x1FAFA ; Common
+    0x1FAFB,  # .. 0x1FAFF ; Unknown
     0x1FB00,  # .. 0x1FB92 ; Common
     0x1FB93,  # .. 0x1FB93 ; Unknown
     0x1FB94,  # .. 0x1FBFA ; Common
     0x1FBFB,  # .. 0x1FFFF ; Unknown
     0x20000,  # .. 0x2A6DF ; Han
     0x2A6E0,  # .. 0x2A6FF ; Unknown
-    0x2A700,  # .. 0x2B81D ; Han
-    0x2B81E,  # .. 0x2B81F ; Unknown
+    0x2A700,  # .. 0x2B81E ; Han
+    0x2B81F,  # .. 0x2B81F ; Unknown
     0x2B820,  # .. 0x2CEAD ; Han
     0x2CEAE,  # .. 0x2CEAF ; Unknown
     0x2CEB0,  # .. 0x2EBE0 ; Han
@@ -1730,7 +1743,9 @@ RANGES = [
     0x30000,  # .. 0x3134A ; Han
     0x3134B,  # .. 0x3134F ; Unknown
     0x31350,  # .. 0x33479 ; Han
-    0x3347A,  # .. 0xE0000 ; Unknown
+    0x3347A,  # .. 0x3CFFF ; Unknown
+    0x3D000,  # .. 0x3FC3F ; Seal
+    0x3FC40,  # .. 0xE0000 ; Unknown
     0xE0001,  # .. 0xE0001 ; Common
     0xE0002,  # .. 0xE001F ; Unknown
     0xE0020,  # .. 0xE007F ; Common
@@ -1786,13 +1801,11 @@ VALUES = [
     "Cyrl",  # 0487..052F ; Cyrillic
     "Zzzz",  # 0530..0530 ; Unknown
     "Armn",  # 0531..0556 ; Armenian
-    "Zzzz",  # 0557..0558 ; Unknown
-    "Armn",  # 0559..058A ; Armenian
-    "Zzzz",  # 058B..058C ; Unknown
-    "Armn",  # 058D..058F ; Armenian
+    "Zzzz",  # 0557..0557 ; Unknown
+    "Armn",  # 0558..058F ; Armenian
     "Zzzz",  # 0590..0590 ; Unknown
-    "Hebr",  # 0591..05C7 ; Hebrew
-    "Zzzz",  # 05C8..05CF ; Unknown
+    "Hebr",  # 0591..05C9 ; Hebrew
+    "Zzzz",  # 05CA..05CF ; Unknown
     "Hebr",  # 05D0..05EA ; Hebrew
     "Zzzz",  # 05EB..05EE ; Unknown
     "Hebr",  # 05EF..05F4 ; Hebrew
@@ -1952,8 +1965,8 @@ VALUES = [
     "Orya",  # 0B47..0B48 ; Oriya
     "Zzzz",  # 0B49..0B4A ; Unknown
     "Orya",  # 0B4B..0B4D ; Oriya
-    "Zzzz",  # 0B4E..0B54 ; Unknown
-    "Orya",  # 0B55..0B57 ; Oriya
+    "Zzzz",  # 0B4E..0B52 ; Unknown
+    "Orya",  # 0B53..0B57 ; Oriya
     "Zzzz",  # 0B58..0B5B ; Unknown
     "Orya",  # 0B5C..0B5D ; Oriya
     "Zzzz",  # 0B5E..0B5E ; Unknown
@@ -2247,10 +2260,8 @@ VALUES = [
     "Zzzz",  # 1A9A..1A9F ; Unknown
     "Lana",  # 1AA0..1AAD ; Tai_Tham
     "Zzzz",  # 1AAE..1AAF ; Unknown
-    "Zinh",  # 1AB0..1ADD ; Inherited
-    "Zzzz",  # 1ADE..1ADF ; Unknown
-    "Zinh",  # 1AE0..1AEB ; Inherited
-    "Zzzz",  # 1AEC..1AFF ; Unknown
+    "Zinh",  # 1AB0..1AF0 ; Inherited
+    "Zzzz",  # 1AF1..1AFF ; Unknown
     "Bali",  # 1B00..1B4C ; Balinese
     "Zzzz",  # 1B4D..1B4D ; Unknown
     "Bali",  # 1B4E..1B7F ; Balinese
@@ -2338,12 +2349,10 @@ VALUES = [
     "Zzzz",  # 2072..2073 ; Unknown
     "Zyyy",  # 2074..207E ; Common
     "Latn",  # 207F..207F ; Latin
-    "Zyyy",  # 2080..208E ; Common
-    "Zzzz",  # 208F..208F ; Unknown
-    "Latn",  # 2090..209C ; Latin
-    "Zzzz",  # 209D..209F ; Unknown
-    "Zyyy",  # 20A0..20C1 ; Common
-    "Zzzz",  # 20C2..20CF ; Unknown
+    "Zyyy",  # 2080..208F ; Common
+    "Latn",  # 2090..209F ; Latin
+    "Zyyy",  # 20A0..20C4 ; Common
+    "Zzzz",  # 20C5..20CF ; Unknown
     "Zinh",  # 20D0..20F0 ; Inherited
     "Zzzz",  # 20F1..20FF ; Unknown
     "Zyyy",  # 2100..2125 ; Common
@@ -2403,7 +2412,9 @@ VALUES = [
     "Zzzz",  # 2DDF..2DDF ; Unknown
     "Cyrl",  # 2DE0..2DFF ; Cyrillic
     "Zyyy",  # 2E00..2E5D ; Common
-    "Zzzz",  # 2E5E..2E7F ; Unknown
+    "Zzzz",  # 2E5E..2E5F ; Unknown
+    "Zyyy",  # 2E60..2E63 ; Common
+    "Zzzz",  # 2E64..2E7F ; Unknown
     "Hani",  # 2E80..2E99 ; Han
     "Zzzz",  # 2E9A..2E9A ; Unknown
     "Hani",  # 2E9B..2EF3 ; Han
@@ -2467,8 +2478,10 @@ VALUES = [
     "Zyyy",  # A700..A721 ; Common
     "Latn",  # A722..A787 ; Latin
     "Zyyy",  # A788..A78A ; Common
-    "Latn",  # A78B..A7DC ; Latin
-    "Zzzz",  # A7DD..A7F0 ; Unknown
+    "Latn",  # A78B..A7DD ; Latin
+    "Zzzz",  # A7DE..A7E1 ; Unknown
+    "Latn",  # A7E2..A7E2 ; Latin
+    "Zzzz",  # A7E3..A7F0 ; Unknown
     "Latn",  # A7F1..A7FF ; Latin
     "Sylo",  # A800..A82C ; Syloti_Nagri
     "Zzzz",  # A82D..A82F ; Unknown
@@ -2526,7 +2539,8 @@ VALUES = [
     "Grek",  # AB65..AB65 ; Greek
     "Latn",  # AB66..AB69 ; Latin
     "Zyyy",  # AB6A..AB6B ; Common
-    "Zzzz",  # AB6C..AB6F ; Unknown
+    "Latn",  # AB6C..AB6D ; Latin
+    "Zzzz",  # AB6E..AB6F ; Unknown
     "Cher",  # AB70..ABBF ; Cherokee
     "Mtei",  # ABC0..ABED ; Meetei_Mayek
     "Zzzz",  # ABEE..ABEF ; Unknown
@@ -2696,8 +2710,8 @@ VALUES = [
     "Zzzz",  # 10786..10786 ; Unknown
     "Latn",  # 10787..107B0 ; Latin
     "Zzzz",  # 107B1..107B1 ; Unknown
-    "Latn",  # 107B2..107BA ; Latin
-    "Zzzz",  # 107BB..107FF ; Unknown
+    "Latn",  # 107B2..107BF ; Latin
+    "Zzzz",  # 107C0..107FF ; Unknown
     "Cprt",  # 10800..10805 ; Cypriot
     "Zzzz",  # 10806..10807 ; Unknown
     "Cprt",  # 10808..10808 ; Cypriot
@@ -2800,10 +2814,10 @@ VALUES = [
     "Yezi",  # 10EB0..10EB1 ; Yezidi
     "Zzzz",  # 10EB2..10EC1 ; Unknown
     "Arab",  # 10EC2..10EC7 ; Arabic
-    "Zzzz",  # 10EC8..10ECF ; Unknown
-    "Arab",  # 10ED0..10ED8 ; Arabic
-    "Zzzz",  # 10ED9..10EF9 ; Unknown
-    "Arab",  # 10EFA..10EFF ; Arabic
+    "Zzzz",  # 10EC8..10EC8 ; Unknown
+    "Arab",  # 10EC9..10EEE ; Arabic
+    "Zzzz",  # 10EEF..10EEF ; Unknown
+    "Arab",  # 10EF0..10EFF ; Arabic
     "Sogo",  # 10F00..10F27 ; Old_Sogdian
     "Zzzz",  # 10F28..10F2F ; Unknown
     "Sogd",  # 10F30..10F59 ; Sogdian
@@ -2972,8 +2986,8 @@ VALUES = [
     "Cans",  # 11AB0..11ABF ; Canadian_Aboriginal
     "Pauc",  # 11AC0..11AF8 ; Pau_Cin_Hau
     "Zzzz",  # 11AF9..11AFF ; Unknown
-    "Deva",  # 11B00..11B09 ; Devanagari
-    "Zzzz",  # 11B0A..11B5F ; Unknown
+    "Deva",  # 11B00..11B0A ; Devanagari
+    "Zzzz",  # 11B0B..11B5F ; Unknown
     "Shrd",  # 11B60..11B67 ; Sharada
     "Zzzz",  # 11B68..11BBF ; Unknown
     "Sunu",  # 11BC0..11BE1 ; Sunuwar
@@ -3023,7 +3037,9 @@ VALUES = [
     "Tols",  # 11DB0..11DDB ; Tolong_Siki
     "Zzzz",  # 11DDC..11DDF ; Unknown
     "Tols",  # 11DE0..11DE9 ; Tolong_Siki
-    "Zzzz",  # 11DEA..11EDF ; Unknown
+    "Zzzz",  # 11DEA..11DEF ; Unknown
+    "Beng",  # 11DF0..11DF1 ; Bengali
+    "Zzzz",  # 11DF2..11EDF ; Unknown
     "Maka",  # 11EE0..11EF8 ; Makasar
     "Zzzz",  # 11EF9..11EFF ; Unknown
     "Kawi",  # 11F00..11F10 ; Kawi
@@ -3039,12 +3055,12 @@ VALUES = [
     "Taml",  # 11FFF..11FFF ; Tamil
     "Xsux",  # 12000..12399 ; Cuneiform
     "Zzzz",  # 1239A..123FF ; Unknown
-    "Xsux",  # 12400..1246E ; Cuneiform
-    "Zzzz",  # 1246F..1246F ; Unknown
-    "Xsux",  # 12470..12474 ; Cuneiform
-    "Zzzz",  # 12475..1247F ; Unknown
-    "Xsux",  # 12480..12543 ; Cuneiform
-    "Zzzz",  # 12544..12F8F ; Unknown
+    "Xsux",  # 12400..12543 ; Cuneiform
+    "Zzzz",  # 12544..1254F ; Unknown
+    "Xsux",  # 12550..125A7 ; Cuneiform
+    "Pcun",  # 125A8..1264B ; Proto_Cuneiform
+    "Xsux",  # 1264C..12686 ; Cuneiform
+    "Zzzz",  # 12687..12F8F ; Unknown
     "Cpmn",  # 12F90..12FF2 ; Cypro_Minoan
     "Zzzz",  # 12FF3..12FFF ; Unknown
     "Egyp",  # 13000..13455 ; Egyptian_Hieroglyphs
@@ -3102,13 +3118,17 @@ VALUES = [
     "Hani",  # 16FF0..16FF6 ; Han
     "Zzzz",  # 16FF7..16FFF ; Unknown
     "Tang",  # 17000..18AFF ; Tangut
-    "Kits",  # 18B00..18CD5 ; Khitan_Small_Script
-    "Zzzz",  # 18CD6..18CFE ; Unknown
+    "Kits",  # 18B00..18CDA ; Khitan_Small_Script
+    "Zzzz",  # 18CDB..18CFE ; Unknown
     "Kits",  # 18CFF..18CFF ; Khitan_Small_Script
-    "Tang",  # 18D00..18D1E ; Tangut
-    "Zzzz",  # 18D1F..18D7F ; Unknown
+    "Tang",  # 18D00..18D20 ; Tangut
+    "Zzzz",  # 18D21..18D7F ; Unknown
     "Tang",  # 18D80..18DF2 ; Tangut
-    "Zzzz",  # 18DF3..1AFEF ; Unknown
+    "Zzzz",  # 18DF3..18DFF ; Unknown
+    "Jurc",  # 18E00..19191 ; Jurchen
+    "Zzzz",  # 19192..1919F ; Unknown
+    "Jurc",  # 191A0..191D2 ; Jurchen
+    "Zzzz",  # 191D3..1AFEF ; Unknown
     "Kana",  # 1AFF0..1AFF3 ; Katakana
     "Zzzz",  # 1AFF4..1AFF4 ; Unknown
     "Kana",  # 1AFF5..1AFFB ; Katakana
@@ -3118,15 +3138,17 @@ VALUES = [
     "Kana",  # 1B000..1B000 ; Katakana
     "Hira",  # 1B001..1B11F ; Hiragana
     "Kana",  # 1B120..1B122 ; Katakana
-    "Zzzz",  # 1B123..1B131 ; Unknown
+    "Hira",  # 1B123..1B123 ; Hiragana
+    "Kana",  # 1B124..1B128 ; Katakana
+    "Zzzz",  # 1B129..1B131 ; Unknown
     "Hira",  # 1B132..1B132 ; Hiragana
     "Zzzz",  # 1B133..1B14F ; Unknown
     "Hira",  # 1B150..1B152 ; Hiragana
     "Zzzz",  # 1B153..1B154 ; Unknown
     "Kana",  # 1B155..1B155 ; Katakana
     "Zzzz",  # 1B156..1B163 ; Unknown
-    "Kana",  # 1B164..1B167 ; Katakana
-    "Zzzz",  # 1B168..1B16F ; Unknown
+    "Kana",  # 1B164..1B168 ; Katakana
+    "Zzzz",  # 1B169..1B16F ; Unknown
     "Nshu",  # 1B170..1B2FB ; Nushu
     "Zzzz",  # 1B2FC..1BBFF ; Unknown
     "Dupl",  # 1BC00..1BC6A ; Duployan
@@ -3145,9 +3167,11 @@ VALUES = [
     "Zyyy",  # 1CD00..1CEB3 ; Common
     "Zzzz",  # 1CEB4..1CEB9 ; Unknown
     "Zyyy",  # 1CEBA..1CED0 ; Common
-    "Zzzz",  # 1CED1..1CEDF ; Unknown
-    "Zyyy",  # 1CEE0..1CEF0 ; Common
-    "Zzzz",  # 1CEF1..1CEFF ; Unknown
+    "Zzzz",  # 1CED1..1CED1 ; Unknown
+    "Zyyy",  # 1CED2..1CED4 ; Common
+    "Zzzz",  # 1CED5..1CEDC ; Unknown
+    "Zyyy",  # 1CEDD..1CEFD ; Common
+    "Zzzz",  # 1CEFE..1CEFF ; Unknown
     "Zinh",  # 1CF00..1CF2D ; Inherited
     "Zzzz",  # 1CF2E..1CF2F ; Unknown
     "Zinh",  # 1CF30..1CF46 ; Inherited
@@ -3157,7 +3181,7 @@ VALUES = [
     "Zyyy",  # 1D000..1D0F5 ; Common
     "Zzzz",  # 1D0F6..1D0FF ; Unknown
     "Zyyy",  # 1D100..1D126 ; Common
-    "Zzzz",  # 1D127..1D128 ; Unknown
+    "Zinh",  # 1D127..1D128 ; Inherited
     "Zyyy",  # 1D129..1D166 ; Common
     "Zinh",  # 1D167..1D169 ; Inherited
     "Zyyy",  # 1D16A..1D17A ; Common
@@ -3166,10 +3190,13 @@ VALUES = [
     "Zinh",  # 1D185..1D18B ; Inherited
     "Zyyy",  # 1D18C..1D1A9 ; Common
     "Zinh",  # 1D1AA..1D1AD ; Inherited
-    "Zyyy",  # 1D1AE..1D1EA ; Common
-    "Zzzz",  # 1D1EB..1D1FF ; Unknown
+    "Zyyy",  # 1D1AE..1D1FF ; Common
     "Grek",  # 1D200..1D245 ; Greek
-    "Zzzz",  # 1D246..1D2BF ; Unknown
+    "Zzzz",  # 1D246..1D24F ; Unknown
+    "Zyyy",  # 1D250..1D25A ; Common
+    "Zinh",  # 1D25B..1D25C ; Inherited
+    "Zyyy",  # 1D25D..1D281 ; Common
+    "Zzzz",  # 1D282..1D2BF ; Unknown
     "Zyyy",  # 1D2C0..1D2D3 ; Common
     "Zzzz",  # 1D2D4..1D2DF ; Unknown
     "Zyyy",  # 1D2E0..1D2F3 ; Common
@@ -3214,8 +3241,8 @@ VALUES = [
     "Zzzz",  # 1D547..1D549 ; Unknown
     "Zyyy",  # 1D54A..1D550 ; Common
     "Zzzz",  # 1D551..1D551 ; Unknown
-    "Zyyy",  # 1D552..1D6A5 ; Common
-    "Zzzz",  # 1D6A6..1D6A7 ; Unknown
+    "Zyyy",  # 1D552..1D6A6 ; Common
+    "Zzzz",  # 1D6A7..1D6A7 ; Unknown
     "Zyyy",  # 1D6A8..1D7CB ; Common
     "Zzzz",  # 1D7CC..1D7CD ; Unknown
     "Zyyy",  # 1D7CE..1D7FF ; Common
@@ -3224,11 +3251,16 @@ VALUES = [
     "Sgnw",  # 1DA9B..1DA9F ; SignWriting
     "Zzzz",  # 1DAA0..1DAA0 ; Unknown
     "Sgnw",  # 1DAA1..1DAAF ; SignWriting
-    "Zzzz",  # 1DAB0..1DEFF ; Unknown
-    "Latn",  # 1DF00..1DF1E ; Latin
-    "Zzzz",  # 1DF1F..1DF24 ; Unknown
-    "Latn",  # 1DF25..1DF2A ; Latin
-    "Zzzz",  # 1DF2B..1DFFF ; Unknown
+    "Zzzz",  # 1DAB0..1DAFF ; Unknown
+    "Zyyy",  # 1DB00..1DB1C ; Common
+    "Zzzz",  # 1DB1D..1DEFF ; Unknown
+    "Latn",  # 1DF00..1DF81 ; Latin
+    "Zzzz",  # 1DF82..1DF8F ; Unknown
+    "Latn",  # 1DF90..1DF96 ; Latin
+    "Zzzz",  # 1DF97..1DFCC ; Unknown
+    "Latn",  # 1DFCD..1DFF2 ; Latin
+    "Grek",  # 1DFF3..1DFF4 ; Greek
+    "Latn",  # 1DFF5..1DFFF ; Latin
     "Glag",  # 1E000..1E006 ; Glagolitic
     "Zzzz",  # 1E007..1E007 ; Unknown
     "Glag",  # 1E008..1E018 ; Glagolitic
@@ -3371,8 +3403,8 @@ VALUES = [
     "Zzzz",  # 1F0D0..1F0D0 ; Unknown
     "Zyyy",  # 1F0D1..1F0F5 ; Common
     "Zzzz",  # 1F0F6..1F0FF ; Unknown
-    "Zyyy",  # 1F100..1F1AD ; Common
-    "Zzzz",  # 1F1AE..1F1E5 ; Unknown
+    "Zyyy",  # 1F100..1F1AE ; Common
+    "Zzzz",  # 1F1AF..1F1E5 ; Unknown
     "Zyyy",  # 1F1E6..1F1FF ; Common
     "Hira",  # 1F200..1F200 ; Hiragana
     "Zyyy",  # 1F201..1F202 ; Common
@@ -3385,19 +3417,17 @@ VALUES = [
     "Zzzz",  # 1F252..1F25F ; Unknown
     "Zyyy",  # 1F260..1F265 ; Common
     "Zzzz",  # 1F266..1F2FF ; Unknown
-    "Zyyy",  # 1F300..1F6D8 ; Common
-    "Zzzz",  # 1F6D9..1F6DB ; Unknown
+    "Zyyy",  # 1F300..1F6D9 ; Common
+    "Zzzz",  # 1F6DA..1F6DB ; Unknown
     "Zyyy",  # 1F6DC..1F6EC ; Common
     "Zzzz",  # 1F6ED..1F6EF ; Unknown
     "Zyyy",  # 1F6F0..1F6FC ; Common
     "Zzzz",  # 1F6FD..1F6FF ; Unknown
-    "Zyyy",  # 1F700..1F7D9 ; Common
-    "Zzzz",  # 1F7DA..1F7DF ; Unknown
+    "Zyyy",  # 1F700..1F7DB ; Common
+    "Zzzz",  # 1F7DC..1F7DF ; Unknown
     "Zyyy",  # 1F7E0..1F7EB ; Common
     "Zzzz",  # 1F7EC..1F7EF ; Unknown
-    "Zyyy",  # 1F7F0..1F7F0 ; Common
-    "Zzzz",  # 1F7F1..1F7FF ; Unknown
-    "Zyyy",  # 1F800..1F80B ; Common
+    "Zyyy",  # 1F7F0..1F80B ; Common
     "Zzzz",  # 1F80C..1F80F ; Unknown
     "Zyyy",  # 1F810..1F847 ; Common
     "Zzzz",  # 1F848..1F84F ; Unknown
@@ -3419,26 +3449,24 @@ VALUES = [
     "Zzzz",  # 1FA6E..1FA6F ; Unknown
     "Zyyy",  # 1FA70..1FA7C ; Common
     "Zzzz",  # 1FA7D..1FA7F ; Unknown
-    "Zyyy",  # 1FA80..1FA8A ; Common
-    "Zzzz",  # 1FA8B..1FA8D ; Unknown
-    "Zyyy",  # 1FA8E..1FAC6 ; Common
+    "Zyyy",  # 1FA80..1FAC6 ; Common
     "Zzzz",  # 1FAC7..1FAC7 ; Unknown
     "Zyyy",  # 1FAC8..1FAC8 ; Common
-    "Zzzz",  # 1FAC9..1FACC ; Unknown
-    "Zyyy",  # 1FACD..1FADC ; Common
-    "Zzzz",  # 1FADD..1FADE ; Unknown
-    "Zyyy",  # 1FADF..1FAEA ; Common
-    "Zzzz",  # 1FAEB..1FAEE ; Unknown
-    "Zyyy",  # 1FAEF..1FAF8 ; Common
-    "Zzzz",  # 1FAF9..1FAFF ; Unknown
+    "Zzzz",  # 1FAC9..1FACB ; Unknown
+    "Zyyy",  # 1FACC..1FADD ; Common
+    "Zzzz",  # 1FADE..1FADE ; Unknown
+    "Zyyy",  # 1FADF..1FAEB ; Common
+    "Zzzz",  # 1FAEC..1FAEE ; Unknown
+    "Zyyy",  # 1FAEF..1FAFA ; Common
+    "Zzzz",  # 1FAFB..1FAFF ; Unknown
     "Zyyy",  # 1FB00..1FB92 ; Common
     "Zzzz",  # 1FB93..1FB93 ; Unknown
     "Zyyy",  # 1FB94..1FBFA ; Common
     "Zzzz",  # 1FBFB..1FFFF ; Unknown
     "Hani",  # 20000..2A6DF ; Han
     "Zzzz",  # 2A6E0..2A6FF ; Unknown
-    "Hani",  # 2A700..2B81D ; Han
-    "Zzzz",  # 2B81E..2B81F ; Unknown
+    "Hani",  # 2A700..2B81E ; Han
+    "Zzzz",  # 2B81F..2B81F ; Unknown
     "Hani",  # 2B820..2CEAD ; Han
     "Zzzz",  # 2CEAE..2CEAF ; Unknown
     "Hani",  # 2CEB0..2EBE0 ; Han
@@ -3450,7 +3478,9 @@ VALUES = [
     "Hani",  # 30000..3134A ; Han
     "Zzzz",  # 3134B..3134F ; Unknown
     "Hani",  # 31350..33479 ; Han
-    "Zzzz",  # 3347A..E0000 ; Unknown
+    "Zzzz",  # 3347A..3CFFF ; Unknown
+    "Seal",  # 3D000..3FC3F ; Seal
+    "Zzzz",  # 3FC40..E0000 ; Unknown
     "Zyyy",  # E0001..E0001 ; Common
     "Zzzz",  # E0002..E001F ; Unknown
     "Zyyy",  # E0020..E007F ; Common
@@ -3522,6 +3552,7 @@ NAMES = {
     "Hung": "Old_Hungarian",
     "Ital": "Old_Italic",
     "Java": "Javanese",
+    "Jurc": "Jurchen",
     "Kali": "Kayah_Li",
     "Kana": "Katakana",
     "Kawi": "Kawi",
@@ -3575,6 +3606,7 @@ NAMES = {
     "Ougr": "Old_Uyghur",
     "Palm": "Palmyrene",
     "Pauc": "Pau_Cin_Hau",
+    "Pcun": "Proto_Cuneiform",
     "Perm": "Old_Permic",
     "Phag": "Phags_Pa",
     "Phli": "Inscriptional_Pahlavi",
@@ -3588,6 +3620,7 @@ NAMES = {
     "Samr": "Samaritan",
     "Sarb": "Old_South_Arabian",
     "Saur": "Saurashtra",
+    "Seal": "Seal",
     "Sgnw": "SignWriting",
     "Shaw": "Shavian",
     "Shrd": "Sharada",

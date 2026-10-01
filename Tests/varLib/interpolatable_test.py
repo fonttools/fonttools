@@ -293,6 +293,47 @@ class InterpolatableTest(unittest.TestCase):
         # normal order, with --ignore-missing
         self.assertIsNone(interpolatable_main(["--ignore-missing", glyphsapp_path]))
 
+    def test_html_report_escapes_glyph_name(self):
+        pytest.importorskip("cairo")
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.pens.ttGlyphPen import TTGlyphPen
+
+        glyph_name = "<img src=x onerror=alert(1)>"
+
+        def build_master(path, num_contours):
+            fb = FontBuilder(1000, isTTF=True)
+            fb.setupGlyphOrder([".notdef", glyph_name])
+            fb.setupCharacterMap({0x41: glyph_name})
+            pen = TTGlyphPen(None)
+            for i in range(num_contours):
+                y = i * 300
+                pen.moveTo((0, y))
+                pen.lineTo((0, y + 200))
+                pen.lineTo((200, y + 200))
+                pen.lineTo((200, y))
+                pen.closePath()
+            fb.setupGlyf({".notdef": TTGlyphPen(None).glyph(), glyph_name: pen.glyph()})
+            fb.setupHorizontalMetrics({".notdef": (500, 0), glyph_name: (500, 0)})
+            fb.setupHorizontalHeader(ascent=800, descent=-200)
+            fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+            fb.setupOS2()
+            fb.setupPost()
+            fb.save(path)
+
+        master_a = self.temp_path(".ttf")
+        master_b = self.temp_path(".ttf")
+        # different contour counts so the glyph is reported as a problem
+        build_master(master_a, 1)
+        build_master(master_b, 2)
+        html_path = self.temp_path(".html")
+
+        interpolatable_main(["--quiet", "--html", html_path, master_a, master_b])
+
+        with open(html_path, "rb") as f:
+            html = f.read().decode("utf-8")
+        self.assertIn("<h1>Glyph &lt;img src=x onerror=alert(1)&gt;</h1>", html)
+        self.assertNotIn(glyph_name, html)
+
     def test_interpolatable_varComposite(self):
         input_path = self.get_test_input(
             "..", "..", "ttLib", "data", "varc-ac00-ac01.ttf"

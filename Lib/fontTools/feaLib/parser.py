@@ -8,7 +8,6 @@ import logging
 import os
 import re
 
-
 log = logging.getLogger(__name__)
 
 
@@ -573,10 +572,51 @@ class Parser(object):
         # self.expect_symbol_(";")
         return ast.IncludeStatement(filename, location=location)
 
+    # Keywords that can start a statement in a feature block. A multi-tag
+    # language statement ends before them, so that a missing semicolon is
+    # reported instead of the next statement being read as language tags.
+    _statement_keywords = frozenset(
+        {
+            "anchorDef",
+            "cvParameters",
+            "enum",
+            "enumerate",
+            "feature",
+            "featureNames",
+            "ignore",
+            "language",
+            "lookup",
+            "lookupflag",
+            "markClass",
+            "parameters",
+            "pos",
+            "position",
+            "reversesub",
+            "rsub",
+            "script",
+            "sizemenuname",
+            "sub",
+            "substitute",
+            "subtable",
+            "valueRecordDef",
+        }
+    )
+
     def parse_language_(self):
         assert self.is_cur_keyword_("language")
         location = self.cur_token_location_
-        language = self.expect_language_tag_()
+        languages = [self.expect_language_tag_()]
+        while (
+            self.next_token_type_ is Lexer.NAME
+            and self.next_token_ not in {"exclude_dflt", "include_dflt", "required"}
+            and self.next_token_ not in self._statement_keywords
+            and self.next_token_ not in self.extensions
+        ):
+            languages.append(self.expect_language_tag_())
+        if len(languages) > 1 and "dflt" in languages:
+            raise FeatureLibError(
+                '"dflt" must be the only tag in a language statement', location
+            )
         include_default, required = (True, False)
         if self.next_token_ in {"exclude_dflt", "include_dflt"}:
             include_default = self.expect_name_() == "include_dflt"
@@ -585,7 +625,7 @@ class Parser(object):
             required = True
         self.expect_symbol_(";")
         return self.ast.LanguageStatement(
-            language, include_default, required, location=location
+            languages, include_default, required, location=location
         )
 
     def parse_ligatureCaretByIndex_(self):
@@ -2191,10 +2231,21 @@ class Parser(object):
     def expect_variable_scalar_(self):
         self.advance_lexer_()  # "("
         scalar = VariableScalar()
+        default_seen = False
         while True:
             if self.cur_token_type_ == Lexer.SYMBOL and self.cur_token_ == ")":
                 break
-            location, value = self.expect_master_()
+            if self.cur_token_type_ == Lexer.NUMBER:
+                if default_seen:
+                    raise FeatureLibError(
+                        "Duplicate value for the default location",
+                        self.cur_token_location_,
+                    )
+                default_seen = True
+                location, value = {}, self.cur_token_
+                self.advance_lexer_()
+            else:
+                location, value = self.expect_master_()
             scalar.add_value(location, value)
         return scalar
 

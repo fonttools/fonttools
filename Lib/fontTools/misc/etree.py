@@ -14,7 +14,6 @@ iterwalk.
 
 from fontTools.misc.textTools import tostr
 
-
 XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""
 
 __all__ = [
@@ -45,6 +44,21 @@ try:
     from lxml.etree import *
 
     _have_lxml = True
+
+    # lxml resolves external entities by default, and up to 6.1.2 it also
+    # fetched external parameter entities with resolve_entities="internal"
+    # (https://bugs.launchpad.net/lxml/+bug/2165901). The ElementTree backend
+    # never resolves entities at all, so default to False and keep the two
+    # backends in agreement, rather than depend on the installed lxml version.
+    _XMLParser = XMLParser
+
+    class XMLParser(_XMLParser):
+        """XMLParser subclass that doesn't resolve entities."""
+
+        def __init__(self, *args, **kwargs):
+            kwargs.setdefault("resolve_entities", False)
+            super(XMLParser, self).__init__(*args, **kwargs)
+
 except ImportError:
     try:
         from xml.etree.cElementTree import *
@@ -208,7 +222,7 @@ except ImportError:
     #   Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
     # Here we reversed the pattern to match only the invalid characters.
     _invalid_xml_string = re.compile(
-        "[\u0000-\u0008\u000B-\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE-\uFFFF]"
+        "[\u0000-\u0008\u000b-\u000c\u000e-\u001f\ud800-\udfff\ufffe-\uffff]"
     )
 
     def _tounicode(s):

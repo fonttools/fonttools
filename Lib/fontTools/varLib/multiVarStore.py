@@ -16,7 +16,6 @@ from functools import partial
 from collections import defaultdict
 from heapq import heappush, heappop
 
-
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 ot.MultiVarStore.NO_VARIATION_INDEX = NO_VARIATION_INDEX
 
@@ -235,11 +234,38 @@ def MultiVarStore_get_supports(self, major, fvarAxes):
 ot.MultiVarStore.get_supports = MultiVarStore_get_supports
 
 
+def ConditionTable_collect_varidxes(self, varidxes):
+    if self.Format == 2:
+        varidxes.add(self.VarIdx)
+    elif self.Format in (3, 4):
+        for condition in self.ConditionTable:
+            condition.collect_varidxes(varidxes)
+    elif self.Format == 5:
+        self.ConditionTable.collect_varidxes(varidxes)
+
+
+def ConditionTable_remap_varidxes(self, varidxes_map):
+    if self.Format == 2:
+        self.VarIdx = varidxes_map[self.VarIdx]
+    elif self.Format in (3, 4):
+        for condition in self.ConditionTable:
+            condition.remap_varidxes(varidxes_map)
+    elif self.Format == 5:
+        self.ConditionTable.remap_varidxes(varidxes_map)
+
+
+ot.ConditionTable.collect_varidxes = ConditionTable_collect_varidxes
+ot.ConditionTable.remap_varidxes = ConditionTable_remap_varidxes
+
+
 def VARC_collect_varidxes(self, varidxes):
     for glyph in self.VarCompositeGlyphs.VarCompositeGlyph:
         for component in glyph.components:
             varidxes.add(component.axisValuesVarIndex)
             varidxes.add(component.transformVarIndex)
+    if self.ConditionList is not None:
+        for condition in self.ConditionList.ConditionTable:
+            condition.collect_varidxes(varidxes)
 
 
 def VARC_remap_varidxes(self, varidxes_map):
@@ -247,6 +273,9 @@ def VARC_remap_varidxes(self, varidxes_map):
         for component in glyph.components:
             component.axisValuesVarIndex = varidxes_map[component.axisValuesVarIndex]
             component.transformVarIndex = varidxes_map[component.transformVarIndex]
+    if self.ConditionList is not None:
+        for condition in self.ConditionList.ConditionTable:
+            condition.remap_varidxes(varidxes_map)
 
 
 ot.VARC.collect_varidxes = VARC_collect_varidxes

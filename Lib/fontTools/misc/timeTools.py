@@ -1,11 +1,9 @@
-"""fontTools.misc.timeTools.py -- tools for working with OpenType timestamps.
-"""
+"""fontTools.misc.timeTools.py -- tools for working with OpenType timestamps."""
 
 import os
 import time
 from datetime import datetime, timezone
 import calendar
-
 
 epoch_diff = calendar.timegm((1904, 1, 1, 0, 0, 0, 0, 0, 0))
 

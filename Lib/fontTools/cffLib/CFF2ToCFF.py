@@ -17,7 +17,6 @@ from .width import _get_hmtx, optimizeWidths
 from collections import defaultdict
 import logging
 
-
 __all__ = ["convertCFF2ToCFF", "main"]
 
 

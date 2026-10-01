@@ -65,3 +65,11 @@ def normpath(path: str) -> str:
         # but we want forward slashes, so we convert them back
         normalized = normalized.replace("\\", "/")
     return normalized
+
+
+def escapes_root(path: str) -> bool:
+    # Check whether `path` normalizes to a location outside the filesystem root.
+    # This is a purely textual test, for use where a path can be rejected before
+    # anything touches the disk; OSFS._abs does the authoritative check.
+    normalized = normpath(relpath(path))
+    return normalized == ".." or normalized.startswith("../")

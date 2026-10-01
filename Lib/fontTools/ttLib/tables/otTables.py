@@ -28,6 +28,7 @@ from .otBase import (
     ValueRecord,
     CountReference,
     getFormatSwitchingBaseTableClass,
+    have_uharfbuzz,
 )
 from fontTools.misc.fixedTools import (
     fixedToFloat as fi2fl,
@@ -2345,6 +2346,27 @@ def fixLookupOverFlows(ttf, overflowRecord):
     while lookup.SubTable[0].__class__.LookupType == extType:
         lookupIndex = lookupIndex - 1
         if lookupIndex < 0:
+            # Every lookup before the overflow is already an Extension lookup, so
+            # there is nothing left to promote. When this is a LookupList->Lookup
+            # offset overflow (SubTableIndex is None), the LookupList's uint16
+            # offsets simply can't address all the lookups and fontTools' packer
+            # can't recover; warn with actionable advice. (For a subtable offset
+            # overflow that fell back here, SubTableIndex is set and this message
+            # would be misleading, so it's skipped.)
+            if overflowRecord.SubTableIndex is None:
+                log.error(
+                    "%s LookupList offset overflowed and all lookups are already "
+                    "Extension lookups, so the overflow can't be resolved by "
+                    "promotion; %s.",
+                    overflowRecord.tableType,
+                    (
+                        "reduce the number of lookups"
+                        if have_uharfbuzz
+                        else "install uharfbuzz to enable the HarfBuzz repacker "
+                        "(it can often pack such tables by sharing/duplicating "
+                        "subtables), or reduce the number of lookups"
+                    ),
+                )
             return ok
         lookup = lookups[lookupIndex]
 
@@ -2441,6 +2463,33 @@ def splitLigatureSubst(oldSubTable, newSubTable, overflowRecord):
         del oldSubTable.ligatures[key]
 
     return ok
+
+
+def splitSinglePos(oldSubTable, newSubTable, overflowRecord):
+    # Only Format 2 (one Value per covered glyph) is worth splitting; a Format 1
+    # subtable shares a single Value across its whole Coverage, so there is
+    # nothing worth splitting.
+    if oldSubTable.Format != 2 or len(oldSubTable.Coverage.glyphs) <= 1:
+        return False
+
+    newSubTable.Format = oldSubTable.Format
+    newSubTable.ValueFormat = oldSubTable.ValueFormat
+
+    coverage = oldSubTable.Coverage.glyphs
+    values = oldSubTable.Value
+    oldCount = len(coverage) // 2
+
+    newSubTable.Coverage = oldSubTable.Coverage.__class__()
+    newSubTable.Coverage.glyphs = coverage[oldCount:]
+    newSubTable.Value = values[oldCount:]
+
+    oldSubTable.Coverage.glyphs = coverage[:oldCount]
+    oldSubTable.Value = values[:oldCount]
+
+    oldSubTable.ValueCount = len(oldSubTable.Value)
+    newSubTable.ValueCount = len(newSubTable.Value)
+
+    return True
 
 
 def splitPairPos(oldSubTable, newSubTable, overflowRecord):
@@ -2586,7 +2635,7 @@ splitTable = {
         # 					8: splitReverseChainSingleSubst,
     },
     "GPOS": {
-        # 					1: splitSinglePos,
+        1: splitSinglePos,
         2: splitPairPos,
         # 					3: splitCursivePos,
         4: splitMarkBasePos,
@@ -2749,7 +2798,11 @@ def _buildClasses():
             9: ExtensionPos,
         },
         "mort": {
+            0: RearrangementMorph,
+            1: ContextualMorph,
+            2: LigatureMorph,
             4: NoncontextualMorph,
+            5: InsertionMorph,
         },
         "morx": {
             0: RearrangementMorph,

@@ -1,0 +1,27 @@
+languagesystem latn dflt;
+
+# The current script of a feature starts out as the first declared language
+# system, so "script latn" here is redundant and all rules stay under
+# latn/dflt; no DFLT script record must be created.
+feature kern {
+    script latn;
+    language dflt;
+    pos a b -10;
+} kern;
+
+# Same, but with a rule before the redundant script statement: the feature
+# must not be split between DFLT and latn.
+feature dist {
+    pos c d -10;
+    script latn;
+    language dflt;
+    pos e f -20;
+} dist;
+
+# A script statement that names the already-current script preserves the
+# lookupflag, see https://github.com/fonttools/fonttools/issues/1824.
+feature test {
+    lookupflag IgnoreMarks;
+    script latn;
+    pos a -10;
+} test;

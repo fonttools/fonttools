@@ -3,7 +3,6 @@ from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import newTable
 import unittest
 
-
 # On macOS X 10.12.3, the font /Library/Fonts/AppleGothic.ttf has a ‘gcid’
 # table with a similar structure as this test data, just more CIDs.
 GCID_DATA = deHexStr(

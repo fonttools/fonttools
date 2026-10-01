@@ -141,7 +141,7 @@ KNOWN_GAPS: dict[str, set[str]] = {
 def get_table_modules() -> list[tuple[str, str]]:
     """Return sorted list of (module_name, tag_raw) for all table .py files."""
     modules = []
-    for filename in glob.glob1(TABLES_DIR, "*.py"):
+    for filename in glob.glob("*.py", root_dir=TABLES_DIR):
         name = filename[:-3]
         try:
             tag = identifierToTag(name)  # may contain trailing spaces, e.g. "cvt "

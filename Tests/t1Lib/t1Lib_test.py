@@ -6,7 +6,6 @@ from fontTools.pens.basePen import NullPen
 from fontTools.misc.psCharStrings import T1CharString
 import random
 
-
 CWD = os.path.abspath(os.path.dirname(__file__))
 DATADIR = os.path.join(CWD, "data")
 # I used `tx` to convert PFA to LWFN (stored in the data fork)

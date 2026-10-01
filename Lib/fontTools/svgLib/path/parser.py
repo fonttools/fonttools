@@ -8,8 +8,8 @@
 # License: MIT
 
 from .arc import EllipticalArc
+import cmath
 import re
-
 
 COMMANDS = set("MmZzLlHhVvCcSsQqTtAa")
 ARC_COMMANDS = set("Aa")
@@ -120,7 +120,18 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
     # Reverse for easy use of .pop()
     elements.reverse()
 
+    # A path data segment (if there is one) must begin with a moveto
+    # command (https://www.w3.org/TR/SVG11/paths.html#PathDataMovetoCommands);
+    # raise before any pen call instead of inventing a start point.
+    if elements and elements[-1] not in ("M", "m"):
+        raise ValueError("Path must start with a moveto command: %r" % pathdef)
+
+    # start_pos is the initial point of the current subpath; it is retained
+    # after a closepath so that a drawto command following Z can start a new
+    # subpath at that same point, while subpath_open tracks whether there is
+    # a subpath in progress that still needs closePath/endPath.
     start_pos = None
+    subpath_open = False
     command = None
     last_control = None
 
@@ -143,6 +154,14 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
                 )
             last_command = command  # Used by S and T
 
+        if command not in ("M", "Z") and not subpath_open and start_pos is not None:
+            # If a closepath is followed immediately by any other command,
+            # the next subpath starts at the same initial point as the
+            # current subpath:
+            # https://www.w3.org/TR/SVG11/paths.html#PathDataClosePathCommand
+            pen.moveTo((start_pos.real, start_pos.imag))
+            subpath_open = True
+
         if command == "M":
             # Moveto command.
             x = elements.pop()
@@ -154,7 +173,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
                 current_pos += pos
 
             # M is not preceded by Z; it's an open subpath
-            if start_pos is not None:
+            if subpath_open:
                 pen.endPath()
 
             pen.moveTo((current_pos.real, current_pos.imag))
@@ -163,6 +182,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             # This behavior of Z is defined in svg spec:
             # http://www.w3.org/TR/SVG/paths.html#PathDataClosePathCommand
             start_pos = current_pos
+            subpath_open = True
 
             # Implicit moveto commands are treated as lineto commands.
             # So we set command to lineto here, in case there are
@@ -171,11 +191,17 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
 
         elif command == "Z":
             # Close path
-            if current_pos != start_pos:
-                pen.lineTo((start_pos.real, start_pos.imag))
-            pen.closePath()
-            current_pos = start_pos
-            start_pos = None
+            # A redundant Z with no open subpath (e.g. "M0,0 Z Z") is valid
+            # per the SVG path grammar and has no effect; ignore it instead
+            # of emitting a second closePath.
+            if subpath_open:
+                if not cmath.isclose(
+                    current_pos, start_pos, rel_tol=1e-15, abs_tol=1e-15
+                ):
+                    pen.lineTo((start_pos.real, start_pos.imag))
+                pen.closePath()
+                current_pos = start_pos
+                subpath_open = False
             command = None  # You can't have implicit commands after closing.
 
         elif command == "L":
@@ -225,7 +251,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             # Smooth curve. First control point is the "reflection" of
             # the second control point in the previous path.
 
-            if last_command not in "CS":
+            # last_command is None right after a closepath (Z is not C/S)
+            if last_command not in ("C", "S"):
                 # If there is no previous command or if the previous command
                 # was not an C, c, S or s, assume the first control point is
                 # coincident with the current point.
@@ -267,7 +294,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             # Smooth curve. Control point is the "reflection" of
             # the second control point in the previous path.
 
-            if last_command not in "QT":
+            # last_command is None right after a closepath (Z is not Q/T)
+            if last_command not in ("Q", "T"):
                 # If there is no previous command or if the previous command
                 # was not an Q, q, T or t, assume the first control point is
                 # coincident with the current point.
@@ -318,5 +346,5 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             current_pos = end
 
     # no final Z command, it's an open path
-    if start_pos is not None:
+    if subpath_open:
         pen.endPath()

@@ -142,6 +142,26 @@ def test_round_trip_ttx(font):
     assert getXML(table.toXML, font) == OTSVG_TTX
 
 
+def test_round_trip_ttx_doc_containing_cdata_end(font):
+    # a document containing "]]>" must not escape the CDATA section it is
+    # written into, or the dump reads back as different tables
+    doc = (
+        ']]></svgDoc></SVG><name><namerecord nameID="6" platformID="3" '
+        'platEncID="1" langID="0x409">x</namerecord></name>'
+        '<SVG><svgDoc startGlyphID="1" endGlyphID="1"><![CDATA[y'
+    )
+    table = table_S_V_G_()
+    table.docList = [(doc, 1, 1)]
+    xml = getXML(table.toXML, font)
+
+    table = table_S_V_G_()
+    for name, attrs, content in parseXML(xml):
+        table.fromXML(name, attrs, content, font)
+
+    assert len(table.docList) == 1
+    assert table.docList[0].data == doc
+
+
 def test_unpack_svg_doc_as_3_tuple():
     # test that the legacy docList as list of 3-tuples interface still works
     # even after the new SVGDocument class with extra `compressed` attribute

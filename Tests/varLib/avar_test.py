@@ -182,3 +182,38 @@ def test_build_preserves_existing_name_table(tmp_path):
     build(font, designspace)
 
     assert font["name"].getDebugName(320) == "Existing Name"
+
+
+def test_unbuild_escapes_axis_name_in_designspace():
+    # Axis names come from the font's 'name' table (untrusted); unbuild writes
+    # them into XML attribute values. A name containing markup must not be able
+    # to break out of the attribute and inject elements into the designspace.
+    from xml.etree import ElementTree
+
+    font = TTFont()
+    name = newTable("name")
+    name.names = []
+    hostile = 'W" /><!DOCTYPE x><axis tag="z'
+    name.setName(hostile, 256, 3, 1, 0x409)
+    font["name"] = name
+
+    fvar = newTable("fvar")
+    axis = Axis()
+    axis.axisTag = "wght"
+    axis.minValue, axis.defaultValue, axis.maxValue = 100, 400, 900
+    axis.axisNameID = 256
+    fvar.axes = [axis]
+    font["fvar"] = fvar
+
+    buf = StringIO()
+    unbuild(font, f=buf)
+    out = buf.getvalue()
+
+    # No unescaped markup leaked through
+    assert "<!DOCTYPE" not in out
+    # Output is well-formed and the hostile string survives as a plain
+    # attribute value on the single <axis> element
+    root = ElementTree.fromstring(out)
+    axes = root.findall(".//axis")
+    assert len(axes) == 1
+    assert axes[0].get("name") == hostile

@@ -6,7 +6,6 @@ import unittest
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.macRes import ResourceReader
 
-
 # test resource data in DeRez notation
 """
 data 'TEST' (128, "name1") { $"4865 6C6C 6F" };                   /* Hello */

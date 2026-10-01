@@ -19,9 +19,9 @@ jobs:
     # https://github.community/t/github-actions-does-not-respect-skip-ci/17325/8
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up Python 3.x
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: "3.x"
     - name: Install packages
@@ -36,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         # Oldest supported, 'Stable' supported, Newest supported
-        python-version: ["3.10", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
         platform: [ubuntu-latest]
         include: # Only test on the latest supported stable Python on macOS and Windows.
           - platform: macos-latest
@@ -44,9 +44,9 @@ jobs:
           - platform: windows-latest
             python-version: 3.14
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
@@ -61,7 +61,7 @@ jobs:
         coverage combine
         coverage xml
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v7
       with:
         file: coverage.xml
         flags: unittests
@@ -80,9 +80,9 @@ jobs:
         platform: [ubuntu-latest, macos-latest]
         python-version: ["3.14"]
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install packages
@@ -94,11 +94,12 @@ jobs:
     runs-on: ubuntu-latest
     if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up Python pypy3
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
-        python-version: "pypy-3.11"
+        # PyPy 8 has no lxml and uharfbuzz wheels yet
+        python-version: "pypy-3.11-v7.3.x"
     - name: Install packages
       run: pip install tox
     - name: Run Tox

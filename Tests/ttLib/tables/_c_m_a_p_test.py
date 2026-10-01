@@ -1,10 +1,16 @@
 import io
 import os
 import re
+import struct
 from fontTools import ttLib
+from fontTools.ttLib import TTLibError
 from fontTools.fontBuilder import FontBuilder
 import unittest
-from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
+from fontTools.ttLib.tables._c_m_a_p import (
+    CmapSubtable,
+    cmap_format_unknown,
+    table__c_m_a_p,
+)
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")
@@ -56,6 +62,102 @@ class CmapSubtableTest(unittest.TestCase):
         self.assertEqual(subtable.getEncoding("ascii"), "ascii")
         self.assertEqual(subtable.getEncoding(default="xyz"), "xyz")
 
+    def test_decompile_truncated(self):
+        # A truncated cmap table, an out-of-bounds subtable offset, or a
+        # subtable whose length does not match the data used to raise a bare
+        # struct.error or AssertionError instead of TTLibError.
+        font = ttLib.TTFont()
+
+        def cmap(numTables, *entries, body=b""):
+            data = struct.pack(">HH", 0, numTables)
+            for platformID, platEncID, offset in entries:
+                data += struct.pack(">HHL", platformID, platEncID, offset)
+            return data + body
+
+        # A subtable directory with one entry pointing at `offset`; the subtable
+        # header itself starts right after the 12-byte directory (offset 12).
+        def one_subtable(header):
+            return cmap(1, (3, 1, 12), body=header)
+
+        cases = {
+            "table shorter than the 4-byte header": (
+                b"\x00\x00",
+                "too short",
+            ),
+            "subtable directory truncated": (
+                struct.pack(">HH", 0, 3) + b"ab",
+                "directory is truncated",
+            ),
+            "offset past the end of the data": (
+                cmap(1, (3, 1, 9999)),
+                "out of bounds",
+            ),
+            # 0xFFFFFFFF pins the offset as an unsigned Offset32: read signed it
+            # would be -1 and slip through as an in-range negative index.
+            "offset 0xFFFFFFFF is unsigned and out of bounds": (
+                cmap(1, (3, 1, 0xFFFFFFFF)),
+                "out of bounds",
+            ),
+            # format 4 header is ">HHH" (6 bytes); a length of 4 is too small.
+            "length smaller than the format header": (
+                one_subtable(struct.pack(">HH", 4, 4)),
+                "header is truncated",
+            ),
+            # length claims 20 bytes but only 6 are present after the offset.
+            "length longer than the available data": (
+                one_subtable(struct.pack(">HHH", 4, 20, 0)),
+                "subtable is truncated",
+            ),
+        }
+        for label, (data, pattern) in cases.items():
+            with self.subTest(label):
+                table = table__c_m_a_p("cmap")
+                with self.assertRaisesRegex(ttLib.TTLibError, pattern):
+                    table.decompile(data, font)
+
+    def test_decompile_unknown_format_no_header_minimum(self):
+        # Formats 8 and 10, and any unrecognised format, are handled by
+        # cmap_format_unknown, which keeps the body verbatim instead of
+        # unpacking a fixed header, so a body too short for one is fine.
+        font = ttLib.TTFont()
+
+        for format, header in [
+            # 8 and 10 read a ">HHL" header off the subtable offset, so the
+            # body must be 8 bytes even though the length field says 4.
+            (8, struct.pack(">HHL", 8, 0, 4)),
+            (10, struct.pack(">HHL", 10, 0, 4)),
+            (99, struct.pack(">HH", 99, 4)),
+        ]:
+            with self.subTest(format=format):
+                data = struct.pack(">HH", 0, 1) + struct.pack(">HHL", 3, 1, 12) + header
+                table = table__c_m_a_p("cmap")
+                table.decompile(data, font)
+                subtable = table.tables[0]
+                self.assertIsInstance(subtable, cmap_format_unknown)
+                self.assertEqual(subtable.format, format)
+                self.assertEqual(subtable.data, header[:4])
+
+    def test_decompile_format_12_inconsistent_nGroups(self):
+        # nGroups and length disagree: the header check used to be an assert,
+        # which python -O drops, leaving a subtable claiming groups that are
+        # not there.
+        font = ttLib.TTFont()
+        # length says 28 bytes, but nGroups == 0 accounts for the 16-byte
+        # header alone.
+        body = struct.pack(">HHLLL", 12, 0, 28, 0, 0) + b"\0" * 12
+        data = struct.pack(">HH", 0, 1) + struct.pack(">HHL", 3, 10, 12) + body
+        table = table__c_m_a_p("cmap")
+        with self.assertRaisesRegex(ttLib.TTLibError, "inconsistent group count"):
+            table.decompile(data, font)
+
+    def test_decompile_subtable_format_12_truncated(self):
+        # a subtable decompiled on its own does not go through the length
+        # checks table__c_m_a_p.decompile does up front.
+        subtable = CmapSubtable.newSubtable(12)
+        data = struct.pack(">HHLLL", 12, 0, 28, 0, 1)
+        with self.assertRaisesRegex(ttLib.TTLibError, "is truncated"):
+            subtable.decompile(data, ttLib.TTFont())
+
     def test_compile_2(self):
         subtable = self.makeSubtable(2, 1, 2, 0)
         subtable.cmap = {c: "cid%05d" % c for c in range(32, 8192)}
@@ -89,6 +191,33 @@ class CmapSubtableTest(unittest.TestCase):
             font.setGlyphOrder([".notdef"])
             data = subtable.compile(font)
 
+    def test_compile_2_high_gids(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef"] + ["glyph%05d" % i for i in range(1, 65536)])
+        for gids in [(32767,), (32768,), (32769,), (40000, 40001), (65535,)]:
+            with self.subTest(gids=gids):
+                subtable = self.makeSubtable(2, 1, 1, 0)
+                subtable.cmap = {
+                    0x8140 + i: "glyph%05d" % gid for i, gid in enumerate(gids)
+                }
+                data = subtable.compile(font)
+                subtable2 = CmapSubtable.newSubtable(2)
+                subtable2.decompile(data, font)
+                self.assertEqual(subtable2.cmap, subtable.cmap)
+
+    def test_compile_2_single_byte_only(self):
+        # https://github.com/fonttools/fonttools/issues/1524
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b"])
+        for cmap in [{0x20: "a"}, {0x41: "a", 0x42: "b"}, {0xFF: "b"}]:
+            with self.subTest(cmap=cmap):
+                subtable = self.makeSubtable(2, 1, 1, 0)
+                subtable.cmap = cmap
+                data = subtable.compile(font)
+                subtable2 = CmapSubtable.newSubtable(2)
+                subtable2.decompile(data, font)
+                self.assertEqual(subtable2.cmap, subtable.cmap)
+
     def test_compile_decompile_4_empty(self):
         subtable = self.makeSubtable(4, 3, 1, 0)
         subtable.cmap = {}
@@ -97,6 +226,42 @@ class CmapSubtableTest(unittest.TestCase):
         data = subtable.compile(font)
         subtable2 = CmapSubtable.newSubtable(4)
         subtable2.decompile(data, font)
+        self.assertEqual(subtable2.cmap, {})
+
+    def test_compile_decompile_2_empty(self):
+        # An all-.notdef (empty) Macintosh format 2 cmap must round-trip
+        # instead of crashing on compile, just like format 4 above.
+        # https://github.com/fonttools/fonttools/issues/3663
+        subtable = self.makeSubtable(2, 1, 3, 0)
+        subtable.cmap = {}
+        font = ttLib.TTFont()
+        font.setGlyphOrder([])
+        data = subtable.compile(font)
+        subtable2 = CmapSubtable.newSubtable(2)
+        subtable2.decompile(data, font)
+        self.assertEqual(subtable2.cmap, {})
+
+    def test_decompile_compile_2_all_notdef(self):
+        # A binary format 2 subtable whose only subheader maps its whole range
+        # to .notdef (entryCount 0, the spec's way of encoding a notdef range)
+        # decompiles to an empty cmap; recompiling it must not raise.
+        # https://github.com/fonttools/fonttools/issues/3663
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "A", "B"])
+        subHeaderKeys = b"\x00\x00" * 256  # every first byte -> subHeader 0
+        # subHeader 0: firstCode, entryCount, idDelta, idRangeOffset all zero
+        subHeader0 = struct.pack(">HHhH", 0, 0, 0, 0)
+        body = subHeaderKeys + subHeader0
+        data = struct.pack(">HHH", 2, 6 + len(body), 0) + body
+
+        subtable = CmapSubtable.newSubtable(2)
+        subtable.platformID, subtable.platEncID = 1, 3
+        subtable.decompile(data, font)
+        self.assertEqual(subtable.cmap, {})
+
+        # recompiling and decompiling again must still give the empty cmap
+        subtable2 = CmapSubtable.newSubtable(2)
+        subtable2.decompile(subtable.compile(font), font)
         self.assertEqual(subtable2.cmap, {})
 
     def test_decompile_4(self):
@@ -110,6 +275,148 @@ class CmapSubtableTest(unittest.TestCase):
         font = ttLib.TTFont()
         font.setGlyphOrder([])
         subtable.decompile(b"\0" * 7 + b"\x10" + b"\0" * 8, font)
+
+    @staticmethod
+    def _decompile_12_or_13(format, groups):
+        subtable = CmapSubtable.newSubtable(format)
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b", "c"])
+        body = b"".join(struct.pack(">LLL", *group) for group in groups)
+        header = struct.pack(">HHLLL", format, 0, 16 + len(body), 0, len(groups))
+        subtable.decompile(header + body, font)
+        return subtable.cmap
+
+    def test_decompile_12_or_13_clamps_to_max_unicode(self):
+        # a single group claiming the whole 32-bit range used to be expanded
+        # into a list of 2**32 code points.
+        for format in (12, 13):
+            with self.subTest(format=format):
+                with self.assertLogs(
+                    "fontTools.ttLib.tables._c_m_a_p", "WARNING"
+                ) as logs:
+                    cmap = self._decompile_12_or_13(format, [(0x10FFFE, 0xFFFFFFFF, 1)])
+                self.assertEqual(
+                    cmap,
+                    {
+                        0x10FFFE: "a",
+                        0x10FFFF: "b" if format == 12 else "a",
+                    },
+                )
+                self.assertIn("beyond U+10FFFF", logs.output[0])
+
+    def test_decompile_12_or_13_many_overlapping_groups(self):
+        # clamping alone is not enough: repeated full-range groups would
+        # still add up to far more code points than exist.
+        for format in (12, 13):
+            with self.subTest(format=format):
+                with self.assertLogs("fontTools.ttLib.tables._c_m_a_p", "WARNING"):
+                    cmap = self._decompile_12_or_13(format, [(0, 0xFFFFFFFF, 1)] * 1000)
+                self.assertEqual(len(cmap), 0x110000)
+
+    def test_decompile_12_or_13_bad_groups_skipped(self):
+        # like HarfBuzz, a group that is inverted or starts before the
+        # previous one ends is dropped whole, so the first group in subtable
+        # order wins.
+        cases = [
+            (12, [(0x41, 0x43, 1), (0x42, 0x44, 2)], {0x41: "a", 0x42: "b", 0x43: "c"}),
+            (12, [(0x43, 0x43, 3), (0x41, 0x42, 1)], {0x43: "c"}),
+            (12, [(0x42, 0x41, 1), (0x200000, 0x200001, 1)], {}),
+            (13, [(0x42, 0x41, 1), (0x200000, 0x200001, 1)], {}),
+        ]
+        for format, groups, expected in cases:
+            with self.subTest(format=format, groups=groups):
+                with self.assertLogs(
+                    "fontTools.ttLib.tables._c_m_a_p", "WARNING"
+                ) as logs:
+                    cmap = self._decompile_12_or_13(format, groups)
+                self.assertEqual(cmap, expected)
+                self.assertTrue(
+                    any("unsorted or overlapping" in m for m in logs.output)
+                )
+
+    def test_decompile_12_or_13_shared_endpoint(self):
+        # like HarfBuzz, a group may start on the previous group's last code
+        # point; the later nonzero mapping wins there, the missing glyph
+        # erases nothing.
+        cases = [
+            (12, [(0x41, 0x42, 2), (0x42, 0x43, 1)], {0x41: "b", 0x42: "a", 0x43: "b"}),
+            (13, [(0x41, 0x42, 1), (0x42, 0x43, 2)], {0x41: "a", 0x42: "b", 0x43: "b"}),
+            (12, [(0x41, 0x42, 1), (0x42, 0x43, 0)], {0x41: "a", 0x42: "b", 0x43: "a"}),
+            (13, [(0x41, 0x42, 1), (0x42, 0x43, 0)], {0x41: "a", 0x42: "a"}),
+        ]
+        for format, groups, expected in cases:
+            with self.subTest(format=format, groups=groups):
+                with self.assertNoLogs("fontTools.ttLib.tables._c_m_a_p", "WARNING"):
+                    cmap = self._decompile_12_or_13(format, groups)
+                self.assertEqual(cmap, expected)
+
+    def test_decompile_13_full_range_missing_glyph(self):
+        # maps nothing, so it is not expanded either
+        cmap = self._decompile_12_or_13(13, [(0, 0x10FFFF, 0)])
+        self.assertEqual(cmap, {})
+
+    def test_decompile_12_starting_missing_glyph(self):
+        cmap = self._decompile_12_or_13(12, [(0x41, 0x43, 0)])
+        self.assertEqual(cmap, {0x42: "a", 0x43: "b"})
+
+    def test_decompile_12_sorted_groups_no_warning(self):
+        # adjacent groups, ending exactly at U+10FFFF
+        with self.assertNoLogs("fontTools.ttLib.tables._c_m_a_p", "WARNING"):
+            cmap = self._decompile_12_or_13(
+                12, [(0x41, 0x42, 1), (0x43, 0x43, 3), (0x10FFFF, 0x10FFFF, 1)]
+            )
+        self.assertEqual(cmap, {0x41: "a", 0x42: "b", 0x43: "c", 0x10FFFF: "a"})
+
+    @staticmethod
+    def _decompile_4(segments, glyphIndexArray=()):
+        # segments: (start, end, delta, rangeOffset); the 0xFFFF sentinel
+        # segment is appended here.
+        segments = list(segments) + [(0xFFFF, 0xFFFF, 1, 0)]
+        n = len(segments)
+        starts, ends, deltas, offsets = zip(*segments)
+        body = (
+            struct.pack(">4H", n * 2, 0, 0, 0)
+            + struct.pack(f">{n}H", *ends)
+            + struct.pack(">H", 0)
+            + struct.pack(f">{n}H", *starts)
+            + struct.pack(f">{n}H", *(d & 0xFFFF for d in deltas))
+            + struct.pack(f">{n}H", *offsets)
+            + struct.pack(f">{len(glyphIndexArray)}H", *glyphIndexArray)
+        )
+        subtable = CmapSubtable.newSubtable(4)
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b", "c", "d"])
+        subtable.decompile(struct.pack(">3H", 4, 6 + len(body), 0) + body, font)
+        return subtable.cmap
+
+    def test_decompile_4_overlapping_segments(self):
+        # every segment covers the whole BMP: each one used to be expanded
+        # in full before deduplication
+        cmap = self._decompile_4([(0, 0xFFFE, 1, 0)] * 8)
+        self.assertEqual(len(cmap), 0xFFFF)
+
+    def test_decompile_4_later_segment_wins(self):
+        # overlapping segments keep the previous behavior (and HarfBuzz's):
+        # the last nonzero mapping wins, a missing glyph erases nothing.
+        # rangeOffset is in bytes from the segment's own idRangeOffset entry:
+        # with 3 segments, segment 0 is 6 bytes before glyphIndexArray[0],
+        # and segment 1 is 4 bytes before it, plus 6 to start at [3].
+        cmap = self._decompile_4(
+            [(0x41, 0x43, 0, 6), (0x42, 0x43, 0, 4 + 6)],
+            glyphIndexArray=[1, 2, 3, 4, 0],
+        )
+        self.assertEqual(cmap, {0x41: "a", 0x42: "d", 0x43: "c"})
+
+    def test_decompile_4_idRangeOffset_out_of_bounds(self):
+        # rangeOffset is in bytes from the segment's own idRangeOffset entry:
+        # 2 lands before glyphIndexArray, 0xFFF0 lands past its end.
+        for rangeOffset in (2, 0xFFF0):
+            with self.subTest(rangeOffset=rangeOffset):
+                with self.assertRaises(TTLibError):
+                    self._decompile_4(
+                        [(0x41, 0x41, 0, rangeOffset)],
+                        glyphIndexArray=[1, 2, 3],
+                    )
 
     def test_buildReversed(self):
         c4 = self.makeSubtable(4, 3, 1, 0)
@@ -208,6 +515,32 @@ class CmapSubtableTest(unittest.TestCase):
         cmap.tables = [subtable4, subtable12]
         with self.assertRaisesRegex(ValueError, "duplicate"):
             cmap.compile(ttFont=None)
+
+    def test_unsupported_format_is_preserved(self):
+        # A subtable in a format we can't read is kept as raw data and written
+        # back out unchanged.
+        path = os.path.join(DATA_DIR, "aots", "cmap10_font1.otf")
+        for lazy in (True, False):
+            with self.subTest(lazy=lazy):
+                font = ttLib.TTFont(path, lazy=lazy)
+                data = font["cmap"].tables[0].data
+
+                font.saveXML(io.StringIO(), tables=["cmap"])
+                buf = io.BytesIO()
+                font.save(buf)
+                buf.seek(0)
+
+                subtable = ttLib.TTFont(buf)["cmap"].tables[0]
+                self.assertEqual(subtable.format, 10)
+                self.assertEqual(subtable.data, data)
+
+    def test_unsupported_format_missing_attribute(self):
+        # Retaining self.data must not make __getattr__ recurse forever.
+        path = os.path.join(DATA_DIR, "aots", "cmap10_font1.otf")
+        subtable = ttLib.TTFont(path)["cmap"].tables[0]
+        self.assertFalse(hasattr(subtable, "length"))
+        with self.assertRaises(AttributeError):
+            subtable.nosuchattribute
 
 
 if __name__ == "__main__":
