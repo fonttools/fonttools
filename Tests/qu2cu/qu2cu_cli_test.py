@@ -38,7 +38,7 @@ class MainTest(object):
 
         output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
         font = TTFont(output_path)
-        assert font["head"].glyphDataFormat == 1
+        assert font["head"].glyphDataFormat == 0
         assert "GLYF" in font
         assert "glyf" not in font
         assert os.stat(ttf_path).st_size > os.stat(output_path).st_size
@@ -50,7 +50,7 @@ class MainTest(object):
         self.run_main(ttf_path, "-o", output_path)
 
         font = TTFont(output_path)
-        assert font["head"].glyphDataFormat == 1
+        assert font["head"].glyphDataFormat == 0
         assert "GLYF" in font
         assert "glyf" not in font
 
@@ -65,7 +65,7 @@ class MainTest(object):
 
         output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
         font = TTFont(output_path)
-        assert font["head"].glyphDataFormat == 1
+        assert font["head"].glyphDataFormat == 0
         assert "GLYF" in font
         assert "glyf" not in font
 
@@ -79,7 +79,7 @@ class MainTest(object):
 
         output_path = str(ttf_path).replace(".ttf", ".cubic.ttf")
         font = TTFont(output_path)
-        assert font["head"].glyphDataFormat == 1
+        assert font["head"].glyphDataFormat == 0
         assert "GLYF" in font
         assert "glyf" not in font
 

@@ -35,8 +35,6 @@ def _font_to_cubic(input_path, output_path=None, **kwargs):
         glyph.draw(pen)
         glyf[glyphName] = ttpen.glyph(dropImpliedOnCurves=True)
 
-    font["head"].glyphDataFormat = 1
-
     if kwargs["dump_stats"]:
         logger.info("Stats: %s", stats)
 
