@@ -181,15 +181,20 @@ class GVARTableTest(unittest.TestCase):
         return font, gvar
 
     def test_GVAR_compile_decompile(self):
-        font, gvar = self.makeFont({}, "GVAR", "GLYF")
+        font, gvar = self.makeFont(GVAR_VARIATIONS, "GVAR", "GLYF")
         data = gvar.compile(font)
         self.assertEqual(data[12:15], b"\x00\x00\x03")
+        glyphVariationDataOffset = int.from_bytes(data[17:21], "big")
+        self.assertEqual(
+            data[glyphVariationDataOffset : glyphVariationDataOffset + 5],
+            b"\x80\x01\x00\x00\x0d",
+        )
 
         decompiled = newTable("GVAR")
         font.tables["GVAR"] = decompiled
         decompiled.decompile(data, font)
         self.assertEqual(decompiled.glyphCount, 3)
-        self.assertEqual(decompiled.variations, {".notdef": [], "space": [], "I": []})
+        self.assertVariationsAlmostEqual(decompiled.variations, GVAR_VARIATIONS)
 
     def test_compile(self):
         font, gvar = self.makeFont(GVAR_VARIATIONS)
