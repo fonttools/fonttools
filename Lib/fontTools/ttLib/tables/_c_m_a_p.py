@@ -180,7 +180,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
                 format, reserved, length = struct.unpack(
                     ">HHL", data[offset : offset + 8]
                 )
-            elif format in [14]:
+            elif format in [14, 15]:
                 if offset + 6 > len(data):
                     raise TTLibError("cmap subtable header is truncated")
                 format, length = struct.unpack(">HL", data[offset : offset + 6])

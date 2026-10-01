@@ -3061,7 +3061,7 @@ def closure_glyphs(self, s):
 
     # Close glyphs
     for table in tables:
-        if table.format == 14:
+        if table.format in (14, 15):
             for varSelector, cmap in table.uvsDict.items():
                 if varSelector not in s.unicodes_requested:
                     continue
@@ -3108,7 +3108,7 @@ def subset_glyphs(self, s):
         if t.platformID == 3 and t.platEncID == 1:
             table_plat3_enc1[t.language] = t
 
-        if t.format == 14:
+        if t.format in (14, 15):
             # TODO(behdad) We drop all the default-UVS mappings
             # for glyphs_requested.  So it's the caller's responsibility to make
             # sure those are included.
@@ -3153,7 +3153,9 @@ def subset_glyphs(self, s):
         ):
             t.cmap.clear()
 
-    self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
+    self.tables = [
+        t for t in self.tables if (t.cmap if t.format not in (14, 15) else t.uvsDict)
+    ]
     self.numSubTables = len(self.tables)
     # TODO(behdad) Convert formats when needed.
     # In particular, if we have a format=12 without non-BMP
@@ -4103,7 +4105,7 @@ def main(args=None):
             for t in font["cmap"].tables:
                 if t.isUnicode():
                     unicodes.extend(t.cmap.keys())
-                    if t.format == 14:
+                    if t.format in (14, 15):
                         unicodes.extend(t.uvsDict.keys())
         assert "" not in glyphs
 

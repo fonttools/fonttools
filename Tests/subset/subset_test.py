@@ -7,6 +7,7 @@ from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.subset.svg import etree
@@ -1141,6 +1142,30 @@ class SubsetTest:
         self.expect_ttx(
             subsetfont, self.getpath("cmap14_font1.uvs_non_default.ttx"), ["cmap"]
         )
+
+    def test_cmap_format15(self):
+        fontpath = self.compile_font(self.getpath("cmap14_font1.ttx"), ".otf")
+        inputpath = self.temp_path(".otf")
+        subsetpath = self.temp_path(".otf")
+
+        font = TTFont(fontpath)
+        cmap14 = next(t for t in font["cmap"].tables if t.format == 14)
+        cmap15 = CmapSubtable.newSubtable(15)
+        cmap15.platformID = cmap14.platformID
+        cmap15.platEncID = cmap14.platEncID
+        cmap15.language = cmap14.language
+        cmap15.cmap = {}
+        cmap15.uvsDict = cmap14.uvsDict
+        font["cmap"].tables[font["cmap"].tables.index(cmap14)] = cmap15
+        font.save(inputpath)
+
+        subset.main(
+            [inputpath, "--unicodes=4e10,e0100", "--output-file=%s" % subsetpath]
+        )
+        subsetfont = TTFont(subsetpath)
+        cmap15 = next(t for t in subsetfont["cmap"].tables if t.format == 15)
+
+        assert cmap15.uvsDict == {0xE0100: [(0x4E10, "g25")]}
 
     @pytest.mark.parametrize("text, n", [("!", 1), ("#", 2)])
     def test_GPOS_PairPos_Format2_useClass0(self, text, n):
