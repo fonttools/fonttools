@@ -255,6 +255,7 @@ class TTFont(object):
         quiet: bool | None = None,  # Deprecated
         _tableCache: MutableMapping[tuple[Tag, bytes], DefaultTable] | None = None,
         cfg: Mapping[str, Any] | AbstractConfig = {},
+        _useLegacyTTC: bool = False,
     ) -> None:
         # Set deprecated attributes
         for name in ("verbose", "quiet"):
@@ -327,7 +328,12 @@ class TTFont(object):
         elif not seekable:
             raise TTLibError("Input file must be seekable when lazy=True")
         self._tableCache = _tableCache
-        self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
+        readerOptions = {}
+        if _useLegacyTTC:
+            readerOptions["_useLegacyTTC"] = True
+        self.reader = SFNTReader(
+            file, checkChecksums, fontNumber=fontNumber, **readerOptions
+        )
         self.sfntVersion = self.reader.sfntVersion
         self.flavor = self.reader.flavor
         self.flavorData = self.reader.flavorData
