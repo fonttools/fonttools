@@ -824,11 +824,7 @@ class Glyph(object):
                 flag = bool(safeEval(attrs["on"]))
                 if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
                     flag |= flagOverlapSimple
-                if (
-                    extended
-                    and "cubic" in attrs
-                    and bool(safeEval(attrs["cubic"]))
-                ):
+                if extended and "cubic" in attrs and bool(safeEval(attrs["cubic"])):
                     flag |= flagCubic
                 flags.append(flag)
             if not hasattr(self, "coordinates"):
