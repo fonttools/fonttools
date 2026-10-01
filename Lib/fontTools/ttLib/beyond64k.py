@@ -35,7 +35,6 @@ from fontTools.ttLib import TTFont, TTLibError, newTable
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 
-
 _TABLE_PAIRS = {
     "glyf": "GLYF",
     "loca": "LOCA",

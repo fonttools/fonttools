@@ -1,7 +1,6 @@
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otData import otData
 
-
 TABLES = dict(otData)
 
 

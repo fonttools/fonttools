@@ -4,7 +4,6 @@ from fontTools.pens.svgPathPen import main
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.beyond64k import upper_tables
 
-
 DATA_DIR = Path(__file__).parent.parent / "ttLib" / "data"
 
 

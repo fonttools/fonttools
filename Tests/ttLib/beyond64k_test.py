@@ -20,7 +20,6 @@ from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent, flagCubic
 from fontTools.ttLib.tables.otBase import CountReference, OTTableWriter
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 
-
 DATA_DIR = Path(__file__).parent / "data"
 
 

@@ -1445,11 +1445,7 @@ class ClassDef(FormatSwitchingBaseTable):
             )
             rangeSize = 4 + len(ranges) * 6
             if extended:
-                rangeSize = (
-                    5 + len(ranges) * 8
-                    if maxClass <= 0xFFFF
-                    else float("inf")
-                )
+                rangeSize = 5 + len(ranges) * 8 if maxClass <= 0xFFFF else float("inf")
             arraySize = (8 + glyphCount * 3) if extended else (6 + glyphCount * 2)
             if rangeSize < arraySize:
                 # Range format is more compact.
