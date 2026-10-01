@@ -47,3 +47,9 @@ def test_extended_context_count_exceptions():
     assert field("ReverseChainSingleSubstFormat2", "LookAheadGlyphCount").type == (
         "uint16"
     )
+
+
+def test_extended_chained_rule_offsets():
+    assert field("ChainedSeqRuleSet2", "ChainedSeqRule").type == (
+        "Offset24To(ChainedSeqRule2)"
+    )

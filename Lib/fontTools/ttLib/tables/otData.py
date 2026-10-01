@@ -2863,7 +2863,7 @@ otData = [
                 description="Number of ChainedSeqRule2 tables",
             ),
             FieldSpec(
-                "OffsetTo(ChainedSeqRule2)",
+                "Offset24To(ChainedSeqRule2)",
                 "ChainedSeqRule",
                 repeat="ChainedSeqRuleCount",
                 aux=0,
