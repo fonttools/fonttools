@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.colorLib.builder import buildCOLR
 from fontTools.otlLib import builder
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.ttLib import TTFont, newTable
@@ -921,6 +922,49 @@ def test_lower_rejects_large_vorg_glyph_id():
 
     with pytest.raises(ValueError, match="does not fit"):
         lower_tables(font, tables={"VORG"})
+
+
+def test_colr_paint_glyph_conversion():
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "base", "outline"])
+    font["COLR"] = buildCOLR(
+        {
+            "base": (
+                otTables.PaintFormat.PaintGlyph,
+                (otTables.PaintFormat.PaintSolid, 0),
+                "outline",
+            )
+        },
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+    )
+    paint = font["COLR"].table.BaseGlyphList.BaseGlyphPaintRecord[0].Paint
+
+    upper_tables(font, tables={"COLR"})
+    assert paint.Format == otTables.PaintFormat.PaintGlyph2
+
+    lower_tables(font, tables={"COLR"})
+    assert paint.Format == otTables.PaintFormat.PaintGlyph
+
+
+def test_lower_rejects_large_colr_paint_glyph():
+    font = TTFont()
+    glyph_map = {"base": 1, "high": 0x10000}
+    font["COLR"] = buildCOLR(
+        {
+            "base": (
+                otTables.PaintFormat.PaintGlyph2,
+                (otTables.PaintFormat.PaintSolid, 0),
+                "high",
+            )
+        },
+        version=1,
+        glyphMap=glyph_map,
+    )
+    font.getGlyphID = glyph_map.__getitem__
+
+    with pytest.raises(ValueError, match="does not fit"):
+        lower_tables(font, tables={"COLR"})
 
 
 def test_layout_header_round_trip():

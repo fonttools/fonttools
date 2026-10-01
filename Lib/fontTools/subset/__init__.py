@@ -2621,6 +2621,7 @@ def _paint_glyph_names(paint, colr):
     def callback(paint):
         if paint.Format in {
             otTables.PaintFormat.PaintGlyph,
+            otTables.PaintFormat.PaintGlyph2,
             otTables.PaintFormat.PaintColrGlyph,
         }:
             result.add(paint.Glyph)

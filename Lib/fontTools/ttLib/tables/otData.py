@@ -7021,6 +7021,23 @@ otData = [
             ),
         ],
     ),
+    # PaintGlyph2
+    (
+        "PaintFormat33",
+        [
+            FieldSpec(
+                "uint8", "PaintFormat", description="Format identifier-format = 33"
+            ),
+            FieldSpec(
+                "Offset24",
+                "Paint",
+                description="Offset (from beginning of PaintGlyph2 table) to Paint subtable.",
+            ),
+            FieldSpec(
+                "GlyphID24", "Glyph", description="Glyph ID for the source outline."
+            ),
+        ],
+    ),
     #
     # avar
     #

@@ -51,6 +51,7 @@ _TABLE_IDENTITIES = {
 _TABLE_IDENTITIES.update(
     {
         "BASE": "BASE",
+        "COLR": "COLR",
         "GDEF": "GDEF",
         "GPOS": "GPOS",
         "GSUB": "GSUB",
@@ -464,12 +465,34 @@ def _lower_vorg(font, table, overwrite):
     table.minorVersion = 0
 
 
+def _iter_colr_paints(table):
+    if not hasattr(table, "table"):
+        return
+    for path in dfs_base_table(table.table):
+        value = path[-1].value
+        if isinstance(value, otTables.Paint):
+            yield value
+
+
+def _upper_colr(font, table, overwrite):
+    for paint in _iter_colr_paints(table):
+        if paint.Format == otTables.PaintFormat.PaintGlyph:
+            paint.Format = otTables.PaintFormat.PaintGlyph2
+
+
+def _lower_colr(font, table, overwrite):
+    for paint in _iter_colr_paints(table):
+        if paint.Format == otTables.PaintFormat.PaintGlyph2:
+            paint.Format = otTables.PaintFormat.PaintGlyph
+
+
 _UPPER_TABLES = {
     **{
         source: _TableConversion(destination)
         for source, destination in _TABLE_PAIRS.items()
     },
     "BASE": _TableConversion("BASE", _upper_layout_formats),
+    "COLR": _TableConversion("COLR", _upper_colr),
     "GDEF": _TableConversion("GDEF", _upper_gdef),
     "GSUB": _TableConversion("GSUB", _upper_layout_header),
     "GPOS": _TableConversion("GPOS", _upper_layout_header),
@@ -479,6 +502,7 @@ _UPPER_TABLES = {
 _LOWER_TABLES = {
     **{upper: _TableConversion(lower) for lower, upper in _TABLE_PAIRS.items()},
     "BASE": _TableConversion("BASE", _lower_layout_formats),
+    "COLR": _TableConversion("COLR", _lower_colr),
     "GDEF": _TableConversion("GDEF", _lower_gdef),
     "GSUB": _TableConversion("GSUB", _lower_layout_header),
     "GPOS": _TableConversion("GPOS", _lower_layout_header),
@@ -540,6 +564,15 @@ def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -
         for glyph_name in vorg.VOriginRecords:
             if font.getGlyphID(glyph_name) > 0xFFFF:
                 raise ValueError(f"VORG glyph {glyph_name!r} does not fit in version 1")
+    if "COLR" in conversions and "COLR" in font:
+        for paint in _iter_colr_paints(font["COLR"]):
+            if (
+                paint.Format == otTables.PaintFormat.PaintGlyph2
+                and font.getGlyphID(paint.Glyph) > 0xFFFF
+            ):
+                raise ValueError(
+                    f"COLR PaintGlyph2 glyph {paint.Glyph!r} does not fit in PaintGlyph"
+                )
     _validate_cmap_uvs_lowering(font)
 
 

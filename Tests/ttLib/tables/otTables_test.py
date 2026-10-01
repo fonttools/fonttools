@@ -1309,6 +1309,24 @@ class ColrV1Test(unittest.TestCase):
         paint.traverse(colr, lambda p: visited.append(p))
         assert len(visited) == 1
 
+    def testPaintGlyph2RoundTrip(self):
+        font = SparseFakeFont({"high": 0x10000})
+        paint = otTables.Paint()
+        paint.Format = otTables.PaintFormat.PaintGlyph2
+        paint.Glyph = "high"
+        paint.Paint = otTables.Paint()
+        paint.Paint.Format = otTables.PaintFormat.PaintSolid
+        paint.Paint.PaletteIndex = 3
+        paint.Paint.Alpha = 1.0
+
+        data = "210000070100000200034000"
+        self.assertEqual(compileTable(paint, font), data)
+
+        rebuilt = decompileTable(otTables.Paint(), data, font)
+        self.assertEqual(rebuilt.Format, otTables.PaintFormat.PaintGlyph2)
+        self.assertEqual(rebuilt.Glyph, "high")
+        self.assertEqual(rebuilt.Paint.Format, otTables.PaintFormat.PaintSolid)
+
 
 def test_parse_Device_DeltaValue_from_XML_and_compile():
     # https://github.com/fonttools/fonttools/pull/3757

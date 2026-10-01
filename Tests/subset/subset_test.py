@@ -1556,6 +1556,18 @@ def test_subset_remaps_24bit_glyf_component():
     assert composite.getComponentNames(glyf) == ["component"]
 
 
+def test_colr_paint_glyph2_closure():
+    paint = ot.Paint()
+    paint.Format = ot.PaintFormat.PaintGlyph2
+    paint.Glyph = "high"
+    paint.Paint = ot.Paint()
+    paint.Paint.Format = ot.PaintFormat.PaintSolid
+    paint.Paint.PaletteIndex = 0
+    paint.Paint.Alpha = 1.0
+
+    assert subset._paint_glyph_names(paint, ot.COLR()) == {"high"}
+
+
 @pytest.fixture
 def colrv1_path(tmp_path):
     base_glyph_names = ["uni%04X" % i for i in range(0xE000, 0xE000 + 10)]

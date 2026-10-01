@@ -2066,6 +2066,7 @@ class PaintFormat(IntEnum):
     PaintSkewAroundCenter = 30
     PaintVarSkewAroundCenter = 31
     PaintComposite = 32
+    PaintGlyph2 = 33
 
     def is_variable(self):
         return self.name.startswith("PaintVar")
@@ -2193,7 +2194,10 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
             self, iter_subtables_fn=lambda paint: paint.iterPaintSubTables(colr)
         ):
             paint = path[-1].value
-            if paint.Format == PaintFormat.PaintGlyph:
+            if paint.Format in {
+                PaintFormat.PaintGlyph,
+                PaintFormat.PaintGlyph2,
+            }:
                 transformation = reduce(
                     Transform.transform,
                     (st.value.getTransform() for st in path),

@@ -375,7 +375,10 @@ def visit(visitor, record):
 
 @ScalerVisitor.register(otTables.Paint)
 def visit(visitor, paint):
-    if paint.Format != otTables.PaintFormat.PaintGlyph:
+    if paint.Format not in {
+        otTables.PaintFormat.PaintGlyph,
+        otTables.PaintFormat.PaintGlyph2,
+    }:
         return True
 
     newPaint = otTables.Paint()

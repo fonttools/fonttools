@@ -1,6 +1,7 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.beyond64k import upper_tables
-from fontTools.ttLib.scaleUpem import scale_upem
+from fontTools.ttLib.scaleUpem import ScalerVisitor, scale_upem
+from fontTools.ttLib.tables import otTables
 from io import BytesIO
 import difflib
 import os
@@ -113,3 +114,19 @@ class ScaleUpemTest(unittest.TestCase):
         font = TTFont(self.get_path("TestVGID-Regular.otf"))
 
         scale_upem(font, 500)
+
+
+def test_scale_upem_paint_glyph2():
+    paint = otTables.Paint()
+    paint.Format = otTables.PaintFormat.PaintGlyph2
+    paint.Glyph = "high"
+    paint.Paint = otTables.Paint()
+    paint.Paint.Format = otTables.PaintFormat.PaintSolid
+    paint.Paint.PaletteIndex = 0
+    paint.Paint.Alpha = 1.0
+
+    ScalerVisitor(2).visit(paint)
+
+    assert paint.Format == otTables.PaintFormat.PaintScaleUniform
+    assert paint.Paint.Format == otTables.PaintFormat.PaintGlyph2
+    assert paint.Paint.Glyph == "high"
