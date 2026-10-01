@@ -1350,7 +1350,8 @@ class TTFont(object):
         If the font contains both a ``CFF ``/``CFF2`` and a ``GLYF``/``glyf``
         table, you can use the ``preferCFF`` argument to specify which one
         should be taken. If the font contains both a ``CFF `` and a ``CFF2``
-        table, the latter is taken.
+        table, the latter is taken. If the font contains both a ``GLYF`` and a
+        ``glyf`` table, the former is taken.
 
         If the ``location`` parameter is set, it should be a dictionary mapping
         four-letter variation tags to their float values, and the returned

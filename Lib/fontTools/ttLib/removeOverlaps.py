@@ -294,8 +294,8 @@ def removeOverlaps(
 
     Overlapping components are first decomposed to simple contours, then merged.
 
-    Currently this only works for fonts with 'glyf'/'GLYF' or 'CFF ' tables.
-    Raises NotImplementedError if 'glyf'/'GLYF' or 'CFF ' tables are absent.
+    Currently this only works for fonts with 'glyf'/'GLYF', 'CFF ', or 'CFF2'
+    tables. Raises NotImplementedError if all of these tables are absent.
 
     Note that removing overlaps invalidates the hinting. By default we drop hinting
     from all glyphs whether or not overlaps are removed from a given one, as it would
