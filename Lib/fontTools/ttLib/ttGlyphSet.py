@@ -63,6 +63,8 @@ class _TTGlyphSet(Mapping):
         self.locationStack = []
         self.rawLocationStack = []
         self.glyphsMapping = glyphsMapping
+        self._hMetricsTag = hMetricsTag
+        self._vMetricsTag = vMetricsTag
         self.hMetrics = font[hMetricsTag].metrics
         self.vMetrics = getattr(font.get(vMetricsTag), "metrics", None)
         self.hvarTable = None
@@ -174,7 +176,13 @@ class _TTGlyphSetCFF(_TTGlyphSet):
 class _TTGlyphSetVARC(_TTGlyphSet):
     def __init__(self, font, location, glyphSet):
         self.glyphSet = glyphSet
-        super().__init__(font, location, glyphSet)
+        super().__init__(
+            font,
+            location,
+            glyphSet,
+            hMetricsTag=glyphSet._hMetricsTag,
+            vMetricsTag=glyphSet._vMetricsTag,
+        )
         self.varcTable = font["VARC"].table
 
     def __getitem__(self, glyphName):

@@ -281,6 +281,44 @@ class TTGlyphSetTest(object):
         glyph.draw(pen)
         assert len(pen.value) == 3
 
+    @pytest.mark.parametrize("location", [None, {"wght": 800}])
+    def test_glyphset_varComposite_uppercase_metrics(self, location):
+        from fontTools.fontBuilder import FontBuilder
+
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        builder = FontBuilder(font=font)
+        builder.setupVerticalMetrics(
+            {name: (1024, 30) for name in font.getGlyphOrder()}
+        )
+        builder.setupVerticalHeader()
+        glyphset = font.getGlyphSet(location=location)
+        pen = DecomposingRecordingPen(glyphset)
+        glyphset["uniAC01"].draw(pen)
+        expected = pen.value
+        expected_metrics = (
+            glyphset["uniAC01"].width,
+            glyphset["uniAC01"].lsb,
+            glyphset["uniAC01"].height,
+            glyphset["uniAC01"].tsb,
+        )
+
+        upper_tables(font)
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        glyphset = font.getGlyphSet(location=location)
+        pen = DecomposingRecordingPen(glyphset)
+        glyphset["uniAC01"].draw(pen)
+        assert pen.value == expected
+        assert (
+            glyphset["uniAC01"].width,
+            glyphset["uniAC01"].lsb,
+            glyphset["uniAC01"].height,
+            glyphset["uniAC01"].tsb,
+        ) == expected_metrics
+        assert glyphset.hMetrics is font["HMTX"].metrics
+        assert glyphset.vMetrics is font["VMTX"].metrics
+
     @pytest.mark.parametrize(
         "format, expected_components", [(None, 3), (3, 3), (4, 3), (5, 2)]
     )
