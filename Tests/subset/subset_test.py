@@ -1517,13 +1517,11 @@ def featureVarsTestFont():
     fb.setupNameTable({"familyName": "TestFeatureVars", "styleName": "Regular"})
     fb.setupPost()
     fb.setupFvar(axes=[("wght", 100, 400, 900, "Weight")], instances=[])
-    fb.addOpenTypeFeatures(
-        """\
+    fb.addOpenTypeFeatures("""\
         feature dlig {
             sub f f by f_f;
         } dlig;
-    """
-    )
+    """)
     fb.addFeatureVariations(
         [([{"wght": (0.20886, 1.0)}], {"dollar": "dollar.rvrn"})], featureTag="rvrn"
     )
@@ -1786,15 +1784,13 @@ def singlepos2_font():
     fb.setupCharacterMap({ord("a"): "a", ord("b"): "b", ord("c"): "c"})
     fb.setupNameTable({"familyName": "TestSingePosFormat", "styleName": "Regular"})
     fb.setupPost()
-    fb.addOpenTypeFeatures(
-        """
+    fb.addOpenTypeFeatures("""
         feature kern {
             pos a -50;
             pos b -40;
             pos c -50;
         } kern;
-    """
-    )
+    """)
 
     buf = io.BytesIO()
     fb.save(buf)
@@ -2443,8 +2439,7 @@ def test_subset_keep_size_drop_empty_stylistic_set():
     fb.setupOS2()
     fb.setupPost()
     fb.setupNameTable({"familyName": "TestKeepSizeFeature", "styleName": "Regular"})
-    fb.addOpenTypeFeatures(
-        """
+    fb.addOpenTypeFeatures("""
         feature size {
           parameters 10.0 0;
         } size;
@@ -2454,8 +2449,7 @@ def test_subset_keep_size_drop_empty_stylistic_set():
           };
           sub b by b.ss01;
         } ss01;
-    """
-    )
+    """)
 
     buf = io.BytesIO()
     fb.save(buf)
@@ -2600,8 +2594,7 @@ def test_subset_prune_gdef_markglyphsetsdef():
     fb.setupNameTable(
         {"familyName": "TestGDEFMarkGlyphSetsDef", "styleName": "Regular"}
     )
-    fb.addOpenTypeFeatures(
-        """
+    fb.addOpenTypeFeatures("""
         feature ccmp {
             lookup ccmp_1 {
                 lookupflag UseMarkFilteringSet [acutecomb];
@@ -2620,8 +2613,7 @@ def test_subset_prune_gdef_markglyphsetsdef():
                 sub A acutecomb by Aacute;
             } ccmp_3;
         } ccmp;
-    """
-    )
+    """)
 
     buf = io.BytesIO()
     fb.save(buf)
