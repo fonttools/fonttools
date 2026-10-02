@@ -3166,7 +3166,11 @@ def _cmap_closure_glyphs(self, s, excluded_unicodes=(), excluded_uvs=()):
                     if u in s.unicodes_requested
                     and (varSelector, u) not in excluded_uvs
                 ]
-                matched_uvs.update((varSelector, u) for u, _ in matches)
+                # Glyph zero is a miss, so it must not suppress cmap fallback
+                # when this is DMAP. None denotes a default UVS and is a match.
+                matched_uvs.update(
+                    (varSelector, u) for u, g in matches if g != s.orig_glyph_order[0]
+                )
                 glyphs = {g for _, g in matches}
                 if None in glyphs:
                     glyphs.remove(None)

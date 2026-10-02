@@ -1242,6 +1242,71 @@ class SubsetTest:
         assert font.getGlyphID(font.getBestCmap()[0x41]) == 1
         assert font.getGlyphID(font.getBestCmap()[0x42]) == 2
 
+    @pytest.mark.parametrize("cmap_format", [14, 15])
+    @pytest.mark.parametrize("dmap_format", [14, 15])
+    @pytest.mark.parametrize("glyph_zero", [".notdef", "zero"])
+    @pytest.mark.parametrize("dmap_mapping", ["zero", "default", "nonzero"])
+    def test_DMAP_UVS_fallback(
+        self, cmap_format, dmap_format, glyph_zero, dmap_mapping
+    ):
+        glyph_order = [glyph_zero, "baseA", "cmapA.var", "dmapA.var"]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupCharacterMap({0x41: "baseA"})
+        fb.setupGlyf({name: Glyph() for name in glyph_order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyph_order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+
+        def uvs_table(format, glyph):
+            table = CmapSubtable.newSubtable(format)
+            table.platformID = 0
+            table.platEncID = 5
+            table.language = 0xFF
+            table.cmap = {}
+            table.uvsDict = {0xFE00: [(0x41, glyph)]}
+            return table
+
+        dmap_glyph = {
+            "zero": glyph_zero,
+            "default": None,
+            "nonzero": "dmapA.var",
+        }[dmap_mapping]
+        fb.font["cmap"].tables.append(uvs_table(cmap_format, "cmapA.var"))
+        fb.font["DMAP"] = newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [uvs_table(dmap_format, dmap_glyph)]
+
+        stream = io.BytesIO()
+        fb.font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        options = subset.Options()
+        options.glyph_names = True
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(unicodes=[0x41, 0xFE00])
+        subsetter.subset(font)
+
+        expected_glyphs = [glyph_zero, "baseA"]
+        if dmap_mapping == "zero":
+            expected_glyphs.append("cmapA.var")
+        elif dmap_mapping == "nonzero":
+            expected_glyphs.append("dmapA.var")
+        assert font.getGlyphOrder() == expected_glyphs
+
+        stream = io.BytesIO()
+        font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        assert font.getGlyphOrder() == expected_glyphs
+        cmap_uvs = [t for t in font["cmap"].tables if t.format in (14, 15)]
+        if dmap_mapping == "zero":
+            assert len(cmap_uvs) == 1
+            assert cmap_uvs[0].uvsDict == {0xFE00: [(0x41, "cmapA.var")]}
+        else:
+            assert not cmap_uvs
+        assert font["DMAP"].tables[0].uvsDict == {0xFE00: [(0x41, dmap_glyph)]}
+
     @pytest.mark.parametrize("text, n", [("!", 1), ("#", 2)])
     def test_GPOS_PairPos_Format2_useClass0(self, text, n):
         # Check two things related to class 0 ('every other glyph'):
