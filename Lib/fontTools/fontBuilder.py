@@ -317,9 +317,9 @@ class FontBuilder(object):
         the font will be a glyf-based TTF; if `isTTF` is False it will be
         a CFF-based OTF.
 
-        A ValueError is raised if glyphs are added that contain cubic splines.
-        This is to prevent accidentally creating fonts that are incompatible
-        with existing TrueType implementations.
+        Unless `beyond64k` is True, a ValueError is raised if glyphs are added
+        that contain cubic splines. This prevents accidentally creating fonts
+        that are incompatible with existing TrueType implementations.
 
         If `beyond64k` is True, FontBuilder will create the uppercase companion
         table family where the Open Font Format beyond-64k specification defines
@@ -684,12 +684,17 @@ class FontBuilder(object):
         calculated. Only pass False if your glyph objects already have
         their bounding box values set.
 
-        Raises ValueError if any glyph contains cubic curves.
+        Raises ValueError if any glyph contains cubic curves, unless
+        `beyond64k` is True (the uppercase `GLYF` table supports cubics).
         """
         assert self.isTTF
 
         for name, g in glyphs.items():
-            if g.numberOfContours > 0 and any(f & flagCubic for f in g.flags):
+            if (
+                not self.beyond64k
+                and g.numberOfContours > 0
+                and any(f & flagCubic for f in g.flags)
+            ):
                 raise ValueError(
                     f"Glyph {name!r} has cubic Bezier outlines; "
                     "convert to quadratics with cu2qu."

@@ -237,6 +237,28 @@ def test_build_cubic_ttf(tmp_path):
         fb.setupGlyf(glyphs)
 
 
+def test_build_cubic_beyond64k_ttf(tmp_path):
+    from fontTools.pens.recordingPen import RecordingPen
+
+    fb = _setupBeyond64kFontBuilder()
+    pen = TTGlyphPen(None)
+    pen.moveTo((100, 100))
+    pen.curveTo((200, 300), (300, 300), (400, 100))
+    pen.closePath()
+    fb.setupGlyf({".notdef": fb.font["GLYF"][".notdef"], "A": pen.glyph()})
+
+    path = tmp_path / "cubic.ttf"
+    fb.save(path)
+    font = TTFont(path)
+    pen = RecordingPen()
+    font["GLYF"]["A"].draw(pen, font["GLYF"])
+    assert pen.value == [
+        ("moveTo", ((100, 100),)),
+        ("curveTo", ((200, 300), (300, 300), (400, 100))),
+        ("closePath", ()),
+    ]
+
+
 def test_build_otf(tmpdir):
     outPath = os.path.join(str(tmpdir), "test.otf")
 
