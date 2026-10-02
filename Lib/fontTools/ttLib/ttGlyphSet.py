@@ -328,8 +328,13 @@ def _evaluateCondition(condition, axes, location, instancer):
         return minValue <= axisValue <= maxValue
     elif condition.Format == 2:
         # ConditionValue
+        from fontTools.ttLib.tables.otTables import NO_VARIATION_INDEX
+
         value = condition.DefaultValue
-        value += instancer[condition.VarIdx][0]
+        # NO_VARIATION_INDEX has a zero delta; the multi-store instancer returns
+        # an empty vector because it does not know the number of values.
+        if condition.VarIdx != NO_VARIATION_INDEX:
+            value += instancer[condition.VarIdx][0]
         return value > 0
     elif condition.Format == 3:
         # ConditionAnd

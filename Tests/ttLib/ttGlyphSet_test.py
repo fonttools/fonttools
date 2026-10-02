@@ -2,7 +2,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
 from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
-from fontTools.ttLib.tables.otTables import ConditionTable
+from fontTools.ttLib.tables.otTables import ConditionTable, NO_VARIATION_INDEX
 from fontTools.pens.recordingPen import (
     RecordingPen,
     RecordingPointPen,
@@ -292,6 +292,35 @@ class TTGlyphSetTest(object):
             condition.Format = format
             condition.ConditionTable = None if format == 5 else [None]
         font["VARC"].table.ConditionList.ConditionTable[0] = condition
+
+        stream = BytesIO()
+        font.save(stream)
+        stream.seek(0)
+        font = TTFont(stream)
+        pen = RecordingPen()
+        font.getGlyphSet()["uniAC01"].draw(pen)
+        assert len(pen.value) == expected_components
+
+    @pytest.mark.parametrize(
+        "default_value, expected_components", [(-1, 2), (0, 2), (1, 3)]
+    )
+    @pytest.mark.parametrize("with_store", [False, True])
+    def test_glyphset_varComposite_static_value_condition(
+        self, default_value, expected_components, with_store
+    ):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        varc = font["VARC"].table
+        condition = ConditionTable()
+        condition.Format = 2
+        condition.DefaultValue = default_value
+        condition.VarIdx = NO_VARIATION_INDEX
+        varc.ConditionList.ConditionTable[0] = condition
+        if not with_store:
+            varc.MultiVarStore = None
+            for glyph in varc.VarCompositeGlyphs.VarCompositeGlyph:
+                for component in glyph.components:
+                    component.axisValuesVarIndex = NO_VARIATION_INDEX
+                    component.transformVarIndex = NO_VARIATION_INDEX
 
         stream = BytesIO()
         font.save(stream)
