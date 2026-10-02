@@ -2386,6 +2386,22 @@ class InstantiateAvar2Test(object):
         dead = TupleVariation({"wght": (0.5, 0.75, 1.0)}, [10] * 4)
         assert instancer._isTupleVariationDead(dead, {"wght": (0.0, 0.25)})
 
+    @pytest.mark.parametrize("gvarTag", ["gvar", "GVAR"])
+    def test_cull_glyph_variations(self, gvarTag):
+        font = ttLib.TTFont()
+        font["fvar"] = ttLib.newTable("fvar")
+        axis = _f_v_a_r.Axis()
+        axis.axisTag = "wght"
+        font["fvar"].axes = [axis]
+        font[gvarTag] = ttLib.newTable(gvarTag)
+        live = TupleVariation({"wght": (0, 0.25, 0.5)}, [(10, 20)] * 4)
+        dead = TupleVariation({"wght": (0.5, 0.75, 1)}, [(30, 40)] * 4)
+        font[gvarTag].variations = {"A": [live, dead]}
+
+        instancer._cullVariationsForAvar2(font, {"wght": (0, 0.25)})
+
+        assert font[gvarTag].variations == {"A": [live]}
+
     def test_avar2_culling_preserves_live_gvar_regions(self, avar2_varfont):
         # Region culling may only delete TupleVariations whose support scalar
         # is zero at EVERY reachable final coordinate. Sample a grid of user

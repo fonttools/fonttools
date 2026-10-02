@@ -2197,8 +2197,9 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
     """
     fvarAxes = varfont["fvar"].axes
 
-    if "gvar" in varfont:
-        gvar = varfont["gvar"]
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    if gvarTag in varfont:
+        gvar = varfont[gvarTag]
         totalCulled = 0
         totalTotal = 0
 
@@ -2215,7 +2216,8 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
 
         if totalCulled:
             log.info(
-                "avar2 gvar culling: removed %d / %d TupleVariations (%.1f%%)",
+                "avar2 %s culling: removed %d / %d TupleVariations (%.1f%%)",
+                gvarTag,
                 totalCulled,
                 totalTotal,
                 100 * totalCulled / totalTotal if totalTotal else 0,
