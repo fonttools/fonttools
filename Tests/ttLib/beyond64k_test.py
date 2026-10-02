@@ -24,6 +24,36 @@ from fontTools.ttLib.tables.otTraverse import dfs_base_table
 DATA_DIR = Path(__file__).parent / "data"
 
 
+@pytest.mark.parametrize("uppercase", [False, True])
+@pytest.mark.parametrize("fontfile", ["I.otf", "../../cffLib/data/varc-short-cff2.otf"])
+def test_cff2_metric_header_recalculation(fontfile, uppercase):
+    from fontTools.fontBuilder import FontBuilder
+
+    font = TTFont(DATA_DIR / fontfile)
+    FontBuilder(font=font).setupVerticalMetrics(
+        {name: (800, 20) for name in font.getGlyphOrder()}
+    )
+    FontBuilder(font=font).setupVerticalHeader()
+    font["hhea"].recalc(font)
+    font["vhea"].recalc(font)
+    if uppercase:
+        upper_tables(font)
+    hhea, hmtx = ("HHEA", "HMTX") if uppercase else ("hhea", "hmtx")
+    vhea, vmtx = ("VHEA", "VMTX") if uppercase else ("vhea", "vmtx")
+    assert font[hhea].advanceWidthMax < 5000
+    assert font[vhea].advanceHeightMax < 6000
+    font[hmtx].metrics = {name: (5000, 10) for name in font.getGlyphOrder()}
+    font[vmtx].metrics = {name: (6000, 20) for name in font.getGlyphOrder()}
+
+    stream = BytesIO()
+    font.save(stream)
+    reloaded = TTFont(BytesIO(stream.getvalue()))
+    assert reloaded[hhea].advanceWidthMax == 5000
+    assert reloaded[vhea].advanceHeightMax == 6000
+    assert reloaded[hhea].minLeftSideBearing == 10
+    assert reloaded[vhea].minTopSideBearing == 20
+
+
 def layout_subtables(font, tag, table_type):
     return [
         path[-1].value
