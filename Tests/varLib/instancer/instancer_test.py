@@ -627,6 +627,101 @@ class InstantiateHVARTest(object):
         assert varStore.VarRegionList.RegionAxisCount == 1
 
 
+class InstantiateVVARTest:
+    @pytest.fixture
+    def varfont(self, fvarAxes):
+        font = ttLib.TTFont()
+        glyphOrder = [".notdef", "a", "b", "c"]
+        font.setGlyphOrder(glyphOrder)
+        font["fvar"] = ttLib.newTable("fvar")
+        font["fvar"].axes = deepcopy(fvarAxes)
+        font["vmtx"] = ttLib.newTable("vmtx")
+        font["vmtx"].metrics = {glyph: (1000, 100) for glyph in glyphOrder}
+        font["VORG"] = ttLib.newTable("VORG")
+        font["VORG"].majorVersion = 1
+        font["VORG"].minorVersion = 0
+        font["VORG"].defaultVertOriginY = 800
+        font["VORG"].VOriginRecords = {"b": 850}
+
+        vvar = otTables.VVAR()
+        vvar.Version = 0x10000
+        vvar.VarStore = builder.buildVarStore(
+            builder.buildVarRegionList(
+                [{"wght": (0, 1, 1)}, {"wdth": (-1, -1, 0)}],
+                ["wght", "wdth"],
+            ),
+            [builder.buildVarData([0, 1], [[0, 0], [10, 0], [100, 30], [-50, 0]])],
+        )
+        vvar.AdvHeightMap = builder.buildVarIdxMap([0] * 4, glyphOrder)
+        vvar.TsbMap = vvar.BsbMap = None
+        vvar.VOrgMap = builder.buildVarIdxMap(
+            [1, 2, 3, otTables.NO_VARIATION_INDEX], glyphOrder
+        )
+        font["VVAR"] = ttLib.newTable("VVAR")
+        font["VVAR"].table = vvar
+        return font
+
+    @pytest.mark.parametrize(
+        "limits, expected, remainingLocation, remainingOrigins",
+        [
+            ({"wght": 1, "wdth": 0}, [810, 900, 800, 800], None, None),
+            (
+                {"wght": 1},
+                [810, 900, 800, 800],
+                {"wdth": -1},
+                [810, 930, 800, 800],
+            ),
+            (
+                {"wght": (0.5, 0.5, 1), "wdth": 0},
+                [805, 850, 825, 800],
+                {"wght": 1},
+                [810, 900, 800, 800],
+            ),
+        ],
+    )
+    def test_vertical_origins(
+        self, varfont, limits, expected, remainingLocation, remainingOrigins
+    ):
+        limits = instancer.NormalizedAxisLimits(limits)
+        instancer.instantiateVVAR(varfont, limits)
+
+        glyphOrder = varfont.getGlyphOrder()
+        vorg = varfont["VORG"]
+        assert [vorg[glyph] for glyph in glyphOrder] == expected
+        assert vorg.defaultVertOriginY == 800
+        assert all(value != 800 for value in vorg.VOriginRecords.values())
+        assert varfont["vmtx"].metrics == {glyph: (1000, 100) for glyph in glyphOrder}
+
+        reloaded = ttLib.newTable("VORG")
+        reloaded.decompile(vorg.compile(varfont), varfont)
+        assert [reloaded[glyph] for glyph in glyphOrder] == expected
+
+        if remainingLocation is None:
+            assert "VVAR" not in varfont
+        else:
+            vvar = varfont["VVAR"].table
+            remainingAxes = [
+                axis
+                for axis in varfont["fvar"].axes
+                if axis.axisTag not in limits.pinnedLocation()
+            ]
+            evaluator = varStore.VarStoreInstancer(
+                vvar.VarStore, remainingAxes, remainingLocation
+            )
+            assert [
+                vorg[glyph] + evaluator[vvar.VOrgMap.mapping[glyph]]
+                for glyph in glyphOrder
+            ] == remainingOrigins
+
+    def test_no_origin_mapping(self, varfont):
+        varfont["VVAR"].table.VOrgMap = None
+        instancer.instantiateVVAR(
+            varfont, instancer.NormalizedAxisLimits(wght=1, wdth=0)
+        )
+        assert varfont["VORG"].defaultVertOriginY == 800
+        assert varfont["VORG"].VOriginRecords == {"b": 850}
+
+
 class InstantiateItemVariationStoreTest(object):
     def test_VarRegion_get_support(self):
         axisOrder = ["wght", "wdth", "opsz"]
