@@ -78,6 +78,47 @@ class SubsetTest:
     # Tests
     # -----
 
+    @pytest.mark.parametrize("vertical", [False, True])
+    @pytest.mark.parametrize("retain_gids", [False, True])
+    def test_uppercase_companion_tables(self, vertical, retain_gids):
+        from fontTools.ttLib.beyond64k import upper_tables
+
+        fb = FontBuilder(1000)
+        order = [".notdef", "a", "b", "unused"]
+        fb.setupGlyphOrder(order)
+        fb.setupCharacterMap({0x61: "a", 0x62: "b"})
+        fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+        fb.setupHorizontalHeader()
+        if vertical:
+            fb.setupVerticalMetrics({name: (1000, 0) for name in order})
+            fb.setupVerticalHeader()
+        fb.setupNameTable({"familyName": "Uppercase subset", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+        upper_tables(fb.font)
+        source = self.temp_path(".ttf")
+        output = self.temp_path(".ttf")
+        fb.font.save(source)
+
+        args = [source, "--unicodes=U+0062", "--output-file=" + output]
+        if retain_gids:
+            args.append("--retain-gids")
+        subset.main(args)
+        font = TTFont(output)
+        count = 3 if retain_gids else 2
+        assert font["MAXP"].numGlyphs == count
+        assert "GLYF" in font and "LOCA" in font
+        assert len(font["LOCA"].locations) == count + 1
+        assert font["HHEA"].numberOfHMetrics == (count if retain_gids else 1)
+        assert font["HMTX"].metrics["b"] == (500, 0)
+        if vertical:
+            assert font["VHEA"].numberOfVMetrics == (count if retain_gids else 1)
+            assert font["VMTX"].metrics["b"] == (1000, 0)
+        assert not {"maxp", "glyf", "loca", "hhea", "hmtx", "vhea", "vmtx"} & set(
+            font.keys()
+        )
+
     def test_layout_scripts(self):
         fontpath = self.compile_font(self.getpath("layout_scripts.ttx"), ".otf")
         subsetpath = self.temp_path(".otf")
