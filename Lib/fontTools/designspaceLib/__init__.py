@@ -3189,7 +3189,17 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             item.location = self.normalizeLocation(item.location)
         # the axes
         for axis in self.axes:
-            # scale the map first
+            # Convert user-space bounds to design coordinates before changing the map.
+            minimum = self.normalizeLocation(
+                {axis.name: axis.map_forward(axis.minimum)}
+            ).get(axis.name)
+            maximum = self.normalizeLocation(
+                {axis.name: axis.map_forward(axis.maximum)}
+            ).get(axis.name)
+            default = self.normalizeLocation(
+                {axis.name: axis.map_forward(axis.default)}
+            ).get(axis.name)
+            # scale the map outputs
             newMap = []
             for inputValue, outputValue in axis.map:
                 newOutputValue = self.normalizeLocation({axis.name: outputValue}).get(
@@ -3199,10 +3209,6 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             if newMap:
                 axis.map = newMap
             # finally the axis values
-            minimum = self.normalizeLocation({axis.name: axis.minimum}).get(axis.name)
-            maximum = self.normalizeLocation({axis.name: axis.maximum}).get(axis.name)
-            default = self.normalizeLocation({axis.name: axis.default}).get(axis.name)
-            # and set them in the axis.minimum
             axis.minimum = minimum
             axis.maximum = maximum
             axis.default = default
