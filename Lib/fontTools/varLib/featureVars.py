@@ -4,6 +4,10 @@ https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#featurevariat
 NOTE: The API is experimental and subject to change.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Iterable, Mapping, Sequence
+
 from fontTools.misc.dictTools import hashdict
 from fontTools.misc.intTools import bit_count
 from fontTools.ttLib import newTable
@@ -14,8 +18,17 @@ from collections import OrderedDict
 
 from .errors import VarLibError, VarLibValidationError
 
+if TYPE_CHECKING:
+    from fontTools.ttLib import TTFont
 
-def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
+
+def addFeatureVariations(
+    font: TTFont,
+    conditionalSubstitutions: Sequence[
+        tuple[Sequence[Mapping[str, tuple[float, float]]], Mapping[str, str]]
+    ],
+    featureTag: str | Iterable[str] = "rvrn",
+) -> None:
     """Add conditional substitutions to a Variable Font.
 
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
@@ -356,7 +369,9 @@ def cleanupBox(box):
 #
 
 
-def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="rvrn"):
+def addFeatureVariationsRaw(
+    font, table, conditionalSubstitutions, featureTag: str | Iterable[str] = "rvrn"
+):
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 
