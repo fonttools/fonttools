@@ -10,7 +10,7 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.roundTools import nearestMultipleShortestRepr, otRound
 from fontTools.misc.textTools import bytesjoin, tobytes, tostr, pad, safeEval
 from fontTools.misc.lazyTools import LazyList
-from fontTools.ttLib import OPTIMIZE_FONT_SPEED, getSearchRange
+from fontTools.ttLib import OPTIMIZE_FONT_SPEED, TTLibError, getSearchRange
 from .otBase import (
     CountReference,
     FormatSwitchingBaseTable,
@@ -2553,6 +2553,10 @@ class CFF2Index(BaseConverter):
         if count == 0:
             return []
         offSize = reader.readUInt8()
+        if offSize not in (1, 2, 3, 4):
+            raise TTLibError(f"invalid CFF2 INDEX offSize: {offSize}")
+        if reader.pos + (count + 1) * offSize > len(reader.data):
+            raise TTLibError(f"CFF2 INDEX count {count} exceeds available data")
 
         def getReadArray(reader, offSize):
             return {
@@ -2674,6 +2678,19 @@ class CFF2Index(BaseConverter):
                 )
         else:
             raise NotImplementedError()
+
+
+class TupleListOffset(CFF2Index):
+    def read(self, reader, font, tableDict):
+        offset = reader.readULong()
+        assert offset != 0
+        return super().read(reader.getSubReader(offset), font, tableDict)
+
+    def write(self, writer, font, tableDict, values, repeatIndex=None):
+        subWriter = writer.getSubWriter()
+        subWriter.name = self.name
+        writer.writeSubTable(subWriter, offsetSize=4)
+        super().write(subWriter, font, tableDict, values, repeatIndex)
 
 
 class LookupFlag(UShort):
@@ -3009,6 +3026,7 @@ converterMapping = {
     "CompositeMode": CompositeMode,
     "STATFlags": STATFlags,
     "TupleList": partial(CFF2Index, itemConverterClass=TupleValues),
+    "TupleListOffset": partial(TupleListOffset, itemConverterClass=TupleValues),
     "VarCompositeGlyphList": partial(CFF2Index, itemClass=VarCompositeGlyph),
     # AAT
     "CIDGlyphMap": CIDGlyphMap,

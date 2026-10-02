@@ -219,6 +219,22 @@ class CmapSubtableTest(unittest.TestCase):
                 subtable2.decompile(data, font)
                 self.assertEqual(subtable2.cmap, subtable.cmap)
 
+    def test_compile_2_single_byte_notdef(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a", "b"])
+        for cmap, expected in [
+            ({0x41: ".notdef"}, {}),
+            ({0x41: ".notdef", 0x8140: "a"}, {0x8140: "a"}),
+            ({0x00: "a", 0x41: ".notdef", 0x8140: "b"}, {0x00: "a", 0x8140: "b"}),
+        ]:
+            with self.subTest(cmap=cmap):
+                subtable = self.makeSubtable(2, 1, 1, 0)
+                subtable.cmap = cmap
+                data = subtable.compile(font)
+                subtable2 = CmapSubtable.newSubtable(2)
+                subtable2.decompile(data, font)
+                self.assertEqual(subtable2.cmap, expected)
+
     def test_compile_decompile_4_empty(self):
         subtable = self.makeSubtable(4, 3, 1, 0)
         subtable.cmap = {}

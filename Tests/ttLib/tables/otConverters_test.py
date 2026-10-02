@@ -2,8 +2,9 @@ from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont, makeXMLWriter
 from fontTools.misc.textTools import deHexStr
 import fontTools.ttLib.tables.otConverters as otConverters
-from fontTools.ttLib import newTable
+from fontTools.ttLib import TTFont, TTLibError, newTable
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
+import pytest
 import unittest
 
 
@@ -479,6 +480,45 @@ class LazyListTest(unittest.TestCase):
             0 + LazyList()
         with self.assertRaises(TypeError):
             tuple() + LazyList()
+
+
+def _readCFF2Index(data, lazy):
+    conv = otConverters.CFF2Index("Item", None, None)
+    return conv.read(OTTableReader(deHexStr(data)), TTFont(lazy=lazy), None)
+
+
+@pytest.mark.parametrize("lazy", [False, True, None])
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        ("00000002 01 01 03 06 AABB CCDDEE", [b"\xaa\xbb", b"\xcc\xdd\xee"]),
+        # more than 8 items are read lazily; here the offset array ends the data
+        ("0000000A 01" + " 01" * 11, [b""] * 10),
+    ],
+)
+def test_CFF2Index_read(data, expected, lazy):
+    assert list(_readCFF2Index(data, lazy)) == expected
+
+
+@pytest.mark.parametrize("lazy", [False, True, None])
+@pytest.mark.parametrize(
+    "data",
+    [
+        "00100000 01 01 01",  # count far larger than the data
+        "00000003 01 01 01 01",  # one offset short
+        "0000000A 01" + " 01" * 10,  # one offset short, lazy
+    ],
+)
+def test_CFF2Index_count_exceeds_data(data, lazy):
+    with pytest.raises(TTLibError, match="exceeds available data"):
+        _readCFF2Index(data, lazy)
+
+
+@pytest.mark.parametrize("lazy", [False, True, None])
+@pytest.mark.parametrize("offSize", ["00", "05"])
+def test_CFF2Index_invalid_offSize(offSize, lazy):
+    with pytest.raises(TTLibError, match="offSize"):
+        _readCFF2Index("00000001 " + offSize + " 01 01 AA", lazy)
 
 
 if __name__ == "__main__":
