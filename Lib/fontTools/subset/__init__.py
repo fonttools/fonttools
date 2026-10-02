@@ -2381,16 +2381,19 @@ def _pruneGDEF(font):
 
     # Collect.
     table.collect_device_varidxes(usedVarIdxes)
-    if "GPOS" in font:
-        font["GPOS"].table.collect_device_varidxes(usedVarIdxes)
+    for tag in ("GSUB", "GPOS"):
+        if tag in font:
+            font[tag].table.collect_device_varidxes(usedVarIdxes)
 
     # Subset.
     varidx_map = store.subset_varidxes(usedVarIdxes)
 
     # Map.
-    table.remap_device_varidxes(varidx_map)
-    if "GPOS" in font:
-        font["GPOS"].table.remap_device_varidxes(varidx_map)
+    done = set()
+    table.remap_device_varidxes(varidx_map, done=done)
+    for tag in ("GSUB", "GPOS"):
+        if tag in font:
+            font[tag].table.remap_device_varidxes(varidx_map, done=done)
 
 
 @_add_method(ttLib.getTableClass("GDEF"))

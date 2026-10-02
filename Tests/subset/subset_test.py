@@ -1542,6 +1542,72 @@ def test_subset_lookup_variations_keeps_empty_override(featureVarsTestFont):
     )
 
 
+@pytest.mark.parametrize("lookupVariations", [False, True])
+def test_subset_preserves_condition_varstore(featureVarsTestFont, lookupVariations):
+    from fontTools.varLib.builder import buildVarData, buildVarRegionList, buildVarStore
+    from fontTools.varLib.varStore import VarStoreInstancer
+
+    font = featureVarsTestFont
+    value = ot.ConditionTable()
+    value.Format = 2
+    value.DefaultValue = -1
+    value.VarIdx = 1
+    negate = ot.ConditionTable()
+    negate.Format = 5
+    negate.ConditionTable = value
+    condition = ot.ConditionTable()
+    condition.Format = 3
+    condition.ConditionTable = [None, negate]
+    condition.ConditionCount = 2
+    variations = font["GSUB"].table.FeatureVariations
+    if lookupVariations:
+        addLookupVariation(font)
+        variations.LookupVariationRecord[0].FeatureLookupsTable.LookupConditionRecord[
+            0
+        ].ConditionTable = condition
+        variations.FeatureVariationRecord = []
+        variations.FeatureVariationCount = 0
+    else:
+        variations.FeatureVariationRecord[0].ConditionSet.ConditionTable = [condition]
+
+    gdef = ot.GDEF()
+    gdef.Version = 0x00010003
+    gdef.GlyphClassDef = gdef.AttachList = gdef.LigCaretList = None
+    gdef.MarkAttachClassDef = gdef.MarkGlyphSetsDef = None
+    gdef.VarStore = buildVarStore(
+        buildVarRegionList([{"wght": (0, 1, 1)}], ["wght"]),
+        [buildVarData([0], [[99], [2]], optimize=False)],
+    )
+    font["GDEF"] = newTable("GDEF")
+    font["GDEF"].table = gdef
+
+    subsetter = subset.Subsetter()
+    subsetter.populate(unicodes=[ord("f"), ord("$")])
+    subsetter.subset(font)
+    assert value.VarIdx == 0
+    assert font["GDEF"].table.VarStore.VarData[0].Item == [[2]]
+
+    output = io.BytesIO()
+    font.save(output)
+    output.seek(0)
+    roundtripped = TTFont(output)
+    variations = roundtripped["GSUB"].table.FeatureVariations
+    if lookupVariations:
+        condition = (
+            variations.LookupVariationRecord[0]
+            .FeatureLookupsTable.LookupConditionRecord[0]
+            .ConditionTable
+        )
+    else:
+        condition = variations.FeatureVariationRecord[0].ConditionSet.ConditionTable[0]
+    value = condition.ConditionTable[1].ConditionTable
+    assert value.VarIdx == 0
+    evaluator = VarStoreInstancer(
+        roundtripped["GDEF"].table.VarStore, roundtripped["fvar"].axes, {"wght": 1}
+    )
+    assert value.DefaultValue + evaluator[value.VarIdx] == 1
+
+
 def test_subset_lookup_variations_prevents_feature_dedup(featureVarsTestFont):
     font = featureVarsTestFont
     addLookupVariation(font)

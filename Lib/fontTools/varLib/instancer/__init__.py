@@ -1436,12 +1436,11 @@ def instantiateOTL(varfont, axisLimits):
 
     if varStore.VarRegionList.Region:
         varIndexMapping = varStore.optimize()
-        gdef.remap_device_varidxes(varIndexMapping)
-        if "GPOS" in varfont:
-            varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
-        instantiateLookupVariationConditionValues(
-            varfont, varIndexMapping=varIndexMapping
-        )
+        done = set()
+        gdef.remap_device_varidxes(varIndexMapping, done=done)
+        for tag in ("GSUB", "GPOS"):
+            if tag in varfont:
+                varfont[tag].table.remap_device_varidxes(varIndexMapping, done=done)
     elif any(
         getattr(gdef, name, None) is not None
         for name in (

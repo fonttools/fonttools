@@ -902,9 +902,11 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 
     # Optimize
     varidx_map = store.optimize()
-    GDEF.remap_device_varidxes(varidx_map)
-    if "GPOS" in font:
-        font["GPOS"].table.remap_device_varidxes(varidx_map)
+    done = set()
+    GDEF.remap_device_varidxes(varidx_map, done=done)
+    for tag in ("GSUB", "GPOS"):
+        if tag in font:
+            font[tag].table.remap_device_varidxes(varidx_map, done=done)
 
 
 def _add_GSUB_feature_variations(

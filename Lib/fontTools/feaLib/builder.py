@@ -811,9 +811,13 @@ class Builder(object):
                 gdef.VarStore = store
                 varidx_map = store.optimize()
 
-                gdef.remap_device_varidxes(varidx_map)
-                if "GPOS" in self.font:
-                    self.font["GPOS"].table.remap_device_varidxes(varidx_map)
+                done = set()
+                gdef.remap_device_varidxes(varidx_map, done=done)
+                for tag in ("GSUB", "GPOS"):
+                    if tag in self.font:
+                        self.font[tag].table.remap_device_varidxes(
+                            varidx_map, done=done
+                        )
         has_data = any(
             (
                 gdef.GlyphClassDef,
