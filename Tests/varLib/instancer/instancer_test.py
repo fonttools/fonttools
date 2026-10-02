@@ -411,6 +411,43 @@ class InstantiateCvarTest(object):
 
 
 class InstantiateMVARTest(object):
+    @pytest.mark.parametrize("fullyInstanced", [False, True])
+    @pytest.mark.parametrize("uppercase", [False, True])
+    @pytest.mark.parametrize(
+        "valueTag",
+        ["hcrs", "hcrn", "hcof", "vasc", "vdsc", "vlgp", "vcrs", "vcrn", "vcof"],
+    )
+    def test_metric_header_companions(
+        self, varfont, valueTag, uppercase, fullyInstanced
+    ):
+        from fontTools.ttLib.beyond64k import upper_tables
+        from fontTools.varLib.mvar import getMVARTableTag
+
+        if uppercase:
+            upper_tables(varfont)
+        tableTag, itemName = MVAR_ENTRIES[valueTag]
+        tableTag = getMVARTableTag(varfont, tableTag)
+        original = getattr(varfont[tableTag], itemName)
+        mvar = varfont["MVAR"].table
+        record = otTables.MetricsValueRecord()
+        record.ValueTag = valueTag
+        record.VarIdx = 0
+        mvar.ValueRecord = [record]
+        mvar.ValueRecordCount = 1
+        mvar.VarStore = builder.buildVarStore(
+            builder.buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"]),
+            [builder.buildVarData([0], [[20]])],
+        )
+        location = {"wght": 900}
+        if fullyInstanced:
+            location["wdth"] = 100
+        instance = instancer.instantiateVariableFont(varfont, location)
+        assert getattr(instance[tableTag], itemName) == original + 20
+        output = BytesIO()
+        instance.save(output)
+        output.seek(0)
+        assert getattr(ttLib.TTFont(output)[tableTag], itemName) == original + 20
+
     @pytest.mark.parametrize(
         "location, expected",
         [

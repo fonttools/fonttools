@@ -120,7 +120,7 @@ from fontTools.cffLib.specializer import (
 )
 from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
 from fontTools.varLib import builder
-from fontTools.varLib.mvar import MVAR_ENTRIES
+from fontTools.varLib.mvar import MVAR_ENTRIES, getMVARTableTag
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
@@ -1072,6 +1072,7 @@ def setMvarDeltas(varfont, deltas):
         if mvarTag not in MVAR_ENTRIES:
             continue
         tableTag, itemName = MVAR_ENTRIES[mvarTag]
+        tableTag = getMVARTableTag(varfont, tableTag)
         delta = deltas[rec.VarIdx]
         if delta != 0:
             setattr(
