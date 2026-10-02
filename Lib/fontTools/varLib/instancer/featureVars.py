@@ -54,6 +54,33 @@ def _limitFeatureVariationConditionRange(condition, axisLimit):
     )
 
 
+def _conditionAppliesAtDefault(condition, axisLimits, fvarAxes, depth=64):
+    if condition is None:
+        return True
+    if not depth:
+        return False
+    if condition.Format == 1:
+        if condition.AxisIndex >= len(fvarAxes):
+            return False
+        axisTag = fvarAxes[condition.AxisIndex].axisTag
+        default = axisLimits[axisTag].default if axisTag in axisLimits else 0
+        return condition.FilterRangeMinValue <= default <= condition.FilterRangeMaxValue
+    if condition.Format == 2:
+        # instantiateOTL has already moved the default deltas into DefaultValue.
+        return condition.DefaultValue > 0
+    if condition.Format in (3, 4):
+        values = (
+            _conditionAppliesAtDefault(child, axisLimits, fvarAxes, depth - 1)
+            for child in condition.ConditionTable
+        )
+        return all(values) if condition.Format == 3 else any(values)
+    if condition.Format == 5:
+        return not _conditionAppliesAtDefault(
+            condition.ConditionTable, axisLimits, fvarAxes, depth - 1
+        )
+    return False
+
+
 def _instantiateFeatureVariationRecord(
     record, recIdx, axisLimits, fvarAxes, axisIndexMap
 ):
@@ -105,6 +132,20 @@ def _instantiateFeatureVariationRecord(
                     newConditions = None
                     break
 
+        elif condition.Format in (2, 3, 4, 5):
+            applies &= _conditionAppliesAtDefault(condition, axisLimits, fvarAxes)
+            result = _instantiateLookupCondition(
+                condition, axisLimits, fvarAxes, axisIndexMap
+            )
+            if result == _LOOKUP_CONDITION_FALSE:
+                newConditions = None
+                applies = False
+                break
+            if result == _LOOKUP_CONDITION_KEEP:
+                newConditions.append(condition)
+                shouldKeep = True
+            elif axisIndexMap:
+                shouldKeep = True
         else:
             log.warning(
                 "Condition table {0} of FeatureVariationRecord {1} has "
@@ -290,6 +331,9 @@ def instantiateLookupVariationConditionValues(
         if tableTag not in varfont:
             continue
         variations = getattr(varfont[tableTag].table, "FeatureVariations", None)
+        for record in getattr(variations, "FeatureVariationRecord", []):
+            if record.ConditionSet is not None:
+                conditions.extend(record.ConditionSet.ConditionTable)
         for record in getattr(variations, "LookupVariationRecord", []):
             conditions.extend(
                 conditionRecord.ConditionTable

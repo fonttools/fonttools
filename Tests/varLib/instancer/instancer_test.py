@@ -2887,7 +2887,132 @@ def makeLookupVariationsFont(withVarStore=False):
     return font
 
 
+def makeFeatureVariationConditionsFont(format):
+    font = makeLookupVariationsFont(withVarStore=True)
+    variations = font["GSUB"].table.FeatureVariations
+    records = variations.LookupVariationRecord[
+        0
+    ].FeatureLookupsTable.LookupConditionRecord
+    lookupRecord = records[max(format - 3, 0)]
+    condition = (
+        _lookupVariationValueCondition(-1, 0)
+        if format == 2
+        else lookupRecord.ConditionTable
+    )
+    substitution = featureVars.buildFeatureTableSubstitutionRecord(
+        0, lookupRecord.LookupIndexList.LookupIndex
+    )
+    variations.FeatureVariationRecord = [
+        featureVars.buildFeatureVariationRecord([condition], [substitution])
+    ]
+    variations.FeatureVariationCount = 1
+    variations.Version = 0x00010000
+    del variations.LookupVariationRecord
+    del variations.LookupVariationCount
+    return font
+
+
+def _getFeatureVariationSubstitutions(font, location):
+    from fontTools.ttLib.ttGlyphSet import _evaluateCondition
+
+    gsub = font["GSUB"].table
+    axes = font["fvar"].axes if "fvar" in font else []
+    store = getattr(font["GDEF"].table, "VarStore", None) if "GDEF" in font else None
+    evaluator = varStore.VarStoreInstancer(store, axes, location)
+    indices = set()
+    gsub.collect_device_varidxes(indices)
+    values = {index: [evaluator[index]] for index in indices}
+    feature = gsub.FeatureList.FeatureRecord[0].Feature
+    variations = getattr(gsub, "FeatureVariations", None)
+    for record in getattr(variations, "FeatureVariationRecord", []):
+        conditions = (
+            record.ConditionSet.ConditionTable
+            if record.ConditionSet is not None
+            else []
+        )
+        if all(_evaluateCondition(c, axes, location, values) for c in conditions):
+            feature = record.FeatureTableSubstitution.SubstitutionRecord[0].Feature
+            break
+    return _getSubstitutions(gsub, feature.LookupListIndex)
+
+
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize("format", [2, 3, 4, 5])
+    @pytest.mark.parametrize(
+        "location", [(0, 0), (0.3, 0), (0.3, 0.8), (0.6, 0.8), (0, 0.8)]
+    )
+    def test_condition_formats_full_instance(self, format, location):
+        font = makeFeatureVariationConditionsFont(format)
+        location = dict(zip(("wght", "wdth"), location))
+        expected = _getFeatureVariationSubstitutions(font, location)
+
+        instancer.instantiateVariableFont(font, location, inplace=True)
+
+        assert not hasattr(font["GSUB"].table, "FeatureVariations")
+        assert _getFeatureVariationSubstitutions(font, {}) == expected
+        font["GSUB"].compile(font)
+
+    @pytest.mark.parametrize("format", [2, 3, 4, 5])
+    @pytest.mark.parametrize(
+        "pinned",
+        [{"wght": 0}, {"wght": 0.3}, {"wght": 0.6}, {"wdth": 0}, {"wdth": 0.8}],
+    )
+    def test_condition_formats_partial_instance(self, format, pinned):
+        font = makeFeatureVariationConditionsFont(format)
+        original = deepcopy(font)
+        remaining = "wdth" if "wght" in pinned else "wght"
+
+        instancer.instantiateVariableFont(font, pinned, inplace=True)
+
+        # Exercise serialization as well as the in-memory condition tree.
+        compiled = font["GSUB"].compile(font)
+        font["GSUB"] = ttLib.newTable("GSUB")
+        font["GSUB"].decompile(compiled, font)
+        for value in (-1, 0, 0.3, 0.6, 0.8, 1):
+            assert _getFeatureVariationSubstitutions(font, {remaining: value}) == (
+                _getFeatureVariationSubstitutions(
+                    original, {**pinned, remaining: value}
+                )
+            )
+
+    def test_condition_formats_first_matching_record(self):
+        font = makeFeatureVariationConditionsFont(2)
+        variations = font["GSUB"].table.FeatureVariations
+        second = deepcopy(variations.FeatureVariationRecord[0])
+        second.ConditionSet.ConditionTable[0].DefaultValue = 1
+        # Use the other conditional substitution to distinguish the records.
+        second.FeatureTableSubstitution.SubstitutionRecord[
+            0
+        ].Feature.LookupListIndex = [2]
+        variations.FeatureVariationRecord.append(second)
+        variations.FeatureVariationCount = 2
+        original = deepcopy(font)
+
+        instancer.instantiateVariableFont(font, {"wght": 0}, inplace=True)
+
+        for width in (0, 0.3, 0.8, 1):
+            assert _getFeatureVariationSubstitutions(font, {"wdth": width}) == (
+                _getFeatureVariationSubstitutions(original, {"wght": 0, "wdth": width})
+            )
+
+    @pytest.mark.parametrize("format, expected", [(3, True), (4, True), (5, False)])
+    def test_condition_formats_null_child(self, format, expected):
+        font = makeFeatureVariationConditionsFont(3)
+        condition = otTables.ConditionTable()
+        condition.Format = format
+        condition.ConditionTable = None if format == 5 else [None]
+        if format != 5:
+            condition.ConditionCount = 1
+        font["GSUB"].table.FeatureVariations.FeatureVariationRecord[
+            0
+        ].ConditionSet.ConditionTable = [condition]
+
+        instancer.instantiateVariableFont(font, {"wght": 0, "wdth": 0}, inplace=True)
+
+        assert _getFeatureVariationSubstitutions(font, {}) == (
+            {"B": "B.alt"} if expected else {"A": "A.alt"}
+        )
+
     @pytest.mark.parametrize("format", [None, 3, 4, 5])
     def test_lookup_variations_null_condition(self, format):
         font = makeLookupVariationsFont(withVarStore=True)
@@ -3300,7 +3425,7 @@ class InstantiateFeatureVariationsTest(object):
         featureVariations = font["GSUB"].table.FeatureVariations
         rec1 = featureVariations.FeatureVariationRecord[0]
         assert len(rec1.ConditionSet.ConditionTable) == 2
-        rec1.ConditionSet.ConditionTable[0].Format = 2
+        rec1.ConditionSet.ConditionTable[0].Format = 99
 
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
             instancer.instantiateFeatureVariations(
@@ -3309,7 +3434,7 @@ class InstantiateFeatureVariationsTest(object):
 
         assert (
             "Condition table 0 of FeatureVariationRecord 0 "
-            "has unsupported format (2); ignored"
+            "has unsupported format (99); ignored"
         ) in caplog.text
 
         # check that record with unsupported condition format (but whose other
@@ -3317,7 +3442,7 @@ class InstantiateFeatureVariationsTest(object):
         featureVariations = font["GSUB"].table.FeatureVariations
         assert featureVariations.FeatureVariationRecord[0] is rec1
         assert len(rec1.ConditionSet.ConditionTable) == 2
-        assert rec1.ConditionSet.ConditionTable[0].Format == 2
+        assert rec1.ConditionSet.ConditionTable[0].Format == 99
 
     def test_GSUB_FeatureVariations_is_None(self, varfont2):
         varfont2["GSUB"].table.Version = 0x00010001
