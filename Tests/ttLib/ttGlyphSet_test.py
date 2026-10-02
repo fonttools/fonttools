@@ -347,6 +347,49 @@ class TTGlyphSetTest(object):
         assert pen.value == expected
 
     @pytest.mark.parametrize(
+        "fontfile", ["I.otf", "../../cffLib/data/varc-short-cff2.otf"]
+    )
+    @pytest.mark.parametrize("vertical", [False, True])
+    def test_glyphset_cff2_uppercase_metrics(self, fontfile, vertical):
+        from fontTools.fontBuilder import FontBuilder
+
+        font = TTFont(self.getpath(fontfile))
+        if vertical:
+            builder = FontBuilder(font=font)
+            builder.setupVerticalMetrics(
+                {name: (1024, 30) for name in font.getGlyphOrder()}
+            )
+            builder.setupVerticalHeader()
+        else:
+            for tag in ("vhea", "vmtx"):
+                if tag in font:
+                    del font[tag]
+
+        def outlines_and_metrics(font):
+            glyphset = font.getGlyphSet()
+            result = {}
+            for name in font.getGlyphOrder():
+                glyph = glyphset[name]
+                pen = DecomposingRecordingPen(glyphset)
+                glyph.draw(pen)
+                result[name] = (
+                    pen.value,
+                    glyph.width,
+                    glyph.lsb,
+                    glyph.height,
+                    glyph.tsb,
+                )
+            return result
+
+        expected = outlines_and_metrics(font)
+        upper_tables(font)
+        assert outlines_and_metrics(font) == expected
+        stream = BytesIO()
+        font.save(stream)
+        reloaded = TTFont(BytesIO(stream.getvalue()))
+        assert outlines_and_metrics(reloaded) == expected
+
+    @pytest.mark.parametrize(
         "format, expected_components", [(None, 3), (3, 3), (4, 3), (5, 2)]
     )
     def test_glyphset_varComposite_null_condition(self, format, expected_components):

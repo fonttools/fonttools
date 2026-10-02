@@ -143,7 +143,13 @@ class _TTGlyphSetCFF(_TTGlyphSet):
     def __init__(self, font, location):
         tableTag = "CFF2" if "CFF2" in font else "CFF "
         self.charStrings = list(font[tableTag].cff.values())[0].CharStrings
-        super().__init__(font, location, self.charStrings)
+        super().__init__(
+            font,
+            location,
+            self.charStrings,
+            hMetricsTag="HMTX" if "HMTX" in font else "hmtx",
+            vMetricsTag="VMTX" if "VMTX" in font else "vmtx",
+        )
         self.setLocation(location)
 
     def __getitem__(self, glyphName):
