@@ -1,8 +1,13 @@
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.misc.fixedTools import otRound
 from copy import deepcopy
 import logging
 
 log = logging.getLogger("fontTools.varLib.instancer")
+
+_LOOKUP_CONDITION_FALSE = 0
+_LOOKUP_CONDITION_TRUE = 1
+_LOOKUP_CONDITION_KEEP = 2
 
 
 def _featureVariationRecordIsUnique(rec, seen):
@@ -118,6 +123,191 @@ def _instantiateFeatureVariationRecord(
     return applies, shouldKeep, universal
 
 
+def _trueLookupCondition():
+    condition = ot.ConditionTable()
+    condition.Format = 2
+    condition.DefaultValue = 1
+    condition.VarIdx = ot.NO_VARIATION_INDEX
+    return condition
+
+
+def _instantiateLookupCondition(
+    condition, axisLimits, fvarAxes, axisIndexMap, depth=64
+):
+    if not depth:
+        log.warning("LookupVariationRecord condition nesting is too deep; ignored")
+        return _LOOKUP_CONDITION_KEEP
+
+    if condition.Format == 1:
+        axisIdx = condition.AxisIndex
+        if axisIdx >= len(fvarAxes):
+            log.warning(
+                "LookupVariationRecord condition has invalid axis index %d; ignored",
+                axisIdx,
+            )
+            return _LOOKUP_CONDITION_KEEP
+
+        axisTag = fvarAxes[axisIdx].axisTag
+        from fontTools.varLib.instancer import NormalizedAxisTripleAndDistances
+
+        triple = axisLimits.get(axisTag, NormalizedAxisTripleAndDistances(-1, 0, +1))
+        minimum = condition.FilterRangeMinValue
+        maximum = condition.FilterRangeMaxValue
+        if minimum > maximum or triple.minimum > maximum or triple.maximum < minimum:
+            return _LOOKUP_CONDITION_FALSE
+        if triple.minimum == triple.maximum:
+            return (
+                _LOOKUP_CONDITION_TRUE
+                if minimum <= triple.default <= maximum
+                else _LOOKUP_CONDITION_FALSE
+            )
+
+        newRange = _limitFeatureVariationConditionRange(condition, triple)
+        if newRange is None or axisTag not in axisIndexMap:
+            return _LOOKUP_CONDITION_FALSE
+
+        condition.AxisIndex = axisIndexMap[axisTag]
+        condition.FilterRangeMinValue, condition.FilterRangeMaxValue = newRange
+        if newRange[0] <= -1 and newRange[1] >= 1:
+            return _LOOKUP_CONDITION_TRUE
+        return _LOOKUP_CONDITION_KEEP
+
+    if condition.Format == 2:
+        if condition.VarIdx != ot.NO_VARIATION_INDEX:
+            return _LOOKUP_CONDITION_KEEP
+        return (
+            _LOOKUP_CONDITION_TRUE
+            if condition.DefaultValue > 0
+            else _LOOKUP_CONDITION_FALSE
+        )
+
+    if condition.Format in (3, 4):
+        newConditions = []
+        for child in condition.ConditionTable:
+            result = _instantiateLookupCondition(
+                child, axisLimits, fvarAxes, axisIndexMap, depth - 1
+            )
+            if condition.Format == 3 and result == _LOOKUP_CONDITION_FALSE:
+                return _LOOKUP_CONDITION_FALSE
+            if condition.Format == 4 and result == _LOOKUP_CONDITION_TRUE:
+                return _LOOKUP_CONDITION_TRUE
+            if result == _LOOKUP_CONDITION_KEEP:
+                newConditions.append(child)
+
+        condition.ConditionTable = newConditions
+        condition.ConditionCount = len(newConditions)
+        if newConditions:
+            return _LOOKUP_CONDITION_KEEP
+        return (
+            _LOOKUP_CONDITION_TRUE if condition.Format == 3 else _LOOKUP_CONDITION_FALSE
+        )
+
+    if condition.Format == 5:
+        result = _instantiateLookupCondition(
+            condition.ConditionTable,
+            axisLimits,
+            fvarAxes,
+            axisIndexMap,
+            depth - 1,
+        )
+        if result == _LOOKUP_CONDITION_TRUE:
+            return _LOOKUP_CONDITION_FALSE
+        if result == _LOOKUP_CONDITION_FALSE:
+            return _LOOKUP_CONDITION_TRUE
+        return _LOOKUP_CONDITION_KEEP
+
+    log.warning(
+        "LookupVariationRecord condition has unsupported format %d; ignored",
+        condition.Format,
+    )
+    return _LOOKUP_CONDITION_KEEP
+
+
+def _instantiateLookupVariations(table, fvarAxes, axisLimits, axisIndexMap):
+    variations = table.FeatureVariations
+    records = getattr(variations, "LookupVariationRecord", [])
+    if not records:
+        return
+
+    fullyInstanced = not axisIndexMap
+    newRecords = []
+    for record in records:
+        featureLookups = record.FeatureLookupsTable
+        selectedLookups = []
+        newConditionRecords = []
+        canBake = fullyInstanced
+
+        for conditionRecord in featureLookups.LookupConditionRecord:
+            result = _instantiateLookupCondition(
+                conditionRecord.ConditionTable,
+                axisLimits,
+                fvarAxes,
+                axisIndexMap,
+            )
+            if result == _LOOKUP_CONDITION_FALSE:
+                continue
+            if result == _LOOKUP_CONDITION_TRUE:
+                selectedLookups.extend(conditionRecord.LookupIndexList.LookupIndex)
+                if not fullyInstanced:
+                    conditionRecord.ConditionTable = _trueLookupCondition()
+                    newConditionRecords.append(conditionRecord)
+                continue
+
+            canBake = False
+            newConditionRecords.append(conditionRecord)
+
+        if canBake and table.FeatureList is not None:
+            featureRecord = table.FeatureList.FeatureRecord[record.FeatureIndex]
+            feature = deepcopy(featureRecord.Feature)
+            lookupIndices = (
+                list(feature.LookupListIndex) if featureLookups.Flags & 1 else []
+            )
+            lookupIndices.extend(selectedLookups)
+            feature.LookupListIndex = sorted(set(lookupIndices))
+            feature.LookupCount = len(feature.LookupListIndex)
+            featureRecord.Feature = feature
+        else:
+            featureLookups.LookupConditionRecord = newConditionRecords
+            featureLookups.LookupConditionCount = len(newConditionRecords)
+            newRecords.append(record)
+
+    variations.LookupVariationRecord = newRecords
+    variations.LookupVariationCount = len(newRecords)
+
+
+def instantiateLookupVariationConditionValues(
+    varfont, defaultDeltas=None, varIndexMapping=None
+):
+    conditions = []
+    for tableTag in ("GSUB", "GPOS"):
+        if tableTag not in varfont:
+            continue
+        variations = getattr(varfont[tableTag].table, "FeatureVariations", None)
+        for record in getattr(variations, "LookupVariationRecord", []):
+            conditions.extend(
+                conditionRecord.ConditionTable
+                for conditionRecord in record.FeatureLookupsTable.LookupConditionRecord
+            )
+
+    seen = set()
+    while conditions:
+        condition = conditions.pop()
+        if id(condition) in seen:
+            continue
+        seen.add(id(condition))
+
+        if condition.Format == 2:
+            varIdx = condition.VarIdx
+            if defaultDeltas is not None:
+                condition.DefaultValue += otRound(defaultDeltas.get(varIdx, 0))
+            if varIndexMapping is not None:
+                condition.VarIdx = varIndexMapping.get(varIdx, ot.NO_VARIATION_INDEX)
+        elif condition.Format in (3, 4):
+            conditions.extend(condition.ConditionTable)
+        elif condition.Format == 5:
+            conditions.append(condition.ConditionTable)
+
+
 def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
     pinnedAxes = set(axisLimits.pinnedLocation())
     axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
@@ -166,10 +356,16 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
 
         newRecords.append(defaultRecord)
 
-    if newRecords:
-        table.FeatureVariations.FeatureVariationRecord = newRecords
-        table.FeatureVariations.FeatureVariationCount = len(newRecords)
-    else:
+    variations = table.FeatureVariations
+    variations.FeatureVariationRecord = newRecords
+    variations.FeatureVariationCount = len(newRecords)
+
+    _instantiateLookupVariations(table, fvarAxes, axisLimits, axisIndexMap)
+
+    if not (
+        variations.FeatureVariationCount
+        or getattr(variations, "LookupVariationCount", 0)
+    ):
         del table.FeatureVariations
         # downgrade table version if there are no FeatureVariations left
         table.Version = 0x00010000

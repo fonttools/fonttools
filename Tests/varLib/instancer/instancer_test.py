@@ -2674,7 +2674,347 @@ def makeFeatureVarsFont(conditionalSubstitutions):
     return varfont
 
 
+def _lookupVariationCondition(minimum, maximum, axisIndex=0):
+    condition = otTables.ConditionTable()
+    condition.Format = 1
+    condition.AxisIndex = axisIndex
+    condition.FilterRangeMinValue = minimum
+    condition.FilterRangeMaxValue = maximum
+    return condition
+
+
+def _lookupVariationValueCondition(defaultValue, varIdx=otTables.NO_VARIATION_INDEX):
+    condition = otTables.ConditionTable()
+    condition.Format = 2
+    condition.DefaultValue = defaultValue
+    condition.VarIdx = varIdx
+    return condition
+
+
+def _lookupVariationCompoundCondition(format, conditions):
+    condition = otTables.ConditionTable()
+    condition.Format = format
+    condition.ConditionTable = conditions
+    condition.ConditionCount = len(conditions)
+    return condition
+
+
+def _lookupVariationRecord(condition, lookupIndices):
+    lookupIndexList = otTables.LookupIndexList()
+    lookupIndexList.LookupIndex = lookupIndices
+    lookupIndexList.LookupIndexCount = len(lookupIndices)
+
+    record = otTables.LookupConditionRecord()
+    record.ConditionTable = condition
+    record.LookupIndexList = lookupIndexList
+    return record
+
+
+def makeLookupVariationsFont(withVarStore=False):
+    glyphOrder = [
+        ".notdef",
+        "A",
+        "A.alt",
+        "B",
+        "B.alt",
+        "C",
+        "C.alt",
+        "D",
+        "D.alt",
+    ]
+    font = ttLib.TTFont()
+    font.setGlyphOrder(glyphOrder)
+    font["name"] = ttLib.newTable("name")
+    font["name"].names = []
+
+    fvar = font["fvar"] = ttLib.newTable("fvar")
+    fvar.axes = []
+    for tag in ("wght", "wdth"):
+        axis = _f_v_a_r.Axis()
+        axis.axisTag = Tag(tag)
+        axis.minValue = -1
+        axis.defaultValue = 0
+        axis.maxValue = 1
+        axis.axisNameID = 256 + len(fvar.axes)
+        axis.flags = 0
+        fvar.axes.append(axis)
+    fvar.instances = []
+
+    addOpenTypeFeaturesFromString(
+        font,
+        """
+        languagesystem DFLT dflt;
+        lookup DefaultLiga { sub A by A.alt; } DefaultLiga;
+        lookup ConditionalB { sub B by B.alt; } ConditionalB;
+        lookup ConditionalC { sub C by C.alt; } ConditionalC;
+        lookup ConditionalD { sub D by D.alt; } ConditionalD;
+        feature liga { lookup DefaultLiga; } liga;
+        feature zzzz {
+          lookup ConditionalB;
+          lookup ConditionalC;
+          lookup ConditionalD;
+        } zzzz;
+        """,
+    )
+
+    gsub = font["GSUB"].table
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+    conditionalLookups = list(
+        gsub.FeatureList.FeatureRecord[featureIndices["zzzz"]].Feature.LookupListIndex
+    )
+
+    removedFeatureIndex = featureIndices["zzzz"]
+    gsub.FeatureList.FeatureRecord.pop(removedFeatureIndex)
+    gsub.FeatureList.FeatureCount -= 1
+    for scriptRecord in gsub.ScriptList.ScriptRecord:
+        langSystems = [scriptRecord.Script.DefaultLangSys]
+        langSystems.extend(
+            record.LangSys for record in scriptRecord.Script.LangSysRecord
+        )
+        for langSystem in filter(None, langSystems):
+            langSystem.FeatureIndex = [
+                index - (index > removedFeatureIndex)
+                for index in langSystem.FeatureIndex
+                if index != removedFeatureIndex
+            ]
+            langSystem.FeatureCount = len(langSystem.FeatureIndex)
+
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+    conditionB = _lookupVariationCompoundCondition(
+        3,
+        [
+            _lookupVariationCondition(0.25, 1.0),
+            _lookupVariationCondition(-0.5, 0.5, 1),
+            _lookupVariationValueCondition(1),
+        ],
+    )
+    conditionC = _lookupVariationCompoundCondition(
+        4,
+        [
+            _lookupVariationCondition(0.5, 1.0),
+            (
+                _lookupVariationValueCondition(-1, 0)
+                if withVarStore
+                else _lookupVariationCondition(0.75, 1.0, 1)
+            ),
+            _lookupVariationValueCondition(0),
+        ],
+    )
+    conditionD = otTables.ConditionTable()
+    conditionD.Format = 5
+    conditionD.ConditionTable = _lookupVariationCondition(-1.0, 0.24)
+
+    featureLookups = otTables.FeatureLookupsTable()
+    featureLookups.Version = 0x00010000
+    featureLookups.Flags = 1
+    featureLookups.LookupConditionRecord = [
+        _lookupVariationRecord(conditionB, [conditionalLookups[0]]),
+        _lookupVariationRecord(conditionC, [conditionalLookups[1]]),
+        _lookupVariationRecord(conditionD, [conditionalLookups[2]]),
+    ]
+    featureLookups.LookupConditionCount = len(featureLookups.LookupConditionRecord)
+
+    lookupVariation = otTables.LookupVariationRecord()
+    lookupVariation.FeatureIndex = featureIndices["liga"]
+    lookupVariation.FeatureLookupsTable = featureLookups
+
+    variations = otTables.FeatureVariations()
+    variations.Version = 0x00010001
+    variations.FeatureVariationRecord = []
+    variations.FeatureVariationCount = 0
+    variations.LookupVariationRecord = [lookupVariation]
+    variations.LookupVariationCount = 1
+    gsub.FeatureVariations = variations
+    gsub.Version = 0x00010001
+
+    if withVarStore:
+        gdef = font["GDEF"] = ttLib.newTable("GDEF")
+        gdef.table = otTables.GDEF()
+        gdef.table.Version = 0x00010003
+        gdef.table.GlyphClassDef = None
+        gdef.table.AttachList = None
+        gdef.table.LigCaretList = None
+        gdef.table.MarkAttachClassDef = None
+        gdef.table.MarkGlyphSetsDef = None
+        regionList = builder.buildVarRegionList([{"wdth": (0, 1, 1)}], ["wght", "wdth"])
+        gdef.table.VarStore = builder.buildVarStore(
+            regionList, [builder.buildVarData([0], [[2]])]
+        )
+
+    return font
+
+
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            (
+                {"wght": 0.3, "wdth": 0},
+                {"A": "A.alt", "B": "B.alt", "D": "D.alt"},
+            ),
+            (
+                {"wght": 0.3, "wdth": 0.8},
+                {"A": "A.alt", "C": "C.alt", "D": "D.alt"},
+            ),
+        ],
+    )
+    def test_lookup_variations_full_instance(self, location, expected):
+        font = makeLookupVariationsFont()
+
+        instancer.instantiateFeatureVariations(
+            font, instancer.NormalizedAxisLimits(location)
+        )
+
+        gsub = font["GSUB"].table
+        assert not hasattr(gsub, "FeatureVariations")
+        lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        assert _getSubstitutions(gsub, lookupIndices) == expected
+
+    def test_lookup_variations_partial_instance(self):
+        font = makeLookupVariationsFont()
+
+        instancer.instantiateFeatureVariations(
+            font, instancer.NormalizedAxisLimits({"wght": 0.3})
+        )
+
+        variations = font["GSUB"].table.FeatureVariations
+        assert variations.LookupVariationCount == 1
+        conditionRecords = variations.LookupVariationRecord[
+            0
+        ].FeatureLookupsTable.LookupConditionRecord
+        assert len(conditionRecords) == 3
+        assert [record.ConditionTable.Format for record in conditionRecords] == [
+            3,
+            4,
+            2,
+        ]
+        for record in conditionRecords[:2]:
+            assert record.ConditionTable.ConditionCount == 1
+            condition = record.ConditionTable.ConditionTable[0]
+            assert condition.Format == 1
+            assert condition.AxisIndex == 0
+
+    def test_lookup_variations_full_instance_does_not_modify_shared_feature(self):
+        font = makeLookupVariationsFont()
+        featureList = font["GSUB"].table.FeatureList
+        sharedFeature = featureList.FeatureRecord[0].Feature
+        featureRecord = otTables.FeatureRecord()
+        featureRecord.FeatureTag = "test"
+        featureRecord.Feature = sharedFeature
+        featureList.FeatureRecord.append(featureRecord)
+        featureList.FeatureCount += 1
+
+        instancer.instantiateFeatureVariations(
+            font, instancer.NormalizedAxisLimits({"wght": 0.3, "wdth": 0})
+        )
+
+        assert featureList.FeatureRecord[0].Feature is not sharedFeature
+        assert featureList.FeatureRecord[1].Feature is sharedFeature
+        assert _getSubstitutions(font["GSUB"].table, sharedFeature.LookupListIndex) == {
+            "A": "A.alt"
+        }
+
+    def test_lookup_variations_full_instance_replaces_default_lookups(self):
+        font = makeLookupVariationsFont()
+        featureLookups = (
+            font["GSUB"]
+            .table.FeatureVariations.LookupVariationRecord[0]
+            .FeatureLookupsTable
+        )
+        featureLookups.Flags = 0
+
+        instancer.instantiateFeatureVariations(
+            font, instancer.NormalizedAxisLimits({"wght": 0.3, "wdth": 0})
+        )
+
+        gsub = font["GSUB"].table
+        lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        assert _getSubstitutions(gsub, lookupIndices) == {
+            "B": "B.alt",
+            "D": "D.alt",
+        }
+
+    def test_lookup_variations_use_current_feature_lookups(self):
+        font = makeLookupVariationsFont()
+        gsub = font["GSUB"].table
+        variations = gsub.FeatureVariations
+        lookupVariation = variations.LookupVariationRecord[0]
+        conditionalC = lookupVariation.FeatureLookupsTable.LookupConditionRecord[
+            1
+        ].LookupIndexList.LookupIndex
+        substitution = featureVars.buildFeatureTableSubstitutionRecord(
+            lookupVariation.FeatureIndex, conditionalC
+        )
+        variations.FeatureVariationRecord = [
+            featureVars.buildFeatureVariationRecord(
+                [_lookupVariationCondition(0.25, 1.0)], [substitution]
+            )
+        ]
+        variations.FeatureVariationCount = 1
+
+        instancer.instantiateFeatureVariations(
+            font, instancer.NormalizedAxisLimits({"wght": 0.3, "wdth": 0})
+        )
+
+        assert not hasattr(gsub, "FeatureVariations")
+        lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        assert _getSubstitutions(gsub, lookupIndices) == {
+            "B": "B.alt",
+            "C": "C.alt",
+            "D": "D.alt",
+        }
+
+    def test_lookup_variations_condition_value_partial_instance(self):
+        font = makeLookupVariationsFont(withVarStore=True)
+
+        instancer.instantiateVariableFont(font, {"wght": 0.3}, inplace=True)
+
+        variations = font["GSUB"].table.FeatureVariations
+        conditionRecords = variations.LookupVariationRecord[
+            0
+        ].FeatureLookupsTable.LookupConditionRecord
+        valueCondition = conditionRecords[1].ConditionTable.ConditionTable[0]
+        assert valueCondition.Format == 2
+        assert valueCondition.DefaultValue == -1
+        assert valueCondition.VarIdx == 0
+        font["GDEF"].compile(font)
+        font["GSUB"].compile(font)
+
+    def test_lookup_variations_condition_value_bakes_delta(self):
+        font = makeLookupVariationsFont(withVarStore=True)
+
+        instancer.instantiateVariableFont(font, {"wdth": 0.8}, inplace=True)
+
+        variations = font["GSUB"].table.FeatureVariations
+        featureLookups = variations.LookupVariationRecord[0].FeatureLookupsTable
+        assert featureLookups.LookupConditionCount == 2
+        condition = featureLookups.LookupConditionRecord[0].ConditionTable
+        assert condition.Format == 2
+        assert condition.DefaultValue == 1
+        assert condition.VarIdx == otTables.NO_VARIATION_INDEX
+
+    def test_lookup_variations_condition_value_full_instance(self):
+        font = makeLookupVariationsFont(withVarStore=True)
+
+        instancer.instantiateVariableFont(
+            font, {"wght": 0.3, "wdth": 0.8}, inplace=True
+        )
+
+        gsub = font["GSUB"].table
+        assert not hasattr(gsub, "FeatureVariations")
+        lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        assert _getSubstitutions(gsub, lookupIndices) == {
+            "A": "A.alt",
+            "C": "C.alt",
+            "D": "D.alt",
+        }
+
     @pytest.mark.parametrize(
         "location, appliedSubs, expectedRecords",
         [

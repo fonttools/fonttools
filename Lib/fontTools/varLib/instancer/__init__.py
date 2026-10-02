@@ -124,7 +124,10 @@ from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
-from .featureVars import instantiateFeatureVariations
+from .featureVars import (
+    instantiateFeatureVariations,
+    instantiateLookupVariationConditionValues,
+)
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
 from fontTools.ttLib.tables.otTables import VarComponentFlags
@@ -1398,6 +1401,7 @@ def instantiateOTL(varfont, axisLimits):
         or varfont["GDEF"].table.Version < 0x00010003
         or not varfont["GDEF"].table.VarStore
     ):
+        instantiateLookupVariationConditionValues(varfont, varIndexMapping={})
         return
 
     if "GPOS" in varfont:
@@ -1411,6 +1415,7 @@ def instantiateOTL(varfont, axisLimits):
     fvarAxes = varfont["fvar"].axes
 
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+    instantiateLookupVariationConditionValues(varfont, defaultDeltas=defaultDeltas)
 
     # When VF are built, big lookups may overflow and be broken into multiple
     # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
@@ -1431,6 +1436,9 @@ def instantiateOTL(varfont, axisLimits):
         gdef.remap_device_varidxes(varIndexMapping)
         if "GPOS" in varfont:
             varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
+        instantiateLookupVariationConditionValues(
+            varfont, varIndexMapping=varIndexMapping
+        )
     elif any(
         getattr(gdef, name, None) is not None
         for name in (
@@ -1441,10 +1449,12 @@ def instantiateOTL(varfont, axisLimits):
             "MarkGlyphSetsDef2",
         )
     ):
+        instantiateLookupVariationConditionValues(varfont, varIndexMapping={})
         # beyond-64k GDEF: keep v1.4 and NULL the VarStore, don't drop the *2 fields
         gdef.VarStore = None
         gdef.Version = 0x00010004
     else:
+        instantiateLookupVariationConditionValues(varfont, varIndexMapping={})
         # Downgrade GDEF.
         del gdef.VarStore
         gdef.Version = 0x00010002
