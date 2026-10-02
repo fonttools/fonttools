@@ -480,7 +480,7 @@ class BitmapGlyph(object):
         # Allow lazy decompile.
         if attr[:2] == "__":
             raise AttributeError(attr)
-        if attr == "data":
+        if attr == "data" or "data" not in self.__dict__:
             raise AttributeError(attr)
         self.decompile()
         del self.data

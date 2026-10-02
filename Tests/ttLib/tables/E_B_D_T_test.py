@@ -1,5 +1,9 @@
+import struct
+
 import pytest
 
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables import C_B_D_T_, E_B_D_T_
 from fontTools.ttLib.tables.E_B_D_T_ import _extFileName, _writeExtFileImageData
 
 
@@ -100,3 +104,66 @@ def test_extfile_name_mapping_is_injective():
     assert len(set(mapped)) == len(set(names))
     assert all("/" not in m and "\\" not in m for m in mapped)
     assert all(m not in ("", ".", "..") for m in mapped)
+
+
+@pytest.fixture(params=[1, 2, 6, 7, 8, 9, 17, 18])
+def bitmap_glyph(request):
+    image_format = request.param
+    if image_format in (1, 2, 8, 17):
+        header = struct.pack(">BBbbB", 1, 8, -1, 1, 9)
+        metrics = dict(height=1, width=8, BearingX=-1, BearingY=1, Advance=9)
+    else:
+        header = struct.pack(">BBbbBbbB", 1, 8, -1, 1, 9, -4, 2, 10)
+        metrics = dict(
+            height=1,
+            width=8,
+            horiBearingX=-1,
+            horiBearingY=1,
+            horiAdvance=9,
+            vertBearingX=-4,
+            vertBearingY=2,
+            vertAdvance=10,
+        )
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "A"])
+    if image_format in (8, 9):
+        payload = struct.pack(">HHbb", 1, 1, -2, 3)
+        if image_format == 8:
+            payload = b"\0" + payload
+    elif image_format in (17, 18):
+        # CBDT stores the image as opaque bytes with a length prefix.
+        payload = struct.pack(">L", 1) + b"\x81"
+    else:
+        payload = b"\x81"
+    classes = (
+        C_B_D_T_.cbdt_bitmap_classes
+        if image_format >= 17
+        else E_B_D_T_.ebdt_bitmap_classes
+    )
+    data = header + payload
+    return classes[image_format](data, font), font, data, metrics
+
+
+@pytest.mark.parametrize("decompile_first", [False, True])
+def test_missing_attribute_preserves_bitmap_metrics(bitmap_glyph, decompile_first):
+    glyph, font, data, metrics = bitmap_glyph
+    if decompile_first:
+        assert vars(glyph.metrics) == metrics
+
+    # Attribute probing (for example, by an interactive display) must not
+    # restart decompilation and replace the metrics with an empty object.
+    for _ in range(2):
+        assert not hasattr(glyph, "_repr_mimebundle_")
+        assert vars(glyph.metrics) == metrics
+        assert glyph.compile(font) == data
+
+
+def test_lazy_bitmap_metrics_and_edited_metrics_are_preserved(bitmap_glyph):
+    glyph, font, data, metrics = bitmap_glyph
+    assert vars(glyph.metrics) == metrics
+    assert glyph.compile(font) == data
+    glyph.metrics.width = 7
+    glyph.ensureDecompiled()
+    assert not hasattr(glyph, "missing_attribute")
+    assert glyph.metrics.width == 7
+    assert glyph.compile(font) == data[:1] + b"\x07" + data[2:]
