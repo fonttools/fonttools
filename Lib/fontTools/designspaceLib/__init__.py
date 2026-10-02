@@ -3187,6 +3187,29 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                         glyphMaster["location"]
                     )
             item.location = self.normalizeLocation(item.location)
+        # rules also need the original axis data
+        for rule in self.rules:
+            newConditionSets = []
+            for conditions in rule.conditionSets:
+                newConditions = []
+                for cond in conditions:
+                    if cond.get("minimum") is not None:
+                        minimum = self.normalizeLocation(
+                            {cond["name"]: cond["minimum"]}
+                        ).get(cond["name"])
+                    else:
+                        minimum = None
+                    if cond.get("maximum") is not None:
+                        maximum = self.normalizeLocation(
+                            {cond["name"]: cond["maximum"]}
+                        ).get(cond["name"])
+                    else:
+                        maximum = None
+                    newConditions.append(
+                        dict(name=cond["name"], minimum=minimum, maximum=maximum)
+                    )
+                newConditionSets.append(newConditions)
+            rule.conditionSets = newConditionSets
         # the axes
         for axis in self.axes:
             # Convert user-space bounds to design coordinates before changing the map.
@@ -3212,29 +3235,6 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             axis.minimum = minimum
             axis.maximum = maximum
             axis.default = default
-        # now the rules
-        for rule in self.rules:
-            newConditionSets = []
-            for conditions in rule.conditionSets:
-                newConditions = []
-                for cond in conditions:
-                    if cond.get("minimum") is not None:
-                        minimum = self.normalizeLocation(
-                            {cond["name"]: cond["minimum"]}
-                        ).get(cond["name"])
-                    else:
-                        minimum = None
-                    if cond.get("maximum") is not None:
-                        maximum = self.normalizeLocation(
-                            {cond["name"]: cond["maximum"]}
-                        ).get(cond["name"])
-                    else:
-                        maximum = None
-                    newConditions.append(
-                        dict(name=cond["name"], minimum=minimum, maximum=maximum)
-                    )
-                newConditionSets.append(newConditions)
-            rule.conditionSets = newConditionSets
 
     def loadSourceFonts(self, opener, **kwargs):
         """Ensure SourceDescriptor.font attributes are loaded, and return list of fonts.
