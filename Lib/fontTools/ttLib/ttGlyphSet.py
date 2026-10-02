@@ -24,7 +24,7 @@ def _getVariationAxes(font):
     # VARC permits static fonts to retain gvar or CFF2 variation data for
     # component-internal coordinates without exposing axes through fvar.
     axisCount = 0
-    gvar = font.get("gvar")
+    gvar = font.get("GVAR" if "GVAR" in font else "gvar")
     if gvar is not None:
         axisCount = gvar.axisCount
     if "CFF2" in font:

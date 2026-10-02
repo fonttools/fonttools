@@ -319,6 +319,33 @@ class TTGlyphSetTest(object):
         assert glyphset.hMetrics is font["HMTX"].metrics
         assert glyphset.vMetrics is font["VMTX"].metrics
 
+    @pytest.mark.parametrize("draw_points", [False, True])
+    def test_glyphset_varComposite_uppercase_static_axes(self, draw_points):
+        from fontTools.pens.recordingPen import DecomposingRecordingPointPen
+
+        font = TTFont(self.getpath("varc-static-gvar.ttf"))
+        glyph_name = font["VARC"].table.Coverage.glyphs[0]
+        pen_type = (
+            DecomposingRecordingPointPen if draw_points else DecomposingRecordingPen
+        )
+        draw = "drawPoints" if draw_points else "draw"
+        glyphset = font.getGlyphSet()
+        pen = pen_type(glyphset)
+        getattr(glyphset[glyph_name], draw)(pen)
+        expected = pen.value
+
+        upper_tables(font)
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        assert "fvar" not in font
+        assert "gvar" not in font
+        glyphset = font.getGlyphSet()
+        assert len(glyphset.axes) == font["GVAR"].axisCount == 1
+        pen = pen_type(glyphset)
+        getattr(glyphset[glyph_name], draw)(pen)
+        assert pen.value == expected
+
     @pytest.mark.parametrize(
         "format, expected_components", [(None, 3), (3, 3), (4, 3), (5, 2)]
     )
