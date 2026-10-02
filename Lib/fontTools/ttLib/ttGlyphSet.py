@@ -229,14 +229,18 @@ class _TTGlyph(ABC):
                 if glyphSet.hvarTable.AdvWidthMap is None
                 else glyphSet.hvarTable.AdvWidthMap.mapping[glyphName]
             )
-            self.width += glyphSet.hvarInstancer[varidx]
+            # An implicit mapping always uses outer index zero. Oversized
+            # glyph IDs must not be interpreted as packed variation indices.
+            if glyphSet.hvarTable.AdvWidthMap is not None or varidx <= 0xFFFF:
+                self.width += glyphSet.hvarInstancer[varidx]
         if self.height is not None and glyphSet.vvarTable is not None:
             varidx = (
                 glyphSet.font.getGlyphID(glyphName)
                 if glyphSet.vvarTable.AdvHeightMap is None
                 else glyphSet.vvarTable.AdvHeightMap.mapping[glyphName]
             )
-            self.height += glyphSet.vvarInstancer[varidx]
+            if glyphSet.vvarTable.AdvHeightMap is not None or varidx <= 0xFFFF:
+                self.height += glyphSet.vvarInstancer[varidx]
         # TODO: VORG
 
     @abstractmethod

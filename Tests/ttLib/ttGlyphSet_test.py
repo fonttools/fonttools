@@ -456,6 +456,47 @@ class TTGlyphSetTest(object):
             glyph.draw(DecomposingRecordingPen(glyphset))
             assert glyph.height == expected
 
+    @pytest.mark.parametrize("gid", [0, 0xFFFF, 0x10000, 0x10001])
+    @pytest.mark.parametrize("mapped", [False, True])
+    @pytest.mark.parametrize("uppercase", [False, True])
+    def test_advance_mapping_high_glyph_id(self, gid, mapped, uppercase, monkeypatch):
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables as ot
+        from fontTools.varLib.builder import (
+            buildVarData,
+            buildVarIdxMap,
+            buildVarRegionList,
+            buildVarStore,
+        )
+
+        font = TTFont(self.getpath("I.otf"))
+        builder = FontBuilder(font=font)
+        order = font.getGlyphOrder()
+        builder.setupVerticalMetrics({name: (800, 20) for name in order})
+        builder.setupVerticalHeader()
+        axes = [axis.axisTag for axis in font["fvar"].axes]
+        regions = buildVarRegionList([{axes[0]: (0, 1, 1)}], axes)
+        store = buildVarStore(
+            regions, [buildVarData([0], [[10]]), buildVarData([0], [[100], [200]])]
+        )
+        for tag, map_name in [("HVAR", "AdvWidthMap"), ("VVAR", "AdvHeightMap")]:
+            font[tag] = newTable(tag)
+            table = font[tag].table = getattr(ot, tag)()
+            table.Version = 0x00010000
+            table.VarStore = store
+            mapping = buildVarIdxMap([0x10000] * len(order), order) if mapped else None
+            setattr(table, map_name, mapping)
+        if uppercase:
+            upper_tables(font)
+        # Simulate a high glyph ID without constructing a 65K-glyph fixture.
+        monkeypatch.setattr(font, "getGlyphID", lambda name: gid)
+        glyphset = font.getGlyphSet(location={axes[0]: 0.5}, normalized=True)
+        glyph = glyphset[order[0]]
+        delta = 50 if mapped else 5 if gid == 0 else 0
+        assert glyph.width == glyphset.hMetrics[order[0]][0] + delta
+        assert glyph.height == 800 + delta
+
     @pytest.mark.parametrize(
         "format, expected_components", [(None, 3), (3, 3), (4, 3), (5, 2)]
     )
