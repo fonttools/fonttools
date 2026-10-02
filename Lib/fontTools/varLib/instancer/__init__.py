@@ -1418,7 +1418,6 @@ def instantiateOTL(varfont, axisLimits):
     fvarAxes = varfont["fvar"].axes
 
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
-    instantiateLookupVariationConditionValues(varfont, defaultDeltas=defaultDeltas)
 
     # When VF are built, big lookups may overflow and be broken into multiple
     # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
@@ -1434,9 +1433,13 @@ def instantiateOTL(varfont, axisLimits):
     )
     merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS"])
 
+    varIndexMapping = varStore.optimize() if varStore.VarRegionList.Region else {}
+    done = set()
+    instantiateLookupVariationConditionValues(
+        varfont, defaultDeltas, varIndexMapping, done=done
+    )
+
     if varStore.VarRegionList.Region:
-        varIndexMapping = varStore.optimize()
-        done = set()
         gdef.remap_device_varidxes(varIndexMapping, done=done)
         for tag in ("GSUB", "GPOS"):
             if tag in varfont:
@@ -1451,12 +1454,10 @@ def instantiateOTL(varfont, axisLimits):
             "MarkGlyphSetsDef2",
         )
     ):
-        instantiateLookupVariationConditionValues(varfont, varIndexMapping={})
         # beyond-64k GDEF: keep v1.4 and NULL the VarStore, don't drop the *2 fields
         gdef.VarStore = None
         gdef.Version = 0x00010004
     else:
-        instantiateLookupVariationConditionValues(varfont, varIndexMapping={})
         # Downgrade GDEF.
         del gdef.VarStore
         gdef.Version = 0x00010002

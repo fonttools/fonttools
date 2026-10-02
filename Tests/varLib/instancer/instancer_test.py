@@ -2937,6 +2937,116 @@ def _getFeatureVariationSubstitutions(font, location):
 
 
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize("tableTag", ["GSUB", "GPOS"])
+    @pytest.mark.parametrize("legacy", [False, True])
+    @pytest.mark.parametrize("partial", [False, True])
+    @pytest.mark.parametrize("wrapper", ["value", "and", "or", "not"])
+    @pytest.mark.parametrize(
+        "default,delta,coordinate",
+        [
+            (0, 1, 0.25),
+            (1, -1, 0.75),
+            (-1, 2, 0.51),
+            (1, -2, 0.49),
+            (0, 1, 0),
+            (1, -1, 1),
+            (-1, 2, 0.49),
+            (0, -1, 0.25),
+        ],
+    )
+    def test_fractional_condition_becoming_constant(
+        self, tableTag, legacy, partial, wrapper, default, delta, coordinate
+    ):
+        from fontTools.ttLib.ttGlyphSet import _evaluateCondition
+
+        font = makeLookupVariationsFont(withVarStore=True)
+        variations = font["GSUB"].table.FeatureVariations
+        if tableTag == "GPOS":
+            addOpenTypeFeaturesFromString(
+                font,
+                """
+                lookup Default { pos A 10; } Default;
+                lookup Conditional { pos B 20; } Conditional;
+                feature kern { lookup Default; } kern;
+                feature zzzz { lookup Conditional; } zzzz;
+                """,
+                tables=["GPOS"],
+            )
+            del font["GSUB"]
+            font["GPOS"].table.FeatureVariations = variations
+            font["GPOS"].table.Version = 0x00010001
+        font["GDEF"].table.VarStore.VarData[0].Item = [[delta]]
+        value = _lookupVariationValueCondition(default, 0)
+        if wrapper == "and":
+            condition = _lookupVariationCompoundCondition(3, [value, value])
+        elif wrapper == "or":
+            condition = _lookupVariationCompoundCondition(
+                4, [value, _lookupVariationValueCondition(0)]
+            )
+        elif wrapper == "not":
+            condition = otTables.ConditionTable()
+            condition.Format = 5
+            condition.ConditionTable = value
+        else:
+            condition = value
+        if legacy:
+            variations.Version = 0x00010000
+            variations.FeatureVariationRecord = [
+                featureVars.buildFeatureVariationRecord(
+                    [condition],
+                    [featureVars.buildFeatureTableSubstitutionRecord(0, [1])],
+                )
+            ]
+            variations.FeatureVariationCount = 1
+            del variations.LookupVariationRecord
+            del variations.LookupVariationCount
+        else:
+            featureLookups = variations.LookupVariationRecord[0].FeatureLookupsTable
+            featureLookups.LookupConditionRecord = [
+                _lookupVariationRecord(condition, [1])
+            ]
+            featureLookups.LookupConditionCount = 1
+
+        limits = {"wdth": coordinate}
+        if not partial:
+            limits["wght"] = 0
+        instancer.instantiateVariableFont(font, limits, inplace=True)
+        table = font[tableTag].table
+        font[tableTag].compile(font)
+        axes = font["fvar"].axes if "fvar" in font else []
+        active = list(table.FeatureList.FeatureRecord[0].Feature.LookupListIndex)
+        variations = getattr(table, "FeatureVariations", None)
+        for record in getattr(variations, "FeatureVariationRecord", []):
+            conditions = (
+                record.ConditionSet.ConditionTable
+                if record.ConditionSet is not None
+                else []
+            )
+            if all(_evaluateCondition(c, axes, {}, {}) for c in conditions):
+                active = record.FeatureTableSubstitution.SubstitutionRecord[
+                    0
+                ].Feature.LookupListIndex
+                break
+        for record in getattr(variations, "LookupVariationRecord", []):
+            for lookupCondition in record.FeatureLookupsTable.LookupConditionRecord:
+                if _evaluateCondition(lookupCondition.ConditionTable, axes, {}, {}):
+                    active.extend(lookupCondition.LookupIndexList.LookupIndex)
+
+        positive = default + delta * coordinate > 0
+        applies = not positive if wrapper == "not" else positive
+        expected = {"B"} if legacy and applies else {"A", "B"} if applies else {"A"}
+        affected = (
+            set(_getSubstitutions(table, active))
+            if tableTag == "GSUB"
+            else {
+                name
+                for index in active
+                for subtable in table.LookupList.Lookup[index].SubTable
+                for name in subtable.Coverage.glyphs
+            }
+        )
+        assert affected == expected
+
     @pytest.mark.parametrize("legacy", [False, True])
     @pytest.mark.parametrize("limits", [{"wght": 0.3}, {"wdth": (-0.5, 0.25, 1)}])
     def test_shared_conditions_remapped_once(self, legacy, limits):

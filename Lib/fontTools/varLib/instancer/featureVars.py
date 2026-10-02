@@ -308,7 +308,7 @@ def _instantiateLookupVariations(
 
 
 def instantiateLookupVariationConditionValues(
-    varfont, defaultDeltas=None, varIndexMapping=None
+    varfont, defaultDeltas=None, varIndexMapping=None, *, done=None
 ):
     conditions = []
     for tableTag in ("GSUB", "GPOS"):
@@ -324,7 +324,7 @@ def instantiateLookupVariationConditionValues(
                 for conditionRecord in record.FeatureLookupsTable.LookupConditionRecord
             )
 
-    seen = set()
+    seen = set() if done is None else done
     while conditions:
         condition = conditions.pop()
         if condition is None:
@@ -335,10 +335,22 @@ def instantiateLookupVariationConditionValues(
 
         if condition.Format == 2:
             varIdx = condition.VarIdx
+            newVarIdx = (
+                varIdx
+                if varIndexMapping is None
+                else varIndexMapping.get(varIdx, ot.NO_VARIATION_INDEX)
+            )
             if defaultDeltas is not None:
-                condition.DefaultValue += otRound(defaultDeltas.get(varIdx, 0))
+                value = condition.DefaultValue + defaultDeltas.get(varIdx, 0)
+                # Once constant, only the unrounded sign matters. Rounding a
+                # small positive value to zero would change the condition.
+                condition.DefaultValue = (
+                    int(value > 0)
+                    if newVarIdx == ot.NO_VARIATION_INDEX
+                    else otRound(value)
+                )
             if varIndexMapping is not None:
-                condition.VarIdx = varIndexMapping.get(varIdx, ot.NO_VARIATION_INDEX)
+                condition.VarIdx = newVarIdx
         elif condition.Format in (3, 4):
             conditions.extend(condition.ConditionTable)
         elif condition.Format == 5:
