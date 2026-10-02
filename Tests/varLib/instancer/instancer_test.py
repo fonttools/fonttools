@@ -665,8 +665,8 @@ class InstantiateHVARTest(object):
 
 
 class InstantiateVVARTest:
-    @pytest.fixture
-    def varfont(self, fvarAxes):
+    @pytest.fixture(params=[1, 2], ids=["VORG-v1", "VORG-v2"])
+    def varfont(self, fvarAxes, request):
         font = ttLib.TTFont()
         glyphOrder = [".notdef", "a", "b", "c"]
         font.setGlyphOrder(glyphOrder)
@@ -675,7 +675,7 @@ class InstantiateVVARTest:
         font["vmtx"] = ttLib.newTable("vmtx")
         font["vmtx"].metrics = {glyph: (1000, 100) for glyph in glyphOrder}
         font["VORG"] = ttLib.newTable("VORG")
-        font["VORG"].majorVersion = 1
+        font["VORG"].majorVersion = request.param
         font["VORG"].minorVersion = 0
         font["VORG"].defaultVertOriginY = 800
         font["VORG"].VOriginRecords = {"b": 850}
