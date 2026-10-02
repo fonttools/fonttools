@@ -3190,14 +3190,14 @@ otData = [
         [
             FieldSpec("uint16", "SparseRegionCount"),
             FieldSpec(
-                "struct", "SparseVarRegionAxis", repeat="SparseRegionCount", aux=0
+                "LOffset", "SparseVarRegionAxis", repeat="SparseRegionCount", aux=0
             ),
         ],
     ),
     (
         "SparseVarRegionList",
         [
-            FieldSpec("uint16", "RegionCount"),
+            FieldSpec("uint32", "RegionCount"),
             FieldSpec(
                 "LOffsetTo(SparseVarRegion)", "Region", repeat="RegionCount", aux=0
             ),
@@ -3209,7 +3209,7 @@ otData = [
             FieldSpec("uint8", "Format", description="Set to 1."),
             FieldSpec("uint16", "VarRegionCount"),
             FieldSpec("uint16", "VarRegionIndex", repeat="VarRegionCount", aux=0),
-            FieldSpec("TupleList", "Item", repeat="", aux=0),
+            FieldSpec("TupleListOffset", "Item", repeat="", aux=0),
         ],
     ),
     (

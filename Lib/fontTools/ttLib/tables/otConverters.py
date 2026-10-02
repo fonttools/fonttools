@@ -2638,6 +2638,19 @@ class CFF2Index(BaseConverter):
             raise NotImplementedError()
 
 
+class TupleListOffset(CFF2Index):
+    def read(self, reader, font, tableDict):
+        offset = reader.readULong()
+        assert offset != 0
+        return super().read(reader.getSubReader(offset), font, tableDict)
+
+    def write(self, writer, font, tableDict, values, repeatIndex=None):
+        subWriter = writer.getSubWriter()
+        subWriter.name = self.name
+        writer.writeSubTable(subWriter, offsetSize=4)
+        super().write(subWriter, font, tableDict, values, repeatIndex)
+
+
 class LookupFlag(UShort):
     def xmlWrite(self, xmlWriter, font, value, name, attrs):
         xmlWriter.simpletag(name, attrs + [("value", value)])
@@ -2969,6 +2982,7 @@ converterMapping = {
     "CompositeMode": CompositeMode,
     "STATFlags": STATFlags,
     "TupleList": partial(CFF2Index, itemConverterClass=TupleValues),
+    "TupleListOffset": partial(TupleListOffset, itemConverterClass=TupleValues),
     "VarCompositeGlyphList": partial(CFF2Index, itemClass=VarCompositeGlyph),
     # AAT
     "CIDGlyphMap": CIDGlyphMap,
