@@ -1403,6 +1403,44 @@ def featureVarsTestFont():
     return TTFont(buf)
 
 
+def addLookupVariation(font):
+    gsub = font["GSUB"].table
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+
+    condition = ot.ConditionTable()
+    condition.Format = 1
+    condition.AxisIndex = 0
+    condition.FilterRangeMinValue = 0.25
+    condition.FilterRangeMaxValue = 1.0
+
+    lookupIndices = ot.LookupIndexList()
+    lookupIndices.LookupIndex = list(
+        gsub.FeatureList.FeatureRecord[featureIndices["dlig"]].Feature.LookupListIndex
+    )
+    lookupIndices.LookupIndexCount = len(lookupIndices.LookupIndex)
+
+    lookupCondition = ot.LookupConditionRecord()
+    lookupCondition.ConditionTable = condition
+    lookupCondition.LookupIndexList = lookupIndices
+
+    featureLookups = ot.FeatureLookupsTable()
+    featureLookups.Version = 0x00010000
+    featureLookups.Flags = 1
+    featureLookups.LookupConditionRecord = [lookupCondition]
+    featureLookups.LookupConditionCount = 1
+
+    lookupVariation = ot.LookupVariationRecord()
+    lookupVariation.FeatureIndex = featureIndices["rvrn"]
+    lookupVariation.FeatureLookupsTable = featureLookups
+
+    gsub.FeatureVariations.Version = 0x00010001
+    gsub.FeatureVariations.LookupVariationRecord = [lookupVariation]
+    gsub.FeatureVariations.LookupVariationCount = 1
+
+
 def test_subset_feature_variations_keep_all(featureVarsTestFont):
     font = featureVarsTestFont
 
@@ -1437,6 +1475,98 @@ def test_subset_feature_variations_drop_all(featureVarsTestFont):
     # all FeatureVariationRecords were dropped
     assert font["GSUB"].table.FeatureVariations is None
     assert font["GSUB"].table.Version == 0x00010000
+
+
+def test_subset_lookup_variations_remaps_features_and_lookups(featureVarsTestFont):
+    font = featureVarsTestFont
+    addLookupVariation(font)
+
+    options = subset.Options()
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("f"), ord("$")])
+    subsetter.subset(font)
+
+    gsub = font["GSUB"].table
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+    assert "dlig" not in featureIndices
+    assert "f_f" in font.getGlyphOrder()
+
+    record = gsub.FeatureVariations.LookupVariationRecord[0]
+    assert record.FeatureIndex == featureIndices["rvrn"]
+    lookupIndices = record.FeatureLookupsTable.LookupConditionRecord[
+        0
+    ].LookupIndexList.LookupIndex
+    assert len(lookupIndices) == 1
+    assert lookupIndices[0] < gsub.LookupList.LookupCount
+
+    output = io.BytesIO()
+    font.save(output)
+    output.seek(0)
+    roundtripped = TTFont(output)["GSUB"].table.FeatureVariations
+    assert roundtripped.LookupVariationCount == 1
+    assert (
+        roundtripped.LookupVariationRecord[0].FeatureLookupsTable.LookupConditionCount
+        == 1
+    )
+
+
+def test_subset_lookup_variations_keeps_empty_override(featureVarsTestFont):
+    font = featureVarsTestFont
+    addLookupVariation(font)
+
+    options = subset.Options()
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("$")])
+    subsetter.subset(font)
+
+    variations = font["GSUB"].table.FeatureVariations
+    assert variations.LookupVariationCount == 1
+    assert (
+        variations.LookupVariationRecord[0].FeatureLookupsTable.LookupConditionCount
+        == 0
+    )
+
+
+def test_subset_lookup_variations_prevents_feature_dedup(featureVarsTestFont):
+    font = featureVarsTestFont
+    addLookupVariation(font)
+    gsub = font["GSUB"].table
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+    dligIndex = featureIndices["dlig"]
+    gsub.FeatureVariations.LookupVariationRecord[0].FeatureIndex = dligIndex
+
+    duplicate = ot.FeatureRecord()
+    duplicate.FeatureTag = "dlig"
+    duplicate.Feature = gsub.FeatureList.FeatureRecord[dligIndex].Feature
+    duplicateIndex = len(gsub.FeatureList.FeatureRecord)
+    gsub.FeatureList.FeatureRecord.append(duplicate)
+    gsub.FeatureList.FeatureCount += 1
+
+    for scriptRecord in gsub.ScriptList.ScriptRecord:
+        langSystems = [scriptRecord.Script.DefaultLangSys]
+        langSystems.extend(
+            record.LangSys for record in scriptRecord.Script.LangSysRecord
+        )
+        for langSystem in filter(None, langSystems):
+            if dligIndex in langSystem.FeatureIndex:
+                langSystem.FeatureIndex.append(duplicateIndex)
+                langSystem.FeatureCount += 1
+
+    options = subset.Options()
+    options.layout_features = ["*"]
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("f"), ord("$")])
+    subsetter.subset(font)
+
+    assert [record.FeatureTag for record in gsub.FeatureList.FeatureRecord].count(
+        "dlig"
+    ) == 2
 
 
 # TODO test_subset_feature_variations_drop_from_end_empty_records

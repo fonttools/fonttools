@@ -1725,21 +1725,54 @@ def subset_lookups(self, lookup_indices):
     ]
 
 
+@_add_method(otTables.LookupIndexList)
+def subset_lookups(self, lookup_indices):
+    lookup_map = {old: new for new, old in enumerate(lookup_indices)}
+    self.LookupIndex = [
+        lookup_map[index] for index in self.LookupIndex if index in lookup_map
+    ]
+    self.LookupIndexCount = len(self.LookupIndex)
+    return bool(self.LookupIndex)
+
+
+@_add_method(otTables.FeatureLookupsTable)
+def subset_lookups(self, lookup_indices):
+    self.LookupConditionRecord = [
+        record
+        for record in self.LookupConditionRecord
+        if record.LookupIndexList.subset_lookups(lookup_indices)
+    ]
+    self.LookupConditionCount = len(self.LookupConditionRecord)
+    return bool(self.LookupConditionRecord)
+
+
+@_add_method(otTables.FeatureLookupsTable)
+def collect_lookups(self):
+    return sum(
+        (record.LookupIndexList.LookupIndex for record in self.LookupConditionRecord),
+        [],
+    )
+
+
 @_add_method(otTables.FeatureVariations)
 def subset_lookups(self, lookup_indices):
     """Returns the indices of nonempty features."""
-    return sum(
+    feature_indices = sum(
         (
             f.FeatureTableSubstitution.subset_lookups(lookup_indices)
             for f in self.FeatureVariationRecord
         ),
         [],
     )
+    for record in getattr(self, "LookupVariationRecord", []):
+        if record.FeatureLookupsTable.subset_lookups(lookup_indices):
+            feature_indices.append(record.FeatureIndex)
+    return feature_indices
 
 
 @_add_method(otTables.FeatureVariations)
 def collect_lookups(self, feature_indices):
-    return sum(
+    lookup_indices = sum(
         (
             r.Feature.LookupListIndex
             for vr in self.FeatureVariationRecord
@@ -1748,6 +1781,13 @@ def collect_lookups(self, feature_indices):
         ),
         [],
     )
+    lookup_indices.extend(
+        lookup_index
+        for record in getattr(self, "LookupVariationRecord", [])
+        if record.FeatureIndex in feature_indices
+        for lookup_index in record.FeatureLookupsTable.collect_lookups()
+    )
+    return lookup_indices
 
 
 @_add_method(otTables.FeatureTableSubstitution)
@@ -1791,7 +1831,19 @@ def subset_features(self, feature_indices):
     ):
         self.FeatureVariationRecord.pop()
     self.FeatureVariationCount = len(self.FeatureVariationRecord)
-    return bool(self.FeatureVariationCount)
+
+    feature_map = {old: new for new, old in enumerate(feature_indices)}
+    if hasattr(self, "LookupVariationRecord"):
+        self.LookupVariationRecord = [
+            record
+            for record in self.LookupVariationRecord
+            if record.FeatureIndex in feature_map
+        ]
+        for record in self.LookupVariationRecord:
+            record.FeatureIndex = feature_map[record.FeatureIndex]
+        self.LookupVariationCount = len(self.LookupVariationRecord)
+
+    return bool(self.FeatureVariationCount or getattr(self, "LookupVariationCount", 0))
 
 
 @_add_method(otTables.FeatureVariations)
@@ -1809,7 +1861,18 @@ def prune_features(self, feature_index_map):
     ):
         self.FeatureVariationRecord.pop()
     self.FeatureVariationCount = len(self.FeatureVariationRecord)
-    return bool(self.FeatureVariationCount)
+
+    if hasattr(self, "LookupVariationRecord"):
+        self.LookupVariationRecord = [
+            record
+            for record in self.LookupVariationRecord
+            if record.FeatureIndex in feature_index_map
+        ]
+        for record in self.LookupVariationRecord:
+            record.FeatureIndex = feature_index_map[record.FeatureIndex]
+        self.LookupVariationCount = len(self.LookupVariationRecord)
+
+    return bool(self.FeatureVariationCount or getattr(self, "LookupVariationCount", 0))
 
 
 @_add_method(otTables.DefaultLangSys, otTables.LangSys)
@@ -2122,6 +2185,14 @@ def remap_duplicate_features(self, feature_indices):
 
     unique_features = {}
     duplicate_features = {}
+    lookup_variation_features = {
+        record.FeatureIndex
+        for record in getattr(
+            getattr(self.table, "FeatureVariations", None),
+            "LookupVariationRecord",
+            [],
+        )
+    }
     for i in feature_indices:
         f = features[i]
         tag = f.FeatureTag
@@ -2134,7 +2205,11 @@ def remap_duplicate_features(self, feature_indices):
 
         found = False
         for other_i in same_tag_features:
-            if features[other_i] == f:
+            if (
+                i not in lookup_variation_features
+                and other_i not in lookup_variation_features
+                and features[other_i] == f
+            ):
                 found = True
                 duplicate_features[i] = other_i
                 break
@@ -2242,7 +2317,11 @@ def prune_post_subset(self, font, options):
     if hasattr(table, "FeatureVariations"):
         # drop FeatureVariations if there are no features to substitute
         if table.FeatureVariations and not (
-            table.FeatureList and table.FeatureVariations.FeatureVariationRecord
+            table.FeatureList
+            and (
+                table.FeatureVariations.FeatureVariationRecord
+                or getattr(table.FeatureVariations, "LookupVariationRecord", [])
+            )
         ):
             table.FeatureVariations = None
 
