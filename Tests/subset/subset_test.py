@@ -1294,6 +1294,53 @@ class SubsetTest:
         assert font.getGlyphID(font.getBestCmap()[0x41]) == 1
         assert font.getGlyphID(font.getBestCmap()[0x42]) == 2
 
+    @pytest.mark.parametrize("unicodes", [[0x41, 0x42], [0x42]])
+    def test_DMAP_multiple_unicode_subtables(self, unicodes):
+        glyph_order = [".notdef", "baseA", "baseB", "dmapA", "dmapB"]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupCharacterMap({0x41: "baseA", 0x42: "baseB"})
+        fb.setupGlyf({name: Glyph() for name in glyph_order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyph_order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+
+        dmap12 = CmapSubtable.newSubtable(12)
+        dmap12.platformID = 3
+        dmap12.platEncID = 10
+        dmap12.language = 0
+        dmap12.cmap = {0x41: "dmapA"}
+        dmap4 = CmapSubtable.newSubtable(4)
+        dmap4.platformID = 3
+        dmap4.platEncID = 1
+        dmap4.language = 0
+        dmap4.cmap = {0x42: "dmapB"}
+        fb.font["DMAP"] = newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [dmap12, dmap4]
+
+        stream = io.BytesIO()
+        fb.font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        preferences = [[(3, 10), (3, 1)], [(3, 1)]]
+        expected = [
+            {u: g for u, g in font.getBestCmap(p).items() if u in unicodes}
+            for p in preferences
+        ]
+
+        options = subset.Options()
+        options.glyph_names = True
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(unicodes=unicodes)
+        subsetter.subset(font)
+
+        stream = io.BytesIO()
+        font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        assert [font.getBestCmap(p) for p in preferences] == expected
+
     @pytest.mark.parametrize("cmap_format", [14, 15])
     @pytest.mark.parametrize("dmap_format", [14, 15])
     @pytest.mark.parametrize("glyph_zero", [".notdef", "zero"])

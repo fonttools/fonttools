@@ -3153,11 +3153,13 @@ def _cmap_add_bidi_mirroring(s):
 def _cmap_closure_glyphs(self, s, excluded_unicodes=(), excluded_uvs=()):
     tables = [t for t in self.tables if t.isUnicode()]
     matched_unicodes = set()
-    matched_uvs = set()
+    covered_unicodes = None
+    covered_uvs = None
 
     # Close glyphs
     for table in tables:
         if table.format in (14, 15):
+            table_uvs = set()
             for varSelector, cmap in table.uvsDict.items():
                 if varSelector not in s.unicodes_requested:
                     continue
@@ -3169,26 +3171,38 @@ def _cmap_closure_glyphs(self, s, excluded_unicodes=(), excluded_uvs=()):
                 ]
                 # Glyph zero is a miss, so it must not suppress cmap fallback
                 # when this is DMAP. None denotes a default UVS and is a match.
-                matched_uvs.update(
+                table_uvs.update(
                     (varSelector, u) for u, g in matches if g != s.orig_glyph_order[0]
                 )
                 glyphs = {g for _, g in matches}
                 if None in glyphs:
                     glyphs.remove(None)
                 s.glyphs.update(glyphs)
+            covered_uvs = (
+                table_uvs
+                if covered_uvs is None
+                else covered_uvs.intersection(table_uvs)
+            )
         else:
             cmap = table.cmap
             intersection = s.unicodes_requested.intersection(cmap.keys())
             intersection.difference_update(excluded_unicodes)
             matched_unicodes.update(intersection)
             s.glyphs.update(cmap[u] for u in intersection)
-    return matched_unicodes, matched_uvs
+            covered_unicodes = (
+                intersection
+                if covered_unicodes is None
+                else covered_unicodes.intersection(intersection)
+            )
+    # Only mappings covered by every selectable DMAP subtable can suppress
+    # cmap fallback; different consumers may select different subtables.
+    return matched_unicodes, covered_unicodes or set(), covered_uvs or set()
 
 
 @_add_method(ttLib.getTableClass("cmap"))
 def closure_glyphs(self, s):
     _cmap_add_bidi_mirroring(s)
-    matched_unicodes, _ = _cmap_closure_glyphs(self, s)
+    matched_unicodes, _, _ = _cmap_closure_glyphs(self, s)
 
     # Calculate unicodes_missing
     s.unicodes_missing = s.unicodes_requested.difference(matched_unicodes)
@@ -3199,12 +3213,15 @@ def _closure_glyphs_cmap_and_dmap(font, s):
 
     dmap_unicodes = set()
     dmap_uvs = set()
+    matched_dmap_unicodes = set()
     if "DMAP" in font:
-        dmap_unicodes, dmap_uvs = _cmap_closure_glyphs(font["DMAP"], s)
+        matched_dmap_unicodes, dmap_unicodes, dmap_uvs = _cmap_closure_glyphs(
+            font["DMAP"], s
+        )
 
     cmap_unicodes = set()
     if "cmap" in font:
-        cmap_unicodes, _ = _cmap_closure_glyphs(
+        cmap_unicodes, _, _ = _cmap_closure_glyphs(
             font["cmap"],
             s,
             excluded_unicodes=dmap_unicodes,
@@ -3213,7 +3230,9 @@ def _closure_glyphs_cmap_and_dmap(font, s):
 
     s.unicodes_dmaped = dmap_unicodes
     s.uvs_dmaped = dmap_uvs
-    s.unicodes_missing = s.unicodes_requested.difference(dmap_unicodes | cmap_unicodes)
+    s.unicodes_missing = s.unicodes_requested.difference(
+        matched_dmap_unicodes | cmap_unicodes
+    )
 
 
 @_add_method(ttLib.getTableClass("cmap"))
@@ -3278,7 +3297,7 @@ def subset_glyphs(self, s):
 
     # Fomat 12 tables are redundant if they contain just the same BMP codepoints
     # their little BMP-only encoding siblings contain.
-    for t in tables_format12_bmp:
+    for t in tables_format12_bmp if is_cmap else ():
         if (
             t.platformID == 0  # Unicode platform
             and t.platEncID == 4  # Unicode full repertoire
@@ -3294,9 +3313,16 @@ def subset_glyphs(self, s):
         ):
             t.cmap.clear()
 
-    self.tables = [
+    nonempty_tables = [
         t for t in self.tables if (t.cmap if t.format not in (14, 15) else t.uvsDict)
     ]
+    # Retain empty DMAP subtables while any mappings remain, so subsetting
+    # does not promote another subtable and replace a cmap fallback.
+    self.tables = (
+        [t for t in self.tables if t.isUnicode() or t in nonempty_tables]
+        if not is_cmap and nonempty_tables
+        else nonempty_tables
+    )
     self.numSubTables = len(self.tables)
     # TODO(behdad) Convert formats when needed.
     # In particular, if we have a format=12 without non-BMP
