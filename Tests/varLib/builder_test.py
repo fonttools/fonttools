@@ -8,8 +8,32 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.varLib import build
-from fontTools.varLib.builder import buildVarData
+from fontTools.varLib.builder import buildMultiVarData, buildVarData
 import pytest
+
+
+@pytest.mark.parametrize(
+    "region_indices, items",
+    [
+        ([], []),
+        ([], [[]]),
+        ([0], [[100, 0, 0]]),
+        ([0, 1], [[100, 0, 0, 200, 0, 0]]),
+        ([0, 1], [[1, 2], [3, 4, 5, 6]]),
+    ],
+)
+def test_buildMultiVarData(region_indices, items):
+    data = buildMultiVarData(region_indices, items)
+    assert data.Item == items
+    assert data.ItemCount == len(items)
+    assert data.VarRegionIndex == region_indices
+    assert data.VarRegionCount == len(region_indices)
+
+
+@pytest.mark.parametrize("region_indices, item", [([], [1]), ([0, 1], [1, 2, 3])])
+def test_buildMultiVarData_invalid_tuple(region_indices, item):
+    with pytest.raises(AssertionError):
+        buildMultiVarData(region_indices, [item])
 
 
 @pytest.mark.parametrize(
