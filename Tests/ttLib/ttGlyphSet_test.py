@@ -282,6 +282,26 @@ class TTGlyphSetTest(object):
         assert len(pen.value) == 3
 
     @pytest.mark.parametrize(
+        "format, expected_components", [(None, 3), (3, 3), (4, 3), (5, 2)]
+    )
+    def test_glyphset_varComposite_null_condition(self, format, expected_components):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        condition = None
+        if format is not None:
+            condition = ConditionTable()
+            condition.Format = format
+            condition.ConditionTable = None if format == 5 else [None]
+        font["VARC"].table.ConditionList.ConditionTable[0] = condition
+
+        stream = BytesIO()
+        font.save(stream)
+        stream.seek(0)
+        font = TTFont(stream)
+        pen = RecordingPen()
+        font.getGlyphSet()["uniAC01"].draw(pen)
+        assert len(pen.value) == expected_components
+
+    @pytest.mark.parametrize(
         "location, negations, expected_components",
         [({}, 1, 3), ({"wght": 800}, 1, 2), ({}, 2, 2), ({"wght": 800}, 2, 3)],
     )

@@ -506,12 +506,21 @@ class SubsetTest:
         negatedCondition.ConditionTable = makeCondition(4)
         usedCondition = ot.ConditionTable()
         usedCondition.Format = 3
-        usedCondition.ConditionTable = [makeCondition(6), negatedCondition]
+        negatedNull = ot.ConditionTable()
+        negatedNull.Format = 5
+        negatedNull.ConditionTable = None
+        usedCondition.ConditionTable = [
+            None,
+            makeCondition(6),
+            negatedCondition,
+            negatedNull,
+        ]
 
         conditionList = ot.ConditionList()
-        conditionList.ConditionTable = [unusedCondition, usedCondition]
+        conditionList.ConditionTable = [unusedCondition, usedCondition, None]
         varc.ConditionList = conditionList
         varc.VarCompositeGlyphs.VarCompositeGlyph[0].components[0].conditionIndex = 1
+        varc.VarCompositeGlyphs.VarCompositeGlyph[0].components[1].conditionIndex = 2
 
         inputpath = self.temp_path(".ttf")
         font.save(inputpath)
@@ -520,10 +529,13 @@ class SubsetTest:
 
         subsetfont = TTFont(subsetpath)
         varc = subsetfont["VARC"].table
-        assert len(varc.ConditionList.ConditionTable) == 1
+        assert len(varc.ConditionList.ConditionTable) == 2
+        assert varc.ConditionList.ConditionTable[1] is None
         condition = varc.ConditionList.ConditionTable[0]
-        assert condition.ConditionTable[0].VarIdx == 3
-        assert condition.ConditionTable[1].ConditionTable.VarIdx == 2
+        assert condition.ConditionTable[0] is None
+        assert condition.ConditionTable[1].VarIdx == 3
+        assert condition.ConditionTable[2].ConditionTable.VarIdx == 2
+        assert condition.ConditionTable[3].ConditionTable is None
         assert len(varc.MultiVarStore.MultiVarData) == 1
         assert len(varc.MultiVarStore.MultiVarData[0].Item) == 4
 

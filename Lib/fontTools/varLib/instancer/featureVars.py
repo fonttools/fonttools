@@ -16,6 +16,8 @@ def _featureVariationRecordIsUnique(rec, seen):
         rec.ConditionSet.ConditionTable if rec.ConditionSet is not None else []
     )
     for cond in conditionSets:
+        if cond is None:
+            continue
         if cond.Format != 1:
             # can't tell whether this is duplicate, assume is unique
             return True
@@ -66,6 +68,8 @@ def _instantiateFeatureVariationRecord(
         record.ConditionSet.ConditionTable = []
         record.ConditionSet.ConditionCount = 0
     for i, condition in enumerate(record.ConditionSet.ConditionTable):
+        if condition is None:
+            continue
         if condition.Format == 1:
             axisIdx = condition.AxisIndex
             axisTag = fvarAxes[axisIdx].axisTag
@@ -134,6 +138,9 @@ def _trueLookupCondition():
 def _instantiateLookupCondition(
     condition, axisLimits, fvarAxes, axisIndexMap, depth=64
 ):
+    if condition is None:
+        return _LOOKUP_CONDITION_TRUE
+
     if not depth:
         log.warning("LookupVariationRecord condition nesting is too deep; ignored")
         return _LOOKUP_CONDITION_KEEP
@@ -292,6 +299,8 @@ def instantiateLookupVariationConditionValues(
     seen = set()
     while conditions:
         condition = conditions.pop()
+        if condition is None:
+            continue
         if id(condition) in seen:
             continue
         seen.add(id(condition))

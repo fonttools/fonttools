@@ -314,6 +314,10 @@ class _TTGlyphCFF(_TTGlyph):
 
 
 def _evaluateCondition(condition, axes, location, instancer):
+    if condition is None:
+        # A null condition offset denotes True.
+        return True
+
     if condition.Format == 1:
         # ConditionAxisRange
         axisIndex = condition.AxisIndex

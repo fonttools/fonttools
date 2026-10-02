@@ -2851,6 +2851,31 @@ def makeLookupVariationsFont(withVarStore=False):
 
 
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize("format", [None, 3, 4, 5])
+    def test_lookup_variations_null_condition(self, format):
+        font = makeLookupVariationsFont(withVarStore=True)
+        records = (
+            font["GSUB"]
+            .table.FeatureVariations.LookupVariationRecord[0]
+            .FeatureLookupsTable.LookupConditionRecord
+        )
+        condition = None
+        if format is not None:
+            condition = otTables.ConditionTable()
+            condition.Format = format
+            condition.ConditionTable = None if format == 5 else [None]
+        records[0].ConditionTable = condition
+        instancer.instantiateLookupVariationConditionValues(font)
+        instancer.instantiateVariableFont(font, {"wght": 0, "wdth": 0}, inplace=True)
+
+        gsub = font["GSUB"].table
+        assert not hasattr(gsub, "FeatureVariations")
+        lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        expected = {"A": "A.alt"}
+        if format != 5:
+            expected["B"] = "B.alt"
+        assert _getSubstitutions(gsub, lookupIndices) == expected
+
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -3201,14 +3226,21 @@ class InstantiateFeatureVariationsTest(object):
         else:
             assert not gsub.FeatureList.FeatureRecord
 
-    def test_null_conditionset(self):
+    @pytest.mark.parametrize("null_conditionset", [False, True])
+    def test_null_conditionset(self, null_conditionset):
         # A null ConditionSet offset should be treated like an empty ConditionTable, i.e.
         # all contexts are matched; see https://github.com/fonttools/fonttools/issues/3211
         font = makeFeatureVarsFont(
             [([{"wght": (-1.0, 1.0)}], {"uni0024": "uni0024.nostroke"})]
         )
         gsub = font["GSUB"].table
-        gsub.FeatureVariations.FeatureVariationRecord[0].ConditionSet = None
+        record = gsub.FeatureVariations.FeatureVariationRecord[0]
+        if null_conditionset:
+            record.ConditionSet = None
+        else:
+            record.ConditionSet = otTables.ConditionSet()
+            record.ConditionSet.ConditionTable = [None]
+            record.ConditionSet.ConditionCount = 1
 
         location = instancer.NormalizedAxisLimits({"wght": 0.5})
         instancer.instantiateFeatureVariations(font, location)

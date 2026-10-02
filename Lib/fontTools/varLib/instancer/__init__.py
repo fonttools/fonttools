@@ -527,6 +527,8 @@ def _getVARCAxisIndexRecords(varc):
     seen = set()
     while conditions:
         condition = conditions.pop()
+        if condition is None:
+            continue
         if id(condition) in seen:
             continue
         seen.add(id(condition))
