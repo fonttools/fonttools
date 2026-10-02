@@ -86,7 +86,18 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
         self.advanceWidthMax = max(adv for adv, _ in hmtxTable.metrics.values())
 
         boundsWidthDict = {}
-        if self.glyphTableTag in ttFont:
+        if "VARC" in ttFont:
+            from fontTools.pens.boundsPen import BoundsPen
+
+            glyphSet = ttFont.getGlyphSet()
+            for name in ttFont.getGlyphOrder():
+                pen = BoundsPen(glyphSet)
+                glyphSet[name].draw(pen)
+                if pen.bounds is not None:
+                    boundsWidthDict[name] = int(
+                        math.ceil(pen.bounds[2]) - math.floor(pen.bounds[0])
+                    )
+        elif self.glyphTableTag in ttFont:
             glyfTable = ttFont[self.glyphTableTag]
             for name in ttFont.getGlyphOrder():
                 g = glyfTable[name]

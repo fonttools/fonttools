@@ -179,7 +179,7 @@ class _TTGlyphSetVARC(_TTGlyphSet):
         super().__init__(
             font,
             location,
-            glyphSet,
+            dict.fromkeys(font.getGlyphOrder()),
             hMetricsTag=glyphSet._hMetricsTag,
             vMetricsTag=glyphSet._vMetricsTag,
         )
