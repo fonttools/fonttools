@@ -2937,6 +2937,49 @@ def _getFeatureVariationSubstitutions(font, location):
 
 
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize("earlierConditional", [False, True])
+    @pytest.mark.parametrize("compound", [False, True])
+    def test_partial_instance_preserves_universal_first_match(
+        self, earlierConditional, compound
+    ):
+        font = makeLookupVariationsFont()
+        variations = font["GSUB"].table.FeatureVariations
+        variations.Version = 0x00010000
+        del variations.LookupVariationRecord
+        del variations.LookupVariationCount
+
+        def record(condition, lookup):
+            return featureVars.buildFeatureVariationRecord(
+                [condition],
+                [featureVars.buildFeatureTableSubstitutionRecord(0, [lookup])],
+            )
+
+        condition = _lookupVariationCondition(0.25, 1)
+        if compound:
+            condition = _lookupVariationCompoundCondition(3, [condition])
+        records = [
+            record(condition, 1),
+            record(_lookupVariationCondition(0.5, 1, 1), 2),
+        ]
+        if earlierConditional:
+            records.insert(0, record(_lookupVariationCondition(0.75, 1, 1), 3))
+        variations.FeatureVariationRecord = records
+        variations.FeatureVariationCount = len(records)
+        original = deepcopy(font)
+
+        instancer.instantiateVariableFont(font, {"wght": 0.3}, inplace=True)
+
+        # A universal record must block later records, including after saving.
+        compiled = font["GSUB"].compile(font)
+        font["GSUB"] = ttLib.newTable("GSUB")
+        font["GSUB"].decompile(compiled, font)
+        for width in (-1, 0, 0.6, 0.8, 1):
+            assert _getFeatureVariationSubstitutions(font, {"wdth": width}) == (
+                _getFeatureVariationSubstitutions(
+                    original, {"wght": 0.3, "wdth": width}
+                )
+            )
+
     @pytest.mark.parametrize("format", [2, 3, 4, 5])
     @pytest.mark.parametrize(
         "location", [(0, 0), (0.3, 0), (0.3, 0.8), (0.6, 0.8), (0, 0.8)]
@@ -3223,7 +3266,7 @@ class InstantiateFeatureVariationsTest(object):
                         {"cntr": (0.75, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
                     ),
-                    ({}, {}),
+                    ({}, {"uni0024": "uni0024.nostroke"}),
                 ],
             ),
             (
@@ -3242,7 +3285,7 @@ class InstantiateFeatureVariationsTest(object):
                         {"wght": (0.20886, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
                     ),
-                    ({}, {}),
+                    ({}, {"uni0041": "uni0061"}),
                 ],
             ),
             (

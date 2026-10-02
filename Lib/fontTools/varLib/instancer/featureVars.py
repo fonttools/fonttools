@@ -154,16 +154,16 @@ def _instantiateFeatureVariationRecord(
             applies = False
             newConditions.append(condition)
 
-    if newConditions is not None and shouldKeep:
+    # A satisfied condition set can become universal after pinning all of
+    # its axes. It still terminates first-match processing even if dropped.
+    universal = newConditions is not None and not newConditions
+    if newConditions is not None and (shouldKeep or universal):
         record.ConditionSet.ConditionTable = newConditions
         if not newConditions:
             record.ConditionSet = None
-        shouldKeep = True
+        shouldKeep = shouldKeep or bool(axisIndexMap)
     else:
         shouldKeep = False
-
-    # Does this *always* apply?
-    universal = shouldKeep and not newConditions
 
     return applies, shouldKeep, universal
 
