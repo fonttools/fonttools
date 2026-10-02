@@ -1543,7 +1543,10 @@ def test_subset_lookup_variations_keeps_empty_override(featureVarsTestFont):
 
 
 @pytest.mark.parametrize("lookupVariations", [False, True])
-def test_subset_preserves_condition_varstore(featureVarsTestFont, lookupVariations):
+@pytest.mark.parametrize("varIdx", [1, 7, 0x10000])
+def test_subset_preserves_condition_varstore(
+    featureVarsTestFont, lookupVariations, varIdx
+):
     from fontTools.varLib.builder import buildVarData, buildVarRegionList, buildVarStore
     from fontTools.varLib.varStore import VarStoreInstancer
 
@@ -1551,7 +1554,7 @@ def test_subset_preserves_condition_varstore(featureVarsTestFont, lookupVariatio
     value = ot.ConditionTable()
     value.Format = 2
     value.DefaultValue = -1
-    value.VarIdx = 1
+    value.VarIdx = varIdx
     negate = ot.ConditionTable()
     negate.Format = 5
     negate.ConditionTable = value
@@ -1584,8 +1587,12 @@ def test_subset_preserves_condition_varstore(featureVarsTestFont, lookupVariatio
     subsetter = subset.Subsetter()
     subsetter.populate(unicodes=[ord("f"), ord("$")])
     subsetter.subset(font)
-    assert value.VarIdx == 0
-    assert font["GDEF"].table.VarStore.VarData[0].Item == [[2]]
+    if varIdx == 1:
+        assert value.VarIdx == 0
+        assert font["GDEF"].table.VarStore.VarData[0].Item == [[2]]
+    else:
+        assert value.VarIdx == ot.NO_VARIATION_INDEX
+        assert "GDEF" not in font
 
     output = io.BytesIO()
     font.save(output)
@@ -1601,11 +1608,13 @@ def test_subset_preserves_condition_varstore(featureVarsTestFont, lookupVariatio
     else:
         condition = variations.FeatureVariationRecord[0].ConditionSet.ConditionTable[0]
     value = condition.ConditionTable[1].ConditionTable
-    assert value.VarIdx == 0
+    assert value.VarIdx == (0 if varIdx == 1 else ot.NO_VARIATION_INDEX)
     evaluator = VarStoreInstancer(
-        roundtripped["GDEF"].table.VarStore, roundtripped["fvar"].axes, {"wght": 1}
+        roundtripped["GDEF"].table.VarStore if "GDEF" in roundtripped else None,
+        roundtripped["fvar"].axes,
+        {"wght": 1},
     )
-    assert value.DefaultValue + evaluator[value.VarIdx] == 1
+    assert value.DefaultValue + evaluator[value.VarIdx] == (1 if varIdx == 1 else -1)
 
 
 def test_subset_lookup_variations_prevents_feature_dedup(featureVarsTestFont):

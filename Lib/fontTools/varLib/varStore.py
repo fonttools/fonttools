@@ -415,7 +415,7 @@ def _Device_mapVarIdx(self, mapping, done):
         return
     done.add(id(self))
     if isinstance(self, ot.ConditionTable):
-        self.VarIdx = mapping[self.VarIdx]
+        self.VarIdx = mapping.get(self.VarIdx, NO_VARIATION_INDEX)
     elif self.DeltaFormat == 0x8000:
         varIdx = mapping[(self.StartSize << 16) + self.EndSize]
         self.StartSize = varIdx >> 16

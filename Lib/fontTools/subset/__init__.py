@@ -2386,6 +2386,13 @@ def _pruneGDEF(font):
             font[tag].table.collect_device_varidxes(usedVarIdxes)
 
     # Subset.
+    # Missing condition delta sets contribute zero, just like NO_VARIATION_INDEX.
+    usedVarIdxes = {
+        index
+        for index in usedVarIdxes
+        if index >> 16 < len(store.VarData)
+        and index & 0xFFFF < len(store.VarData[index >> 16].Item)
+    }
     varidx_map = store.subset_varidxes(usedVarIdxes)
 
     # Map.
