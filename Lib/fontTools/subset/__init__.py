@@ -2917,6 +2917,7 @@ def closure_glyphs(self, s):
         for glyphName in oldNew:
             if glyphName in covered:
                 continue
+            covered.add(glyphName)
             idx = glyphMap.get(glyphName)
             if idx is None:
                 continue

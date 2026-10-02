@@ -6,6 +6,7 @@ from fontTools.misc.textTools import tobytes, tostr
 from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables._g_l_y_f import Glyph
@@ -21,6 +22,7 @@ import tempfile
 import unittest
 import pathlib
 import pytest
+from types import SimpleNamespace
 
 
 class SubsetTest:
@@ -487,6 +489,56 @@ class SubsetTest:
         assert len(varc.MultiVarStore.MultiVarData) == 1
         assert len(varc.MultiVarStore.MultiVarData[0].Item) == 5
         assert len(varc.MultiVarStore.SparseVarRegionList.Region) == 3
+
+    @pytest.mark.parametrize(
+        "edges",
+        [
+            {"a": ["a"]},
+            {"a": ["b"], "b": ["a"]},
+            {"a": ["b", "c"], "b": ["d"], "c": ["d"], "d": []},
+        ],
+    )
+    def test_varComposite_closure_visited(self, edges):
+        varc = newTable("VARC")
+        varc.table = ot.VARC()
+        varc.table.Coverage = ot.Coverage()
+        varc.table.Coverage.glyphs = list(edges)
+        varc.table.VarCompositeGlyphs = ot.VarCompositeGlyphs()
+        records = varc.table.VarCompositeGlyphs.VarCompositeGlyph = []
+        for names in edges.values():
+            glyph = ot.VarCompositeGlyph()
+            glyph.components = []
+            for name in names:
+                component = ot.VarComponent()
+                component.glyphName = name
+                glyph.components.append(component)
+            records.append(glyph)
+        state = SimpleNamespace(glyphs={"a"})
+        varc.closure_glyphs(state)
+        assert state.glyphs == set(edges)
+
+    def test_varComposite_self_reference_subset(self):
+        font = TTFont(self.getpath("..", "..", "cffLib", "data", "varc-short-cff2.otf"))
+        varc = font["VARC"].table
+        varc.Coverage.glyphs.insert(0, "leaf")
+        component = ot.VarComponent()
+        component.glyphName = "leaf"
+        glyph = ot.VarCompositeGlyph()
+        glyph.components = [component]
+        varc.VarCompositeGlyphs.VarCompositeGlyph.insert(0, glyph)
+
+        sub = subset.Subsetter()
+        sub.populate(glyphs=["composite"])
+        sub.subset(font)
+        data = io.BytesIO()
+        font.save(data)
+        font = TTFont(io.BytesIO(data.getvalue()))
+        glyphSet = font.getGlyphSet()
+        composite = font.getBestCmap()[65]
+        pen = BoundsPen(glyphSet)
+        glyphSet[composite].draw(pen)
+        assert pen.bounds == (600, 0, 800, 200)
+        assert len(font["VARC"].table.Coverage.glyphs) == 2
 
     def test_varComposite_condition_varidx(self):
         fontpath = self.getpath("..", "..", "ttLib", "data", "varc-ac00-ac01.ttf")
@@ -1465,11 +1517,13 @@ def featureVarsTestFont():
     fb.setupNameTable({"familyName": "TestFeatureVars", "styleName": "Regular"})
     fb.setupPost()
     fb.setupFvar(axes=[("wght", 100, 400, 900, "Weight")], instances=[])
-    fb.addOpenTypeFeatures("""\
+    fb.addOpenTypeFeatures(
+        """\
         feature dlig {
             sub f f by f_f;
         } dlig;
-    """)
+    """
+    )
     fb.addFeatureVariations(
         [([{"wght": (0.20886, 1.0)}], {"dollar": "dollar.rvrn"})], featureTag="rvrn"
     )
@@ -1732,13 +1786,15 @@ def singlepos2_font():
     fb.setupCharacterMap({ord("a"): "a", ord("b"): "b", ord("c"): "c"})
     fb.setupNameTable({"familyName": "TestSingePosFormat", "styleName": "Regular"})
     fb.setupPost()
-    fb.addOpenTypeFeatures("""
+    fb.addOpenTypeFeatures(
+        """
         feature kern {
             pos a -50;
             pos b -40;
             pos c -50;
         } kern;
-    """)
+    """
+    )
 
     buf = io.BytesIO()
     fb.save(buf)
@@ -2387,7 +2443,8 @@ def test_subset_keep_size_drop_empty_stylistic_set():
     fb.setupOS2()
     fb.setupPost()
     fb.setupNameTable({"familyName": "TestKeepSizeFeature", "styleName": "Regular"})
-    fb.addOpenTypeFeatures("""
+    fb.addOpenTypeFeatures(
+        """
         feature size {
           parameters 10.0 0;
         } size;
@@ -2397,7 +2454,8 @@ def test_subset_keep_size_drop_empty_stylistic_set():
           };
           sub b by b.ss01;
         } ss01;
-    """)
+    """
+    )
 
     buf = io.BytesIO()
     fb.save(buf)
@@ -2542,7 +2600,8 @@ def test_subset_prune_gdef_markglyphsetsdef():
     fb.setupNameTable(
         {"familyName": "TestGDEFMarkGlyphSetsDef", "styleName": "Regular"}
     )
-    fb.addOpenTypeFeatures("""
+    fb.addOpenTypeFeatures(
+        """
         feature ccmp {
             lookup ccmp_1 {
                 lookupflag UseMarkFilteringSet [acutecomb];
@@ -2561,7 +2620,8 @@ def test_subset_prune_gdef_markglyphsetsdef():
                 sub A acutecomb by Aacute;
             } ccmp_3;
         } ccmp;
-    """)
+    """
+    )
 
     buf = io.BytesIO()
     fb.save(buf)
