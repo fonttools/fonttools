@@ -54,7 +54,9 @@ def _limitFeatureVariationConditionRange(condition, axisLimit):
     )
 
 
-def _conditionAppliesAtDefault(condition, axisLimits, fvarAxes, depth=64):
+def _conditionAppliesAtDefault(
+    condition, axisLimits, fvarAxes, depth=64, instancer=None
+):
     if condition is None:
         return True
     if not depth:
@@ -66,17 +68,21 @@ def _conditionAppliesAtDefault(condition, axisLimits, fvarAxes, depth=64):
         default = axisLimits[axisTag].default if axisTag in axisLimits else 0
         return condition.FilterRangeMinValue <= default <= condition.FilterRangeMaxValue
     if condition.Format == 2:
-        # instantiateOTL has already moved the default deltas into DefaultValue.
-        return condition.DefaultValue > 0
+        value = condition.DefaultValue
+        if instancer is not None:
+            value += instancer[condition.VarIdx]
+        return value > 0
     if condition.Format in (3, 4):
         values = (
-            _conditionAppliesAtDefault(child, axisLimits, fvarAxes, depth - 1)
+            _conditionAppliesAtDefault(
+                child, axisLimits, fvarAxes, depth - 1, instancer
+            )
             for child in condition.ConditionTable
         )
         return all(values) if condition.Format == 3 else any(values)
     if condition.Format == 5:
         return not _conditionAppliesAtDefault(
-            condition.ConditionTable, axisLimits, fvarAxes, depth - 1
+            condition.ConditionTable, axisLimits, fvarAxes, depth - 1, instancer
         )
     return False
 
@@ -307,9 +313,7 @@ def _instantiateLookupVariations(
     variations.LookupVariationCount = len(newRecords)
 
 
-def instantiateLookupVariationConditionValues(
-    varfont, defaultDeltas=None, varIndexMapping=None, *, done=None
-):
+def _iterLookupVariationConditions(varfont, done=None):
     conditions = []
     for tableTag in ("GSUB", "GPOS"):
         if tableTag not in varfont:
@@ -332,7 +336,18 @@ def instantiateLookupVariationConditionValues(
         if id(condition) in seen:
             continue
         seen.add(id(condition))
+        yield condition
 
+        if condition.Format in (3, 4):
+            conditions.extend(condition.ConditionTable)
+        elif condition.Format == 5:
+            conditions.append(condition.ConditionTable)
+
+
+def instantiateLookupVariationConditionValues(
+    varfont, defaultDeltas=None, varIndexMapping=None, *, done=None
+):
+    for condition in _iterLookupVariationConditions(varfont, done):
         if condition.Format == 2:
             varIdx = condition.VarIdx
             newVarIdx = (
@@ -351,10 +366,6 @@ def instantiateLookupVariationConditionValues(
                 )
             if varIndexMapping is not None:
                 condition.VarIdx = newVarIdx
-        elif condition.Format in (3, 4):
-            conditions.extend(condition.ConditionTable)
-        elif condition.Format == 5:
-            conditions.append(condition.ConditionTable)
 
 
 def _instantiateFeatureVariations(
@@ -431,6 +442,12 @@ def _instantiateFeatureVariations(
 
 
 def instantiateFeatureVariations(varfont, axisLimits):
+    from fontTools.varLib.varStore import VarStoreInstancer
+
+    store = (
+        getattr(varfont["GDEF"].table, "VarStore", None) if "GDEF" in varfont else None
+    )
+    defaultInstancer = VarStoreInstancer(store, varfont["fvar"].axes, {})
     conditionResults = {}
     conditionDefaults = {}
     # Record default applicability before any shared condition is modified.
@@ -445,7 +462,10 @@ def instantiateFeatureVariations(varfont, axisLimits):
                 key = id(condition)
                 if key not in conditionDefaults:
                     conditionDefaults[key] = _conditionAppliesAtDefault(
-                        condition, axisLimits, varfont["fvar"].axes
+                        condition,
+                        axisLimits,
+                        varfont["fvar"].axes,
+                        instancer=defaultInstancer,
                     )
     for tableTag in ("GPOS", "GSUB"):
         if tableTag not in varfont or not getattr(

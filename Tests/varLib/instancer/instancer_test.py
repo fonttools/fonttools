@@ -2955,6 +2955,142 @@ def _getFeatureVariationSubstitutions(font, location):
 class InstantiateFeatureVariationsTest(object):
     @pytest.mark.parametrize("tableTag", ["GSUB", "GPOS"])
     @pytest.mark.parametrize("legacy", [False, True])
+    @pytest.mark.parametrize("wrapper", ["value", "and", "or", "not"])
+    @pytest.mark.parametrize(
+        "default,deltas,pinned,peak,tensor",
+        [
+            (0, [1, -1], 0.25, 1, False),
+            (1, [-1, -1], 0.75, 1, False),
+            (0, [1, -1], 0.25, 1, True),
+            (32767, [1, -32768], 0.25, 1, False),
+            (0, [1, -1], 0.25, 0.75, False),
+        ],
+    )
+    def test_fractional_condition_remaining_variable(
+        self, tableTag, legacy, wrapper, default, deltas, pinned, peak, tensor
+    ):
+        from fontTools.ttLib.ttGlyphSet import _evaluateCondition
+
+        font = makeLookupVariationsFont(withVarStore=True)
+        variations = font["GSUB"].table.FeatureVariations
+        addOpenTypeFeaturesFromString(
+            font,
+            """
+            lookup Default { pos A 10; } Default;
+            lookup Conditional { pos B 20; } Conditional;
+            feature kern { lookup Default; } kern;
+            feature zzzz { lookup Conditional; } zzzz;
+            """,
+            tables=["GPOS"],
+        )
+        # A positioning value shares the condition's source variation row.
+        position = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+        position.Value.XAdvDevice = builder.buildVarDevTable(0)
+        position.ValueFormat |= 0x40
+        if tableTag == "GPOS":
+            del font["GSUB"]
+            font["GPOS"].table.FeatureVariations = variations
+            font["GPOS"].table.Version = 0x00010001
+        region = {"wdth": (0, 1, 1)}
+        if tensor:
+            region["wght"] = (0, peak, 1)
+        font["GDEF"].table.VarStore = builder.buildVarStore(
+            builder.buildVarRegionList(
+                [{"wght": (0, peak, 1)}, region], ["wght", "wdth"]
+            ),
+            [builder.buildVarData([0, 1], [deltas])],
+        )
+        value = _lookupVariationValueCondition(default, 0)
+        if wrapper in ("and", "or"):
+            condition = _lookupVariationCompoundCondition(
+                3 if wrapper == "and" else 4, [value, value]
+            )
+        elif wrapper == "not":
+            condition = otTables.ConditionTable()
+            condition.Format = 5
+            condition.ConditionTable = value
+        else:
+            condition = value
+        if legacy:
+            variations.Version = 0x00010000
+            variations.FeatureVariationRecord = [
+                featureVars.buildFeatureVariationRecord(
+                    [condition],
+                    [featureVars.buildFeatureTableSubstitutionRecord(0, [1])],
+                )
+            ]
+            variations.FeatureVariationCount = 1
+            del variations.LookupVariationRecord
+            del variations.LookupVariationCount
+        else:
+            lookups = variations.LookupVariationRecord[0].FeatureLookupsTable
+            lookups.LookupConditionRecord = [_lookupVariationRecord(condition, [1])]
+            lookups.LookupConditionCount = 1
+
+        original = deepcopy(font)
+        instancer.instantiateVariableFont(font, {"wght": pinned}, inplace=True)
+        # Exercise the serialized integer fields, not just the Python objects.
+        for tag in ("GDEF", tableTag, "GPOS"):
+            data = font[tag].compile(font)
+            table = ttLib.newTable(tag)
+            table.decompile(data, font)
+            font[tag] = table
+
+        variations = font[tableTag].table.FeatureVariations
+        if legacy:
+            condition = variations.FeatureVariationRecord[
+                0
+            ].ConditionSet.ConditionTable[0]
+        else:
+            condition = (
+                variations.LookupVariationRecord[0]
+                .FeatureLookupsTable.LookupConditionRecord[0]
+                .ConditionTable
+            )
+        for coordinate in (
+            0,
+            0.125,
+            0.25,
+            0.33331298828125,
+            0.3333740234375,
+            0.5,
+            16383 / 16384,
+            1,
+        ):
+            sourceEvaluator = varStore.VarStoreInstancer(
+                original["GDEF"].table.VarStore,
+                original["fvar"].axes,
+                {"wght": pinned, "wdth": coordinate},
+            )
+            evaluator = varStore.VarStoreInstancer(
+                font["GDEF"].table.VarStore, font["fvar"].axes, {"wdth": coordinate}
+            )
+            indices = set()
+            font[tableTag].table.collect_device_varidxes(indices)
+            values = {index: [evaluator[index]] for index in indices}
+            positive = default + sourceEvaluator[0] > 0
+            expected = not positive if wrapper == "not" else positive
+            assert (
+                _evaluateCondition(
+                    condition, font["fvar"].axes, {"wdth": coordinate}, values
+                )
+                == expected
+            )
+            if not tensor:
+                position = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+                device = position.Value.XAdvDevice
+                varIdx = (device.StartSize << 16) | device.EndSize
+                assert evaluator[varIdx] == deltas[1] * coordinate
+            if legacy and tableTag == "GSUB":
+                full = instancer.instantiateVariableFont(font, {"wdth": coordinate})
+                assert _getFeatureVariationSubstitutions(
+                    full, {}
+                ) == _getFeatureVariationSubstitutions(
+                    original, {"wght": pinned, "wdth": coordinate}
+                )
+
+    @pytest.mark.parametrize("tableTag", ["GSUB", "GPOS"])
+    @pytest.mark.parametrize("legacy", [False, True])
     @pytest.mark.parametrize("partial", [False, True])
     @pytest.mark.parametrize("wrapper", ["value", "and", "or", "not"])
     @pytest.mark.parametrize(

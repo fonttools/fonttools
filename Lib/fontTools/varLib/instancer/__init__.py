@@ -127,6 +127,7 @@ from fontTools.varLib.varStore import NO_VARIATION_INDEX
 from .featureVars import (
     instantiateFeatureVariations,
     instantiateLookupVariationConditionValues,
+    _iterLookupVariationConditions,
 )
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
@@ -137,6 +138,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from enum import IntEnum
 import logging
+import math
 import os
 import re
 import io
@@ -574,7 +576,7 @@ def instantiateVARC(varfont, axisLimits):
 
 
 def instantiateTupleVariationStore(
-    variations, axisLimits, origCoords=None, endPts=None
+    variations, axisLimits, origCoords=None, endPts=None, *, round=True
 ):
     """Instantiate TupleVariation list at the given location, or limit axes' min/max.
 
@@ -603,6 +605,7 @@ def instantiateTupleVariationStore(
         origCoords: GlyphCoordinates: default instance's coordinates for computing 'gvar'
             inferred points (cf. table__g_l_y_f._getCoordinatesAndControls).
         endPts: List[int]: indices of contour end points, for inferring 'gvar' deltas.
+        round: whether to round the surviving deltas to integers.
 
     Returns:
         List[float]: the overall delta adjustment after applicable deltas were summed.
@@ -627,8 +630,9 @@ def instantiateTupleVariationStore(
     # its deltas will be added to the default instance's coordinates
     defaultVar = mergedVariations.pop(frozenset(), None)
 
-    for var in mergedVariations.values():
-        var.roundDeltas()
+    if round:
+        for var in mergedVariations.values():
+            var.roundDeltas()
     variations[:] = list(mergedVariations.values())
 
     return defaultVar.coordinates if defaultVar is not None else []
@@ -1276,10 +1280,12 @@ class _TupleVarStoreAdapter(object):
             newRegions.extend(dict(region) for region in uniqueRegions)
         self.regions = newRegions
 
-    def instantiate(self, axisLimits):
+    def instantiate(self, axisLimits, *, round=True):
         defaultDeltaArray = []
         for variations, itemCount in zip(self.tupleVarData, self.itemCounts):
-            defaultDeltas = instantiateTupleVariationStore(variations, axisLimits)
+            defaultDeltas = instantiateTupleVariationStore(
+                variations, axisLimits, round=round
+            )
             if not defaultDeltas:
                 defaultDeltas = [0] * itemCount
             defaultDeltaArray.append(defaultDeltas)
@@ -1318,8 +1324,58 @@ class _TupleVarStoreAdapter(object):
         return itemVarStore
 
 
+def _instantiateConditionValueRows(tupleVarStore, defaultDeltaArray, conditions):
+    for condition in conditions:
+        varIdx = condition.VarIdx
+        if varIdx == NO_VARIATION_INDEX:
+            continue
+        major, minor = varIdx >> 16, varIdx & 0xFFFF
+        if (
+            major >= len(tupleVarStore.tupleVarData)
+            or minor >= tupleVarStore.itemCounts[major]
+        ):
+            continue
+        variations = tupleVarStore.tupleVarData[major]
+        deltas = [var.coordinates[minor] for var in variations]
+        if not any(deltas):
+            continue
+        value = condition.DefaultValue + defaultDeltaArray[major][minor]
+        values = [value, *deltas]
+        maximum = max(abs(v) for v in values)
+        shift = 0
+        while math.ldexp(maximum, shift) > 0x7FFFFFFF:
+            shift -= 1
+        # A positive rescaling preserves the Boolean boundary. Prefer an exact
+        # integer encoding; otherwise use the available 32-bit precision.
+        while (
+            any(math.ldexp(v, shift) != otRound(math.ldexp(v, shift)) for v in values)
+            and math.ldexp(maximum, shift) * 2 <= 0x7FFFFFFF
+        ):
+            shift += 1
+        default = otRound(math.ldexp(value, shift))
+        if shift == 0 and -0x8000 <= default <= 0x7FFF:
+            continue
+        if len(tupleVarStore.tupleVarData) >= 0xFFFF:
+            raise ValueError("Too many variation subtables for a private condition row")
+        # Conditions can share their source row with positioning values, which
+        # must not be rescaled. Append a private copy before rounding those rows.
+        private = [
+            TupleVariation(dict(var.axes), [otRound(math.ldexp(delta, shift))])
+            for var, delta in zip(variations, deltas)
+            if delta
+        ]
+        if not -0x8000 <= default <= 0x7FFF:
+            private.append(TupleVariation({}, [default]))
+            default = 0
+        condition.DefaultValue = default
+        condition.VarIdx = len(tupleVarStore.tupleVarData) << 16
+        tupleVarStore.tupleVarData.append(private)
+        tupleVarStore.itemCounts.append(1)
+        defaultDeltaArray.append([0])
+
+
 def instantiateItemVariationStore(
-    itemVarStore, fvarAxes, axisLimits, hierarchical=False
+    itemVarStore, fvarAxes, axisLimits, hierarchical=False, *, conditionValues=()
 ):
     """Compute deltas at partial location, and update varStore in-place.
 
@@ -1328,7 +1384,8 @@ def instantiateItemVariationStore(
     were instanced.
 
     The number of VarData subtables, and the number of items within each, are
-    not modified, in order to keep the existing VariationIndex valid.
+    not modified, in order to keep the existing VariationIndex valid, except
+    that private rows may be appended for conditionValues.
     One may call VarStore.optimize() method after this to further optimize those.
 
     Args:
@@ -1337,19 +1394,31 @@ def instantiateItemVariationStore(
         axisLimits: NormalizedAxisLimits: mapping axis tags to normalized
             min/default/max axis coordinates. May not specify coordinates/ranges for
             all the fvar axes.
+        conditionValues: format-2 layout conditions needing private rescaled rows.
 
     Returns:
         defaultDeltas: to be added to the default instance, of type dict of floats
             keyed by VariationIndex compound values: i.e. (outer << 16) + inner.
     """
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(itemVarStore, fvarAxes)
-    defaultDeltaArray = tupleVarStore.instantiate(axisLimits)
+    defaultDeltaArray = tupleVarStore.instantiate(axisLimits, round=not conditionValues)
+    if conditionValues:
+        _instantiateConditionValueRows(
+            tupleVarStore, defaultDeltaArray, conditionValues
+        )
+        for variations in tupleVarStore.tupleVarData:
+            for var in variations:
+                var.roundDeltas()
+        tupleVarStore.rebuildRegions()
     newItemVarStore = tupleVarStore.asItemVarStore()
 
     itemVarStore.VarRegionList = newItemVarStore.VarRegionList
     if not hasattr(itemVarStore, "VarDataCount"):  # Happens fromXML
         itemVarStore.VarDataCount = len(newItemVarStore.VarData)
-    assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
+    if conditionValues:
+        itemVarStore.VarDataCount = newItemVarStore.VarDataCount
+    else:
+        assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
     itemVarStore.VarData = newItemVarStore.VarData
 
     if not hierarchical:
@@ -1417,7 +1486,14 @@ def instantiateOTL(varfont, axisLimits):
     varStore = gdef.VarStore
     fvarAxes = varfont["fvar"].axes
 
-    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+    conditions = [
+        condition
+        for condition in _iterLookupVariationConditions(varfont)
+        if condition.Format == 2
+    ]
+    defaultDeltas = instantiateItemVariationStore(
+        varStore, fvarAxes, axisLimits, conditionValues=conditions
+    )
 
     # When VF are built, big lookups may overflow and be broken into multiple
     # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
