@@ -390,6 +390,73 @@ class TTGlyphSetTest(object):
         assert outlines_and_metrics(reloaded) == expected
 
     @pytest.mark.parametrize(
+        "fontfile",
+        [
+            "I.ttf",
+            "I.otf",
+            "varc-ac01-conditional.ttf",
+            "../../cffLib/data/varc-short-cff2.otf",
+        ],
+    )
+    @pytest.mark.parametrize("uppercase", [False, True])
+    @pytest.mark.parametrize("mapped", [False, True])
+    @pytest.mark.parametrize("hvar", [False, True])
+    def test_glyphset_vvar_height(self, fontfile, uppercase, mapped, hvar):
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables as ot
+        from fontTools.varLib.builder import (
+            buildVarData,
+            buildVarIdxMap,
+            buildVarRegionList,
+            buildVarStore,
+        )
+
+        font = TTFont(self.getpath(fontfile))
+        builder = FontBuilder(font=font)
+        if "fvar" not in font:
+            builder.setupFvar([("TEST", 0, 0, 1, "Test")], [])
+        order = font.getGlyphOrder()
+        builder.setupVerticalMetrics({name: (1000, 20) for name in order})
+        builder.setupVerticalHeader()
+        axes = [axis.axisTag for axis in font["fvar"].axes]
+        deltas = [100 + gid * 20 for gid in range(len(order))]
+        regions = buildVarRegionList([{axes[0]: (0, 1, 1)}], axes)
+        font["VVAR"] = newTable("VVAR")
+        vvar = font["VVAR"].table = ot.VVAR()
+        vvar.Version = 0x00010000
+        vvar.VarStore = buildVarStore(
+            regions, [buildVarData([0], [[d] for d in deltas])]
+        )
+        indices = (
+            list(reversed(range(len(order)))) if mapped else list(range(len(order)))
+        )
+        vvar.AdvHeightMap = buildVarIdxMap(indices, order) if mapped else None
+        vvar.TsbMap = vvar.BsbMap = vvar.VOrgMap = None
+        if hvar and "HVAR" not in font:
+            font["HVAR"] = newTable("HVAR")
+            table = font["HVAR"].table = ot.HVAR()
+            table.Version = 0x00010000
+            table.VarStore = buildVarStore(
+                regions, [buildVarData([0], [[0]] * len(order))]
+            )
+            table.AdvWidthMap = table.LsbMap = table.RsbMap = None
+        elif not hvar and "HVAR" in font:
+            del font["HVAR"]
+        if uppercase:
+            upper_tables(font)
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        glyphset = font.getGlyphSet(location={axes[0]: 0.5}, normalized=True)
+        for gid, name in enumerate(order):
+            glyph = glyphset[name]
+            expected = 1000 + deltas[indices[gid]] / 2
+            assert glyph.height == expected
+            glyph.draw(DecomposingRecordingPen(glyphset))
+            assert glyph.height == expected
+
+    @pytest.mark.parametrize(
         "format, expected_components", [(None, 3), (3, 3), (4, 3), (5, 2)]
     )
     def test_glyphset_varComposite_null_condition(self, format, expected_components):

@@ -68,6 +68,7 @@ class _TTGlyphSet(Mapping):
         self.hMetrics = font[hMetricsTag].metrics
         self.vMetrics = getattr(font.get(vMetricsTag), "metrics", None)
         self.hvarTable = None
+        self.vvarTable = None
         if location:
             from fontTools.varLib.varStore import VarStoreInstancer
 
@@ -76,7 +77,12 @@ class _TTGlyphSet(Mapping):
                 self.hvarInstancer = VarStoreInstancer(
                     self.hvarTable.VarStore, self.axes, location
                 )
-            # TODO VVAR, VORG
+            self.vvarTable = getattr(font.get("VVAR"), "table", None)
+            if self.vvarTable is not None:
+                self.vvarInstancer = VarStoreInstancer(
+                    self.vvarTable.VarStore, self.axes, location
+                )
+            # TODO VORG
 
     @contextmanager
     def pushLocation(self, location, reset: bool):
@@ -224,7 +230,14 @@ class _TTGlyph(ABC):
                 else glyphSet.hvarTable.AdvWidthMap.mapping[glyphName]
             )
             self.width += glyphSet.hvarInstancer[varidx]
-        # TODO: VVAR/VORG
+        if self.height is not None and glyphSet.vvarTable is not None:
+            varidx = (
+                glyphSet.font.getGlyphID(glyphName)
+                if glyphSet.vvarTable.AdvHeightMap is None
+                else glyphSet.vvarTable.AdvHeightMap.mapping[glyphName]
+            )
+            self.height += glyphSet.vvarInstancer[varidx]
+        # TODO: VORG
 
     @abstractmethod
     def draw(self, pen):
@@ -315,6 +328,7 @@ class _TTGlyphGlyf(_TTGlyph):
         if glyphSet.hvarTable is None:
             # no HVAR: let's set metrics from the phantom points
             self.width = width
+        if glyphSet.vvarTable is None:
             self.height = height
         return glyph
 
