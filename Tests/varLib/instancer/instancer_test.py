@@ -2937,6 +2937,88 @@ def _getFeatureVariationSubstitutions(font, location):
 
 
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize("legacy", [False, True])
+    @pytest.mark.parametrize("limits", [{"wght": 0.3}, {"wdth": (-0.5, 0.25, 1)}])
+    def test_shared_conditions_remapped_once(self, legacy, limits):
+        from fontTools.ttLib.ttGlyphSet import _evaluateCondition
+
+        font = makeLookupVariationsFont()
+        variations = font["GSUB"].table.FeatureVariations
+        shared = _lookupVariationCondition(0.5, 1, 1)
+        conditions = [
+            _lookupVariationCompoundCondition(3, [shared, shared]),
+            _lookupVariationCompoundCondition(4, [shared]),
+        ]
+        if legacy:
+            variations.FeatureVariationRecord = [
+                featureVars.buildFeatureVariationRecord(
+                    [condition],
+                    [featureVars.buildFeatureTableSubstitutionRecord(0, [index])],
+                )
+                for condition, index in zip(conditions, (1, 2))
+            ]
+            variations.FeatureVariationCount = 2
+            variations.LookupVariationRecord = []
+            variations.LookupVariationCount = 0
+        else:
+            lookups = variations.LookupVariationRecord[0].FeatureLookupsTable
+            lookups.LookupConditionRecord = [
+                _lookupVariationRecord(condition, [index])
+                for condition, index in zip(conditions, (1, 2))
+            ]
+            lookups.LookupConditionCount = 2
+
+        # Share a root across GSUB and GPOS, which are instanced in sequence.
+        other = ttLib.TTFont()
+        other.setGlyphOrder(font.getGlyphOrder())
+        addOpenTypeFeaturesFromString(other, "feature kern { pos B 10; } kern;")
+        font["GPOS"] = other["GPOS"]
+        gpos = font["GPOS"].table
+        gpos.Version = 0x00010001
+        gpos.FeatureVariations = otTables.FeatureVariations()
+        fv = gpos.FeatureVariations
+        fv.Version = 0x00010000
+        fv.FeatureVariationRecord = [
+            featureVars.buildFeatureVariationRecord(
+                [conditions[0]],
+                [featureVars.buildFeatureTableSubstitutionRecord(0, [0])],
+            )
+        ]
+        fv.FeatureVariationCount = 1
+        original = deepcopy(font)
+
+        instancer.instantiateVariableFont(font, limits, inplace=True)
+
+        for tag in ("GSUB", "GPOS"):
+            data = font[tag].compile(font)
+            font[tag] = ttLib.newTable(tag)
+            font[tag].decompile(data, font)
+        if "wght" in limits:
+            locations = [({"wdth": w}, {"wght": 0.3, "wdth": w}) for w in (0, 0.8)]
+        else:
+            locations = [({"wdth": w}, {"wdth": old}) for w, old in ((0, 0.25), (1, 1))]
+        for location, oldLocation in locations:
+            if legacy:
+                assert _getFeatureVariationSubstitutions(font, location) == (
+                    _getFeatureVariationSubstitutions(original, oldLocation)
+                )
+            else:
+                records = (
+                    font["GSUB"]
+                    .table.FeatureVariations.LookupVariationRecord[0]
+                    .FeatureLookupsTable.LookupConditionRecord
+                )
+                selected = [
+                    r.LookupIndexList.LookupIndex[0]
+                    for r in records
+                    if _evaluateCondition(
+                        r.ConditionTable, font["fvar"].axes, location, {}
+                    )
+                ]
+                assert _getSubstitutions(font["GSUB"].table, selected) == (
+                    {"B": "B.alt", "C": "C.alt"} if oldLocation["wdth"] >= 0.5 else {}
+                )
+
     @pytest.mark.parametrize("earlierConditional", [False, True])
     @pytest.mark.parametrize("compound", [False, True])
     def test_partial_instance_preserves_universal_first_match(

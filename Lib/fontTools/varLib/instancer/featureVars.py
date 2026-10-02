@@ -82,14 +82,17 @@ def _conditionAppliesAtDefault(condition, axisLimits, fvarAxes, depth=64):
 
 
 def _instantiateFeatureVariationRecord(
-    record, recIdx, axisLimits, fvarAxes, axisIndexMap
+    record,
+    recIdx,
+    axisLimits,
+    fvarAxes,
+    axisIndexMap,
+    conditionResults,
+    conditionDefaults,
 ):
     applies = True
     shouldKeep = False
     newConditions = []
-    from fontTools.varLib.instancer import NormalizedAxisTripleAndDistances
-
-    default_triple = NormalizedAxisTripleAndDistances(-1, 0, +1)
     if record.ConditionSet is None:
         record.ConditionSet = ot.ConditionSet()
         record.ConditionSet.ConditionTable = []
@@ -97,45 +100,10 @@ def _instantiateFeatureVariationRecord(
     for i, condition in enumerate(record.ConditionSet.ConditionTable):
         if condition is None:
             continue
-        if condition.Format == 1:
-            axisIdx = condition.AxisIndex
-            axisTag = fvarAxes[axisIdx].axisTag
-
-            minValue = condition.FilterRangeMinValue
-            maxValue = condition.FilterRangeMaxValue
-            triple = axisLimits.get(axisTag, default_triple)
-
-            if not (minValue <= triple.default <= maxValue):
-                applies = False
-
-            # if condition not met, remove entire record
-            if triple.minimum > maxValue or triple.maximum < minValue:
-                newConditions = None
-                break
-
-            if axisTag in axisIndexMap:
-                # remap axis index
-                condition.AxisIndex = axisIndexMap[axisTag]
-
-                # remap condition limits
-                newRange = _limitFeatureVariationConditionRange(condition, triple)
-                if newRange:
-                    # keep condition with updated limits
-                    minimum, maximum = newRange
-                    condition.FilterRangeMinValue = minimum
-                    condition.FilterRangeMaxValue = maximum
-                    shouldKeep = True
-                    if minimum != -1 or maximum != +1:
-                        newConditions.append(condition)
-                else:
-                    # condition out of range, remove entire record
-                    newConditions = None
-                    break
-
-        elif condition.Format in (2, 3, 4, 5):
-            applies &= _conditionAppliesAtDefault(condition, axisLimits, fvarAxes)
+        if condition.Format in (1, 2, 3, 4, 5):
+            applies &= conditionDefaults[id(condition)]
             result = _instantiateLookupCondition(
-                condition, axisLimits, fvarAxes, axisIndexMap
+                condition, axisLimits, fvarAxes, axisIndexMap, conditionResults
             )
             if result == _LOOKUP_CONDITION_FALSE:
                 newConditions = None
@@ -177,7 +145,19 @@ def _trueLookupCondition():
 
 
 def _instantiateLookupCondition(
-    condition, axisLimits, fvarAxes, axisIndexMap, depth=64
+    condition, axisLimits, fvarAxes, axisIndexMap, conditionResults, depth=64
+):
+    # Shared nodes must be folded and remapped only once, even across tables.
+    key = id(condition)
+    if key not in conditionResults:
+        conditionResults[key] = _instantiateLookupConditionImpl(
+            condition, axisLimits, fvarAxes, axisIndexMap, conditionResults, depth
+        )
+    return conditionResults[key]
+
+
+def _instantiateLookupConditionImpl(
+    condition, axisLimits, fvarAxes, axisIndexMap, conditionResults, depth
 ):
     if condition is None:
         return _LOOKUP_CONDITION_TRUE
@@ -233,7 +213,7 @@ def _instantiateLookupCondition(
         newConditions = []
         for child in condition.ConditionTable:
             result = _instantiateLookupCondition(
-                child, axisLimits, fvarAxes, axisIndexMap, depth - 1
+                child, axisLimits, fvarAxes, axisIndexMap, conditionResults, depth - 1
             )
             if condition.Format == 3 and result == _LOOKUP_CONDITION_FALSE:
                 return _LOOKUP_CONDITION_FALSE
@@ -256,6 +236,7 @@ def _instantiateLookupCondition(
             axisLimits,
             fvarAxes,
             axisIndexMap,
+            conditionResults,
             depth - 1,
         )
         if result == _LOOKUP_CONDITION_TRUE:
@@ -271,7 +252,9 @@ def _instantiateLookupCondition(
     return _LOOKUP_CONDITION_KEEP
 
 
-def _instantiateLookupVariations(table, fvarAxes, axisLimits, axisIndexMap):
+def _instantiateLookupVariations(
+    table, fvarAxes, axisLimits, axisIndexMap, conditionResults
+):
     variations = table.FeatureVariations
     records = getattr(variations, "LookupVariationRecord", [])
     if not records:
@@ -291,6 +274,7 @@ def _instantiateLookupVariations(table, fvarAxes, axisLimits, axisIndexMap):
                 axisLimits,
                 fvarAxes,
                 axisIndexMap,
+                conditionResults,
             )
             if result == _LOOKUP_CONDITION_FALSE:
                 continue
@@ -361,7 +345,9 @@ def instantiateLookupVariationConditionValues(
             conditions.append(condition.ConditionTable)
 
 
-def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
+def _instantiateFeatureVariations(
+    table, fvarAxes, axisLimits, conditionResults, conditionDefaults
+):
     pinnedAxes = set(axisLimits.pinnedLocation())
     axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
     axisIndexMap = {axisTag: axisOrder.index(axisTag) for axisTag in axisOrder}
@@ -373,7 +359,13 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
 
     for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
         applies, shouldKeep, universal = _instantiateFeatureVariationRecord(
-            record, i, axisLimits, fvarAxes, axisIndexMap
+            record,
+            i,
+            axisLimits,
+            fvarAxes,
+            axisIndexMap,
+            conditionResults,
+            conditionDefaults,
         )
 
         if shouldKeep and _featureVariationRecordIsUnique(record, uniqueRecords):
@@ -413,7 +405,9 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
     variations.FeatureVariationRecord = newRecords
     variations.FeatureVariationCount = len(newRecords)
 
-    _instantiateLookupVariations(table, fvarAxes, axisLimits, axisIndexMap)
+    _instantiateLookupVariations(
+        table, fvarAxes, axisLimits, axisIndexMap, conditionResults
+    )
 
     if not (
         variations.FeatureVariationCount
@@ -425,6 +419,22 @@ def _instantiateFeatureVariations(table, fvarAxes, axisLimits):
 
 
 def instantiateFeatureVariations(varfont, axisLimits):
+    conditionResults = {}
+    conditionDefaults = {}
+    # Record default applicability before any shared condition is modified.
+    for tableTag in ("GPOS", "GSUB"):
+        if tableTag not in varfont:
+            continue
+        variations = getattr(varfont[tableTag].table, "FeatureVariations", None)
+        for record in getattr(variations, "FeatureVariationRecord", []):
+            if record.ConditionSet is None:
+                continue
+            for condition in record.ConditionSet.ConditionTable:
+                key = id(condition)
+                if key not in conditionDefaults:
+                    conditionDefaults[key] = _conditionAppliesAtDefault(
+                        condition, axisLimits, varfont["fvar"].axes
+                    )
     for tableTag in ("GPOS", "GSUB"):
         if tableTag not in varfont or not getattr(
             varfont[tableTag].table, "FeatureVariations", None
@@ -432,7 +442,11 @@ def instantiateFeatureVariations(varfont, axisLimits):
             continue
         log.info("Instantiating FeatureVariations of %s table", tableTag)
         _instantiateFeatureVariations(
-            varfont[tableTag].table, varfont["fvar"].axes, axisLimits
+            varfont[tableTag].table,
+            varfont["fvar"].axes,
+            axisLimits,
+            conditionResults,
+            conditionDefaults,
         )
         # remove unreferenced lookups
         varfont[tableTag].prune_lookups()
