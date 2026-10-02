@@ -44,7 +44,9 @@ def interpolate_layout(designspace, loc, master_finder=lambda s: s, mapped=False
     if not mapped:
         loc = {name: ds.axes[name].map_forward(v) for name, v in loc.items()}
     log.info("Internal location: %s", pformat(loc))
-    loc = models.normalizeLocation(loc, ds.internal_axis_supports)
+    loc = models.normalizeLocation(
+        loc, ds.internal_axis_supports, allow_decreasing=True
+    )
     log.info("Normalized location: %s", pformat(loc))
 
     # Assume single-model for now.

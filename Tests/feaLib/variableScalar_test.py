@@ -22,11 +22,20 @@ def test_variable_scalar_repr():
     assert str(scalar) == "(20 wght=400:1 wght=500.5:4 wght=700:10)"
 
 
-def test_variable_scalar_interpolation_with_avar():
+@pytest.mark.parametrize(
+    "axis_map",
+    [
+        [(200, 50), (300, 90), (400, 100), (800, 150)],
+        # same axis with design values decreasing as user values increase
+        [(200, 150), (300, 110), (400, 100), (800, 50)],
+    ],
+    ids=["increasing", "decreasing"],
+)
+def test_variable_scalar_interpolation_with_avar(axis_map):
     """Test that avar mapping is applied when interpolating a variable scalar
     from a designspace.
 
-    The map entry (300, 90) shifts user 300 toward the design default, so the
+    The map entry for user 300 shifts it toward the design default, so the
     interpolated value is closer to 40 than a naive interpolation without avar
     would give.
     """
@@ -42,12 +51,7 @@ def test_variable_scalar_interpolation_with_avar():
             minimum=200,
             default=400,
             maximum=800,
-            map=[
-                (200, 50),
-                (300, 90),  # user 300 close to design default (100)
-                (400, 100),
-                (800, 150),
-            ],
+            map=axis_map,
         )
     )
 

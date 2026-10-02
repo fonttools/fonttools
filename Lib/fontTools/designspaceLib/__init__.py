@@ -3162,7 +3162,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             triple = [
                 axis.map_forward(v) for v in (axis.minimum, axis.default, axis.maximum)
             ]
-            new[axis.name] = normalizeValue(value, triple)
+            new[axis.name] = normalizeValue(value, triple, allow_decreasing=True)
         return new
 
     def normalize(self):
