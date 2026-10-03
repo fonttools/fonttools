@@ -265,7 +265,8 @@ In alphabetical order:
 
 aschmitz, Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
 Jelle Bosma, Sascha Brawer, Tom Byrer, Antonio Cavedoni, Frédéric Coiffier,
-Vincent Connare, David Corbett, Simon Cozens, Dave Crossland, Simon Daniels,
+Vincent Connare, David Corbett, Simon Cozens, Dave Crossland,
+Zihan Dai, Simon Daniels,
 Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes Famira, Sam Fishman,
 Matt Fontaine, Takaaki Fuji, Rob Hagemans, Yannis Haralambous, Greg Hitchcock,
 Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack Jansen,
