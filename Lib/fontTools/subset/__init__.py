@@ -3135,7 +3135,7 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, font, options):
     remove_hinting = not options.hinting
     for v in self.glyphs.values():
-        v.trim(remove_hinting=remove_hinting)
+        v.trim(remove_hinting=remove_hinting, extended=self.extended)
     return True
 
 

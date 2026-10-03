@@ -2068,7 +2068,8 @@ def test_subset_empty_glyf(tmp_path, ttf_path):
     assert all(loc == 0 for loc in loca)
 
 
-def test_subset_remaps_24bit_glyf_component():
+@pytest.mark.parametrize("hinting", [False, True])
+def test_subset_remaps_24bit_glyf_component(hinting):
     glyph_order = [".notdef"] + [None] * 0xFFFF + ["component", "composite"]
     glyf = newTable("GLYF")
     glyf.glyphOrder = glyph_order
@@ -2081,9 +2082,10 @@ def test_subset_remaps_24bit_glyf_component():
     composite.data = (
         b"\xff\xff"  # numberOfContours
         b"\0\0\0\0\0\0\0\0"  # bounds
-        b"\x20\x02"  # GID_IS_24_BIT | ARGS_ARE_XY_VALUES
+        b"\x21\x02"  # GID_IS_24_BIT | WE_HAVE_INSTRUCTIONS | ARGS_ARE_XY_VALUES
         b"\x01\x00\x00"  # component glyph ID 0x10000
-        b"\0\0"  # x, y
+        b"\x0a\x14"  # x, y
+        b"\0\x03\xb0\x01\x21"  # PUSHB 1; POP
     )
 
     subsetter = subset.Subsetter()
@@ -2091,10 +2093,18 @@ def test_subset_remaps_24bit_glyf_component():
     subsetter.glyphs_emptied = frozenset()
 
     glyf.subset_glyphs(subsetter)
+    options = subset.Options()
+    options.hinting = hinting
+    glyf.prune_post_subset(TTFont(), options)
 
     assert glyf.glyphOrder == [".notdef", "component", "composite"]
     assert composite.data[12:15] == b"\0\0\x01"
     assert composite.getComponentNames(glyf) == ["component"]
+    composite.expand(glyf)
+    assert (composite.components[0].x, composite.components[0].y) == (10, 20)
+    assert hasattr(composite, "program") == hinting
+    if hinting:
+        assert composite.program.getBytecode() == b"\xb0\x01\x21"
 
 
 @pytest.mark.parametrize("extended", [False, True])

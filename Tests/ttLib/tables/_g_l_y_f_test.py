@@ -23,6 +23,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
 )
 from fontTools.ttLib.tables import ttProgram
 import sys
+import struct
 import array
 from collections.abc import ValuesView, ItemsView
 from copy import deepcopy
@@ -1134,6 +1135,64 @@ def build_interpolatable_glyphs(contours, *transforms):
         glyph.coordinates.translate(t[4:6])
         result.append(glyph)
     return result
+
+
+@pytest.mark.parametrize("extended", [False, True])
+@pytest.mark.parametrize("wide_gid", [False, True])
+@pytest.mark.parametrize("word_args", [False, True])
+@pytest.mark.parametrize(
+    "transform",
+    [
+        (0, ()),
+        (WE_HAVE_A_SCALE, (0x2000,)),
+        (WE_HAVE_AN_X_AND_Y_SCALE, (0x2000, 0x4000)),
+        (WE_HAVE_A_TWO_BY_TWO, (0x2000, 0x1000, 0x1000, 0x4000)),
+    ],
+)
+@pytest.mark.parametrize("remove_hinting", [False, True])
+def test_trim_compact_composite(
+    extended, wide_gid, word_args, transform, remove_hinting
+):
+    transform_flag, transform_values = transform
+    header = bytes.fromhex("ffff 0000 0000 0064 0064")
+    records = []
+    for index, gid in enumerate((2, 1)):
+        flags = ARGS_ARE_XY_VALUES | transform_flag
+        if index == 0:
+            flags |= 0x0020  # MORE_COMPONENTS
+            if wide_gid:
+                flags |= 0x2000  # GID_IS_24_BIT, reserved in lowercase glyf
+        else:
+            flags |= 0x0100  # WE_HAVE_INSTRUCTIONS
+        if word_args:
+            flags |= 0x0001  # ARG_1_AND_2_ARE_WORDS
+        gid_size = 3 if extended and flags & 0x2000 else 2
+        records.append(
+            struct.pack(">H", flags)
+            + gid.to_bytes(gid_size, "big")
+            + struct.pack(">hh" if word_args else ">bb", 123, -42)
+            + struct.pack(">" + "h" * len(transform_values), *transform_values)
+        )
+    program = bytes.fromhex("0003 b00121")
+    data = header + b"".join(records) + program
+    glyph = Glyph(data + b"\0\0\0")
+    glyf = newTable("GLYF" if extended else "glyf")
+    glyf.glyphOrder = [".notdef", "a", "b"]
+    glyf.glyphs = {"composite": glyph}
+
+    if remove_hinting:
+        glyf.removeHinting()
+        records[-1] = bytes([records[-1][0] & ~1]) + records[-1][1:]
+        expected = header + b"".join(records)
+    else:
+        glyph.trim(extended=extended)
+        expected = data
+
+    assert glyph.data == expected
+    glyph.expand(glyf)
+    assert [comp.glyphName for comp in glyph.components] == ["b", "a"]
+    assert [(comp.x, comp.y) for comp in glyph.components] == [(123, -42)] * 2
+    assert hasattr(glyph, "program") == (not remove_hinting)
 
 
 def test_dropImpliedOnCurvePoints_all_quad_off_curves():

@@ -326,7 +326,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         See :py:meth:`Glyph.removeHinting`.
         """
         for glyph in self.glyphs.values():
-            glyph.removeHinting()
+            glyph.removeHinting(extended=self.extended)
 
     def keys(self):
         return self.glyphs.keys()
@@ -1408,7 +1408,7 @@ class Glyph(object):
 
         return components
 
-    def trim(self, remove_hinting=False):
+    def trim(self, remove_hinting=False, *, extended=False):
         """Remove padding and, if requested, hinting, from a glyph.
         This works on both expanded and compacted glyphs, without
         expanding it."""
@@ -1479,7 +1479,7 @@ class Glyph(object):
                     we_have_instructions = True
                 data[i + 0] = flags >> 8
                 data[i + 1] = flags & 0xFF
-                i += 4
+                i += 5 if extended and flags & GID_IS_24_BIT else 4
                 flags = int(flags)
 
                 if flags & ARG_1_AND_2_ARE_WORDS:
@@ -1501,9 +1501,9 @@ class Glyph(object):
 
         self.data = data
 
-    def removeHinting(self):
+    def removeHinting(self, *, extended=False):
         """Removes TrueType hinting instructions from the glyph."""
-        self.trim(remove_hinting=True)
+        self.trim(remove_hinting=True, extended=extended)
 
     def draw(self, pen, glyfTable, offset=0):
         """Draws the glyph using the supplied pen object.

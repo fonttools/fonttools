@@ -238,7 +238,7 @@ def merge(self, m, tables):
             if i:
                 # Drop hints for all but first font, since
                 # we don't map functions / CVT values.
-                g.removeHinting()
+                g.removeHinting(extended=table.extended)
             # Expand composite glyphs to load their
             # composite glyph names.
             if g.isComposite():
