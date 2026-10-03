@@ -117,6 +117,75 @@ class TTGlyphSetTest(object):
         font.save(stream)
         check(TTFont(BytesIO(stream.getvalue())))
 
+    @pytest.mark.parametrize("initial", [{}, {"wght": 0.75}])
+    @pytest.mark.parametrize("reset", [False, True])
+    @pytest.mark.parametrize("nested", [False, True])
+    @pytest.mark.parametrize("points", [False, True])
+    def test_varc_reset_pen_location(self, initial, reset, nested, points):
+        from contextlib import ExitStack
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables as ot
+        from fontTools.pens.recordingPen import DecomposingRecordingPointPen
+        from fontTools.pens.transformPen import TransformPen, TransformPointPen
+
+        class OutlinePointPen(DecomposingRecordingPointPen):
+            def addVarComponent(self, *args, **kwargs):
+                raise AttributeError
+
+        font = TTFont(self.getpath("I.ttf"))
+        varc = font["VARC"] = newTable("VARC")
+        table = varc.table = ot.VARC()
+        table.Version = 0x00010000
+        table.Coverage = ot.Coverage()
+        table.Coverage.glyphs = [".notdef"]
+        table.MultiVarStore = table.ConditionList = None
+        table.AxisIndicesList = ot.AxisIndicesList()
+        table.AxisIndicesList.Item = [[1]]
+        component = ot.VarComponent()
+        component.glyphName = "I"
+        component.axisIndicesIndex = 0
+        component.axisValues = (0.25,)
+        if reset:
+            component.flags = ot.VarComponentFlags.RESET_UNSPECIFIED_AXES
+        table.VarCompositeGlyphs = ot.VarCompositeGlyphs()
+        table.VarCompositeGlyphs.VarCompositeGlyph = [ot.VarCompositeGlyph([component])]
+
+        glyphset = font.getGlyphSet(location=initial, normalized=True)
+        pen_type = RecordingPointPen if points else RecordingPen
+        decomposing_pen_type = OutlinePointPen if points else DecomposingRecordingPen
+        transform_pen_type = TransformPointPen if points else TransformPen
+        draw = "drawPoints" if points else "draw"
+        with ExitStack() as stack:
+            if nested:
+                stack.enter_context(
+                    glyphset.glyphSet.pushLocation({"wght": 0.25}, False)
+                )
+                stack.enter_context(glyphset.pushLocation({"wght": 0.25}, False))
+            expected = decomposing_pen_type(glyphset)
+            getattr(glyphset[".notdef"], draw)(expected)
+            recording = pen_type()
+            getattr(glyphset[".notdef"], draw)(recording)
+            assert len(recording.value) == 1
+            operator, operands = recording.value[0][:2]
+            assert operator == "addVarComponent"
+            name, transform, location = operands
+            expected_location = {"wdth": 0.25}
+            if reset:
+                expected_location = {
+                    **glyphset.defaultLocationNormalized,
+                    **initial,
+                    **expected_location,
+                }
+            assert location == expected_location
+
+            actual = decomposing_pen_type(glyphset)
+            with glyphset.glyphSet.pushLocation(location, False):
+                with glyphset.pushLocation(location, False):
+                    getattr(glyphset[name], draw)(
+                        transform_pen_type(actual, transform.toTransform())
+                    )
+            assert actual.value == expected.value
+
     @pytest.mark.parametrize(
         "fontfile, location, expected",
         [

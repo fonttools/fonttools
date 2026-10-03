@@ -91,6 +91,7 @@ class _TTGlyphSet(Mapping):
         if reset:
             self.location = self.originalLocation.copy()
             self.rawLocation = self.defaultLocationNormalized.copy()
+            self.rawLocation.update(self.originalLocation)
         else:
             self.location = self.location.copy()
             self.rawLocation = {}
