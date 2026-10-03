@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Iterable
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Callable
 
@@ -268,6 +269,7 @@ def _convert_contextual_layout_formats(table, extended):
             ) in conversions.items()
         }
 
+    changed = False
     for path in dfs_base_table(table):
         subtable = path[-1].value
         conversion = conversions.get(
@@ -279,6 +281,8 @@ def _convert_contextual_layout_formats(table, extended):
         _replace_layout_subtree(subtable, replacements)
         _rename_layout_attributes(subtable, outer_renames)
         subtable.Format = format
+        changed = True
+    return changed
 
 
 def _convert_explicit_layout_formats(table, extended):
@@ -295,6 +299,7 @@ def _convert_explicit_layout_formats(table, extended):
             ) in conversions.items()
         }
 
+    changed = False
     for path in dfs_base_table(table):
         subtable = path[-1].value
         conversion = conversions.get(
@@ -304,11 +309,14 @@ def _convert_explicit_layout_formats(table, extended):
             continue
         subtable.Format, replacements = conversion
         _replace_layout_classes(subtable, replacements)
+        changed = True
+    return changed
 
 
 def _convert_layout_formats(table, extended):
-    _convert_contextual_layout_formats(table, extended)
-    _convert_explicit_layout_formats(table, extended)
+    contextual = _convert_contextual_layout_formats(table, extended)
+    explicit = _convert_explicit_layout_formats(table, extended)
+    return contextual or explicit
 
 
 def _convert_table_object(table, table_type):
@@ -454,6 +462,36 @@ def _lower_layout_header(font, table, overwrite):
         0x00010001 if getattr(table, "FeatureVariations", None) else 0x00010000
     )
     _convert_layout_formats(table, False)
+
+
+@contextmanager
+def _compact_layout_tables(font):
+    # Use compact in-memory layouts for algorithms that dispatch on them.
+    # No compact serialization occurs here: glyph IDs and counts stay intact.
+    restore = []
+    try:
+        for tag, version, lower, upper in (
+            ("GDEF", 0x00010004, _lower_gdef, _upper_gdef),
+            ("GSUB", 0x00010002, _lower_layout_header, _upper_layout_header),
+            ("GPOS", 0x00010002, _lower_layout_header, _upper_layout_header),
+        ):
+            if tag not in font:
+                continue
+            table = font[tag]
+            if table.table.Version >= version:
+                restore.append((tag, upper))
+                lower(font, table, True)
+            elif _convert_layout_formats(table.table, False):
+                restore.append((tag, None))
+        yield
+    finally:
+        for tag, upper in restore:
+            if tag not in font:
+                continue
+            if upper is not None:
+                upper(font, font[tag], True)
+            else:
+                _convert_layout_formats(font[tag].table, True)
 
 
 def _upper_vorg(font, table, overwrite):

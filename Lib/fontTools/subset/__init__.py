@@ -9,6 +9,7 @@ from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otBase import USE_HARFBUZZ_REPACKER
+from fontTools.ttLib.beyond64k import _compact_layout_tables
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
@@ -4051,10 +4052,11 @@ class Subsetter(object):
         return [t for t in tags if t != "GlyphOrder"]
 
     def subset(self, font):
-        self._prune_pre_subset(font)
-        self._closure_glyphs(font)
-        self._subset_glyphs(font)
-        self._prune_post_subset(font)
+        with _compact_layout_tables(font):
+            self._prune_pre_subset(font)
+            self._closure_glyphs(font)
+            self._subset_glyphs(font)
+            self._prune_post_subset(font)
 
 
 @timer("load font")

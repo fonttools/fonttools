@@ -1972,13 +1972,172 @@ def test_subset_null_gdef_varstore(singlepos2_font, keep_classes, extended):
     subsetter.subset(font)
     assert ("GDEF" in font) == keep_classes
     if keep_classes:
-        assert font["GDEF"].table.GlyphClassDef.classDefs == {"a": 1}
+        table = font["GDEF"].table
+        class_def = table.GlyphClassDef2 if extended else table.GlyphClassDef
+        assert class_def.classDefs == {"a": 1}
         assert font["GDEF"].table.Version == (0x00010004 if extended else 0x00010000)
 
     output = io.BytesIO()
     font.save(output)
     output.seek(0)
     assert ("GDEF" in TTFont(output)) == keep_classes
+
+
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("retain_gids", [False, True])
+def test_subset_extended_layout(extended_header, extended_formats, lazy, retain_gids):
+    from fontTools.ttLib.beyond64k import (
+        _convert_layout_formats,
+        lower_tables,
+        upper_tables,
+    )
+
+    fb = FontBuilder(1000)
+    order = [
+        ".notdef",
+        "a",
+        "b",
+        "c",
+        "d",
+        "a.alt",
+        "b.alt",
+        "a_b",
+        "acute",
+        "grave",
+        "unused",
+    ]
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap(
+        {
+            97: "a",
+            98: "b",
+            99: "c",
+            100: "d",
+            0x301: "acute",
+            0x300: "grave",
+            120: "unused",
+        }
+    )
+    fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+    fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "Extended Layout", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    fb.addOpenTypeFeatures("""
+        languagesystem DFLT dflt;
+        markClass acute <anchor 0 0> @TOP;
+        markClass grave <anchor 50 0> @TOP;
+        feature salt { sub b from [b.alt c]; } salt;
+        feature liga { sub a b by a_b; } liga;
+        feature ccmp { sub d by a b; } ccmp;
+        feature calt {
+            lookupflag UseMarkFilteringSet [acute grave];
+            sub c a' b by a.alt;
+        } calt;
+        feature rclt { rsub c a' b by a.alt; } rclt;
+        feature kern {
+            pos a -50;
+            pos a b -30;
+            pos [a c] [b d] -15;
+        } kern;
+        feature curs {
+            pos cursive a <anchor 0 0> <anchor 300 0>;
+            pos cursive b <anchor 0 0> <anchor 300 0>;
+        } curs;
+        feature mark {
+            pos base a <anchor 100 300> mark @TOP;
+            pos ligature a_b <anchor 100 300> mark @TOP
+                ligComponent <anchor 200 300> mark @TOP;
+        } mark;
+        feature mkmk { pos mark acute <anchor 100 300> mark @TOP; } mkmk;
+    """)
+
+    def roundtrip(font, lazy=False):
+        buf = io.BytesIO()
+        font.save(buf)
+        return TTFont(io.BytesIO(buf.getvalue()), lazy=lazy)
+
+    reference = roundtrip(fb.font)
+    font = roundtrip(fb.font)
+    if extended_header:
+        upper_tables(font, tables=["GDEF", "GSUB", "GPOS"])
+    for tag in ("GSUB", "GPOS"):
+        _convert_layout_formats(font[tag].table, extended_formats)
+    font = roundtrip(font, lazy=lazy)
+
+    options = subset.Options()
+    options.retain_gids = retain_gids
+    options.glyph_names = True
+    options.layout_features = ["*"]
+    for target in (reference, font):
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(text="abcd\u0301\u0300")
+        subsetter.subset(target)
+    assert font.getGlyphOrder() == reference.getGlyphOrder()
+    assert "a.alt" in font.getGlyphOrder()
+    assert "a_b" in font.getGlyphOrder()
+    assert "unused" not in font.getGlyphOrder()
+
+    for tag in ("GSUB", "GPOS"):
+        assert font[tag].table.Version == (
+            0x00010002 if extended_header else 0x00010000
+        )
+    assert font["GDEF"].table.Version == (0x00010004 if extended_header else 0x00010002)
+    font = roundtrip(font)
+    lower_tables(font, tables=["GDEF", "GSUB", "GPOS"])
+    for tag in ("GDEF", "GSUB", "GPOS"):
+        assert getXML(font[tag].table.toXML, font) == getXML(
+            reference[tag].table.toXML, reference
+        )
+
+
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("retain_gids", [False, True])
+def test_subset_extended_layout_high_glyph_ids(lazy, retain_gids):
+    fb = FontBuilder(1000, beyond64k=True)
+    order = [".notdef"] + [f"unused{i}" for i in range(1, 0x10000)] + ["a", "b", "a_b"]
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap({97: "a", 98: "b"})
+    fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+    fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "High Layout GIDs", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    fb.addOpenTypeFeatures("""
+        feature liga { sub a b by a_b; } liga;
+        feature kern { pos a b -30; } kern;
+        table GDEF { GlyphClassDef [a b], [a_b], , ; } GDEF;
+    """)
+    buf = io.BytesIO()
+    fb.font.save(buf)
+    font = TTFont(io.BytesIO(buf.getvalue()), lazy=lazy)
+
+    options = subset.Options()
+    options.retain_gids = retain_gids
+    subsetter = subset.Subsetter(options=options)
+    subsetter.populate(text="ab")
+    subsetter.subset(font)
+    output = io.BytesIO()
+    font.save(output)
+    font = TTFont(io.BytesIO(output.getvalue()))
+    assert len(font.getGlyphOrder()) == (0x10003 if retain_gids else 4)
+    ligature = font["GSUB"].table.LookupList2.Lookup[0].SubTable[0].ligatures["a"][0]
+    assert font.getGlyphID(ligature.LigGlyph) == (0x10002 if retain_gids else 3)
+    assert ligature.Component == ["b"]
+    assert font["GDEF"].table.GlyphClassDef2.classDefs[ligature.LigGlyph] == 2
+    pair = (
+        font["GPOS"]
+        .table.LookupList2.Lookup[0]
+        .SubTable[0]
+        .PairSet[0]
+        .PairValueRecord[0]
+    )
+    assert pair.SecondGlyph == "b"
+    assert pair.Value1.XAdvance == -30
 
 
 def test_subset_single_pos_format(singlepos2_font):

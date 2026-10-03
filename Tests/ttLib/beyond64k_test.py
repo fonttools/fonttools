@@ -452,6 +452,59 @@ def test_gdef_end_to_end_round_trip(lazy):
     assert isinstance(table.LigCaretList, otTables.LigCaretList)
 
 
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_subset_extended_contextual_layout(extended_header, lazy):
+    from fontTools import subset
+    from fontTools.misc.testTools import getXML
+    from fontTools.ttLib.beyond64k import _convert_layout_formats
+
+    font = build_contextual_layout_font()
+    value = otTables.ValueRecord()
+    value.XAdvance = -20
+    for tag, subtable in (
+        ("GSUB", builder.buildSingleSubstSubtable({"period": "ellipsis"})),
+        (
+            "GPOS",
+            builder.buildSinglePos({"period": value}, font.getReverseGlyphMap())[0],
+        ),
+    ):
+        table = font[tag].table
+        table.LookupList.Lookup.insert(0, builder.buildLookup([subtable], table=tag))
+        table.LookupList.LookupCount = len(table.LookupList.Lookup)
+        feature = table.FeatureList.FeatureRecord[0].Feature
+        feature.LookupListIndex = list(range(1, table.LookupList.LookupCount))
+        feature.LookupCount = len(feature.LookupListIndex)
+
+    def roundtrip(font, lazy=False):
+        buf = BytesIO()
+        font.save(buf)
+        return TTFont(BytesIO(buf.getvalue()), lazy=lazy)
+
+    reference = roundtrip(font)
+    if extended_header:
+        upper_tables(font, tables=["GSUB", "GPOS"])
+    else:
+        for tag in ("GSUB", "GPOS"):
+            _convert_layout_formats(font[tag].table, True)
+    font = roundtrip(font, lazy=lazy)
+
+    for target in (reference, font):
+        options = subset.Options()
+        options.layout_features = ["*"]
+        options.glyph_names = True
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(glyphs=["space", "period", "ellipsis"])
+        subsetter.subset(target)
+    assert_contextual_formats(font, True)
+    font = roundtrip(font)
+    lower_tables(font, tables=["GSUB", "GPOS"])
+    for tag in ("GSUB", "GPOS"):
+        assert getXML(font[tag].table.toXML, font) == getXML(
+            reference[tag].table.toXML, reference
+        )
+
+
 def test_base_end_to_end_round_trip():
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
