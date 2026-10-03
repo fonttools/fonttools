@@ -413,7 +413,7 @@ class _TTGlyphVARC(_TTGlyph):
         )
 
         for comp in glyph.components:
-            if comp.flags & VarComponentFlags.HAVE_CONDITION:
+            if comp.conditionIndex is not None:
                 condition = varc.ConditionList.ConditionTable[comp.conditionIndex]
                 if not _evaluateCondition(
                     condition, axes, self.glyphSet.location, instancer
