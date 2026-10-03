@@ -17,7 +17,12 @@ from fontTools.ttLib.beyond64k import (
 )
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables import otTables
-from fontTools.ttLib.tables._g_l_y_f import Glyph, GlyphComponent, flagCubic
+from fontTools.ttLib.tables._g_l_y_f import (
+    Glyph,
+    GlyphComponent,
+    flagCubic,
+    flagOnCurve,
+)
 from fontTools.ttLib.tables.otBase import CountReference, OTTableWriter
 from fontTools.ttLib.tables.otTraverse import dfs_base_table
 
@@ -966,6 +971,45 @@ def test_lower_rejects_cubic_glyph():
 
     with pytest.raises(ValueError, match="cubic outlines"):
         lower_tables(font, tables={"glyf"}, validate=False)
+
+
+@pytest.mark.parametrize("recalc_bboxes", [False, True])
+def test_lower_allows_cubic_flag_on_oncurve_points(recalc_bboxes):
+    font = TTFont(DATA_DIR / "I.ttf", recalcBBoxes=recalc_bboxes)
+    upper_tables(font)
+    glyph = font["GLYF"]["I"]
+    for i, flag in enumerate(glyph.flags):
+        if flag & flagOnCurve:
+            glyph.flags[i] |= flagCubic
+    stream = BytesIO()
+    font.save(stream)
+    font = TTFont(BytesIO(stream.getvalue()), recalcBBoxes=recalc_bboxes)
+    expected = glyph_paths(font)
+    assert any(flag & flagCubic for flag in font["GLYF"]["I"].flags)
+
+    lower_tables(font)
+
+    stream = BytesIO()
+    font.save(stream)
+    font = TTFont(BytesIO(stream.getvalue()))
+    assert not any(flag & flagCubic for flag in font["glyf"]["I"].flags)
+    assert glyph_paths(font) == expected
+
+
+def test_lower_rejects_hinted_oncurve_cubic_flags():
+    font = TTFont(DATA_DIR / "I.ttf")
+    upper_tables(font)
+    glyph = font["GLYF"]["I"]
+    assert glyph.flags[0] & flagOnCurve and glyph.flags[1] & flagOnCurve
+    glyph.flags[0] |= flagCubic
+    glyph.flags[1] |= flagCubic
+    glyph.program.fromAssembly(
+        ["PUSHB[ ]", "2", "SLOOP[ ]", "PUSHB[ ]", "0", "1", "FLIPPT[ ]"]
+    )
+
+    with pytest.raises(ValueError, match="hinted CUBIC flags"):
+        lower_tables(font)
+    assert "GLYF" in font and "glyf" not in font
 
 
 def test_lower_rejects_large_component_glyph_id():

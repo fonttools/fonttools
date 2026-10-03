@@ -536,7 +536,7 @@ def _validate_family(font: TTFont) -> None:
 
 def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -> None:
     if "GLYF" in conversions and "GLYF" in font:
-        from fontTools.ttLib.tables._g_l_y_f import flagCubic
+        from fontTools.ttLib.tables._g_l_y_f import flagCubic, flagOnCurve
 
         glyf = font["GLYF"]
         for glyph_name in font.getGlyphOrder():
@@ -547,8 +547,19 @@ def _validate_lowering(font: TTFont, conversions: dict[str, _TableConversion]) -
                         raise ValueError(
                             f"GLYF component {component.glyphName!r} does not fit in glyf"
                         )
-            elif any(flag & flagCubic for flag in getattr(glyph, "flags", ())):
-                raise ValueError(f"GLYF glyph {glyph_name!r} has cubic outlines")
+            else:
+                cubic_flags = [
+                    flag for flag in getattr(glyph, "flags", ()) if flag & flagCubic
+                ]
+                program = getattr(glyph, "program", None)
+                # Hinting can flip an on-curve point and activate its CUBIC bit.
+                if cubic_flags and (
+                    any(not flag & flagOnCurve for flag in cubic_flags)
+                    or (program and program.getBytecode())
+                ):
+                    raise ValueError(
+                        f"GLYF glyph {glyph_name!r} has cubic outlines or hinted CUBIC flags"
+                    )
     if "MAXP" in conversions and "MAXP" in font and font["MAXP"].numGlyphs > 0xFFFF:
         raise ValueError("MAXP.numGlyphs does not fit in maxp")
     if "HHEA" in conversions and "HHEA" in font:
