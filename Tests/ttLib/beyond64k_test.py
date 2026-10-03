@@ -384,14 +384,15 @@ def assert_contextual_formats(font, extended):
         assert [subtable.Format for subtable in subtables] == formats
 
 
-def test_contextual_layout_end_to_end_round_trip():
+@pytest.mark.parametrize("lazy", [False, True])
+def test_contextual_layout_end_to_end_round_trip(lazy):
     font = build_contextual_layout_font()
 
     upper_tables(font, tables={"GSUB", "GPOS"})
     data = BytesIO()
     font.save(data)
     data.seek(0)
-    font = TTFont(data)
+    font = TTFont(data, lazy=lazy)
     assert_contextual_formats(font, True)
 
     lower_tables(font, tables={"GSUB", "GPOS"})
@@ -402,7 +403,8 @@ def test_contextual_layout_end_to_end_round_trip():
     assert_contextual_formats(font, False)
 
 
-def test_gdef_end_to_end_round_trip():
+@pytest.mark.parametrize("lazy", [False, True])
+def test_gdef_end_to_end_round_trip(lazy):
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
     addOpenTypeFeaturesFromString(
@@ -426,7 +428,7 @@ def test_gdef_end_to_end_round_trip():
     data = BytesIO()
     font.save(data)
     data.seek(0)
-    font = TTFont(data)
+    font = TTFont(data, lazy=lazy)
     table = font["GDEF"].table
     assert table.Version == 0x00010004
     assert table.GlyphClassDef2 is not None
@@ -1137,7 +1139,8 @@ def test_lower_rejects_large_colr_paint_glyph():
         lower_tables(font, tables={"COLR"})
 
 
-def test_layout_header_round_trip():
+@pytest.mark.parametrize("lazy", [False, True])
+def test_layout_header_round_trip(lazy):
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
     addOpenTypeFeaturesFromString(
@@ -1164,7 +1167,7 @@ def test_layout_header_round_trip():
     data = BytesIO()
     font.save(data)
     data.seek(0)
-    font = TTFont(data)
+    font = TTFont(data, lazy=lazy)
 
     lower_tables(font, tables={"GSUB", "GPOS"})
 
@@ -1174,6 +1177,8 @@ def test_layout_header_round_trip():
         assert table.ScriptList is not None
         assert table.FeatureList is not None
         assert table.LookupList is not None
+        assert table.LookupList.LookupCount == 1
+        assert table.LookupList.Lookup[0] is not None
         assert table.ScriptList2 is None
         assert table.FeatureList2 is None
         assert table.LookupList2 is None

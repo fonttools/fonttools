@@ -312,6 +312,7 @@ def _convert_layout_formats(table, extended):
 
 
 def _convert_table_object(table, table_type):
+    table.ensureDecompiled()
     converted = table_type()
     converted.__dict__.update(table.__dict__)
     return converted
