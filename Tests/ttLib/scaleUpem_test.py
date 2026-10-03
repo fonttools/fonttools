@@ -89,25 +89,6 @@ class ScaleUpemTest(unittest.TestCase):
         assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
         assert font["HMTX"]["I"] == (136, 44)
 
-    def test_scale_upem_varComposite(self):
-        font = TTFont(self.get_path("varc-ac00-ac01.ttf"))
-        tables = [table_tag for table_tag in font.keys() if table_tag != "head"]
-
-        scale_upem(font, 500)
-
-        # Save / load to ensure calculated values are correct
-        # XXX This wans't needed before. So needs investigation.
-        iobytes = BytesIO()
-        font.save(iobytes)
-        # Just saving is enough to fix the numbers. Sigh...
-
-        expected_ttx_path = self.get_path("varc-ac00-ac01-500upem.ttx")
-        self.expect_ttx(font, expected_ttx_path, tables)
-
-        # Scale our other varComposite font as well; without checking the expected
-        font = TTFont(self.get_path("varc-6868.ttf"))
-        scale_upem(font, 500)
-
     def test_scale_upem_otf(self):
         # Just test that it doesn't crash
 
@@ -147,3 +128,31 @@ def test_scale_upem_paint_glyph2():
     assert paint.Format == otTables.PaintFormat.PaintScaleUniform
     assert paint.Paint.Format == otTables.PaintFormat.PaintGlyph2
     assert paint.Paint.Glyph == "high"
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "varc-ac00-ac01.ttf",
+        "varc-6868.ttf",
+        "varc-ac01-conditional.ttf",
+        "varc-static-gvar.ttf",
+    ],
+)
+@pytest.mark.parametrize("use_visitor", [False, True])
+@pytest.mark.parametrize("uppercase", [False, True])
+def test_scale_upem_rejects_varc(filename, use_visitor, uppercase):
+    font = TTFont(ScaleUpemTest.get_path(filename), recalcTimestamp=False)
+    if uppercase:
+        upper_tables(font)
+    font.ensureDecompiled()
+    before = BytesIO()
+    font.save(before)
+    with pytest.raises(NotImplementedError, match="VARC"):
+        if use_visitor:
+            ScalerVisitor(0.5).visit(font["VARC"])
+        else:
+            scale_upem(font, font["head"].unitsPerEm // 2)
+    after = BytesIO()
+    font.save(after)
+    assert after.getvalue() == before.getvalue()
