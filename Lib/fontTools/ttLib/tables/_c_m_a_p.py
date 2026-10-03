@@ -1601,7 +1601,7 @@ class cmap_format_14(CmapSubtable):
                 defRecs = []
                 for defEntry in defList:
                     cnt += 1
-                    if (lastUV + cnt) != defEntry:
+                    if (lastUV + cnt) != defEntry or cnt > 255:
                         rec = struct.pack(">3sB", cvtFromUVS(lastUV), cnt - 1)
                         lastUV = defEntry
                         defRecs.append(rec)

@@ -504,6 +504,30 @@ class CmapSubtableTest(unittest.TestCase):
             font.importXML(f)
         self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
 
+    def test_default_uvs_range_limit(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a"])
+        for count in (255, 256, 257, 512, 513, 768):
+            for gaps in (False, True):
+                with self.subTest(count=count, gaps=gaps):
+                    points = list(range(0x1000, 0x1000 + count))
+                    if gaps:
+                        points.extend(range(0x2000, 0x2000 + count))
+                    table = self.makeSubtable(14, 0, 5, 0)
+                    table.cmap = {}
+                    table.uvsDict = {
+                        0xFE00: [(cp, None) for cp in reversed(points)]
+                        + [(0x3000, "a")]
+                    }
+                    data = table.compile(font)
+                    reloaded = self.makeSubtable(14, 0, 5, 0)
+                    reloaded.decompile(data, font)
+                    self.assertEqual(
+                        reloaded.uvsDict,
+                        {0xFE00: [(cp, None) for cp in points] + [(0x3000, "a")]},
+                    )
+                    self.assertEqual(reloaded.compile(font), data)
+
     def test_sort_subtables_with_duplicate_keys(self):
         # https://github.com/fonttools/fonttools/issues/4035
         # Sorting subtables that share (platformID, platEncID, language) but
