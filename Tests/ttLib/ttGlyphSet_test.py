@@ -681,24 +681,12 @@ class TTGlyphSetTest(object):
             ("closePath", ()),
         ]
 
-        # Ouch! We can't represent all-cubic-offcurves in pointPen!
+        # The point protocol cannot distinguish these from quadratic controls.
         # https://github.com/fonttools/fonttools/issues/3191
-        expectedPoints = [
-            ("beginPath", (), {}),
-            ("addPoint", ((103, 181), None, False, None), {}),
-            ("addPoint", ((125, 158), None, False, None), {}),
-            ("addPoint", ((125, 104), None, False, None), {}),
-            ("addPoint", ((103, 82), None, False, None), {}),
-            ("addPoint", ((48, 82), None, False, None), {}),
-            ("addPoint", ((26, 104), None, False, None), {}),
-            ("addPoint", ((26, 158), None, False, None), {}),
-            ("addPoint", ((48, 181), None, False, None), {}),
-            ("endPath", (), {}),
-        ]
         pen = RecordingPointPen()
-        glyphset["four"].drawPoints(pen)
-        print(pen.value)
-        assert pen.value == expectedPoints
+        with pytest.raises(NotImplementedError, match="All-off-curve cubic"):
+            glyphset["four"].drawPoints(pen)
+        assert pen.value == []
 
     def test_varc_gvar_axes_without_fvar(self, tmp_path):
         font = TTFont(self.getpath("varc-static-gvar.ttf"))
