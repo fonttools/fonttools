@@ -3955,6 +3955,68 @@ class InstantiateFeatureVariationsTest(object):
         lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
         assert _getSubstitutions(gsub, lookupIndices) == {"uni0024": "uni0024.nostroke"}
 
+    @pytest.mark.parametrize("explicit_empty", [False, True])
+    @pytest.mark.parametrize("lazy", [False, True])
+    @pytest.mark.parametrize(
+        "partial, coordinate, expected",
+        [
+            (False, 0, {"A.alt": "A"}),
+            (False, 0.375, {"A": "A.alt"}),
+            (False, 0.75, {"A.alt": "A"}),
+            (True, -0.5, {"A.alt": "A"}),
+            (True, -0.25, {"A": "A.alt"}),
+            (True, 0, {"A.alt": "A"}),
+            (True, 0.5, {"A.alt": "A"}),
+        ],
+    )
+    def test_null_substitution(
+        self, explicit_empty, lazy, partial, coordinate, expected
+    ):
+        font = makeFeatureVarsFont([([{"wght": (0.25, 1.0)}], {"A": "A.alt"})])
+        gsub = font["GSUB"].table
+        featureVars.buildSubstitutionLookups(
+            gsub, [(("A.alt", "A"),)], processLast=True
+        )
+        feature = gsub.FeatureList.FeatureRecord[0].Feature
+        feature.LookupListIndex = [1]
+        feature.LookupCount = 1
+        first = deepcopy(gsub.FeatureVariations.FeatureVariationRecord[0])
+        first.ConditionSet.ConditionTable[0].FilterRangeMinValue = 0.5
+        if explicit_empty:
+            first.FeatureTableSubstitution.SubstitutionRecord = []
+            first.FeatureTableSubstitution.SubstitutionCount = 0
+        else:
+            first.FeatureTableSubstitution = None
+        gsub.FeatureVariations.FeatureVariationRecord.insert(0, first)
+        gsub.FeatureVariations.FeatureVariationCount = 2
+        data = font["GSUB"].compile(font)
+        font.lazy = lazy
+        font["GSUB"] = ttLib.newTable("GSUB")
+        font["GSUB"].decompile(data, font)
+
+        if partial:
+            instancer.instantiateFeatureVariations(
+                font, instancer.NormalizedAxisLimits({"wght": (-1, 0.75, 1)})
+            )
+            gsub = font["GSUB"].table
+            assert gsub.FeatureVariations.FeatureVariationCount == 2
+            first = gsub.FeatureVariations.FeatureVariationRecord[0]
+            if explicit_empty:
+                assert first.FeatureTableSubstitution.SubstitutionCount == 0
+            else:
+                assert first.FeatureTableSubstitution is None
+            data = font["GSUB"].compile(font)
+            font["GSUB"] = ttLib.newTable("GSUB")
+            font["GSUB"].decompile(data, font)
+
+        instancer.instantiateFeatureVariations(
+            font, instancer.NormalizedAxisLimits({"wght": coordinate})
+        )
+        gsub = font["GSUB"].table
+        assert not hasattr(gsub, "FeatureVariations")
+        indices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+        assert _getSubstitutions(gsub, indices) == expected
+
     def test_unsupported_condition_format(self, caplog):
         font = makeFeatureVarsFont(
             [

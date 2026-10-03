@@ -30,7 +30,12 @@ def _featureVariationRecordIsUnique(rec, seen):
     # version is currently defined. It's theoretically possible that multiple
     # records with same conditions but different substitution table version be
     # present in the same font for backward compatibility.
-    recordKey = frozenset([rec.FeatureTableSubstitution.Version] + conditionSet)
+    substitutionVersion = (
+        rec.FeatureTableSubstitution.Version
+        if rec.FeatureTableSubstitution is not None
+        else 0x00010000
+    )
+    recordKey = frozenset([substitutionVersion] + conditionSet)
     if recordKey in seen:
         return False
     else:
@@ -396,19 +401,21 @@ def _instantiateFeatureVariations(
             newRecords.append(record)
 
         if applies and not featureVariationApplied:
-            assert record.FeatureTableSubstitution.Version == 0x00010000
-            defaultsSubsts = deepcopy(record.FeatureTableSubstitution)
-            for default, rec in zip(
-                defaultsSubsts.SubstitutionRecord,
-                record.FeatureTableSubstitution.SubstitutionRecord,
-            ):
-                default.Feature = deepcopy(
-                    table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature
-                )
-                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = deepcopy(
-                    rec.Feature
-                )
+            if record.FeatureTableSubstitution is not None:
+                assert record.FeatureTableSubstitution.Version == 0x00010000
+                defaultsSubsts = deepcopy(record.FeatureTableSubstitution)
+                for default, rec in zip(
+                    defaultsSubsts.SubstitutionRecord,
+                    record.FeatureTableSubstitution.SubstitutionRecord,
+                ):
+                    default.Feature = deepcopy(
+                        table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature
+                    )
+                    table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = (
+                        deepcopy(rec.Feature)
+                    )
             # Set variations only once
+            # A null substitution still matches and blocks later records.
             featureVariationApplied = True
 
         # Further records don't have a chance to apply after a universal record
