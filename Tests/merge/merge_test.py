@@ -578,6 +578,95 @@ def test_merge_dmap_uvs_only(uvs_format):
     assert merged.getGlyphID(glyph) == 2
 
 
+@pytest.mark.parametrize("upper_family", [False, True])
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("context_format", [1, 2, 3])
+@pytest.mark.parametrize("mark_filtering", [False, True])
+@pytest.mark.parametrize("chaining", [False, True])
+def test_merge_extended_layout(
+    upper_family,
+    extended_header,
+    extended_formats,
+    context_format,
+    mark_filtering,
+    chaining,
+):
+    from fontTools.otlLib import builder
+    from fontTools.ttLib.beyond64k import _convert_layout_formats
+    from fontTools.ttLib.tables import otTables as ot
+
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0xE100, 4))
+    first, second = font.getGlyphOrder()[1:3]
+    addOpenTypeFeaturesFromString(
+        font,
+        f"""
+        lookup Substitute {{ sub {first} by {second}; }} Substitute;
+        lookup Position {{ pos {first} -20; }} Position;
+        feature calt {{ sub {first}' lookup Substitute {second}; }} calt;
+        feature kern {{ pos {first}' lookup Position {second}; }} kern;
+        table GDEF {{
+            GlyphClassDef [{first}], [], [{second}], [];
+            LigatureCaretByPos {first} 0;
+        }} GDEF;
+        """,
+    )
+    for tag, builder_type in (
+        ("GSUB", builder.ChainContextSubstBuilder),
+        ("GPOS", builder.ChainContextPosBuilder),
+    ):
+        lookup_builder = builder_type(font, None)
+        referenced_lookup = builder.SingleSubstBuilder(font, None)
+        referenced_lookup.lookup_index = 0
+        rule = builder.ChainContextualRule(
+            [[font.getGlyphOrder()[3]]] if chaining else [],
+            [[first], [second]],
+            [[font.getGlyphOrder()[3]]] if chaining else [],
+            [[referenced_lookup], None],
+        )
+        ruleset = builder.ChainContextualRuleset()
+        ruleset.addRule(rule)
+        if context_format == 1:
+            subtable = lookup_builder.buildFormat1Subtable(ruleset, chaining)
+        elif context_format == 2:
+            subtable = lookup_builder.buildFormat2Subtable(
+                ruleset, ruleset.format2ClassDefs(), chaining
+            )
+        else:
+            subtable = lookup_builder.buildFormat3Subtable(rule, chaining)
+        font[tag].table.LookupList.Lookup[1] = builder.buildLookup(
+            [subtable], table=tag
+        )
+    if mark_filtering:
+        font["GDEF"].table.MarkGlyphSetsDef = builder.buildMarkGlyphSetsDef(
+            [{second}], font.getReverseGlyphMap()
+        )
+        font["GDEF"].table.Version = 0x00010002
+        for tag in ("GSUB", "GPOS"):
+            lookup = font[tag].table.LookupList.Lookup[0]
+            lookup.LookupFlag |= 0x0010
+            lookup.MarkFilteringSet = 0
+
+    other = _make_fontfile_with_glyphs(0xE000, 4, add_layout=True)
+    reference = _merge_and_recompile([other, _compile(font)])
+    if upper_family:
+        upper_tables(font)
+    if extended_header:
+        upper_tables(font, tables=["GSUB", "GPOS", "GDEF"])
+    for tag in ("GSUB", "GPOS"):
+        _convert_layout_formats(font[tag].table, extended_formats)
+    merged = _merge_and_recompile([other, _compile(font)])
+    if upper_family or extended_header:
+        upper_tables(reference)
+        assert "MAXP" in merged
+        assert "maxp" not in merged
+    else:
+        assert "maxp" in merged
+        assert "MAXP" not in merged
+    for tag in ("GSUB", "GPOS", "GDEF"):
+        assert merged[tag].compile(merged) == reference[tag].compile(reference)
+
+
 def test_merge_head_different_units_per_em():
     heads = []
     for units_per_em in (1000, 2048):

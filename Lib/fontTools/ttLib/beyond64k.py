@@ -465,10 +465,10 @@ def _lower_layout_header(font, table, overwrite):
 
 
 @contextmanager
-def _compact_layout_tables(font):
+def _compact_layout_tables(font, *, restore=True):
     # Use compact in-memory layouts for algorithms that dispatch on them.
     # No compact serialization occurs here: glyph IDs and counts stay intact.
-    restore = []
+    restore_actions = []
     try:
         for tag, version, lower, upper in (
             ("GDEF", 0x00010004, _lower_gdef, _upper_gdef),
@@ -479,13 +479,13 @@ def _compact_layout_tables(font):
                 continue
             table = font[tag]
             if table.table.Version >= version:
-                restore.append((tag, upper))
+                restore_actions.append((tag, upper))
                 lower(font, table, True)
             elif _convert_layout_formats(table.table, False):
-                restore.append((tag, None))
+                restore_actions.append((tag, None))
         yield
     finally:
-        for tag, upper in restore:
+        for tag, upper in restore_actions if restore else ():
             if tag not in font:
                 continue
             if upper is not None:

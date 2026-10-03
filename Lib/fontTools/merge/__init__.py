@@ -12,7 +12,7 @@ from fontTools.merge.cmap import (
 )
 from fontTools.merge.layout import layoutPreMerge, layoutPostMerge
 from fontTools.merge.options import Options
-from fontTools.ttLib.beyond64k import upper_tables
+from fontTools.ttLib.beyond64k import upper_tables, _compact_layout_tables
 import fontTools.merge.tables
 from fontTools.misc.loggingTools import Timer
 from functools import reduce
@@ -37,7 +37,14 @@ _COMPANION_TABLES = {
 
 
 def _fontHasUpperTables(font):
-    return bool(_UPPER_TABLES.intersection(font.keys()))
+    return bool(_UPPER_TABLES.intersection(font.keys())) or any(
+        tag in font and font[tag].table.Version >= version
+        for tag, version in (
+            ("GDEF", 0x00010004),
+            ("GSUB", 0x00010002),
+            ("GPOS", 0x00010002),
+        )
+    )
 
 
 class Merger(object):
@@ -126,7 +133,10 @@ class Merger(object):
         mega.setGlyphOrder(self.glyphOrder)
 
         for font in fonts:
-            self._preMerge(font)
+            # Inputs are owned by the merger; normalize without restoring them.
+            # The output is upgraded before serialization when needed.
+            with _compact_layout_tables(font, restore=False):
+                self._preMerge(font)
 
         self.fonts = fonts
 
