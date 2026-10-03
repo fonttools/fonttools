@@ -109,6 +109,8 @@ def _existingVariableFeatures(table):
     if hasattr(table, "FeatureVariations") and table.FeatureVariations is not None:
         features = table.FeatureList.FeatureRecord
         for fvr in table.FeatureVariations.FeatureVariationRecord:
+            if fvr.FeatureTableSubstitution is None:
+                continue
             for ftsr in fvr.FeatureTableSubstitution.SubstitutionRecord:
                 existingFeatureVarsTags.add(features[ftsr.FeatureIndex].FeatureTag)
     return existingFeatureVarsTags
@@ -459,6 +461,10 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
         if hasFeatureVariations and (
             fvr := findFeatureVariationRecord(table.FeatureVariations, conditionTable)
         ):
+            if fvr.FeatureTableSubstitution is None:
+                fvr.FeatureTableSubstitution = buildFeatureVariationRecord(
+                    conditionTable, []
+                ).FeatureTableSubstitution
             fvr.FeatureTableSubstitution.SubstitutionRecord.extend(records)
             fvr.FeatureTableSubstitution.SubstitutionCount = len(
                 fvr.FeatureTableSubstitution.SubstitutionRecord
@@ -687,6 +693,8 @@ def remapFeatures(table, featureRemap):
 
     if hasattr(table, "FeatureVariations") and table.FeatureVariations is not None:
         for fvr in table.FeatureVariations.FeatureVariationRecord:
+            if fvr.FeatureTableSubstitution is None:
+                continue
             for ftsr in fvr.FeatureTableSubstitution.SubstitutionRecord:
                 ftsr.FeatureIndex = featureRemap[ftsr.FeatureIndex]
 
