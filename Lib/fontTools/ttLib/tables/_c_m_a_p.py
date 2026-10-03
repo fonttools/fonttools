@@ -672,6 +672,10 @@ class cmap_format_2(CmapSubtable):
 
                     gids.append(gid)
 
+        for gid in gids:
+            if not 0 <= gid <= 0xFFFF:
+                raise struct.error(f"cmap format 2 cannot represent glyph ID {gid}")
+
         # Process the (char code to gid) item list in char code order.
         # By definition, all one byte char codes map to subheader 0.
         # For all the two byte char codes, we assume that the first byte maps maps to the empty subhead (with an entry count of 0,
@@ -1036,6 +1040,8 @@ class cmap_format_4(CmapSubtable):
                         gids.append(gid)
             cmap = {}  # code:glyphID mapping
             for code, gid in zip(charCodes, gids):
+                if not 0 <= gid <= 0xFFFF:
+                    raise struct.error(f"cmap format 4 cannot represent glyph ID {gid}")
                 cmap[code] = gid
 
             # Build startCode and endCode lists.
