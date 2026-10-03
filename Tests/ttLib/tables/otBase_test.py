@@ -1,6 +1,29 @@
 from fontTools.misc.textTools import deHexStr
+from fontTools.misc.lazyTools import LazyList
+from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import unittest
+
+
+class BaseTableTest(unittest.TestCase):
+    def test_ensureDecompiled_lazy_array(self):
+        font = TTFont(lazy=True)
+        child = otTables.Lookup()
+        child.reader = OTTableReader(deHexStr("0001 0000 0000"), tableTag="GSUB")
+        child.font = font
+        parent = otTables.LookupList()
+        parent.Lookup = LazyList([lambda i: child] * 10)
+
+        parent.ensureDecompiled(recurse=False)
+        self.assertIsInstance(parent.Lookup, LazyList)
+        self.assertIn("reader", vars(child))
+
+        parent.ensureDecompiled(recurse=True)
+        self.assertIsInstance(parent.Lookup, list)
+        self.assertNotIn("reader", vars(child))
+        self.assertEqual(child.LookupType, 1)
+        self.assertEqual(child.SubTable, [])
 
 
 class OTTableReaderTest(unittest.TestCase):

@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 from fontTools.misc.textTools import deHexStr
-from fontTools.ttLib import TTCollection
+from fontTools.ttLib import TTCollection, TTFont
+from fontTools.ttLib.sfnt import TTC_V1_1, TTC_V2_1, readTTCHeader
 from fontTools.ttLib.tables.D_S_I_G_ import table_D_S_I_G_
 
 TTX_DATA_DIR = Path(__file__).parent.parent / "ttx" / "data"
@@ -30,6 +31,52 @@ def test_lazy_open_file(lazy):
         assert len(collection) == 2
         assert collection[0]["maxp"].numGlyphs == 6
         assert collection[1]["maxp"].numGlyphs == 6
+
+
+@pytest.mark.parametrize(
+    "with_dsig, expected_version, expected_header_size",
+    [(False, TTC_V1_1, 24), (True, TTC_V2_1, 36)],
+)
+def test_extended_ttc_roundtrip(
+    lazy, with_dsig, expected_version, expected_header_size
+):
+    ttc_path = TTX_DATA_DIR / "TestTTC.ttc"
+    with TTCollection(ttc_path, lazy=False) as source:
+        legacy = source.fonts[0]
+        extended = source.fonts[1]
+        legacy["head"].fontRevision = 1.25
+        extended["head"].fontRevision = 2.5
+
+        collection = TTCollection()
+        collection.legacyFonts = [legacy]
+        collection.fonts = [extended]
+        if with_dsig:
+            collection.dsig = table_D_S_I_G_("DSIG")
+            collection.dsig.ulVersion = 1
+            collection.dsig.usNumSigs = 0
+            collection.dsig.usFlag = 0
+            collection.dsig.signatureRecords = []
+
+        buf = BytesIO()
+        collection.save(buf)
+        data = buf.getvalue()
+
+    header = readTTCHeader(BytesIO(data))
+    assert header.Version == expected_version
+    assert header.numFonts == 1
+    assert header.numFonts2 == 1
+    assert header.offsetTable[0] == expected_header_size
+    assert header.offsetTable2[0] > header.offsetTable[0]
+
+    with TTCollection(BytesIO(data), lazy=lazy) as collection:
+        assert len(collection.fonts) == 1
+        assert len(collection.legacyFonts) == 1
+        assert collection.fonts[0]["head"].fontRevision == 2.5
+        assert collection.legacyFonts[0]["head"].fontRevision == 1.25
+        assert (getattr(collection, "dsig", None) is not None) == with_dsig
+
+    with TTFont(BytesIO(data), fontNumber=0, lazy=lazy) as font:
+        assert font["head"].fontRevision == 2.5
 
 
 def test_save_ttc_v2_dsig(lazy):

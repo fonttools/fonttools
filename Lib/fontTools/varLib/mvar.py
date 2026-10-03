@@ -38,3 +38,15 @@ MVAR_ENTRIES = {
     #'gsp8': ('gasp', 'gaspRange[8].rangeMaxPPEM'),	 # gaspRange[8]
     #'gsp9': ('gasp', 'gaspRange[9].rangeMaxPPEM'),	 # gaspRange[9]
 }
+
+MVAR_COMPANION_TABLES = {
+    "hhea": "HHEA",
+    "vhea": "VHEA",
+}
+
+
+def getMVARTableTag(font, tableTag):
+    companionTag = MVAR_COMPANION_TABLES.get(tableTag)
+    if companionTag is not None and companionTag in font:
+        return companionTag
+    return tableTag

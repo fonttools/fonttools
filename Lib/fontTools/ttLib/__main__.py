@@ -123,7 +123,7 @@ def main(args=None):
         if lazy is False:
             tables = ["*"]
         elif optimizeFontSpeed:
-            tables = {"glyf", "gvar", "VARC"}.intersection(font.keys())
+            tables = {"glyf", "GLYF", "gvar", "GVAR", "VARC"}.intersection(font.keys())
         else:
             tables = []
     for font in fonts:

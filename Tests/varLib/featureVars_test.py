@@ -10,6 +10,105 @@ from fontTools.varLib.featureVars import (
 import pytest
 
 
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("existing_variation", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("feature_tag", ["rvrn", "rclt"])
+def test_addFeatureVariations_extended_layout(
+    varfont, extended_header, extended_formats, existing_variation, lazy, feature_tag
+):
+    from copy import deepcopy
+    from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+    from fontTools.misc.testTools import getXML
+    from fontTools.otlLib import builder
+    from fontTools.ttLib.beyond64k import (
+        _convert_layout_formats,
+        lower_tables,
+        upper_tables,
+    )
+
+    addOpenTypeFeaturesFromString(varfont, "feature calt { sub B A' by A.alt; } calt;")
+    lookup_builder = builder.ChainContextSubstBuilder(varfont, None)
+    referenced_lookup = builder.SingleSubstBuilder(varfont, None)
+    referenced_lookup.lookup_index = 1
+    rule = builder.ChainContextualRule(
+        [], [["A", "B"], ["A", "B"]], [], [[referenced_lookup], None]
+    )
+    ruleset = builder.ChainContextualRuleset()
+    ruleset.addRule(rule)
+    varfont["GSUB"].table.LookupList.Lookup[0] = builder.buildLookup(
+        [lookup_builder.buildFormat1Subtable(ruleset, False)]
+    )
+    if existing_variation:
+        addFeatureVariations(
+            varfont, [([{"wght": (-1.0, 0.0)}], {"B": "B.alt"})], featureTag="ccmp"
+        )
+    reference = deepcopy(varfont)
+    if extended_header:
+        upper_tables(varfont, tables=["GSUB"])
+    _convert_layout_formats(varfont["GSUB"].table, extended_formats)
+
+    def roundtrip(font, lazy=False):
+        data = font["GSUB"].compile(font)
+        font.lazy = lazy
+        table = newTable("GSUB")
+        table.decompile(data, font)
+        font["GSUB"] = table
+
+    roundtrip(varfont, lazy=lazy)
+    substitutions = [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})]
+    addFeatureVariations(reference, substitutions, featureTag=feature_tag)
+    addFeatureVariations(varfont, substitutions, featureTag=feature_tag)
+    assert varfont["GSUB"].table.Version == (
+        0x00010002 if extended_header else 0x00010001
+    )
+    roundtrip(varfont)
+    roundtrip(reference)
+    lower_tables(varfont, tables=["GSUB"])
+    assert getXML(varfont["GSUB"].toXML, varfont) == getXML(
+        reference["GSUB"].toXML, reference
+    )
+
+
+@pytest.mark.parametrize("tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_addFeatureVariationsRaw_extended_layout(varfont, tag, extended_header, lazy):
+    from copy import deepcopy
+    from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+    from fontTools.misc.testTools import getXML
+    from fontTools.ttLib.beyond64k import lower_tables, upper_tables
+    from fontTools.varLib.featureVars import addFeatureVariationsRaw
+
+    features = (
+        "feature calt { sub A by A.alt; } calt;"
+        if tag == "GSUB"
+        else "feature kern { pos A -20; } kern;"
+    )
+    addOpenTypeFeaturesFromString(varfont, features)
+    reference = deepcopy(varfont)
+    if extended_header:
+        upper_tables(varfont, tables=[tag])
+
+    def roundtrip(font, lazy=False):
+        data = font[tag].compile(font)
+        font.lazy = lazy
+        table = newTable(tag)
+        table.decompile(data, font)
+        font[tag] = table
+
+    roundtrip(varfont, lazy=lazy)
+    for font in (reference, varfont):
+        addFeatureVariationsRaw(font, font[tag].table, [({"wght": (0.5, 1.0)}, [0])])
+        roundtrip(font)
+    assert varfont[tag].table.Version == (0x00010002 if extended_header else 0x00010001)
+    lower_tables(varfont, tables=[tag])
+    assert getXML(varfont[tag].toXML, varfont) == getXML(
+        reference[tag].toXML, reference
+    )
+
+
 def makeVariableFont(glyphOrder, axes):
     font = TTFont()
     font.setGlyphOrder(glyphOrder)
@@ -137,6 +236,69 @@ def test_addFeatureVariations_new_feature(varfont):
     assert _substitution_features(gsub, rec_index=1) == [(0, "rclt")]
 
 
+@pytest.mark.parametrize("same_condition", [False, True])
+def test_addFeatureVariations_prepend_lookup(varfont, same_condition):
+    condition = {"wght": (0.5, 1.0)}
+    addFeatureVariations(varfont, [([condition], {"A": "A.alt"})], featureTag="ccmp")
+    gsub = varfont["GSUB"].table
+    original_feature = (
+        gsub.FeatureVariations.FeatureVariationRecord[0]
+        .FeatureTableSubstitution.SubstitutionRecord[0]
+        .Feature
+    )
+    assert original_feature.LookupListIndex == [0]
+
+    new_condition = condition if same_condition else {"wght": (-1.0, 0.0)}
+    addFeatureVariations(varfont, [([new_condition], {"B": "B.alt"})])
+    assert original_feature.LookupListIndex == [1]
+    assert gsub.LookupList.Lookup[0].SubTable[0].mapping == {"B": "B.alt"}
+    assert gsub.LookupList.Lookup[1].SubTable[0].mapping == {"A": "A.alt"}
+
+
+@pytest.mark.parametrize("same_condition", [False, True])
+@pytest.mark.parametrize("explicit_empty", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_addFeatureVariations_null_substitution(
+    varfont, same_condition, explicit_empty, lazy
+):
+    condition = {"wght": (0.5, 1.0)}
+    addFeatureVariations(varfont, [([condition], {"A": "A.alt"})])
+    record = varfont["GSUB"].table.FeatureVariations.FeatureVariationRecord[0]
+    if explicit_empty:
+        record.FeatureTableSubstitution.SubstitutionRecord = []
+        record.FeatureTableSubstitution.SubstitutionCount = 0
+    else:
+        record.FeatureTableSubstitution = None
+
+    data = varfont["GSUB"].compile(varfont)
+    varfont.lazy = lazy
+    varfont["GSUB"] = newTable("GSUB")
+    varfont["GSUB"].decompile(data, varfont)
+
+    new_condition = condition if same_condition else {"wght": (-1.0, 0.0)}
+    addFeatureVariations(
+        varfont, [([new_condition], {"B": "B.alt"})], featureTag="ccmp"
+    )
+
+    data = varfont["GSUB"].compile(varfont)
+    varfont["GSUB"] = newTable("GSUB")
+    varfont["GSUB"].decompile(data, varfont)
+    gsub = varfont["GSUB"].table
+    records = gsub.FeatureVariations.FeatureVariationRecord
+    assert len(records) == (1 if same_condition else 2)
+    if not same_condition:
+        if explicit_empty:
+            assert records[0].FeatureTableSubstitution.SubstitutionCount == 0
+        else:
+            assert records[0].FeatureTableSubstitution is None
+    substitution = records[-1].FeatureTableSubstitution.SubstitutionRecord[0]
+    assert (
+        gsub.FeatureList.FeatureRecord[substitution.FeatureIndex].FeatureTag == "ccmp"
+    )
+    assert substitution.Feature.LookupListIndex == [1]
+    assert gsub.LookupList.Lookup[1].SubTable[0].mapping == {"B": "B.alt"}
+
+
 def test_addFeatureVariations_existing_condition(varfont):
     assert "GSUB" not in varfont
 
@@ -167,6 +329,51 @@ def test_addFeatureVariations_existing_condition(varfont):
     assert len(gsub.LookupList.Lookup) == 2
     assert len(gsub.FeatureVariations.FeatureVariationRecord) == 1
     assert _substitution_features(gsub, rec_index=0) == [(0, "ccmp"), (1, "rlig")]
+
+
+@pytest.mark.parametrize("same_condition", [False, True])
+@pytest.mark.parametrize("explicit_empty", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_addFeatureVariations_null_condition(
+    varfont, same_condition, explicit_empty, lazy
+):
+    from fontTools.ttLib.tables import otTables as ot
+
+    addFeatureVariations(
+        varfont, [([{"wght": (-1.0, 1.0)}], {"A": "A.alt"})], featureTag="ccmp"
+    )
+    record = varfont["GSUB"].table.FeatureVariations.FeatureVariationRecord[0]
+    assert record.ConditionSet is None
+    if explicit_empty:
+        record.ConditionSet = ot.ConditionSet()
+        record.ConditionSet.ConditionTable = []
+        record.ConditionSet.ConditionCount = 0
+
+    data = varfont["GSUB"].compile(varfont)
+    varfont.lazy = lazy
+    varfont["GSUB"] = newTable("GSUB")
+    varfont["GSUB"].decompile(data, varfont)
+    condition = {} if same_condition else {"wght": (0.5, 1.0)}
+    addFeatureVariations(varfont, [([condition], {"B": "B.alt"})], featureTag="rclt")
+    data = varfont["GSUB"].compile(varfont)
+    varfont["GSUB"] = newTable("GSUB")
+    varfont["GSUB"].decompile(data, varfont)
+
+    gsub = varfont["GSUB"].table
+    records = gsub.FeatureVariations.FeatureVariationRecord
+    assert len(records) == (1 if same_condition else 2)
+    assert (records[0].ConditionSet is not None) == explicit_empty
+    original_feature = records[0].FeatureTableSubstitution.SubstitutionRecord[0]
+    assert original_feature.Feature.LookupListIndex == [0]
+    if same_condition:
+        assert _substitution_features(gsub, 0) == [(0, "ccmp"), (1, "rclt")]
+        new_feature = records[0].FeatureTableSubstitution.SubstitutionRecord[1]
+    else:
+        assert _substitution_features(gsub, 0) == [(0, "ccmp")]
+        assert _substitution_features(gsub, 1) == [(1, "rclt")]
+        new_feature = records[1].FeatureTableSubstitution.SubstitutionRecord[0]
+        assert records[1].ConditionSet.ConditionTable[0].FilterRangeMinValue == 0.5
+    assert new_feature.Feature.LookupListIndex == [1]
 
 
 def _test_linear(n):

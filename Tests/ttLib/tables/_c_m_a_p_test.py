@@ -11,6 +11,7 @@ from fontTools.ttLib.tables._c_m_a_p import (
     cmap_format_unknown,
     table__c_m_a_p,
 )
+from fontTools.ttLib.tables._g_l_y_f import Glyph
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, "data")
@@ -40,6 +41,34 @@ class CmapSubtableTest(unittest.TestCase):
         subtable = self.makeSubtable(4, 0, 2, 7)
         self.assertEqual("utf_16_be", subtable.getEncoding())
         self.assertEqual(True, subtable.isUnicode())
+
+    def test_compact_glyph_id_limits(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef"] + [f"g{i}" for i in range(1, 0x10002)])
+        for format in (2, 4):
+            for virtual in (False, True):
+                for companion in (False, True):
+                    for gid in (0xFFFF, 0x10000, 0x10001):
+                        with self.subTest(
+                            format=format, virtual=virtual, companion=companion, gid=gid
+                        ):
+                            subtable = self.makeSubtable(format, 3, 1, 0)
+                            subtable.cmap = {
+                                65: f"gid{gid}" if virtual else font.getGlyphName(gid)
+                            }
+                            if companion:
+                                subtable.cmap[66] = "g2"
+                            if gid > 0xFFFF:
+                                with self.assertRaisesRegex(struct.error, "glyph ID"):
+                                    subtable.compile(font)
+                            else:
+                                data = subtable.compile(font)
+                                reloaded = CmapSubtable.newSubtable(format)
+                                reloaded.decompile(data, font)
+                                expected = {65: font.getGlyphName(gid)}
+                                if companion:
+                                    expected[66] = "g2"
+                                self.assertEqual(reloaded.cmap, expected)
 
     def test_toUnicode_macroman(self):
         subtable = self.makeSubtable(4, 1, 0, 7)  # MacRoman
@@ -243,6 +272,20 @@ class CmapSubtableTest(unittest.TestCase):
         subtable2 = CmapSubtable.newSubtable(4)
         subtable2.decompile(data, font)
         self.assertEqual(subtable2.cmap, {})
+
+    def test_compile_decompile_12_13_empty(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([])
+        for format in (12, 13):
+            with self.subTest(format=format):
+                subtable = self.makeSubtable(format, 3, 10, 0)
+                subtable.cmap = {}
+                data = subtable.compile(font)
+                self.assertEqual(len(data), 16)
+                subtable2 = CmapSubtable.newSubtable(format)
+                subtable2.decompile(data, font)
+                self.assertEqual(subtable2.cmap, {})
+                self.assertEqual(subtable2.compile(font), data)
 
     def test_compile_decompile_2_empty(self):
         # An all-.notdef (empty) Macintosh format 2 cmap must round-trip
@@ -473,6 +516,56 @@ class CmapSubtableTest(unittest.TestCase):
         )
         self.assertEqual(font.getBestCmap(cmapPreferences=[(0, 4)]), None)
 
+    def test_font_getBestCmap_applies_DMAP_first(self):
+        cmap4 = self.makeSubtable(4, 3, 1, 0)
+        cmap4.cmap = {0x0041: "A", 0x0042: "B"}
+        dmap4 = self.makeSubtable(4, 3, 1, 0)
+        dmap4.cmap = {0x0041: "A.alt", 0x0043: "C"}
+
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "A", "A.alt", "B", "C"])
+        font["cmap"] = table__c_m_a_p("cmap")
+        font["cmap"].tableVersion = 0
+        font["cmap"].tables = [cmap4]
+        font["DMAP"] = ttLib.newTable("DMAP")
+        font["DMAP"].tableVersion = 0
+        font["DMAP"].tables = [dmap4]
+
+        self.assertIsInstance(font["DMAP"], table__c_m_a_p)
+        self.assertEqual(
+            font.getBestCmap(), {0x0041: "A.alt", 0x0042: "B", 0x0043: "C"}
+        )
+
+        data = font["DMAP"].compile(font)
+        dmap = ttLib.newTable("DMAP")
+        dmap.decompile(data, font)
+        self.assertEqual(dmap.getBestCmap(), dmap4.cmap)
+
+    def test_glyph_order_applies_DMAP_first(self):
+        glyphOrder = [".notdef", "cmapA", "dmapA", "cmapB", "dmapC"]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyphOrder)
+        fb.setupCharacterMap({0x0041: "cmapA", 0x0042: "cmapB"})
+        fb.setupGlyf({name: Glyph() for name in glyphOrder})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyphOrder})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost(keepGlyphNames=False)
+
+        dmap4 = self.makeSubtable(4, 3, 1, 0)
+        dmap4.cmap = {0x0041: "dmapA", 0x0043: "dmapC"}
+        fb.font["DMAP"] = ttLib.newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [dmap4]
+
+        data = io.BytesIO()
+        fb.font.save(data)
+        data.seek(0)
+        font = ttLib.TTFont(data)
+
+        self.assertEqual(font.getGlyphOrder(), [".notdef", "glyph00001", "A", "B", "C"])
+
     def test_format_14(self):
         subtable = self.makeSubtable(14, 0, 5, 0)
         subtable.cmap = {}  # dummy
@@ -503,6 +596,30 @@ class CmapSubtableTest(unittest.TestCase):
         with open(CMAP_FORMAT_14_BW_COMPAT_TTX) as f:
             font.importXML(f)
         self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
+
+    def test_default_uvs_range_limit(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a"])
+        for count in (255, 256, 257, 512, 513, 768):
+            for gaps in (False, True):
+                with self.subTest(count=count, gaps=gaps):
+                    points = list(range(0x1000, 0x1000 + count))
+                    if gaps:
+                        points.extend(range(0x2000, 0x2000 + count))
+                    table = self.makeSubtable(14, 0, 5, 0)
+                    table.cmap = {}
+                    table.uvsDict = {
+                        0xFE00: [(cp, None) for cp in reversed(points)]
+                        + [(0x3000, "a")]
+                    }
+                    data = table.compile(font)
+                    reloaded = self.makeSubtable(14, 0, 5, 0)
+                    reloaded.decompile(data, font)
+                    self.assertEqual(
+                        reloaded.uvsDict,
+                        {0xFE00: [(cp, None) for cp in points] + [(0x3000, "a")]},
+                    )
+                    self.assertEqual(reloaded.compile(font), data)
 
     def test_sort_subtables_with_duplicate_keys(self):
         # https://github.com/fonttools/fonttools/issues/4035

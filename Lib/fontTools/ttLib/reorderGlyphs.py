@@ -202,6 +202,37 @@ _REORDER_RULES = {
 }
 
 
+# Extended formats retain the same coverage/parallel-array relationships.
+for table_type, compact_format, extended_format in (
+    (ot.SinglePos, 1, 3),
+    (ot.SinglePos, 2, 4),
+    (ot.PairPos, 1, 3),
+    (ot.PairPos, 2, 4),
+    (ot.CursivePos, 1, 2),
+    (ot.MarkBasePos, 1, 2),
+    (ot.MarkLigPos, 1, 2),
+    (ot.MarkMarkPos, 1, 2),
+    (ot.ContextPos, 2, 5),
+    (ot.ContextPos, 3, 6),
+    (ot.ChainContextPos, 2, 5),
+    (ot.ContextSubst, 2, 5),
+    (ot.ContextSubst, 3, 6),
+    (ot.ChainContextSubst, 2, 5),
+    (ot.ReverseChainSingleSubst, 1, 2),
+):
+    _REORDER_RULES[(table_type, extended_format)] = _REORDER_RULES[
+        (table_type, compact_format)
+    ]
+for table_type in (ot.ContextPos, ot.ContextSubst):
+    _REORDER_RULES[(table_type, 4)] = [ReorderCoverage(parallel_list_attr="SeqRuleSet")]
+for table_type in (ot.ChainContextPos, ot.ChainContextSubst):
+    _REORDER_RULES[(table_type, 4)] = [
+        ReorderCoverage(parallel_list_attr="ChainedSeqRuleSet")
+    ]
+_REORDER_RULES[(ot.PairSet2, None)] = _REORDER_RULES[(ot.PairSet, None)]
+_REORDER_RULES[(ot.LigCaretList2, None)] = _REORDER_RULES[(ot.LigCaretList, None)]
+
+
 # TODO Port to otTraverse
 
 SubTablePath = Tuple[otBase.BaseTable.SubTableEntry, ...]

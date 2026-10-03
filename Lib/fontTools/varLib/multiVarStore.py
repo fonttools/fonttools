@@ -239,8 +239,9 @@ def ConditionTable_collect_varidxes(self, varidxes):
         varidxes.add(self.VarIdx)
     elif self.Format in (3, 4):
         for condition in self.ConditionTable:
-            condition.collect_varidxes(varidxes)
-    elif self.Format == 5:
+            if condition is not None:
+                condition.collect_varidxes(varidxes)
+    elif self.Format == 5 and self.ConditionTable is not None:
         self.ConditionTable.collect_varidxes(varidxes)
 
 
@@ -249,8 +250,9 @@ def ConditionTable_remap_varidxes(self, varidxes_map):
         self.VarIdx = varidxes_map[self.VarIdx]
     elif self.Format in (3, 4):
         for condition in self.ConditionTable:
-            condition.remap_varidxes(varidxes_map)
-    elif self.Format == 5:
+            if condition is not None:
+                condition.remap_varidxes(varidxes_map)
+    elif self.Format == 5 and self.ConditionTable is not None:
         self.ConditionTable.remap_varidxes(varidxes_map)
 
 
@@ -265,7 +267,8 @@ def VARC_collect_varidxes(self, varidxes):
             varidxes.add(component.transformVarIndex)
     if self.ConditionList is not None:
         for condition in self.ConditionList.ConditionTable:
-            condition.collect_varidxes(varidxes)
+            if condition is not None:
+                condition.collect_varidxes(varidxes)
 
 
 def VARC_remap_varidxes(self, varidxes_map):
@@ -275,7 +278,8 @@ def VARC_remap_varidxes(self, varidxes_map):
             component.transformVarIndex = varidxes_map[component.transformVarIndex]
     if self.ConditionList is not None:
         for condition in self.ConditionList.ConditionTable:
-            condition.remap_varidxes(varidxes_map)
+            if condition is not None:
+                condition.remap_varidxes(varidxes_map)
 
 
 ot.VARC.collect_varidxes = VARC_collect_varidxes

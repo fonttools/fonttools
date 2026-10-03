@@ -1,3 +1,5 @@
+from fontTools.ttLib.tables.otTables import _getLookupList
+
 __all__ = ["maxCtxFont"]
 
 
@@ -9,9 +11,10 @@ def maxCtxFont(font):
         if tag not in font:
             continue
         table = font[tag].table
-        if not table.LookupList:
+        lookupList = _getLookupList(table)
+        if not lookupList:
             continue
-        for lookup in table.LookupList.Lookup:
+        for lookup in lookupList.Lookup:
             for st in lookup.SubTable:
                 maxCtx = maxCtxSubtable(maxCtx, tag, lookup.LookupType, st)
     return maxCtx
@@ -62,25 +65,36 @@ def maxCtxSubtable(maxCtx, tag, lookupType, st):
 def maxCtxContextualSubtable(maxCtx, st, ruleType, chain=""):
     """Calculate usMaxContext based on a contextual feature subtable."""
 
-    if st.Format == 1:
-        for ruleset in getattr(st, "%s%sRuleSet" % (chain, ruleType)):
+    if st.Format in (1, 4):
+        prefix = (
+            ("ChainedSeq" if chain else "Seq")
+            if st.Format == 4
+            else "%s%s" % (chain, ruleType)
+        )
+        for ruleset in getattr(st, prefix + "RuleSet"):
             if ruleset is None:
                 continue
-            for rule in getattr(ruleset, "%s%sRule" % (chain, ruleType)):
+            for rule in getattr(ruleset, prefix + "Rule"):
                 if rule is None:
                     continue
                 maxCtx = maxCtxContextualRule(maxCtx, rule, chain)
 
-    elif st.Format == 2:
-        for ruleset in getattr(st, "%s%sClassSet" % (chain, ruleType)):
+    elif st.Format in (2, 5):
+        prefix = (
+            ("ChainedClassSeq" if chain else "ClassSeq")
+            if st.Format == 5
+            else "%s%sClass" % (chain, ruleType)
+        )
+        ruleSet = prefix + ("RuleSet" if st.Format == 5 else "Set")
+        for ruleset in getattr(st, ruleSet):
             if ruleset is None:
                 continue
-            for rule in getattr(ruleset, "%s%sClassRule" % (chain, ruleType)):
+            for rule in getattr(ruleset, prefix + "Rule"):
                 if rule is None:
                     continue
                 maxCtx = maxCtxContextualRule(maxCtx, rule, chain)
 
-    elif st.Format == 3:
+    elif st.Format in (3, 6):
         maxCtx = maxCtxContextualRule(maxCtx, st, chain)
 
     return maxCtx

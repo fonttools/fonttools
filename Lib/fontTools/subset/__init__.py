@@ -9,6 +9,7 @@ from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otBase import USE_HARFBUZZ_REPACKER
+from fontTools.ttLib.beyond64k import _compact_layout_tables
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
@@ -1725,29 +1726,71 @@ def subset_lookups(self, lookup_indices):
     ]
 
 
-@_add_method(otTables.FeatureVariations)
+@_add_method(otTables.LookupIndexList)
 def subset_lookups(self, lookup_indices):
-    """Returns the indices of nonempty features."""
+    lookup_map = {old: new for new, old in enumerate(lookup_indices)}
+    self.LookupIndex = [
+        lookup_map[index] for index in self.LookupIndex if index in lookup_map
+    ]
+    self.LookupIndexCount = len(self.LookupIndex)
+    return bool(self.LookupIndex)
+
+
+@_add_method(otTables.FeatureLookupsTable)
+def subset_lookups(self, lookup_indices):
+    self.LookupConditionRecord = [
+        record
+        for record in self.LookupConditionRecord
+        if record.LookupIndexList.subset_lookups(lookup_indices)
+    ]
+    self.LookupConditionCount = len(self.LookupConditionRecord)
+    return bool(self.LookupConditionRecord)
+
+
+@_add_method(otTables.FeatureLookupsTable)
+def collect_lookups(self):
     return sum(
-        (
-            f.FeatureTableSubstitution.subset_lookups(lookup_indices)
-            for f in self.FeatureVariationRecord
-        ),
+        (record.LookupIndexList.LookupIndex for record in self.LookupConditionRecord),
         [],
     )
 
 
 @_add_method(otTables.FeatureVariations)
+def subset_lookups(self, lookup_indices):
+    """Returns the indices of nonempty features."""
+    feature_indices = sum(
+        (
+            f.FeatureTableSubstitution.subset_lookups(lookup_indices)
+            for f in self.FeatureVariationRecord
+            if f.FeatureTableSubstitution is not None
+        ),
+        [],
+    )
+    for record in getattr(self, "LookupVariationRecord", []):
+        if record.FeatureLookupsTable.subset_lookups(lookup_indices):
+            feature_indices.append(record.FeatureIndex)
+    return feature_indices
+
+
+@_add_method(otTables.FeatureVariations)
 def collect_lookups(self, feature_indices):
-    return sum(
+    lookup_indices = sum(
         (
             r.Feature.LookupListIndex
             for vr in self.FeatureVariationRecord
+            if vr.FeatureTableSubstitution is not None
             for r in vr.FeatureTableSubstitution.SubstitutionRecord
             if r.FeatureIndex in feature_indices
         ),
         [],
     )
+    lookup_indices.extend(
+        lookup_index
+        for record in getattr(self, "LookupVariationRecord", [])
+        if record.FeatureIndex in feature_indices
+        for lookup_index in record.FeatureLookupsTable.collect_lookups()
+    )
+    return lookup_indices
 
 
 @_add_method(otTables.FeatureTableSubstitution)
@@ -1780,36 +1823,61 @@ def prune_features(self, feature_index_map):
 def subset_features(self, feature_indices):
     self.ensureDecompiled()
     for r in self.FeatureVariationRecord:
-        r.FeatureTableSubstitution.subset_features(feature_indices)
+        if r.FeatureTableSubstitution is not None:
+            r.FeatureTableSubstitution.subset_features(feature_indices)
     # Prune empty records at the end only
     # https://github.com/fonttools/fonttools/issues/1881
-    while (
-        self.FeatureVariationRecord
-        and not self.FeatureVariationRecord[
+    while self.FeatureVariationRecord and (
+        self.FeatureVariationRecord[-1].FeatureTableSubstitution is None
+        or not self.FeatureVariationRecord[
             -1
         ].FeatureTableSubstitution.SubstitutionCount
     ):
         self.FeatureVariationRecord.pop()
     self.FeatureVariationCount = len(self.FeatureVariationRecord)
-    return bool(self.FeatureVariationCount)
+
+    feature_map = {old: new for new, old in enumerate(feature_indices)}
+    if hasattr(self, "LookupVariationRecord"):
+        self.LookupVariationRecord = [
+            record
+            for record in self.LookupVariationRecord
+            if record.FeatureIndex in feature_map
+        ]
+        for record in self.LookupVariationRecord:
+            record.FeatureIndex = feature_map[record.FeatureIndex]
+        self.LookupVariationCount = len(self.LookupVariationRecord)
+
+    return bool(self.FeatureVariationCount or getattr(self, "LookupVariationCount", 0))
 
 
 @_add_method(otTables.FeatureVariations)
 def prune_features(self, feature_index_map):
     self.ensureDecompiled()
     for r in self.FeatureVariationRecord:
-        r.FeatureTableSubstitution.prune_features(feature_index_map)
+        if r.FeatureTableSubstitution is not None:
+            r.FeatureTableSubstitution.prune_features(feature_index_map)
     # Prune empty records at the end only
     # https://github.com/fonttools/fonttools/issues/1881
-    while (
-        self.FeatureVariationRecord
-        and not self.FeatureVariationRecord[
+    while self.FeatureVariationRecord and (
+        self.FeatureVariationRecord[-1].FeatureTableSubstitution is None
+        or not self.FeatureVariationRecord[
             -1
         ].FeatureTableSubstitution.SubstitutionCount
     ):
         self.FeatureVariationRecord.pop()
     self.FeatureVariationCount = len(self.FeatureVariationRecord)
-    return bool(self.FeatureVariationCount)
+
+    if hasattr(self, "LookupVariationRecord"):
+        self.LookupVariationRecord = [
+            record
+            for record in self.LookupVariationRecord
+            if record.FeatureIndex in feature_index_map
+        ]
+        for record in self.LookupVariationRecord:
+            record.FeatureIndex = feature_index_map[record.FeatureIndex]
+        self.LookupVariationCount = len(self.LookupVariationRecord)
+
+    return bool(self.FeatureVariationCount or getattr(self, "LookupVariationCount", 0))
 
 
 @_add_method(otTables.DefaultLangSys, otTables.LangSys)
@@ -2122,6 +2190,14 @@ def remap_duplicate_features(self, feature_indices):
 
     unique_features = {}
     duplicate_features = {}
+    lookup_variation_features = {
+        record.FeatureIndex
+        for record in getattr(
+            getattr(self.table, "FeatureVariations", None),
+            "LookupVariationRecord",
+            [],
+        )
+    }
     for i in feature_indices:
         f = features[i]
         tag = f.FeatureTag
@@ -2134,7 +2210,11 @@ def remap_duplicate_features(self, feature_indices):
 
         found = False
         for other_i in same_tag_features:
-            if features[other_i] == f:
+            if (
+                i not in lookup_variation_features
+                and other_i not in lookup_variation_features
+                and features[other_i] == f
+            ):
                 found = True
                 duplicate_features[i] = other_i
                 break
@@ -2242,7 +2322,11 @@ def prune_post_subset(self, font, options):
     if hasattr(table, "FeatureVariations"):
         # drop FeatureVariations if there are no features to substitute
         if table.FeatureVariations and not (
-            table.FeatureList and table.FeatureVariations.FeatureVariationRecord
+            table.FeatureList
+            and (
+                table.FeatureVariations.FeatureVariationRecord
+                or getattr(table.FeatureVariations, "LookupVariationRecord", [])
+            )
         ):
             table.FeatureVariations = None
 
@@ -2293,7 +2377,7 @@ def _pruneGDEF(font):
         return
     gdef = font["GDEF"]
     table = gdef.table
-    if not hasattr(table, "VarStore"):
+    if getattr(table, "VarStore", None) is None:
         return
 
     store = table.VarStore
@@ -2302,16 +2386,26 @@ def _pruneGDEF(font):
 
     # Collect.
     table.collect_device_varidxes(usedVarIdxes)
-    if "GPOS" in font:
-        font["GPOS"].table.collect_device_varidxes(usedVarIdxes)
+    for tag in ("GSUB", "GPOS"):
+        if tag in font:
+            font[tag].table.collect_device_varidxes(usedVarIdxes)
 
     # Subset.
+    # Missing condition delta sets contribute zero, just like NO_VARIATION_INDEX.
+    usedVarIdxes = {
+        index
+        for index in usedVarIdxes
+        if index >> 16 < len(store.VarData)
+        and index & 0xFFFF < len(store.VarData[index >> 16].Item)
+    }
     varidx_map = store.subset_varidxes(usedVarIdxes)
 
     # Map.
-    table.remap_device_varidxes(varidx_map)
-    if "GPOS" in font:
-        font["GPOS"].table.remap_device_varidxes(varidx_map)
+    done = set()
+    table.remap_device_varidxes(varidx_map, done=done)
+    for tag in ("GSUB", "GPOS"):
+        if tag in font:
+            font[tag].table.remap_device_varidxes(varidx_map, done=done)
 
 
 @_add_method(ttLib.getTableClass("GDEF"))
@@ -2328,7 +2422,7 @@ def prune_post_subset(self, font, options):
         table.AttachList = None
     if hasattr(table, "VarStore"):
         _pruneGDEF(font)
-        if table.VarStore.VarDataCount == 0:
+        if table.VarStore is None or table.VarStore.VarDataCount == 0:
             if table.Version == 0x00010003:
                 table.Version = 0x00010002
     if (
@@ -2621,6 +2715,7 @@ def _paint_glyph_names(paint, colr):
     def callback(paint):
         if paint.Format in {
             otTables.PaintFormat.PaintGlyph,
+            otTables.PaintFormat.PaintGlyph2,
             otTables.PaintFormat.PaintColrGlyph,
         }:
             result.add(paint.Glyph)
@@ -2827,6 +2922,7 @@ def closure_glyphs(self, s):
         for glyphName in oldNew:
             if glyphName in covered:
                 continue
+            covered.add(glyphName)
             idx = glyphMap.get(glyphName)
             if idx is None:
                 continue
@@ -2962,7 +3058,7 @@ def subset_glyphs(self, s):
 
 
 @_add_method(ttLib.getTableModule("glyf").Glyph)
-def remapComponentsFast(self, glyphidmap):
+def remapComponentsFast(self, glyphidmap, extended=False):
     if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
         return  # Not composite
     data = self.data = bytearray(self.data)
@@ -2970,12 +3066,14 @@ def remapComponentsFast(self, glyphidmap):
     more = 1
     while more:
         flags = (data[i] << 8) | data[i + 1]
-        glyphID = (data[i + 2] << 8) | data[i + 3]
+        glyphIDSize = 3 if extended and flags & 0x2000 else 2  # GID_IS_24_BIT
+        glyphIDStart = i + 2
+        glyphIDEnd = glyphIDStart + glyphIDSize
+        glyphID = int.from_bytes(data[glyphIDStart:glyphIDEnd], "big")
         # Remap
         glyphID = glyphidmap[glyphID]
-        data[i + 2] = glyphID >> 8
-        data[i + 3] = glyphID & 0xFF
-        i += 4
+        data[glyphIDStart:glyphIDEnd] = glyphID.to_bytes(glyphIDSize, "big")
+        i = glyphIDEnd
         flags = int(flags)
 
         if flags & 0x0001:
@@ -3026,7 +3124,7 @@ def subset_glyphs(self, s):
         glyphmap = {o: n for n, o in enumerate(indices)}
         for v in self.glyphs.values():
             if hasattr(v, "data"):
-                v.remapComponentsFast(glyphmap)
+                v.remapComponentsFast(glyphmap, extended=self.extended)
     Glyph = ttLib.getTableModule("glyf").Glyph
     for g in s.glyphs_emptied:
         self.glyphs[g] = Glyph()
@@ -3042,14 +3140,11 @@ def subset_glyphs(self, s):
 def prune_post_subset(self, font, options):
     remove_hinting = not options.hinting
     for v in self.glyphs.values():
-        v.trim(remove_hinting=remove_hinting)
+        v.trim(remove_hinting=remove_hinting, extended=self.extended)
     return True
 
 
-@_add_method(ttLib.getTableClass("cmap"))
-def closure_glyphs(self, s):
-    tables = [t for t in self.tables if t.isUnicode()]
-
+def _cmap_add_bidi_mirroring(s):
     # Closure unicodes, which for now is pulling in bidi mirrored variants
     if s.options.bidi_closure:
         additional_unicodes = set()
@@ -3059,25 +3154,95 @@ def closure_glyphs(self, s):
                 additional_unicodes.add(mirror_u)
         s.unicodes_requested.update(additional_unicodes)
 
+
+def _cmap_closure_glyphs(self, s, excluded_unicodes=(), excluded_uvs=()):
+    tables = [t for t in self.tables if t.isUnicode()]
+    matched_unicodes = set()
+    covered_unicodes = None
+    covered_uvs = None
+
     # Close glyphs
     for table in tables:
-        if table.format == 14:
+        if table.format in (14, 15):
+            table_uvs = set()
             for varSelector, cmap in table.uvsDict.items():
                 if varSelector not in s.unicodes_requested:
                     continue
-                glyphs = {g for u, g in cmap if u in s.unicodes_requested}
+                matches = [
+                    (u, g)
+                    for u, g in cmap
+                    if u in s.unicodes_requested
+                    and (varSelector, u) not in excluded_uvs
+                ]
+                # Glyph zero is a miss, so it must not suppress cmap fallback
+                # when this is DMAP. None denotes a default UVS and is a match.
+                table_uvs.update(
+                    (varSelector, u) for u, g in matches if g != s.orig_glyph_order[0]
+                )
+                glyphs = {g for _, g in matches}
                 if None in glyphs:
                     glyphs.remove(None)
                 s.glyphs.update(glyphs)
+            covered_uvs = (
+                table_uvs
+                if covered_uvs is None
+                else covered_uvs.intersection(table_uvs)
+            )
         else:
             cmap = table.cmap
             intersection = s.unicodes_requested.intersection(cmap.keys())
+            intersection.difference_update(excluded_unicodes)
+            if self.tableTag == "DMAP":
+                # Glyph zero is a miss, not a replacement for cmap fallback.
+                intersection = {
+                    u for u in intersection if cmap[u] != s.orig_glyph_order[0]
+                }
+            matched_unicodes.update(intersection)
             s.glyphs.update(cmap[u] for u in intersection)
+            covered_unicodes = (
+                intersection
+                if covered_unicodes is None
+                else covered_unicodes.intersection(intersection)
+            )
+    # Only mappings covered by every selectable DMAP subtable can suppress
+    # cmap fallback; different consumers may select different subtables.
+    return matched_unicodes, covered_unicodes or set(), covered_uvs or set()
+
+
+@_add_method(ttLib.getTableClass("cmap"))
+def closure_glyphs(self, s):
+    _cmap_add_bidi_mirroring(s)
+    matched_unicodes, _, _ = _cmap_closure_glyphs(self, s)
 
     # Calculate unicodes_missing
-    s.unicodes_missing = s.unicodes_requested.copy()
-    for table in tables:
-        s.unicodes_missing.difference_update(table.cmap)
+    s.unicodes_missing = s.unicodes_requested.difference(matched_unicodes)
+
+
+def _closure_glyphs_cmap_and_dmap(font, s):
+    _cmap_add_bidi_mirroring(s)
+
+    dmap_unicodes = set()
+    dmap_uvs = set()
+    matched_dmap_unicodes = set()
+    if "DMAP" in font:
+        matched_dmap_unicodes, dmap_unicodes, dmap_uvs = _cmap_closure_glyphs(
+            font["DMAP"], s
+        )
+
+    cmap_unicodes = set()
+    if "cmap" in font:
+        cmap_unicodes, _, _ = _cmap_closure_glyphs(
+            font["cmap"],
+            s,
+            excluded_unicodes=dmap_unicodes,
+            excluded_uvs=dmap_uvs,
+        )
+
+    s.unicodes_dmaped = dmap_unicodes
+    s.uvs_dmaped = dmap_uvs
+    s.unicodes_missing = s.unicodes_requested.difference(
+        matched_dmap_unicodes | cmap_unicodes
+    )
 
 
 @_add_method(ttLib.getTableClass("cmap"))
@@ -3091,12 +3256,15 @@ def prune_pre_subset(self, font, options):
     # For now, drop format=0 which can't be subset_glyphs easily?
     self.tables = [t for t in self.tables if t.format != 0]
     self.numSubTables = len(self.tables)
-    return True  # Required table
+    return self.tableTag == "cmap" or bool(self.tables)
 
 
 @_add_method(ttLib.getTableClass("cmap"))
 def subset_glyphs(self, s):
     s.glyphs = None  # We use s.glyphs_requested and s.unicodes_requested only
+    is_cmap = self.tableTag == "cmap"
+    excluded_unicodes = getattr(s, "unicodes_dmaped", ()) if is_cmap else ()
+    excluded_uvs = getattr(s, "uvs_dmaped", ()) if is_cmap else ()
 
     tables_format12_bmp = []
     table_plat0_enc3 = {}  # Unicode platform, Unicode BMP only, keyed by language
@@ -3108,7 +3276,7 @@ def subset_glyphs(self, s):
         if t.platformID == 3 and t.platEncID == 1:
             table_plat3_enc1[t.language] = t
 
-        if t.format == 14:
+        if t.format in (14, 15):
             # TODO(behdad) We drop all the default-UVS mappings
             # for glyphs_requested.  So it's the caller's responsibility to make
             # sure those are included.
@@ -3116,7 +3284,8 @@ def subset_glyphs(self, s):
                 v: [
                     (u, g)
                     for u, g in l
-                    if g in s.glyphs_requested or u in s.unicodes_requested
+                    if g in s.glyphs_requested
+                    or (u in s.unicodes_requested and (v, u) not in excluded_uvs)
                 ]
                 for v, l in t.uvsDict.items()
                 if v in s.unicodes_requested
@@ -3126,7 +3295,11 @@ def subset_glyphs(self, s):
             t.cmap = {
                 u: g
                 for u, g in t.cmap.items()
-                if g in s.glyphs_requested or u in s.unicodes_requested
+                if (is_cmap or g != s.orig_glyph_order[0])
+                and (
+                    g in s.glyphs_requested
+                    or (u in s.unicodes_requested and u not in excluded_unicodes)
+                )
             }
             # Collect format 12 tables that hold only basic multilingual plane
             # codepoints.
@@ -3137,7 +3310,7 @@ def subset_glyphs(self, s):
 
     # Fomat 12 tables are redundant if they contain just the same BMP codepoints
     # their little BMP-only encoding siblings contain.
-    for t in tables_format12_bmp:
+    for t in tables_format12_bmp if is_cmap else ():
         if (
             t.platformID == 0  # Unicode platform
             and t.platEncID == 4  # Unicode full repertoire
@@ -3153,12 +3326,21 @@ def subset_glyphs(self, s):
         ):
             t.cmap.clear()
 
-    self.tables = [t for t in self.tables if (t.cmap if t.format != 14 else t.uvsDict)]
+    nonempty_tables = [
+        t for t in self.tables if (t.cmap if t.format not in (14, 15) else t.uvsDict)
+    ]
+    # Retain empty DMAP subtables while any mappings remain, so subsetting
+    # does not promote another subtable and replace a cmap fallback.
+    self.tables = (
+        [t for t in self.tables if t.isUnicode() or t in nonempty_tables]
+        if not is_cmap and nonempty_tables
+        else nonempty_tables
+    )
     self.numSubTables = len(self.tables)
     # TODO(behdad) Convert formats when needed.
     # In particular, if we have a format=12 without non-BMP
     # characters, convert it to format=4 if there's not one.
-    return True  # Required table
+    return self.tableTag == "cmap" or bool(self.tables)
 
 
 @_add_method(ttLib.getTableClass("DSIG"))
@@ -3337,10 +3519,14 @@ class Options(object):
         "gasp",
         "head",
         "hhea",
+        "HHEA",
         "maxp",
+        "MAXP",
         "vhea",
+        "VHEA",
         "OS/2",
         "loca",
+        "LOCA",
         "name",
         "cvt",
         "fpgm",
@@ -3627,9 +3813,9 @@ class Subsetter(object):
         self.glyphs = self.glyphs_requested.copy()
 
         self.unicodes_missing = set()
-        if "cmap" in font:
-            with timer("close glyph list over 'cmap'"):
-                font["cmap"].closure_glyphs(self)
+        if "cmap" in font or "DMAP" in font:
+            with timer("close glyph list over character maps"):
+                _closure_glyphs_cmap_and_dmap(font, self)
                 self.glyphs.intersection_update(realGlyphs)
         self.glyphs_cmaped = frozenset(self.glyphs)
         if self.unicodes_missing:
@@ -3640,14 +3826,14 @@ class Subsetter(object):
             del missing
 
         if self.options.notdef_glyph:
-            if "glyf" in font:
+            if "glyf" in font or "GLYF" in font:
                 self.glyphs.add(font.getGlyphName(0))
                 log.info("Added gid0 to subset")
             else:
                 self.glyphs.add(".notdef")
                 log.info("Added .notdef to subset")
         if self.options.recommended_glyphs:
-            if "glyf" in font:
+            if "glyf" in font or "GLYF" in font:
                 for i in range(min(4, len(font.getGlyphOrder()))):
                     self.glyphs.add(font.getGlyphName(i))
                 log.info("Added first four glyphs to subset")
@@ -3714,16 +3900,22 @@ class Subsetter(object):
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_glyfed = frozenset(self.glyphs)
 
-        if "glyf" in font:
-            with timer("close glyph list over 'glyf'"):
+        for table in ("glyf", "GLYF"):
+            if table not in font:
+                continue
+            with timer("close glyph list over '%s'" % table):
                 log.info(
-                    "Closing glyph list over 'glyf': %d glyphs before", len(self.glyphs)
+                    "Closing glyph list over '%s': %d glyphs before",
+                    table,
+                    len(self.glyphs),
                 )
                 log.glyphs(self.glyphs, font=font)
-                font["glyf"].closure_glyphs(self)
+                font[table].closure_glyphs(self)
                 self.glyphs.intersection_update(realGlyphs)
                 log.info(
-                    "Closed glyph list over 'glyf': %d glyphs after", len(self.glyphs)
+                    "Closed glyph list over '%s': %d glyphs after",
+                    table,
+                    len(self.glyphs),
                 )
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_glyfed = frozenset(self.glyphs)
@@ -3864,10 +4056,11 @@ class Subsetter(object):
         return [t for t in tags if t != "GlyphOrder"]
 
     def subset(self, font):
-        self._prune_pre_subset(font)
-        self._closure_glyphs(font)
-        self._subset_glyphs(font)
-        self._prune_post_subset(font)
+        with _compact_layout_tables(font):
+            self._prune_pre_subset(font)
+            self._closure_glyphs(font)
+            self._subset_glyphs(font)
+            self._prune_post_subset(font)
 
 
 @timer("load font")
@@ -4100,11 +4293,14 @@ def main(args=None):
         if wildcard_glyphs:
             glyphs.extend(font.getGlyphOrder())
         if wildcard_unicodes:
-            for t in font["cmap"].tables:
-                if t.isUnicode():
-                    unicodes.extend(t.cmap.keys())
-                    if t.format == 14:
-                        unicodes.extend(t.uvsDict.keys())
+            for tag in ("cmap", "DMAP"):
+                if tag not in font:
+                    continue
+                for t in font[tag].tables:
+                    if t.isUnicode():
+                        unicodes.extend(t.cmap.keys())
+                        if t.format in (14, 15):
+                            unicodes.extend(t.uvsDict.keys())
         assert "" not in glyphs
 
     log.info("Text: '%s'" % text)

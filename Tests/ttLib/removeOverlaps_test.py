@@ -4,6 +4,8 @@ from pathlib import Path
 
 pathops = pytest.importorskip("pathops")
 
+from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.removeOverlaps import removeOverlaps, _simplify, _round_path
 
@@ -71,3 +73,34 @@ def test_CFF_CharString_width_nominalWidthX():
 
     font["CFF "].cff[0].CharStrings["OE"].calcBounds({})
     assert font["CFF "].cff[0].CharStrings["OE"].width == font["hmtx"]["OE"][0]
+
+
+def test_remove_overlaps_beyond64k_glyf():
+    fb = FontBuilder(1024, isTTF=True, beyond64k=True)
+    fb.setupGlyphOrder([".notdef", "A"])
+
+    pen = TTGlyphPen(None)
+    emptyGlyph = pen.glyph()
+
+    pen = TTGlyphPen(None)
+    pen.moveTo((0, 0))
+    pen.lineTo((100, 0))
+    pen.lineTo((100, 100))
+    pen.lineTo((0, 100))
+    pen.closePath()
+    pen.moveTo((50, 0))
+    pen.lineTo((150, 0))
+    pen.lineTo((150, 100))
+    pen.lineTo((50, 100))
+    pen.closePath()
+    glyph = pen.glyph()
+
+    fb.setupGlyf({".notdef": emptyGlyph, "A": glyph})
+    fb.setupHorizontalMetrics({".notdef": (500, 0), "A": (500, 10)})
+
+    removeOverlaps(fb.font)
+
+    assert "GLYF" in fb.font
+    assert "HMTX" in fb.font
+    assert fb.font["GLYF"]["A"].numberOfContours == 1
+    assert fb.font["HMTX"]["A"] == (500, 10)

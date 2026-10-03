@@ -29,6 +29,7 @@ from fontTools.misc.textTools import Tag, bytechr, byteord
 from fontTools import fontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.recordingPen import RecordingPen
+from fontTools.ttLib.beyond64k import upper_tables
 from io import BytesIO
 import struct
 import os
@@ -1215,6 +1216,19 @@ class WOFF2RoundtripTest(object):
         assert tmp.getvalue() == tmp2.getvalue()
         assert not ttFont2.reader.flavorData.transformedTables
 
+    def test_roundtrip_beyond64k_companion_tables(self, ttFont):
+        upper_tables(ttFont)
+        ttFont.flavor = "woff2"
+        tmp = BytesIO()
+        ttFont.save(tmp)
+
+        tmp2, ttFont2 = self.roundtrip(tmp)
+
+        assert tmp.getvalue() == tmp2.getvalue()
+        assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(ttFont2.keys())
+        assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(ttFont2.keys())
+        assert not ttFont2.reader.flavorData.transformedTables
+
     def test_roundtrip_all_transforms(self, ttFont):
         ttFont.flavor = "woff2"
         ttFont.flavorData = WOFF2FlavorData(transformedTables=["glyf", "loca", "hmtx"])
@@ -1512,6 +1526,10 @@ class CubicTest(unittest.TestCase):
             data_dir, "..", "tables", "data", "NotoSans-VF-cubic.subset.ttf"
         )
         ttf = ttLib.TTFont(input_path)
+        upper_tables(
+            ttf,
+            tables={"glyf", "loca", "maxp", "hhea", "hmtx", "gvar"},
+        )
         pen1 = RecordingPen()
         ttf.getGlyphSet()["a"].draw(pen1)
         ttf.flavor = "woff2"

@@ -27,6 +27,8 @@ class FieldSpec(NamedTuple):
             and `aux` is a string, it is often compiled into a Python
             expression for evaluation. For repeating structs, it is often used
             as a constant or an expression.
+        condition: Optional Python expression that controls whether the field
+            is present.
         description: A human-readable description of the field's purpose.
     """
 
@@ -35,3 +37,4 @@ class FieldSpec(NamedTuple):
     repeat: Any = None
     aux: Any = None
     description: str = ""
+    condition: str | None = None

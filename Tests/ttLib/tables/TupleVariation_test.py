@@ -592,6 +592,25 @@ class TupleVariationTest(unittest.TestCase):
         var = TupleVariation({}, [None, 1, 2, None, 4, None])
         # delta for cvts: [1, 2, 4]
         self.assertEqual("02 01 02 04", hexencode(var.compileDeltas()))
+        self.assertEqual(
+            "02 01 02 04", hexencode(var.compileDeltas(optimizeSize=False))
+        )
+
+    def test_compileDeltaValues_empty(self):
+        for optimizeSize in (False, True):
+            with self.subTest(optimizeSize=optimizeSize):
+                self.assertEqual(
+                    TupleVariation.compileDeltaValues_([], optimizeSize=optimizeSize),
+                    bytearray(),
+                )
+                buffer = bytearray(b"prefix")
+                self.assertIs(
+                    TupleVariation.compileDeltaValues_(
+                        [], buffer, optimizeSize=optimizeSize
+                    ),
+                    buffer,
+                )
+                self.assertEqual(buffer, bytearray(b"prefix"))
 
     def test_compileDeltaValues(self):
         compileDeltaValues = lambda values, optimizeSize=True: hexencode(
@@ -811,6 +830,29 @@ class TupleVariationTest(unittest.TestCase):
         self.assertEqual(
             decompileTupleVariationStore(
                 "gvar",
+                ["wght", "wdth"],
+                tupleVariationCount,
+                pointCount=4,
+                sharedTuples={},
+                data=(tuples + data),
+                pos=0,
+                dataPos=len(tuples),
+            ),
+            variations,
+        )
+
+    def test_compileTupleVariationStore_roundTrip_GVAR(self):
+        deltas = [(1, 1), (2, 2), (3, 3), (4, 4)]
+        variations = [
+            TupleVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, deltas),
+            TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, deltas),
+        ]
+        tupleVariationCount, tuples, data = compileTupleVariationStore(
+            variations, pointCount=4, axisTags=["wght", "wdth"], sharedTupleIndices={}
+        )
+        self.assertEqual(
+            decompileTupleVariationStore(
+                "GVAR",
                 ["wght", "wdth"],
                 tupleVariationCount,
                 pointCount=4,

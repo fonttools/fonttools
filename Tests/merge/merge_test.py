@@ -2,7 +2,9 @@ import io
 import itertools
 from fontTools import ttLib
 from fontTools.ttLib.tables._g_l_y_f import Glyph
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.fontBuilder import FontBuilder
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.merge import Merger, main as merge_main
 import difflib
 import os
@@ -344,11 +346,325 @@ def _make_fontfile_with_OS2(*, version, **kwargs):
     return _compile(fb.font)
 
 
+def _make_fontfile_with_glyphs(first_gid, glyph_count, *, add_layout=False):
+    upem = 1000
+    glyphOrder = [".notdef"] + [
+        f"glyph{gid:05d}" for gid in range(first_gid, first_gid + glyph_count - 1)
+    ]
+    cmap = {
+        first_gid + codepoint: glyphName
+        for codepoint, glyphName in enumerate(glyphOrder[1:])
+    }
+    glyphs = {gn: Glyph() for gn in glyphOrder}
+    hmtx = {gn: (500, 0) for gn in glyphOrder}
+    names = {"familyName": "TestMerge", "styleName": "Regular"}
+
+    fb = FontBuilder(unitsPerEm=upem)
+    fb.setupGlyphOrder(glyphOrder)
+    fb.setupCharacterMap(cmap)
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics(hmtx)
+    fb.setupHorizontalHeader()
+    fb.setupNameTable(names)
+    fb.setupOS2()
+    if add_layout:
+        glyph1, glyph2 = glyphOrder[1:3]
+        addOpenTypeFeaturesFromString(
+            fb.font,
+            f"feature salt {{ sub {glyph1} by {glyph2}; }} salt;",
+        )
+
+    return _compile(fb.font)
+
+
+def _upper_fontfile(fontfile):
+    font = ttLib.TTFont(fontfile)
+    upper_tables(font)
+    return _compile(font)
+
+
 def _merge_and_recompile(fontfiles, options=None):
     merger = Merger(options)
     merged = merger.merge(fontfiles)
     buf = _compile(merged)
     return ttLib.TTFont(buf)
+
+
+@pytest.mark.parametrize("first_format", [14, 15])
+@pytest.mark.parametrize("second_format", [14, 15])
+@pytest.mark.parametrize("high_glyph_ids", [False, True])
+def test_merge_extended_uvs(first_format, second_format, high_glyph_ids):
+    fontfiles = []
+    count = 0x8001 if high_glyph_ids else 4
+    for index, format in enumerate((first_format, second_format)):
+        font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000 * (index + 1), count))
+        glyphOrder = font.getGlyphOrder()
+        uvs = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(format)
+        uvs.platformID = 0
+        uvs.platEncID = 5
+        uvs.language = 0
+        uvs.cmap = {}
+        uvs.uvsDict = {
+            0xFE00: [(0x10000 * (index + 1), glyphOrder[-1])],
+            0xE0100 + index: [(0x10000 * (index + 1) + 1, None)],
+        }
+        font["cmap"].tables.append(uvs)
+        fontfiles.append(_compile(font))
+
+    merger = Merger()
+    merged = merger.merge(fontfiles)
+    assert merged["cmap"].tables[0].format == (15 if high_glyph_ids else 14)
+    expected = {
+        0xFE00: [
+            (0x10000, merger.glyphOrder[count - 1]),
+            (0x20000, merger.glyphOrder[-1]),
+        ],
+        0xE0100: [(0x10001, None)],
+        0xE0101: [(0x20001, None)],
+    }
+    assert merged["cmap"].tables[0].uvsDict == expected
+    roundtripped = ttLib.TTFont(_compile(merged))
+    actual = roundtripped["cmap"].tables[0].uvsDict
+    for selector, mappings in expected.items():
+        assert [codepoint for codepoint, _ in actual[selector]] == [
+            codepoint for codepoint, _ in mappings
+        ]
+        for (_, actualGlyph), (_, expectedGlyph) in zip(actual[selector], mappings):
+            if expectedGlyph is None:
+                assert actualGlyph is None
+            else:
+                assert roundtripped.getGlyphID(actualGlyph) == merged.getGlyphID(
+                    expectedGlyph
+                )
+
+
+@pytest.mark.parametrize("reverse_order", [False, True])
+def test_merge_prefers_format15_uvs(reverse_order):
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    glyphOrder = font.getGlyphOrder()
+    subtables = []
+    for format, glyph in ((14, glyphOrder[2]), (15, glyphOrder[3])):
+        uvs = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(format)
+        uvs.platformID = 0
+        uvs.platEncID = 5
+        uvs.language = 0
+        uvs.cmap = {}
+        uvs.uvsDict = {0xFE00: [(0x10000, glyph)]}
+        subtables.append(uvs)
+    font["cmap"].tables.extend(reversed(subtables) if reverse_order else subtables)
+
+    merger = Merger()
+    merger.glyphOrder = glyphOrder
+    merger.duplicateGlyphsPerFont = [{}]
+    merged = ttLib.newTable("cmap").merge(merger, [font["cmap"]])
+    assert merged.tables[0].uvsDict == {0xFE00: [(0x10000, glyphOrder[3])]}
+
+
+@pytest.mark.parametrize("uvs_format", [14, 15])
+@pytest.mark.parametrize("dmap_uvs", ["default", "nondefault", "zero"])
+@pytest.mark.parametrize("dmap_only", [False, True])
+@pytest.mark.parametrize("high_glyph_ids", [False, True])
+def test_merge_dmap(uvs_format, dmap_uvs, dmap_only, high_glyph_ids):
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    glyphOrder = font.getGlyphOrder()
+    module = ttLib.getTableModule("cmap")
+    nominal = module.CmapSubtable.newSubtable(12)
+    nominal.platformID = 3
+    nominal.platEncID = 10
+    nominal.language = 0
+    nominal.cmap = {
+        0x10000: glyphOrder[2],
+        0x10001: glyphOrder[0],
+        0x30000: glyphOrder[3],
+    }
+    base_uvs = module.CmapSubtable.newSubtable(uvs_format)
+    base_uvs.platformID = 0
+    base_uvs.platEncID = 5
+    base_uvs.language = 0
+    base_uvs.cmap = {}
+    base_uvs.uvsDict = {
+        0xFE00: [(0x10000, glyphOrder[3]), (0x10001, None)],
+        0xE0100: [(0x10000, None)],
+    }
+    font["cmap"].tables.append(base_uvs)
+    delta_uvs = module.CmapSubtable.newSubtable(uvs_format)
+    delta_uvs.platformID = 0
+    delta_uvs.platEncID = 5
+    delta_uvs.language = 0
+    delta_uvs.cmap = {}
+    delta_uvs.uvsDict = {
+        0xFE00: [
+            (
+                0x10000,
+                {"default": None, "nondefault": glyphOrder[1], "zero": glyphOrder[0]}[
+                    dmap_uvs
+                ],
+            ),
+            (0x30000, glyphOrder[2]),
+        ]
+    }
+    font["DMAP"] = ttLib.newTable("DMAP")
+    font["DMAP"].tableVersion = 0
+    font["DMAP"].tables = [delta_uvs, nominal]
+    if dmap_only:
+        del font["cmap"]
+
+    second = _make_fontfile_with_glyphs(0x20000, 0xFFFF if high_glyph_ids else 4)
+    first = _compile(font)
+    merged = _merge_and_recompile(
+        [second, first] if high_glyph_ids else [first, second]
+    )
+    glyph_offset = 0xFFFF if high_glyph_ids else 0
+    assert "DMAP" not in merged
+    cmap = merged.getBestCmap()
+    assert merged.getGlyphID(cmap[0x10000]) == glyph_offset + 2
+    assert merged.getGlyphID(cmap[0x30000]) == glyph_offset + 3
+    assert merged.getGlyphID(cmap[0x20000]) == (1 if high_glyph_ids else 5)
+    if dmap_only:
+        assert 0x10001 not in cmap
+    else:
+        assert merged.getGlyphID(cmap[0x10001]) == glyph_offset + 2
+    assert merged["cmap"].tables[0].format == (15 if high_glyph_ids else 14)
+    uvs = {
+        selector: dict(entries)
+        for selector, entries in merged["cmap"].tables[0].uvsDict.items()
+    }
+    expected = {"default": None, "nondefault": 1, "zero": None if dmap_only else 3}[
+        dmap_uvs
+    ]
+    if dmap_uvs == "zero" and dmap_only:
+        assert 0x10000 not in uvs[0xFE00]
+    elif expected is None:
+        assert uvs[0xFE00][0x10000] is None
+    else:
+        assert merged.getGlyphID(uvs[0xFE00][0x10000]) == glyph_offset + expected
+    assert merged.getGlyphID(uvs[0xFE00][0x30000]) == glyph_offset + 2
+    if not dmap_only:
+        assert uvs[0xFE00][0x10001] is None
+        assert uvs[0xE0100][0x10000] is None
+
+
+def test_merge_dmap_respects_drop_tables():
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    dmap = ttLib.newTable("DMAP")
+    dmap.tableVersion = 0
+    subtable = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(12)
+    subtable.platformID, subtable.platEncID, subtable.language = 3, 10, 0
+    subtable.cmap = {0x10000: font.getGlyphOrder()[2]}
+    dmap.tables = [subtable]
+    font["DMAP"] = dmap
+    options = Merger().options
+    options.drop_tables = ["DMAP"]
+    merged = _merge_and_recompile([_compile(font)], options)
+    assert "DMAP" not in merged
+    assert merged.getGlyphID(merged.getBestCmap()[0x10000]) == 1
+
+
+@pytest.mark.parametrize("uvs_format", [14, 15])
+def test_merge_dmap_uvs_only(uvs_format):
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    dmap = ttLib.newTable("DMAP")
+    dmap.tableVersion = 0
+    uvs = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(uvs_format)
+    uvs.platformID, uvs.platEncID, uvs.language = 0, 5, 0
+    uvs.cmap = {}
+    uvs.uvsDict = {0xFE00: [(0x10000, font.getGlyphOrder()[2])]}
+    dmap.tables = [uvs]
+    font["DMAP"] = dmap
+    merged = _merge_and_recompile([_compile(font)])
+    assert "DMAP" not in merged
+    assert merged.getGlyphID(merged.getBestCmap()[0x10000]) == 1
+    glyph = merged["cmap"].tables[0].uvsDict[0xFE00][0][1]
+    assert merged.getGlyphID(glyph) == 2
+
+
+@pytest.mark.parametrize("upper_family", [False, True])
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("context_format", [1, 2, 3])
+@pytest.mark.parametrize("mark_filtering", [False, True])
+@pytest.mark.parametrize("chaining", [False, True])
+def test_merge_extended_layout(
+    upper_family,
+    extended_header,
+    extended_formats,
+    context_format,
+    mark_filtering,
+    chaining,
+):
+    from fontTools.otlLib import builder
+    from fontTools.ttLib.beyond64k import _convert_layout_formats
+    from fontTools.ttLib.tables import otTables as ot
+
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0xE100, 4))
+    first, second = font.getGlyphOrder()[1:3]
+    addOpenTypeFeaturesFromString(
+        font,
+        f"""
+        lookup Substitute {{ sub {first} by {second}; }} Substitute;
+        lookup Position {{ pos {first} -20; }} Position;
+        feature calt {{ sub {first}' lookup Substitute {second}; }} calt;
+        feature kern {{ pos {first}' lookup Position {second}; }} kern;
+        table GDEF {{
+            GlyphClassDef [{first}], [], [{second}], [];
+            LigatureCaretByPos {first} 0;
+        }} GDEF;
+        """,
+    )
+    for tag, builder_type in (
+        ("GSUB", builder.ChainContextSubstBuilder),
+        ("GPOS", builder.ChainContextPosBuilder),
+    ):
+        lookup_builder = builder_type(font, None)
+        referenced_lookup = builder.SingleSubstBuilder(font, None)
+        referenced_lookup.lookup_index = 0
+        rule = builder.ChainContextualRule(
+            [[font.getGlyphOrder()[3]]] if chaining else [],
+            [[first], [second]],
+            [[font.getGlyphOrder()[3]]] if chaining else [],
+            [[referenced_lookup], None],
+        )
+        ruleset = builder.ChainContextualRuleset()
+        ruleset.addRule(rule)
+        if context_format == 1:
+            subtable = lookup_builder.buildFormat1Subtable(ruleset, chaining)
+        elif context_format == 2:
+            subtable = lookup_builder.buildFormat2Subtable(
+                ruleset, ruleset.format2ClassDefs(), chaining
+            )
+        else:
+            subtable = lookup_builder.buildFormat3Subtable(rule, chaining)
+        font[tag].table.LookupList.Lookup[1] = builder.buildLookup(
+            [subtable], table=tag
+        )
+    if mark_filtering:
+        font["GDEF"].table.MarkGlyphSetsDef = builder.buildMarkGlyphSetsDef(
+            [{second}], font.getReverseGlyphMap()
+        )
+        font["GDEF"].table.Version = 0x00010002
+        for tag in ("GSUB", "GPOS"):
+            lookup = font[tag].table.LookupList.Lookup[0]
+            lookup.LookupFlag |= 0x0010
+            lookup.MarkFilteringSet = 0
+
+    other = _make_fontfile_with_glyphs(0xE000, 4, add_layout=True)
+    reference = _merge_and_recompile([other, _compile(font)])
+    if upper_family:
+        upper_tables(font)
+    if extended_header:
+        upper_tables(font, tables=["GSUB", "GPOS", "GDEF"])
+    for tag in ("GSUB", "GPOS"):
+        _convert_layout_formats(font[tag].table, extended_formats)
+    merged = _merge_and_recompile([other, _compile(font)])
+    if upper_family or extended_header:
+        upper_tables(reference)
+        assert "MAXP" in merged
+        assert "maxp" not in merged
+    else:
+        assert "maxp" in merged
+        assert "MAXP" not in merged
+    for tag in ("GSUB", "GPOS", "GDEF"):
+        assert merged[tag].compile(merged) == reference[tag].compile(reference)
 
 
 def test_merge_head_different_units_per_em():
@@ -374,6 +690,70 @@ def test_merge_OS2_mixed_versions(v1, v2):
     ]
     merged = _merge_and_recompile(fontfiles)
     assert merged["OS/2"].version == max(v1, v2)
+
+
+def test_merge_keeps_compact_tables_below_glyph_limit():
+    fontfiles = [
+        _make_fontfile_with_glyphs(0xE000, 10),
+        _make_fontfile_with_glyphs(0xE100, 10),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    assert "glyf" in merged
+    assert "GLYF" not in merged
+    assert "maxp" in merged
+    assert "MAXP" not in merged
+
+
+def test_merge_uses_upper_tables_above_glyph_limit():
+    fontfiles = [
+        _make_fontfile_with_glyphs(0x10000, 0x8001),
+        _make_fontfile_with_glyphs(0x20000, 0x8001),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    assert merged.hasExtendedGlyphIDs()
+    assert "GLYF" in merged
+    assert "glyf" not in merged
+    assert "MAXP" in merged
+    assert "maxp" not in merged
+    assert "HHEA" in merged
+    assert "HMTX" in merged
+    assert "LOCA" in merged
+
+
+def test_merge_uses_upper_layout_above_glyph_limit():
+    fontfiles = [
+        _make_fontfile_with_glyphs(0x10000, 0x8001, add_layout=True),
+        _make_fontfile_with_glyphs(0x20000, 0x8001),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    table = merged["GSUB"].table
+    assert table.Version == 0x00010002
+    assert table.ScriptList is None
+    assert table.FeatureList is None
+    assert table.LookupList is None
+    assert table.ScriptList2 is not None
+    assert table.FeatureList2 is not None
+    assert table.LookupList2 is not None
+
+
+def test_merge_preserves_upper_input_family_below_glyph_limit():
+    fontfiles = [
+        _upper_fontfile(_make_fontfile_with_glyphs(0xE000, 10)),
+        _make_fontfile_with_glyphs(0xE100, 10),
+    ]
+
+    merged = _merge_and_recompile(fontfiles)
+
+    assert "GLYF" in merged
+    assert "glyf" not in merged
+    assert "MAXP" in merged
+    assert "maxp" not in merged
 
 
 if __name__ == "__main__":

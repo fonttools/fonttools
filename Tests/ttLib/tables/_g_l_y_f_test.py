@@ -6,6 +6,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.tables._g_l_y_f import (
     Glyph,
     GlyphCoordinates,
@@ -22,6 +23,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
 )
 from fontTools.ttLib.tables import ttProgram
 import sys
+import struct
 import array
 from collections.abc import ValuesView, ItemsView
 from copy import deepcopy
@@ -1035,9 +1037,35 @@ class GlyphComponentTest:
 
 
 class GlyphCubicTest:
+    @pytest.mark.parametrize("count", [2, 4, 8])
+    @pytest.mark.parametrize("cubic", [False, True])
+    def test_drawPoints_all_offcurve(self, count, cubic):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates([(i, i % 2) for i in range(count)])
+        glyph.flags = array.array("B", [flagCubic if cubic else 0] * count)
+        glyph.endPtsOfContours = [count - 1]
+        glyph.program = ttProgram.Program()
+        pen = RecordingPointPen()
+
+        if cubic:
+            with pytest.raises(NotImplementedError, match="All-off-curve cubic"):
+                glyph.drawPoints(pen, None)
+            assert pen.value == []
+            glyph.draw(RecordingPen(), None)
+        else:
+            glyph.drawPoints(pen, None)
+            assert [
+                args[0] for op, args, kwargs in pen.value if op == "addPoint"
+            ] == list(glyph.coordinates)
+
     def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
         font = TTFont(font_path)
+        upper_tables(
+            font,
+            tables={"glyf", "loca", "maxp", "hhea", "hmtx", "gvar"},
+        )
         tables = [table_tag for table_tag in font.keys() if table_tag not in {"head"}]
         xml = StringIO()
         font.saveXML(xml)
@@ -1106,6 +1134,87 @@ class GlyphCubicTest:
             ]
 
 
+@pytest.mark.parametrize("length", [0x7FFF, 0x8000, 0xFFFF, 0x10000])
+@pytest.mark.parametrize("composite", [False, True])
+def test_unsigned_instruction_length(length, composite):
+    glyf = newTable("glyf")
+    glyf.glyphOrder = [".notdef", "base", "composite"]
+    pen = TTGlyphPen(None)
+    pen.moveTo((10, 20))
+    pen.lineTo((100, 20))
+    pen.lineTo((10, 100))
+    pen.closePath()
+    base = pen.glyph()
+    glyf.glyphs = {".notdef": Glyph(), "base": base}
+    if composite:
+        pen = TTGlyphPen(glyf)
+        pen.addComponent("base", (1, 0, 0, 1, 30, 40))
+        glyph = pen.glyph()
+    else:
+        glyph = base
+    glyph.program = ttProgram.Program()
+    glyph.program.fromBytecode([0] * length)
+
+    if length > 0xFFFF:
+        with pytest.raises(struct.error):
+            glyph.compile(glyf)
+        return
+    data = glyph.compile(glyf)
+    reloaded = Glyph(data)
+    reloaded.expand(glyf)
+    assert reloaded.program.getBytecode() == glyph.program.getBytecode()
+    assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
+    assert reloaded.compile(glyf) == data
+
+
+@pytest.mark.parametrize("length", [0, 1, 0x8000, 0xFFFF])
+@pytest.mark.parametrize("remove_hinting", [False, True])
+@pytest.mark.parametrize("expanded", [False, True])
+def test_zero_contour_instructions(length, remove_hinting, expanded):
+    header = struct.pack(">hhhhh", 0, 0, 0, 0, 0)
+    instructions = b"\x00" * length
+    data = header + struct.pack(">H", length) + instructions
+    glyph = Glyph(data + b"\x00\x00\x00")
+    if expanded:
+        glyph.expand(None)
+        assert glyph.program.getBytecode() == instructions
+    glyph.trim(remove_hinting=remove_hinting)
+    if remove_hinting or not length:
+        glyph.expand(None)
+        assert not getattr(glyph, "program", None)
+        assert glyph.compile(None) == b""
+    else:
+        if not expanded:
+            assert glyph.data == data
+        glyph.expand(None)
+        assert glyph.program.getBytecode() == instructions
+        assert glyph.compile(None) == data
+
+
+@pytest.mark.parametrize("data", [b"", b"\x00" * 10, b"\x00" * 11])
+@pytest.mark.parametrize("remove_hinting", [False, True])
+def test_trim_zero_contour_without_instructions(data, remove_hinting):
+    glyph = Glyph(data)
+    glyph.trim(remove_hinting=remove_hinting)
+    glyph.expand(None)
+    assert glyph.compile(None) == b""
+
+
+@pytest.mark.parametrize("split_glyphs", [False, True])
+def test_zero_contour_instructions_xml(tmp_path, split_glyphs):
+    font = TTFont(recalcTimestamp=False)
+    font.setGlyphOrder([".notdef", "space"])
+    font["glyf"] = glyf = newTable("glyf")
+    instructions = b"\xb0\x00\x21"
+    data = struct.pack(">hhhhhH", 0, 0, 0, 0, 0, len(instructions)) + instructions
+    glyf.glyphs = {".notdef": Glyph(), "space": Glyph(data)}
+    path = tmp_path / "empty.ttx"
+    font.saveXML(path, tables=["GlyphOrder", "glyf"], splitGlyphs=split_glyphs)
+    result = TTFont()
+    result.importXML(path)
+    assert result["glyf"]["space"].compile(result["glyf"]) == data
+
+
 def build_interpolatable_glyphs(contours, *transforms):
     # given a list of lists of (point, flag) tuples (one per contour), build a Glyph
     # then make len(transforms) copies transformed accordingly, and return a
@@ -1129,6 +1238,64 @@ def build_interpolatable_glyphs(contours, *transforms):
         glyph.coordinates.translate(t[4:6])
         result.append(glyph)
     return result
+
+
+@pytest.mark.parametrize("extended", [False, True])
+@pytest.mark.parametrize("wide_gid", [False, True])
+@pytest.mark.parametrize("word_args", [False, True])
+@pytest.mark.parametrize(
+    "transform",
+    [
+        (0, ()),
+        (WE_HAVE_A_SCALE, (0x2000,)),
+        (WE_HAVE_AN_X_AND_Y_SCALE, (0x2000, 0x4000)),
+        (WE_HAVE_A_TWO_BY_TWO, (0x2000, 0x1000, 0x1000, 0x4000)),
+    ],
+)
+@pytest.mark.parametrize("remove_hinting", [False, True])
+def test_trim_compact_composite(
+    extended, wide_gid, word_args, transform, remove_hinting
+):
+    transform_flag, transform_values = transform
+    header = bytes.fromhex("ffff 0000 0000 0064 0064")
+    records = []
+    for index, gid in enumerate((2, 1)):
+        flags = ARGS_ARE_XY_VALUES | transform_flag
+        if index == 0:
+            flags |= 0x0020  # MORE_COMPONENTS
+            if wide_gid:
+                flags |= 0x2000  # GID_IS_24_BIT, reserved in lowercase glyf
+        else:
+            flags |= 0x0100  # WE_HAVE_INSTRUCTIONS
+        if word_args:
+            flags |= 0x0001  # ARG_1_AND_2_ARE_WORDS
+        gid_size = 3 if extended and flags & 0x2000 else 2
+        records.append(
+            struct.pack(">H", flags)
+            + gid.to_bytes(gid_size, "big")
+            + struct.pack(">hh" if word_args else ">bb", 123, -42)
+            + struct.pack(">" + "h" * len(transform_values), *transform_values)
+        )
+    program = bytes.fromhex("0003 b00121")
+    data = header + b"".join(records) + program
+    glyph = Glyph(data + b"\0\0\0")
+    glyf = newTable("GLYF" if extended else "glyf")
+    glyf.glyphOrder = [".notdef", "a", "b"]
+    glyf.glyphs = {"composite": glyph}
+
+    if remove_hinting:
+        glyf.removeHinting()
+        records[-1] = bytes([records[-1][0] & ~1]) + records[-1][1:]
+        expected = header + b"".join(records)
+    else:
+        glyph.trim(extended=extended)
+        expected = data
+
+    assert glyph.data == expected
+    glyph.expand(glyf)
+    assert [comp.glyphName for comp in glyph.components] == ["b", "a"]
+    assert [(comp.x, comp.y) for comp in glyph.components] == [(123, -42)] * 2
+    assert hasattr(glyph, "program") == (not remove_hinting)
 
 
 def test_dropImpliedOnCurvePoints_all_quad_off_curves():

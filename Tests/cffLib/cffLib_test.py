@@ -12,9 +12,98 @@ from fontTools.ttLib import TTFont
 import copy
 import unittest
 from io import BytesIO
+import pytest
 
 
 class CffLibTest(DataFilesHandler):
+    def test_VARC_short_CharStrings_roundtrip(self):
+        for format in (3, 4):
+            for retainGids in (False, True):
+                with self.subTest(format=format, retainGids=retainGids):
+                    self._check_VARC_short_CharStrings_roundtrip(format, retainGids)
+
+    def _check_VARC_short_CharStrings_roundtrip(self, format, retainGids):
+        from fontTools.pens.boundsPen import BoundsPen
+        from fontTools import subset
+
+        font = TTFont(self.getpath("varc-short-cff2.otf"))
+        top = font["CFF2"].cff.topDictIndex[0]
+        top.FDSelect.format = format
+
+        def check(font):
+            order = font.getGlyphOrder()
+            top = font["CFF2"].cff.topDictIndex[0]
+            assert len(top.CharStrings) < len(order)
+            assert top.charset == order[: len(top.CharStrings)]
+            assert len(top.FDSelect) == len(order)
+            glyphSet = font.getGlyphSet()
+            assert list(glyphSet) == order
+            composite = font["VARC"].table.Coverage.glyphs[0]
+            assert composite in glyphSet
+            pen = BoundsPen(glyphSet)
+            glyphSet[composite].draw(pen)
+            assert pen.bounds == (600, 0, 800, 200)
+            assert glyphSet[composite].width == 500
+            assert font["head"].xMax == 800
+            assert font["head"].yMax == 200
+            assert font["hhea"].xMaxExtent == 200
+            assert font["vhea"].yMaxExtent == 200
+            assert top.FDSelect.gidArray[-1] == 1
+
+        for _ in range(2):
+            check(font)
+            data = BytesIO()
+            font.save(data)
+            font = TTFont(BytesIO(data.getvalue()))
+        xml = BytesIO()
+        font.saveXML(xml)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+        data = BytesIO()
+        font.save(data)
+        font = TTFont(BytesIO(data.getvalue()))
+        check(font)
+
+        options = subset.Options()
+        options.retain_gids = retainGids
+        # Preserve both FDs: one is used only by the VARC-only glyph.
+        options.hinting = True
+        sub = subset.Subsetter(options=options)
+        sub.populate(glyphs=["composite"])
+        sub.subset(font)
+        data = BytesIO()
+        font.save(data)
+        font = TTFont(BytesIO(data.getvalue()))
+        check(font)
+
+    def test_CFF2_count_mismatch_without_VARC(self):
+        font = TTFont(self.getpath("varc-short-cff2.otf"))
+        font["CFF2"].cff.topDictIndex[0].CharStrings
+        del font["VARC"]
+        with pytest.raises(ValueError, match="CharStrings count"):
+            font.save(BytesIO())
+
+    def test_CFF2_CharStrings_must_be_prefix(self):
+        font = TTFont(self.getpath("varc-short-cff2.otf"))
+        strings = font["CFF2"].cff.topDictIndex[0].CharStrings
+        strings.charStrings["composite"] = strings.charStrings.pop("unused")
+        with pytest.raises(ValueError, match="glyph-order prefix"):
+            font.save(BytesIO())
+
+    def test_FDSelect_VARC_sentinel_bounds(self):
+        from fontTools.cffLib import FDSelect, packFDSelect3, packFDSelect4
+
+        for pack in (packFDSelect3, packFDSelect4):
+            for sentinel in (2, 3, 4, 5):
+                data = BytesIO(pack([0] * sentinel))
+                if sentinel in (3, 4):
+                    select = FDSelect(data, 3, maxGlyphs=4)
+                    assert len(select) == sentinel
+                else:
+                    with pytest.raises(ValueError, match="sentinel"):
+                        FDSelect(data, 3, maxGlyphs=4)
+
     def test_topDict_recalcFontBBox(self):
         topDict = TopDict()
         topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)

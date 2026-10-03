@@ -173,7 +173,7 @@ def buildMultiVarData(varRegionIndices, items):
     records = self.Item = []
     if items:
         for item in items:
-            assert len(item) == regionCount
+            assert (len(item) % regionCount == 0) if regionCount else not item
             records.append(list(item))
     self.ItemCount = len(self.Item)
     return self

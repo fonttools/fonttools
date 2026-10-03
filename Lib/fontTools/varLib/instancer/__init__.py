@@ -120,11 +120,15 @@ from fontTools.cffLib.specializer import (
 )
 from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
 from fontTools.varLib import builder
-from fontTools.varLib.mvar import MVAR_ENTRIES
+from fontTools.varLib.mvar import MVAR_ENTRIES, getMVARTableTag
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
-from .featureVars import instantiateFeatureVariations
+from .featureVars import (
+    instantiateFeatureVariations,
+    instantiateLookupVariationConditionValues,
+    _iterLookupVariationConditions,
+)
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
 from fontTools.ttLib.tables.otTables import VarComponentFlags
@@ -134,6 +138,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from enum import IntEnum
 import logging
+import math
 import os
 import re
 import io
@@ -524,6 +529,8 @@ def _getVARCAxisIndexRecords(varc):
     seen = set()
     while conditions:
         condition = conditions.pop()
+        if condition is None:
+            continue
         if id(condition) in seen:
             continue
         seen.add(id(condition))
@@ -569,7 +576,7 @@ def instantiateVARC(varfont, axisLimits):
 
 
 def instantiateTupleVariationStore(
-    variations, axisLimits, origCoords=None, endPts=None
+    variations, axisLimits, origCoords=None, endPts=None, *, round=True
 ):
     """Instantiate TupleVariation list at the given location, or limit axes' min/max.
 
@@ -598,6 +605,7 @@ def instantiateTupleVariationStore(
         origCoords: GlyphCoordinates: default instance's coordinates for computing 'gvar'
             inferred points (cf. table__g_l_y_f._getCoordinatesAndControls).
         endPts: List[int]: indices of contour end points, for inferring 'gvar' deltas.
+        round: whether to round the surviving deltas to integers.
 
     Returns:
         List[float]: the overall delta adjustment after applicable deltas were summed.
@@ -622,8 +630,9 @@ def instantiateTupleVariationStore(
     # its deltas will be added to the default instance's coordinates
     defaultVar = mergedVariations.pop(frozenset(), None)
 
-    for var in mergedVariations.values():
-        var.roundDeltas()
+    if round:
+        for var in mergedVariations.values():
+            var.roundDeltas()
     variations[:] = list(mergedVariations.values())
 
     return defaultVar.coordinates if defaultVar is not None else []
@@ -991,10 +1000,14 @@ def _instantiateGvarGlyph(
 def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
     """Remove?
     https://github.com/fonttools/fonttools/pull/2266"""
-    gvar = varfont["gvar"]
-    glyf = varfont["glyf"]
-    hMetrics = varfont["hmtx"].metrics
-    vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    glyfTag = "GLYF" if gvarTag == "GVAR" else "glyf"
+    hmtxTag = "HMTX" if gvarTag == "GVAR" else "hmtx"
+    vmtxTag = "VMTX" if gvarTag == "GVAR" else "vmtx"
+    gvar = varfont[gvarTag]
+    glyf = varfont[glyfTag]
+    hMetrics = varfont[hmtxTag].metrics
+    vMetrics = getattr(varfont.get(vmtxTag), "metrics", None)
     _instantiateGvarGlyph(
         glyphname, glyf, gvar, hMetrics, vMetrics, axisLimits, optimize=optimize
     )
@@ -1003,10 +1016,14 @@ def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
 def instantiateGvar(varfont, axisLimits, optimize=True):
     log.info("Instantiating glyf/gvar tables")
 
-    gvar = varfont["gvar"]
-    glyf = varfont["glyf"]
-    hMetrics = varfont["hmtx"].metrics
-    vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    glyfTag = "GLYF" if gvarTag == "GVAR" else "glyf"
+    hmtxTag = "HMTX" if gvarTag == "GVAR" else "hmtx"
+    vmtxTag = "VMTX" if gvarTag == "GVAR" else "vmtx"
+    gvar = varfont[gvarTag]
+    glyf = varfont[glyfTag]
+    hMetrics = varfont[hmtxTag].metrics
+    vMetrics = getattr(varfont.get(vmtxTag), "metrics", None)
     # Get list of glyph names sorted by component depth.
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the
@@ -1028,7 +1045,7 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
         )
 
     if not gvar.variations:
-        del varfont["gvar"]
+        del varfont[gvarTag]
 
 
 def setCvarDeltas(cvt, deltas):
@@ -1059,6 +1076,7 @@ def setMvarDeltas(varfont, deltas):
         if mvarTag not in MVAR_ENTRIES:
             continue
         tableTag, itemName = MVAR_ENTRIES[mvarTag]
+        tableTag = getMVARTableTag(varfont, tableTag)
         delta = deltas[rec.VarIdx]
         if delta != 0:
             setattr(
@@ -1083,12 +1101,13 @@ def verticalMetricsKeptInSync(varfont):
     https://googlefonts.github.io/gf-guide/metrics.html#7-hhea-and-typo-metrics-should-be-equal
     https://github.com/fonttools/fonttools/issues/3297
     """
+    hheaTag = "HHEA" if "HHEA" in varfont else "hhea"
     current_os2_vmetrics = [
         getattr(varfont["OS/2"], attr)
         for attr in ("sTypoAscender", "sTypoDescender", "sTypoLineGap")
     ]
     metrics_are_synced = current_os2_vmetrics == [
-        getattr(varfont["hhea"], attr) for attr in ("ascender", "descender", "lineGap")
+        getattr(varfont[hheaTag], attr) for attr in ("ascender", "descender", "lineGap")
     ]
 
     yield metrics_are_synced
@@ -1102,7 +1121,7 @@ def verticalMetricsKeptInSync(varfont):
             for attr, value in zip(
                 ("ascender", "descender", "lineGap"), new_os2_vmetrics
             ):
-                setattr(varfont["hhea"], attr, value)
+                setattr(varfont[hheaTag], attr, value)
 
 
 def instantiateMVAR(varfont, axisLimits):
@@ -1140,7 +1159,9 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
     vhvar = varfont[tableTag].table
     varStore = vhvar.VarStore
 
-    if "glyf" in varfont:
+    glyfTag = "GLYF" if "GLYF" in varfont else "glyf"
+
+    if glyfTag in varfont:
         # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
         # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
         if set(location).issuperset(axis.axisTag for axis in fvarAxes):
@@ -1150,14 +1171,17 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
 
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
 
-    if "glyf" not in varfont:
+    if glyfTag not in varfont:
         # CFF2 fonts need hmtx/vmtx updated here. For glyf fonts, the instantiateGvar
         # function already updated the hmtx/vmtx from phantom points. Maybe remove
         # that and do it here for both CFF2 and glyf fonts?
         #
         # Specially, if a font has glyf but not gvar, the hmtx/vmtx will not have been
         # updated by instantiateGvar. Though one can call that a faulty font.
-        metricsTag = "vmtx" if tableTag == "VVAR" else "hmtx"
+        if tableTag == "VVAR":
+            metricsTag = "VMTX" if "VMTX" in varfont else "vmtx"
+        else:
+            metricsTag = "HMTX" if "HMTX" in varfont else "hmtx"
         if metricsTag in varfont:
             advMapping = getattr(vhvar, tableFields.advMapping)
             metricsTable = varfont[metricsTag]
@@ -1172,11 +1196,13 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
 
             if (
                 tableTag == "VVAR"
+                and "VORG" in varfont
                 and getattr(vhvar, tableFields.vOrigMapping) is not None
             ):
-                log.warning(
-                    "VORG table not yet updated to reflect changes in VVAR table"
-                )
+                vorg = varfont["VORG"]
+                originMapping = getattr(vhvar, tableFields.vOrigMapping).mapping
+                for glyphName in varfont.getGlyphOrder():
+                    vorg[glyphName] += round(defaultDeltas[originMapping[glyphName]])
 
             # For full instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
             if set(location).issuperset(axis.axisTag for axis in fvarAxes):
@@ -1256,10 +1282,12 @@ class _TupleVarStoreAdapter(object):
             newRegions.extend(dict(region) for region in uniqueRegions)
         self.regions = newRegions
 
-    def instantiate(self, axisLimits):
+    def instantiate(self, axisLimits, *, round=True):
         defaultDeltaArray = []
         for variations, itemCount in zip(self.tupleVarData, self.itemCounts):
-            defaultDeltas = instantiateTupleVariationStore(variations, axisLimits)
+            defaultDeltas = instantiateTupleVariationStore(
+                variations, axisLimits, round=round
+            )
             if not defaultDeltas:
                 defaultDeltas = [0] * itemCount
             defaultDeltaArray.append(defaultDeltas)
@@ -1298,8 +1326,58 @@ class _TupleVarStoreAdapter(object):
         return itemVarStore
 
 
+def _instantiateConditionValueRows(tupleVarStore, defaultDeltaArray, conditions):
+    for condition in conditions:
+        varIdx = condition.VarIdx
+        if varIdx == NO_VARIATION_INDEX:
+            continue
+        major, minor = varIdx >> 16, varIdx & 0xFFFF
+        if (
+            major >= len(tupleVarStore.tupleVarData)
+            or minor >= tupleVarStore.itemCounts[major]
+        ):
+            continue
+        variations = tupleVarStore.tupleVarData[major]
+        deltas = [var.coordinates[minor] for var in variations]
+        if not any(deltas):
+            continue
+        value = condition.DefaultValue + defaultDeltaArray[major][minor]
+        values = [value, *deltas]
+        maximum = max(abs(v) for v in values)
+        shift = 0
+        while math.ldexp(maximum, shift) > 0x7FFFFFFF:
+            shift -= 1
+        # A positive rescaling preserves the Boolean boundary. Prefer an exact
+        # integer encoding; otherwise use the available 32-bit precision.
+        while (
+            any(math.ldexp(v, shift) != otRound(math.ldexp(v, shift)) for v in values)
+            and math.ldexp(maximum, shift) * 2 <= 0x7FFFFFFF
+        ):
+            shift += 1
+        default = otRound(math.ldexp(value, shift))
+        if shift == 0 and -0x8000 <= default <= 0x7FFF:
+            continue
+        if len(tupleVarStore.tupleVarData) >= 0xFFFF:
+            raise ValueError("Too many variation subtables for a private condition row")
+        # Conditions can share their source row with positioning values, which
+        # must not be rescaled. Append a private copy before rounding those rows.
+        private = [
+            TupleVariation(dict(var.axes), [otRound(math.ldexp(delta, shift))])
+            for var, delta in zip(variations, deltas)
+            if delta
+        ]
+        if not -0x8000 <= default <= 0x7FFF:
+            private.append(TupleVariation({}, [default]))
+            default = 0
+        condition.DefaultValue = default
+        condition.VarIdx = len(tupleVarStore.tupleVarData) << 16
+        tupleVarStore.tupleVarData.append(private)
+        tupleVarStore.itemCounts.append(1)
+        defaultDeltaArray.append([0])
+
+
 def instantiateItemVariationStore(
-    itemVarStore, fvarAxes, axisLimits, hierarchical=False
+    itemVarStore, fvarAxes, axisLimits, hierarchical=False, *, conditionValues=()
 ):
     """Compute deltas at partial location, and update varStore in-place.
 
@@ -1308,7 +1386,8 @@ def instantiateItemVariationStore(
     were instanced.
 
     The number of VarData subtables, and the number of items within each, are
-    not modified, in order to keep the existing VariationIndex valid.
+    not modified, in order to keep the existing VariationIndex valid, except
+    that private rows may be appended for conditionValues.
     One may call VarStore.optimize() method after this to further optimize those.
 
     Args:
@@ -1317,19 +1396,31 @@ def instantiateItemVariationStore(
         axisLimits: NormalizedAxisLimits: mapping axis tags to normalized
             min/default/max axis coordinates. May not specify coordinates/ranges for
             all the fvar axes.
+        conditionValues: format-2 layout conditions needing private rescaled rows.
 
     Returns:
         defaultDeltas: to be added to the default instance, of type dict of floats
             keyed by VariationIndex compound values: i.e. (outer << 16) + inner.
     """
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(itemVarStore, fvarAxes)
-    defaultDeltaArray = tupleVarStore.instantiate(axisLimits)
+    defaultDeltaArray = tupleVarStore.instantiate(axisLimits, round=not conditionValues)
+    if conditionValues:
+        _instantiateConditionValueRows(
+            tupleVarStore, defaultDeltaArray, conditionValues
+        )
+        for variations in tupleVarStore.tupleVarData:
+            for var in variations:
+                var.roundDeltas()
+        tupleVarStore.rebuildRegions()
     newItemVarStore = tupleVarStore.asItemVarStore()
 
     itemVarStore.VarRegionList = newItemVarStore.VarRegionList
     if not hasattr(itemVarStore, "VarDataCount"):  # Happens fromXML
         itemVarStore.VarDataCount = len(newItemVarStore.VarData)
-    assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
+    if conditionValues:
+        itemVarStore.VarDataCount = newItemVarStore.VarDataCount
+    else:
+        assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
     itemVarStore.VarData = newItemVarStore.VarData
 
     if not hierarchical:
@@ -1384,6 +1475,7 @@ def instantiateOTL(varfont, axisLimits):
         or varfont["GDEF"].table.Version < 0x00010003
         or not varfont["GDEF"].table.VarStore
     ):
+        instantiateLookupVariationConditionValues(varfont, varIndexMapping={})
         return
 
     if "GPOS" in varfont:
@@ -1396,7 +1488,14 @@ def instantiateOTL(varfont, axisLimits):
     varStore = gdef.VarStore
     fvarAxes = varfont["fvar"].axes
 
-    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
+    conditions = [
+        condition
+        for condition in _iterLookupVariationConditions(varfont)
+        if condition.Format == 2
+    ]
+    defaultDeltas = instantiateItemVariationStore(
+        varStore, fvarAxes, axisLimits, conditionValues=conditions
+    )
 
     # When VF are built, big lookups may overflow and be broken into multiple
     # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
@@ -1412,11 +1511,30 @@ def instantiateOTL(varfont, axisLimits):
     )
     merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS"])
 
+    varIndexMapping = varStore.optimize() if varStore.VarRegionList.Region else {}
+    done = set()
+    instantiateLookupVariationConditionValues(
+        varfont, defaultDeltas, varIndexMapping, done=done
+    )
+
     if varStore.VarRegionList.Region:
-        varIndexMapping = varStore.optimize()
-        gdef.remap_device_varidxes(varIndexMapping)
-        if "GPOS" in varfont:
-            varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
+        gdef.remap_device_varidxes(varIndexMapping, done=done)
+        for tag in ("GSUB", "GPOS"):
+            if tag in varfont:
+                varfont[tag].table.remap_device_varidxes(varIndexMapping, done=done)
+    elif any(
+        getattr(gdef, name, None) is not None
+        for name in (
+            "GlyphClassDef2",
+            "AttachList2",
+            "LigCaretList2",
+            "MarkAttachClassDef2",
+            "MarkGlyphSetsDef2",
+        )
+    ):
+        # beyond-64k GDEF: keep v1.4 and NULL the VarStore, don't drop the *2 fields
+        gdef.VarStore = None
+        gdef.Version = 0x00010004
     else:
         # Downgrade GDEF.
         del gdef.VarStore
@@ -2157,8 +2275,9 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
     """
     fvarAxes = varfont["fvar"].axes
 
-    if "gvar" in varfont:
-        gvar = varfont["gvar"]
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    if gvarTag in varfont:
+        gvar = varfont[gvarTag]
         totalCulled = 0
         totalTotal = 0
 
@@ -2175,7 +2294,8 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
 
         if totalCulled:
             log.info(
-                "avar2 gvar culling: removed %d / %d TupleVariations (%.1f%%)",
+                "avar2 %s culling: removed %d / %d TupleVariations (%.1f%%)",
+                gvarTag,
                 totalCulled,
                 totalTotal,
                 100 * totalCulled / totalTotal if totalTotal else 0,
@@ -2521,7 +2641,7 @@ def _instantiateVariationTables(varfont, limits, optimize, downgradeCFF2):
     if "CFF2" in varfont:
         downgradeCFF2 = instantiateCFF2(varfont, limits, downgrade=downgradeCFF2)
 
-    if "gvar" in varfont:
+    if "gvar" in varfont or "GVAR" in varfont:
         instantiateGvar(varfont, limits, optimize=optimize)
 
     if "cvar" in varfont:
@@ -2546,8 +2666,10 @@ def _instantiateVariationTables(varfont, limits, optimize, downgradeCFF2):
 def sanityCheckVariableTables(varfont):
     if "fvar" not in varfont:
         raise ValueError("Missing required table fvar")
-    if "gvar" in varfont:
-        if "glyf" not in varfont:
+    gvarTag = "GVAR" if "GVAR" in varfont else "gvar"
+    if gvarTag in varfont:
+        glyfTag = "GLYF" if gvarTag == "GVAR" else "glyf"
+        if glyfTag not in varfont:
             raise ValueError("Can't have gvar without glyf")
 
 
@@ -2774,8 +2896,9 @@ def instantiateVariableFont(
 
     if "fvar" not in varfont:
         if overlap == OverlapMode.KEEP_AND_SET_FLAGS:
-            if "glyf" in varfont:
-                setMacOverlapFlags(varfont["glyf"])
+            glyfTag = "GLYF" if "GLYF" in varfont else "glyf"
+            if glyfTag in varfont:
+                setMacOverlapFlags(varfont[glyfTag])
         elif overlap in (OverlapMode.REMOVE, OverlapMode.REMOVE_AND_IGNORE_ERRORS):
             from fontTools.ttLib.removeOverlaps import removeOverlaps
 
