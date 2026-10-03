@@ -3048,6 +3048,66 @@ def _getFeatureVariationSubstitutions(font, location):
 
 
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize("lookup_variations", [False, True])
+    @pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+    @pytest.mark.parametrize("partial", [False, True])
+    def test_extended_layout_header(self, lookup_variations, table_tag, partial):
+        from fontTools.ttLib.beyond64k import lower_tables, upper_tables
+        from fontTools.misc.testTools import getXML
+
+        if lookup_variations:
+            font = makeLookupVariationsFont()
+            location = {"wght": 0.3, "wdth": 0.8}
+        else:
+            font = makeFeatureVarsFont([([{"wght": (0.5, 1.0)}], {"a": "a.alt"})])
+            location = {"wght": 0.75}
+        if partial:
+            location["wght"] = (0.25, 0.3, 0.75)
+        if table_tag == "GPOS":
+            variations = font["GSUB"].table.FeatureVariations
+            base, conditional = ("A", "B") if lookup_variations else ("a", "a.alt")
+            addOpenTypeFeaturesFromString(
+                font,
+                f"""
+                lookup Default {{ pos {base} 10; }} Default;
+                lookup Conditional {{ pos {conditional} 20; }} Conditional;
+                feature kern {{ lookup Default; }} kern;
+                feature zzzz {{ lookup Conditional; }} zzzz;
+                """,
+                tables=["GPOS"],
+            )
+            del font["GSUB"]
+            font["GPOS"].table.FeatureVariations = variations
+            font["GPOS"].table.Version = 0x00010001
+            if lookup_variations:
+                lookups = variations.LookupVariationRecord[0].FeatureLookupsTable
+                lookups.LookupConditionRecord = [
+                    _lookupVariationRecord(_lookupVariationCondition(0.25, 0.5), [1])
+                ]
+                lookups.LookupConditionCount = 1
+            else:
+                for record in variations.FeatureVariationRecord:
+                    for (
+                        substitution
+                    ) in record.FeatureTableSubstitution.SubstitutionRecord:
+                        substitution.Feature.LookupListIndex = [1]
+                        substitution.Feature.LookupCount = 1
+        reference = deepcopy(font)
+        upper_tables(font, tables=[table_tag])
+
+        for target in (reference, font):
+            instancer.instantiateFeatureVariations(
+                target, instancer.NormalizedAxisLimits(location)
+            )
+        assert font[table_tag].table.Version == 0x00010002
+        assert (
+            bool(getattr(font[table_tag].table, "FeatureVariations", None)) == partial
+        )
+        lower_tables(font, tables=[table_tag])
+        assert getXML(font[table_tag].table.toXML, font) == getXML(
+            reference[table_tag].table.toXML, reference
+        )
+
     @pytest.mark.parametrize("tableTag", ["GSUB", "GPOS"])
     @pytest.mark.parametrize("legacy", [False, True])
     @pytest.mark.parametrize("wrapper", ["value", "and", "or", "not"])

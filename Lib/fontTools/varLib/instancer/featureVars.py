@@ -1,5 +1,6 @@
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.misc.fixedTools import otRound
+from fontTools.ttLib.beyond64k import _compact_layout_tables
 from copy import deepcopy
 import logging
 
@@ -442,6 +443,11 @@ def _instantiateFeatureVariations(
 
 
 def instantiateFeatureVariations(varfont, axisLimits):
+    with _compact_layout_tables(varfont):
+        _instantiateFeatureVariationsInFont(varfont, axisLimits)
+
+
+def _instantiateFeatureVariationsInFont(varfont, axisLimits):
     from fontTools.varLib.varStore import VarStoreInstancer
 
     store = (
