@@ -460,6 +460,124 @@ def test_merge_prefers_format15_uvs(reverse_order):
     assert merged.tables[0].uvsDict == {0xFE00: [(0x10000, glyphOrder[3])]}
 
 
+@pytest.mark.parametrize("uvs_format", [14, 15])
+@pytest.mark.parametrize("dmap_uvs", ["default", "nondefault", "zero"])
+@pytest.mark.parametrize("dmap_only", [False, True])
+@pytest.mark.parametrize("high_glyph_ids", [False, True])
+def test_merge_dmap(uvs_format, dmap_uvs, dmap_only, high_glyph_ids):
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    glyphOrder = font.getGlyphOrder()
+    module = ttLib.getTableModule("cmap")
+    nominal = module.CmapSubtable.newSubtable(12)
+    nominal.platformID = 3
+    nominal.platEncID = 10
+    nominal.language = 0
+    nominal.cmap = {
+        0x10000: glyphOrder[2],
+        0x10001: glyphOrder[0],
+        0x30000: glyphOrder[3],
+    }
+    base_uvs = module.CmapSubtable.newSubtable(uvs_format)
+    base_uvs.platformID = 0
+    base_uvs.platEncID = 5
+    base_uvs.language = 0
+    base_uvs.cmap = {}
+    base_uvs.uvsDict = {
+        0xFE00: [(0x10000, glyphOrder[3]), (0x10001, None)],
+        0xE0100: [(0x10000, None)],
+    }
+    font["cmap"].tables.append(base_uvs)
+    delta_uvs = module.CmapSubtable.newSubtable(uvs_format)
+    delta_uvs.platformID = 0
+    delta_uvs.platEncID = 5
+    delta_uvs.language = 0
+    delta_uvs.cmap = {}
+    delta_uvs.uvsDict = {
+        0xFE00: [
+            (
+                0x10000,
+                {"default": None, "nondefault": glyphOrder[1], "zero": glyphOrder[0]}[
+                    dmap_uvs
+                ],
+            ),
+            (0x30000, glyphOrder[2]),
+        ]
+    }
+    font["DMAP"] = ttLib.newTable("DMAP")
+    font["DMAP"].tableVersion = 0
+    font["DMAP"].tables = [delta_uvs, nominal]
+    if dmap_only:
+        del font["cmap"]
+
+    second = _make_fontfile_with_glyphs(0x20000, 0xFFFF if high_glyph_ids else 4)
+    first = _compile(font)
+    merged = _merge_and_recompile(
+        [second, first] if high_glyph_ids else [first, second]
+    )
+    glyph_offset = 0xFFFF if high_glyph_ids else 0
+    assert "DMAP" not in merged
+    cmap = merged.getBestCmap()
+    assert merged.getGlyphID(cmap[0x10000]) == glyph_offset + 2
+    assert merged.getGlyphID(cmap[0x30000]) == glyph_offset + 3
+    assert merged.getGlyphID(cmap[0x20000]) == (1 if high_glyph_ids else 5)
+    if dmap_only:
+        assert 0x10001 not in cmap
+    else:
+        assert merged.getGlyphID(cmap[0x10001]) == glyph_offset + 2
+    assert merged["cmap"].tables[0].format == (15 if high_glyph_ids else 14)
+    uvs = {
+        selector: dict(entries)
+        for selector, entries in merged["cmap"].tables[0].uvsDict.items()
+    }
+    expected = {"default": None, "nondefault": 1, "zero": None if dmap_only else 3}[
+        dmap_uvs
+    ]
+    if dmap_uvs == "zero" and dmap_only:
+        assert 0x10000 not in uvs[0xFE00]
+    elif expected is None:
+        assert uvs[0xFE00][0x10000] is None
+    else:
+        assert merged.getGlyphID(uvs[0xFE00][0x10000]) == glyph_offset + expected
+    assert merged.getGlyphID(uvs[0xFE00][0x30000]) == glyph_offset + 2
+    if not dmap_only:
+        assert uvs[0xFE00][0x10001] is None
+        assert uvs[0xE0100][0x10000] is None
+
+
+def test_merge_dmap_respects_drop_tables():
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    dmap = ttLib.newTable("DMAP")
+    dmap.tableVersion = 0
+    subtable = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(12)
+    subtable.platformID, subtable.platEncID, subtable.language = 3, 10, 0
+    subtable.cmap = {0x10000: font.getGlyphOrder()[2]}
+    dmap.tables = [subtable]
+    font["DMAP"] = dmap
+    options = Merger().options
+    options.drop_tables = ["DMAP"]
+    merged = _merge_and_recompile([_compile(font)], options)
+    assert "DMAP" not in merged
+    assert merged.getGlyphID(merged.getBestCmap()[0x10000]) == 1
+
+
+@pytest.mark.parametrize("uvs_format", [14, 15])
+def test_merge_dmap_uvs_only(uvs_format):
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    dmap = ttLib.newTable("DMAP")
+    dmap.tableVersion = 0
+    uvs = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(uvs_format)
+    uvs.platformID, uvs.platEncID, uvs.language = 0, 5, 0
+    uvs.cmap = {}
+    uvs.uvsDict = {0xFE00: [(0x10000, font.getGlyphOrder()[2])]}
+    dmap.tables = [uvs]
+    font["DMAP"] = dmap
+    merged = _merge_and_recompile([_compile(font)])
+    assert "DMAP" not in merged
+    assert merged.getGlyphID(merged.getBestCmap()[0x10000]) == 1
+    glyph = merged["cmap"].tables[0].uvsDict[0xFE00][0][1]
+    assert merged.getGlyphID(glyph) == 2
+
+
 def test_merge_head_different_units_per_em():
     heads = []
     for units_per_em in (1000, 2048):

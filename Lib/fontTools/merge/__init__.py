@@ -8,6 +8,7 @@ from fontTools.merge.cmap import (
     computeMegaGlyphOrder,
     computeMegaCmap,
     renameCFFCharStrings,
+    _flattenDmap,
 )
 from fontTools.merge.layout import layoutPreMerge, layoutPostMerge
 from fontTools.merge.options import Options
@@ -89,6 +90,8 @@ class Merger(object):
         Returns:
                 A :class:`fontTools.ttLib.TTFont` object. Call the ``save`` method on
                 this to write it out to an OTF file.
+
+        DMAP overrides are folded into the merged cmap table.
         """
         #
         # Settle on a mega glyph order.
@@ -112,6 +115,8 @@ class Merger(object):
                 renameCFFCharStrings(self, glyphOrder, font["CFF "])
             if self.beyond64k:
                 upper_tables(font, tables=_COMPANION_TABLES)
+            if "DMAP" in font and "DMAP" not in self.options.drop_tables:
+                _flattenDmap(font)
 
         cmaps = [font["cmap"] for font in fonts]
         self.duplicateGlyphsPerFont = [{} for _ in fonts]
