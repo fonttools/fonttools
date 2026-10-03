@@ -13,6 +13,89 @@ import pytest
 NO_VARIATION_INDEX = ot.NO_VARIATION_INDEX
 
 
+@pytest.mark.parametrize("extended", [False, True])
+@pytest.mark.parametrize("delete_variations", [False, True])
+@pytest.mark.parametrize(
+    "features",
+    [
+        "pos A 10;",
+        "pos A 10; pos C 20;",
+        "pos A B -20;",
+        "pos [A C] [B D] -40;",
+        "pos cursive A <anchor 10 20> <anchor 30 40>;",
+        "markClass B <anchor 0 0> @TOP; pos base A <anchor 10 20> mark @TOP;",
+        "markClass B <anchor 0 0> @TOP; pos mark A <anchor 10 20> mark @TOP;",
+        "markClass B <anchor 0 0> @TOP; pos ligature A <anchor 10 20> mark @TOP;",
+    ],
+)
+def test_mutator_merge_small_extended_gpos(features, extended, delete_variations):
+    from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+    from fontTools.ttLib import newTable
+    from fontTools.ttLib.beyond64k import upper_tables
+    from fontTools.ttLib.tables.otBase import ValueRecord
+    from fontTools.ttLib.tables.otTraverse import dfs_base_table
+    from fontTools.varLib.builder import buildVarDevTable
+    from fontTools.varLib.merger import MutatorMerger
+
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "A", "B", "C", "D"])
+    addOpenTypeFeaturesFromString(font, "feature kern { " + features + " } kern;")
+
+    def variable_values():
+        for path in dfs_base_table(font["GPOS"].table):
+            table = path[-1].value
+            if isinstance(table, ot.Anchor):
+                yield table, "XCoordinate", "XDeviceTable"
+            else:
+                for value in vars(table).values():
+                    for record in value if isinstance(value, list) else [value]:
+                        if isinstance(record, ValueRecord) and hasattr(
+                            record, "XAdvance"
+                        ):
+                            yield record, "XAdvance", "XAdvDevice"
+
+    expected = sorted(
+        getattr(record, name) + 50 for record, name, _ in variable_values()
+    )
+    for record, _, device in variable_values():
+        setattr(record, device, buildVarDevTable(0))
+        if isinstance(record, ot.Anchor):
+            record.Format = 3
+            record.YDeviceTable = None
+    for lookup in font["GPOS"].table.LookupList.Lookup:
+        for table in lookup.SubTable:
+            if isinstance(table, ot.SinglePos):
+                table.ValueFormat |= 0x40
+            elif isinstance(table, ot.PairPos):
+                table.ValueFormat1 |= 0x40
+    if extended:
+        upper_tables(font, tables=["GPOS"])
+    assert not font.hasExtendedGlyphIDs()
+
+    def roundtrip_gpos():
+        data = font["GPOS"].compile(font)
+        table = font["GPOS"] = newTable("GPOS")
+        table.decompile(data, font)
+
+    roundtrip_gpos()
+    merger = MutatorMerger(font, {0: 50}, deleteVariations=delete_variations)
+    merger.mergeTables(font, [font], ["GPOS"])
+    roundtrip_gpos()
+    assert (
+        sorted(getattr(record, name) for record, name, _ in variable_values())
+        == expected
+    )
+    for record, _, device in variable_values():
+        assert bool(getattr(record, device, None)) == (not delete_variations)
+    lookups = (
+        font["GPOS"].table.LookupList2 if extended else font["GPOS"].table.LookupList
+    )
+    for lookup in lookups.Lookup:
+        for table in lookup.SubTable:
+            formats = (3, 4) if lookup.LookupType in (1, 2) else (2,)
+            assert table.Format in (formats if extended else (1, 2))
+
+
 def dump_xml(table, ttFont=None):
     xml = getXML(table.toXML, ttFont)
     print("[")

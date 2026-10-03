@@ -997,7 +997,13 @@ def merge(merger, self, lst):
 
     # Beyond-64k: demote extended GPOS subtables to format 1/2 so the mergers
     # can handle them; the merged output is promoted back at the end.
-    extended = merger.font.hasExtendedGlyphIDs()
+    # Explicit extended formats remain valid below the 64k glyph threshold.
+    extended = merger.font.hasExtendedGlyphIDs() or any(
+        st.Format in ((3, 4) if isinstance(st, (ot.SinglePos, ot.PairPos)) else (2,))
+        for sts in [self.SubTable] + subtables
+        for st in sts
+        if isinstance(st, _BEYOND64K_GPOS_TYPES)
+    )
     if extended:
         _convert_beyond64k_GPOS(self.SubTable, False)
         for sts in subtables:
