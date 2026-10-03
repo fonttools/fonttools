@@ -505,6 +505,21 @@ def test_subset_extended_contextual_layout(extended_header, lazy):
         )
 
 
+@pytest.mark.parametrize("extended_header", [False, True])
+def test_max_context_extended_layout(extended_header):
+    from fontTools.otlLib.maxContextCalc import maxCtxFont
+    from fontTools.ttLib.beyond64k import _convert_layout_formats
+
+    font = build_contextual_layout_font()
+    assert maxCtxFont(font) == 3
+    if extended_header:
+        upper_tables(font, tables=["GSUB", "GPOS"])
+    else:
+        for tag in ("GSUB", "GPOS"):
+            _convert_layout_formats(font[tag].table, True)
+    assert maxCtxFont(font) == 3
+
+
 def test_base_end_to_end_round_trip():
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
