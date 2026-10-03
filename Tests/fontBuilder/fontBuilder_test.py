@@ -1,7 +1,7 @@
 import os
 import pytest
 from fontTools.designspaceLib import AxisDescriptor
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
@@ -469,6 +469,47 @@ def test_setupPost(is_ttf, keep_glyph_names, make_cff2, post_format):
     assert fb.isTTF is is_ttf
     assert ("CFF2" in fb.font) is make_cff2
     assert fb.font["post"].formatType == post_format
+
+
+@pytest.mark.parametrize("supplementary", [False, True])
+@pytest.mark.parametrize("gid", [0xFFFF, 0x10000, 0x10001])
+def test_character_map_high_glyph_ids(gid, supplementary):
+    fb = FontBuilder(1024, beyond64k=True)
+    order = [".notdef"] + [f"glyph{i}" for i in range(1, gid + 1)]
+    fb.setupGlyphOrder(order)
+    mapping = {65: order[gid], 66: order[1]}
+    if supplementary:
+        mapping[0x10000] = order[gid]
+
+    fb.setupCharacterMap(mapping)
+
+    cmap = fb.font["cmap"]
+    reloaded = newTable("cmap")
+    reloaded.decompile(cmap.compile(fb.font), fb.font)
+    assert reloaded.getBestCmap() == mapping
+    if gid > 0xFFFF:
+        assert {(sub.platformID, sub.platEncID, sub.format) for sub in cmap.tables} == {
+            (3, 10, 12),
+            (0, 4, 12),
+        }
+
+
+@pytest.mark.parametrize("default", [False, True])
+@pytest.mark.parametrize("gid", [0xFFFF, 0x10000, 0x10001])
+def test_unicodeVariationSequences_high_glyph_ids(gid, default):
+    fb = FontBuilder(1024, beyond64k=True)
+    order = [".notdef"] + [f"glyph{i}" for i in range(1, gid + 1)]
+    fb.setupGlyphOrder(order)
+    mapping = {65: order[gid] if default else order[1]}
+    fb.setupCharacterMap(mapping, [(65, 0xFE00, order[gid])])
+
+    uvs = fb.font["cmap"].tables[-1]
+    assert uvs.format == (15 if gid > 0xFFFF and not default else 14)
+    reloaded = newTable("cmap")
+    reloaded.decompile(fb.font["cmap"].compile(fb.font), fb.font)
+    assert reloaded.getcmap(0, 5).uvsDict == {
+        0xFE00: [(65, None if default else order[gid])]
+    }
 
 
 def test_unicodeVariationSequences(tmpdir):

@@ -436,27 +436,34 @@ class FontBuilder(object):
         """
         subTables = []
         highestUnicode = max(cmapping) if cmapping else 0
-        if highestUnicode > 0xFFFF:
+        highGlyphIDs = any(
+            self.font.getGlyphID(name) > 0xFFFF for name in cmapping.values()
+        )
+        if highGlyphIDs:
+            subTables.append(buildCmapSubTable(cmapping, 12, 3, 10))
+            subTables.append(buildCmapSubTable(cmapping, 12, 0, 4))
+        elif highestUnicode > 0xFFFF:
             cmapping_3_1 = dict((k, v) for k, v in cmapping.items() if k < 0x10000)
             subTable_3_10 = buildCmapSubTable(cmapping, 12, 3, 10)
             subTables.append(subTable_3_10)
         else:
             cmapping_3_1 = cmapping
-        format = 4
-        subTable_3_1 = buildCmapSubTable(cmapping_3_1, format, 3, 1)
-        try:
-            subTable_3_1.compile(self.font)
-        except struct.error:
-            # format 4 overflowed, fall back to format 12
-            if not allowFallback:
-                raise ValueError(
-                    "cmap format 4 subtable overflowed; sort glyph order by unicode to fix."
-                )
-            format = 12
+        if not highGlyphIDs:
+            format = 4
             subTable_3_1 = buildCmapSubTable(cmapping_3_1, format, 3, 1)
-        subTables.append(subTable_3_1)
-        subTable_0_3 = buildCmapSubTable(cmapping_3_1, format, 0, 3)
-        subTables.append(subTable_0_3)
+            try:
+                subTable_3_1.compile(self.font)
+            except struct.error:
+                # format 4 overflowed, fall back to format 12
+                if not allowFallback:
+                    raise ValueError(
+                        "cmap format 4 subtable overflowed; sort glyph order by unicode to fix."
+                    )
+                format = 12
+                subTable_3_1 = buildCmapSubTable(cmapping_3_1, format, 3, 1)
+            subTables.append(subTable_3_1)
+            subTable_0_3 = buildCmapSubTable(cmapping_3_1, format, 0, 3)
+            subTables.append(subTable_0_3)
 
         if uvs is not None:
             uvsDict = {}
@@ -467,7 +474,16 @@ class FontBuilder(object):
                 if variationSelector not in uvsDict:
                     uvsDict[variationSelector] = []
                 uvsDict[variationSelector].append((unicodeValue, glyphName))
-            uvsSubTable = buildCmapSubTable({}, 14, 0, 5)
+            uvsFormat = (
+                15
+                if any(
+                    name is not None and self.font.getGlyphID(name) > 0xFFFF
+                    for entries in uvsDict.values()
+                    for _, name in entries
+                )
+                else 14
+            )
+            uvsSubTable = buildCmapSubTable({}, uvsFormat, 0, 5)
             uvsSubTable.uvsDict = uvsDict
             subTables.append(uvsSubTable)
 
