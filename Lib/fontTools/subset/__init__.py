@@ -3821,14 +3821,14 @@ class Subsetter(object):
             del missing
 
         if self.options.notdef_glyph:
-            if "glyf" in font:
+            if "glyf" in font or "GLYF" in font:
                 self.glyphs.add(font.getGlyphName(0))
                 log.info("Added gid0 to subset")
             else:
                 self.glyphs.add(".notdef")
                 log.info("Added .notdef to subset")
         if self.options.recommended_glyphs:
-            if "glyf" in font:
+            if "glyf" in font or "GLYF" in font:
                 for i in range(min(4, len(font.getGlyphOrder()))):
                     self.glyphs.add(font.getGlyphName(i))
                 log.info("Added first four glyphs to subset")
@@ -3895,16 +3895,22 @@ class Subsetter(object):
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_glyfed = frozenset(self.glyphs)
 
-        if "glyf" in font:
-            with timer("close glyph list over 'glyf'"):
+        for table in ("glyf", "GLYF"):
+            if table not in font:
+                continue
+            with timer("close glyph list over '%s'" % table):
                 log.info(
-                    "Closing glyph list over 'glyf': %d glyphs before", len(self.glyphs)
+                    "Closing glyph list over '%s': %d glyphs before",
+                    table,
+                    len(self.glyphs),
                 )
                 log.glyphs(self.glyphs, font=font)
-                font["glyf"].closure_glyphs(self)
+                font[table].closure_glyphs(self)
                 self.glyphs.intersection_update(realGlyphs)
                 log.info(
-                    "Closed glyph list over 'glyf': %d glyphs after", len(self.glyphs)
+                    "Closed glyph list over '%s': %d glyphs after",
+                    table,
+                    len(self.glyphs),
                 )
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_glyfed = frozenset(self.glyphs)

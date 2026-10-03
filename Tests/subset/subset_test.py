@@ -2097,6 +2097,82 @@ def test_subset_remaps_24bit_glyf_component():
     assert composite.getComponentNames(glyf) == ["component"]
 
 
+@pytest.mark.parametrize("extended", [False, True])
+@pytest.mark.parametrize("retain_gids", [False, True])
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("varc", [False, True])
+def test_subset_composite_closure(extended, retain_gids, nested, varc):
+    from fontTools.ttLib.beyond64k import upper_tables
+    from fontTools.pens.recordingPen import DecomposingRecordingPen
+
+    order = [".notdef", "leaf", "unused", "composite"]
+    glyphs = {name: TTGlyphPen(None).glyph() for name in order}
+    pen = TTGlyphPen(None)
+    pen.moveTo((100, 0))
+    pen.lineTo((200, 0))
+    pen.lineTo((100, 100))
+    pen.closePath()
+    glyphs["leaf"] = pen.glyph()
+    if nested:
+        pen = TTGlyphPen(glyphs)
+        pen.addComponent("leaf", (1, 0, 0, 1, 100, 50))
+        glyphs["unused"] = pen.glyph()
+    pen = TTGlyphPen(glyphs)
+    pen.addComponent("unused" if nested else "leaf", (1, 0, 0, 1, 100, 50))
+    glyphs["composite"] = pen.glyph()
+
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap({65: "composite"})
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics({name: (500, 100) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "Composite closure", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    if extended:
+        upper_tables(fb.font)
+    if varc:
+        component = ot.VarComponent()
+        component.glyphName = "composite"
+        glyph = ot.VarCompositeGlyph()
+        glyph.components = [component]
+        table = ot.VARC()
+        table.Version = 0x10000
+        table.Coverage = ot.Coverage()
+        table.Coverage.glyphs = ["composite"]
+        table.MultiVarStore = table.AxisIndicesList = table.ConditionList = None
+        table.VarCompositeGlyphs = ot.VarCompositeGlyphs()
+        table.VarCompositeGlyphs.VarCompositeGlyph = [glyph]
+        fb.font["VARC"] = newTable("VARC")
+        fb.font["VARC"].table = table
+
+    stream = io.BytesIO()
+    fb.font.save(stream)
+    font = TTFont(io.BytesIO(stream.getvalue()))
+    glyph_set = font.getGlyphSet()
+    pen = DecomposingRecordingPen(glyph_set)
+    glyph_set["composite"].draw(pen)
+    expected = pen.value
+
+    options = subset.Options()
+    options.glyph_names = True
+    options.retain_gids = retain_gids
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[65])
+    subsetter.subset(font)
+    assert "leaf" in subsetter.glyphs_retained
+    if nested:
+        assert "unused" in subsetter.glyphs_retained
+    stream = io.BytesIO()
+    font.save(stream)
+    font = TTFont(io.BytesIO(stream.getvalue()))
+    glyph_set = font.getGlyphSet()
+    pen = DecomposingRecordingPen(glyph_set)
+    glyph_set["composite"].draw(pen)
+    assert pen.value == expected
+
+
 def test_colr_paint_glyph2_closure():
     paint = ot.Paint()
     paint.Format = ot.PaintFormat.PaintGlyph2
