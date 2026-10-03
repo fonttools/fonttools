@@ -1466,6 +1466,10 @@ class TTFont(object):
         )
         if dmap is None:
             return cmap
+        if dmap:
+            # Glyph zero is a miss and must allow cmap fallback.
+            glyph_zero = self.getGlyphOrder()[0]
+            dmap = {u: g for u, g in dmap.items() if g != glyph_zero}
         if cmap is None:
             return dmap
         return {**cmap, **dmap}

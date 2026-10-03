@@ -1335,6 +1335,63 @@ class SubsetTest:
         assert font.getGlyphID(font.getBestCmap()[0x41]) == 1
         assert font.getGlyphID(font.getBestCmap()[0x42]) == 2
 
+    @pytest.mark.parametrize("notdef_glyph", [False, True])
+    @pytest.mark.parametrize("from_xml", [False, True])
+    @pytest.mark.parametrize("glyph_zero", [".notdef", "zero"])
+    @pytest.mark.parametrize("dmap_format", [4, 12, 13])
+    def test_DMAP_nominal_zero_fallback(
+        self, dmap_format, glyph_zero, from_xml, notdef_glyph
+    ):
+        order = [glyph_zero, "baseA", "baseB", "dmapB"]
+        fb = FontBuilder(1024)
+        fb.setupGlyphOrder(order)
+        fb.setupCharacterMap({0x41: "baseA", 0x42: "baseB"})
+        fb.setupGlyf({name: Glyph() for name in order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+        table = CmapSubtable.newSubtable(dmap_format)
+        table.platformID = 3
+        table.platEncID = 1 if dmap_format == 4 else 10
+        table.language = 0
+        table.cmap = {0x41: glyph_zero, 0x42: "dmapB"}
+        font = fb.font
+        font["DMAP"] = newTable("DMAP")
+        font["DMAP"].tableVersion = 0
+        font["DMAP"].tables = [table]
+        if from_xml:
+            data = io.BytesIO()
+            font.save(data)
+            font = TTFont(io.BytesIO(data.getvalue()))
+            font["DMAP"].tables[0].cmap[0x41] = glyph_zero
+            stream = io.StringIO()
+            font.saveXML(stream)
+            stream.seek(0)
+            font = TTFont()
+            font.importXML(stream)
+
+        options = subset.Options()
+        options.glyph_names = True
+        options.notdef_glyph = notdef_glyph
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(unicodes=[0x41, 0x42])
+        subsetter.subset(font)
+        assert font.getGlyphOrder() == ([glyph_zero] if notdef_glyph else []) + [
+            "baseA",
+            "dmapB",
+        ]
+        assert font.getBestCmap() == {0x41: "baseA", 0x42: "dmapB"}
+        assert font["DMAP"].getBestCmap() == {0x42: "dmapB"}
+        stream = io.BytesIO()
+        font.save(stream)
+        reloaded = TTFont(io.BytesIO(stream.getvalue()))
+        # Without .notdef, baseA becomes glyph zero and binary cmap omits it.
+        assert reloaded.getBestCmap() == (
+            font.getBestCmap() if notdef_glyph else {0x42: "dmapB"}
+        )
+
     @pytest.mark.parametrize("unicodes", [[0x41, 0x42], [0x42]])
     def test_DMAP_multiple_unicode_subtables(self, unicodes):
         glyph_order = [".notdef", "baseA", "baseB", "dmapA", "dmapB"]

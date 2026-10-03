@@ -19,6 +19,32 @@ import pytest
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 
+@pytest.mark.parametrize("glyph_zero", [".notdef", "zero"])
+@pytest.mark.parametrize("dmap_format", [4, 12, 13])
+def test_getBestCmap_DMAP_zero_fallback(glyph_zero, dmap_format):
+    font = TTFont()
+    font.setGlyphOrder([glyph_zero, "baseA", "baseB", "dmapB"])
+    for tag, format, mapping in (
+        ("cmap", 4, {0x41: "baseA", 0x42: "baseB"}),
+        ("DMAP", dmap_format, {0x41: glyph_zero, 0x42: "dmapB"}),
+    ):
+        table = CmapSubtable.newSubtable(format)
+        table.platformID = 3
+        table.platEncID = 1 if format == 4 else 10
+        table.language = 0
+        table.cmap = mapping
+        font[tag] = newTable(tag)
+        font[tag].tableVersion = 0
+        font[tag].tables = [table]
+
+    assert font.getBestCmap() == {0x41: "baseA", 0x42: "dmapB"}
+    assert font["DMAP"].getBestCmap() == {0x41: glyph_zero, 0x42: "dmapB"}
+    del font["cmap"]
+    assert font.getBestCmap() == {0x42: "dmapB"}
+    font["DMAP"].tables[0].cmap = {0x41: glyph_zero}
+    assert font.getBestCmap() == {}
+
+
 class CustomTableClass(DefaultTable):
     def decompile(self, data, ttFont):
         self.numbers = list(data)

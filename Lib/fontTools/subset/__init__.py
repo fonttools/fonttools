@@ -3187,6 +3187,11 @@ def _cmap_closure_glyphs(self, s, excluded_unicodes=(), excluded_uvs=()):
             cmap = table.cmap
             intersection = s.unicodes_requested.intersection(cmap.keys())
             intersection.difference_update(excluded_unicodes)
+            if self.tableTag == "DMAP":
+                # Glyph zero is a miss, not a replacement for cmap fallback.
+                intersection = {
+                    u for u in intersection if cmap[u] != s.orig_glyph_order[0]
+                }
             matched_unicodes.update(intersection)
             s.glyphs.update(cmap[u] for u in intersection)
             covered_unicodes = (
@@ -3285,8 +3290,11 @@ def subset_glyphs(self, s):
             t.cmap = {
                 u: g
                 for u, g in t.cmap.items()
-                if g in s.glyphs_requested
-                or (u in s.unicodes_requested and u not in excluded_unicodes)
+                if (is_cmap or g != s.orig_glyph_order[0])
+                and (
+                    g in s.glyphs_requested
+                    or (u in s.unicodes_requested and u not in excluded_unicodes)
+                )
             }
             # Collect format 12 tables that hold only basic multilingual plane
             # codepoints.
