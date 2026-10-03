@@ -211,7 +211,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             if glyph is None:
                 log.warning("glyph '%s' does not exist in glyf table", glyphName)
                 continue
-            if glyph.numberOfContours:
+            if glyph.numberOfContours or getattr(glyph, "program", None):
                 if splitGlyphs:
                     glyphPath = userNameToFileName(
                         tostr(glyphName, "utf-8"),
@@ -737,6 +737,11 @@ class Glyph(object):
         # some glyphs; decompileCoordinates assumes that there's at least
         # one, so short-circuit here.
         if self.numberOfContours == 0:
+            # Zero-contour glyphs may have instructions for phantom points.
+            if len(data) >= 2:
+                instructionLength = struct.unpack(">H", data[:2])[0]
+                self.program = ttProgram.Program()
+                self.program.fromBytecode(data[2 : 2 + instructionLength])
             return
         if self.isComposite():
             self.decompileComponents(data, glyfTable)
@@ -754,7 +759,7 @@ class Glyph(object):
                 self.expand(glyfTable)
             else:
                 return self.data
-        if self.numberOfContours == 0:
+        if self.numberOfContours == 0 and not getattr(self, "program", None):
             return b""
 
         if recalcBBoxes:
@@ -763,6 +768,9 @@ class Glyph(object):
         data = sstruct.pack(glyphHeaderFormat, self)
         if self.isComposite():
             data = data + self.compileComponents(glyfTable)
+        elif self.numberOfContours == 0:
+            instructions = self.program.getBytecode()
+            data += struct.pack(">H", len(instructions)) + instructions
         else:
             data = data + self.compileCoordinates(
                 optimizeSize=optimizeSize,
@@ -796,7 +804,7 @@ class Glyph(object):
                 last = self.endPtsOfContours[i] + 1
                 writer.endtag("contour")
                 writer.newline()
-            haveInstructions = self.numberOfContours > 0
+            haveInstructions = hasattr(self, "program")
         if haveInstructions:
             if self.program:
                 writer.begintag("instructions")
@@ -1427,6 +1435,13 @@ class Glyph(object):
         numContours = struct.unpack(">h", self.data[:2])[0]
         data = bytearray(self.data)
         i = 10
+        if numContours == 0:
+            # No contour endpoint or coordinate flags exist in this case.
+            if not remove_hinting and len(data) >= i + 2:
+                instructionLen = (data[i] << 8) | data[i + 1]
+                i += 2 + instructionLen
+            self.data = data[:i]
+            return
         if numContours >= 0:
             i += 2 * numContours  # endPtsOfContours
             nCoordinates = ((data[i - 2] << 8) | data[i - 1]) + 1
