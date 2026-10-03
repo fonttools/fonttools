@@ -694,11 +694,17 @@ def _drop_beyond64k_cmap_format4(font: TTFont) -> None:
         return
 
     for _, character_map in _character_map_tables(font):
+        unicode_bmp_tables = [
+            subtable
+            for subtable in character_map.tables
+            if subtable.format == 4 and subtable.isUnicode() and not subtable.isSymbol()
+        ]
+        if not unicode_bmp_tables:
+            continue
         if not any(subtable.format == 12 for subtable in character_map.tables):
             cmap12 = {}
-            for subtable in character_map.tables:
-                if subtable.format == 4 and subtable.isUnicode():
-                    cmap12.update(subtable.cmap)
+            for subtable in unicode_bmp_tables:
+                cmap12.update(subtable.cmap)
             if cmap12:
                 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 
@@ -710,7 +716,9 @@ def _drop_beyond64k_cmap_format4(font: TTFont) -> None:
                 character_map.tables.append(subtable)
 
         character_map.tables = [
-            subtable for subtable in character_map.tables if subtable.format != 4
+            subtable
+            for subtable in character_map.tables
+            if subtable not in unicode_bmp_tables
         ]
 
 

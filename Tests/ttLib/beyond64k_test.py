@@ -666,6 +666,44 @@ def test_upper_tables_replaces_bmp_format4_cmap_with_format12():
     font["cmap"].compile(font)
 
 
+@pytest.mark.parametrize("tag", ["cmap", "DMAP"])
+@pytest.mark.parametrize("encoding", [0, 2])
+@pytest.mark.parametrize("unicode_companion", [False, True])
+def test_upper_tables_preserves_nonunicode_format4(tag, encoding, unicode_companion):
+    font = TTFont()
+    font.setGlyphOrder([".notdef"] + [f"glyph{i}" for i in range(1, 0x10001)])
+    legacy = CmapSubtable.newSubtable(4)
+    legacy.platformID = 3
+    legacy.platEncID = encoding
+    legacy.language = 0
+    legacy.cmap = {0xF041: "glyph1"}
+    font[tag] = newTable(tag)
+    font[tag].tableVersion = 0
+    font[tag].tables = [legacy]
+    if unicode_companion:
+        unicode = CmapSubtable.newSubtable(4)
+        unicode.platformID = 3
+        unicode.platEncID = 1
+        unicode.language = 0
+        unicode.cmap = {0x42: "glyph65536"}
+        font[tag].tables.append(unicode)
+
+    upper_tables(font)
+
+    assert legacy in font[tag].tables
+    assert legacy.format == 4 and legacy.cmap == {0xF041: "glyph1"}
+    unicode_tables = [sub for sub in font[tag].tables if sub.format == 12]
+    if unicode_companion:
+        assert len(unicode_tables) == 1
+        assert unicode_tables[0].cmap == {0x42: "glyph65536"}
+    else:
+        assert not unicode_tables
+    data = font[tag].compile(font)
+    reloaded = newTable(tag)
+    reloaded.decompile(data, font)
+    assert reloaded.getcmap(3, encoding).cmap == legacy.cmap
+
+
 def test_upper_tables_converts_high_uvs_format14_to_format15():
     font = TTFont()
     font.setGlyphOrder(
