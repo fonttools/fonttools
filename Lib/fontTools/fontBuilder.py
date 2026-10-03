@@ -851,10 +851,16 @@ class FontBuilder(object):
     def setupPost(self, keepGlyphNames=True, **values):
         """Create a new `post` table and initialize it with default values,
         which can be overridden by keyword arguments.
+
+        Glyph names are omitted for beyond-64k fonts exceeding the format 2 count limit.
         """
         isCFF2 = "CFF2" in self.font
         postTable = self._initTableWithValues("post", _postDefaults, values)
-        if (self.isTTF or isCFF2) and keepGlyphNames:
+        if (
+            (self.isTTF or isCFF2)
+            and keepGlyphNames
+            and (not self.beyond64k or len(self.font.getGlyphOrder()) <= 0xFFFF)
+        ):
             postTable.formatType = 2.0
             postTable.extraNames = []
             postTable.mapping = {}

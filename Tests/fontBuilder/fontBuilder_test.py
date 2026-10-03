@@ -471,6 +471,29 @@ def test_setupPost(is_ttf, keep_glyph_names, make_cff2, post_format):
     assert fb.font["post"].formatType == post_format
 
 
+@pytest.mark.parametrize("count", [0xFFFF, 0x10000, 0x10001])
+@pytest.mark.parametrize("cff2", [False, True])
+def test_setupPost_beyond64k_count_limit(count, cff2):
+    fb = FontBuilder(1024, isTTF=not cff2, beyond64k=True)
+    order = [".notdef"] + [f"glyph{i}" for i in range(1, count)]
+    fb.setupGlyphOrder(order)
+    if cff2:
+        fb.font["CFF2"] = newTable("CFF2")
+
+    fb.setupPost()
+
+    post = fb.font["post"]
+    assert post.formatType == (2 if count <= 0xFFFF else 3)
+    fb.font["MAXP"].numGlyphs = count
+    if post.formatType == 2:
+        # Isolate the glyph-count boundary from post's separate name-index limit.
+        post.mapping = {name: "space" for name in order}
+    data = post.compile(fb.font)
+    reloaded = newTable("post")
+    reloaded.decompile(data, fb.font)
+    assert reloaded.formatType == post.formatType
+
+
 @pytest.mark.parametrize("supplementary", [False, True])
 @pytest.mark.parametrize("gid", [0xFFFF, 0x10000, 0x10001])
 def test_character_map_high_glyph_ids(gid, supplementary):
