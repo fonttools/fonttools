@@ -370,6 +370,9 @@ class VarComponent:
             else:
                 assert False, name
 
+        if not (self.flags & VarComponentFlags.HAVE_SCALE_Y):
+            self.transform.scaleY = self.transform.scaleX
+
     def applyTransformDeltas(self, deltas):
         i = 0
 
