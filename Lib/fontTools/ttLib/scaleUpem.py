@@ -104,7 +104,7 @@ def visit(visitor, obj, attr, metrics):
         metrics[g] = visitor.scale(advance), visitor.scale(lsb)
 
 
-@ScalerVisitor.register_attr(ttLib.getTableClass("VMTX"), "VOriginRecords")
+@ScalerVisitor.register_attr(ttLib.getTableClass("VORG"), "VOriginRecords")
 def visit(visitor, obj, attr, VOriginRecords):
     for g in VOriginRecords:
         VOriginRecords[g] = visitor.scale(VOriginRecords[g])
