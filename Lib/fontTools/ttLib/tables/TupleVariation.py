@@ -376,7 +376,7 @@ class TupleVariation(object):
                     pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, bytearr)
                 else:
                     pos = TupleVariation.encodeDeltaRunAsLongs_(deltas, pos, bytearr)
-        else:
+        elif numDeltas:
             minVal, maxVal = min(deltas), max(deltas)
             if minVal == 0 == maxVal:
                 pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, bytearr)

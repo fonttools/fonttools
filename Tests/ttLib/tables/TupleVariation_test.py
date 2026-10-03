@@ -592,6 +592,25 @@ class TupleVariationTest(unittest.TestCase):
         var = TupleVariation({}, [None, 1, 2, None, 4, None])
         # delta for cvts: [1, 2, 4]
         self.assertEqual("02 01 02 04", hexencode(var.compileDeltas()))
+        self.assertEqual(
+            "02 01 02 04", hexencode(var.compileDeltas(optimizeSize=False))
+        )
+
+    def test_compileDeltaValues_empty(self):
+        for optimizeSize in (False, True):
+            with self.subTest(optimizeSize=optimizeSize):
+                self.assertEqual(
+                    TupleVariation.compileDeltaValues_([], optimizeSize=optimizeSize),
+                    bytearray(),
+                )
+                buffer = bytearray(b"prefix")
+                self.assertIs(
+                    TupleVariation.compileDeltaValues_(
+                        [], buffer, optimizeSize=optimizeSize
+                    ),
+                    buffer,
+                )
+                self.assertEqual(buffer, bytearray(b"prefix"))
 
     def test_compileDeltaValues(self):
         compileDeltaValues = lambda values, optimizeSize=True: hexencode(
