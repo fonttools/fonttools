@@ -1134,6 +1134,39 @@ class GlyphCubicTest:
             ]
 
 
+@pytest.mark.parametrize("length", [0x7FFF, 0x8000, 0xFFFF, 0x10000])
+@pytest.mark.parametrize("composite", [False, True])
+def test_unsigned_instruction_length(length, composite):
+    glyf = newTable("glyf")
+    glyf.glyphOrder = [".notdef", "base", "composite"]
+    pen = TTGlyphPen(None)
+    pen.moveTo((10, 20))
+    pen.lineTo((100, 20))
+    pen.lineTo((10, 100))
+    pen.closePath()
+    base = pen.glyph()
+    glyf.glyphs = {".notdef": Glyph(), "base": base}
+    if composite:
+        pen = TTGlyphPen(glyf)
+        pen.addComponent("base", (1, 0, 0, 1, 30, 40))
+        glyph = pen.glyph()
+    else:
+        glyph = base
+    glyph.program = ttProgram.Program()
+    glyph.program.fromBytecode([0] * length)
+
+    if length > 0xFFFF:
+        with pytest.raises(struct.error):
+            glyph.compile(glyf)
+        return
+    data = glyph.compile(glyf)
+    reloaded = Glyph(data)
+    reloaded.expand(glyf)
+    assert reloaded.program.getBytecode() == glyph.program.getBytecode()
+    assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
+    assert reloaded.compile(glyf) == data
+
+
 def build_interpolatable_glyphs(contours, *transforms):
     # given a list of lists of (point, flag) tuples (one per contour), build a Glyph
     # then make len(transforms) copies transformed accordingly, and return a

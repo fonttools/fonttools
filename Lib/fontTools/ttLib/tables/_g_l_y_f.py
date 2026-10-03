@@ -886,7 +886,7 @@ class Glyph(object):
             haveInstructions = haveInstructions | haveInstr
             self.components.append(component)
         if haveInstructions:
-            (numInstructions,) = struct.unpack(">h", data[:2])
+            (numInstructions,) = struct.unpack(">H", data[:2])
             data = data[2:]
             self.program = ttProgram.Program()
             self.program.fromBytecode(data[:numInstructions])
@@ -905,7 +905,7 @@ class Glyph(object):
         self.endPtsOfContours = endPtsOfContours.tolist()
 
         pos = 2 * self.numberOfContours
-        (instructionLength,) = struct.unpack(">h", data[pos : pos + 2])
+        (instructionLength,) = struct.unpack(">H", data[pos : pos + 2])
         self.program = ttProgram.Program()
         self.program.fromBytecode(data[pos + 2 : pos + 2 + instructionLength])
         pos += 2 + instructionLength
@@ -1010,7 +1010,7 @@ class Glyph(object):
             data = data + compo.compile(more, haveInstructions, glyfTable)
         if haveInstructions:
             instructions = self.program.getBytecode()
-            data = data + struct.pack(">h", len(instructions)) + instructions
+            data = data + struct.pack(">H", len(instructions)) + instructions
         return data
 
     def compileCoordinates(self, *, optimizeSize=True, extended=True):
@@ -1021,7 +1021,7 @@ class Glyph(object):
             endPtsOfContours.byteswap()
         data.append(endPtsOfContours.tobytes())
         instructions = self.program.getBytecode()
-        data.append(struct.pack(">h", len(instructions)))
+        data.append(struct.pack(">H", len(instructions)))
         data.append(instructions)
 
         deltas = self.coordinates.copy()
