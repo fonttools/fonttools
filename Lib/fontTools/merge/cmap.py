@@ -54,7 +54,7 @@ def _glyphsAreSame(
 
 
 def computeMegaUvs(merger, uvsTables):
-    """Returns merged UVS subtable (cmap format=14)."""
+    """Returns merged UVS mappings (cmap formats 14 and 15)."""
     uvsDict = {}
     cmap = merger.cmap
     for table in uvsTables:
@@ -82,14 +82,13 @@ def computeMegaUvs(merger, uvsTables):
 class _CmapUnicodePlatEncodings:
     BMP = {(4, 3, 1), (4, 0, 3), (4, 0, 4), (4, 0, 6)}
     FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
-    UVS = {(14, 0, 5)}
+    UVS = {(14, 0, 5), (15, 0, 5)}
 
 
 def computeMegaCmap(merger, cmapTables):
     """Sets merger.cmap and merger.uvsDict."""
 
-    # TODO Handle format=14.
-    # Only merge format 4 and 12 Unicode subtables, ignores all other subtables
+    # For nominal Unicode mappings, only merge formats 4 and 12.
     # If there is a format 12 table for a font, ignore the format 4 table of it
     chosenCmapTables = []
     chosenUvsTables = []
@@ -97,6 +96,7 @@ def computeMegaCmap(merger, cmapTables):
         format4 = None
         format12 = None
         format14 = None
+        format15 = None
         for subtable in table.tables:
             properties = (subtable.format, subtable.platformID, subtable.platEncID)
             if properties in _CmapUnicodePlatEncodings.BMP:
@@ -104,7 +104,10 @@ def computeMegaCmap(merger, cmapTables):
             elif properties in _CmapUnicodePlatEncodings.FullRepertoire:
                 format12 = subtable
             elif properties in _CmapUnicodePlatEncodings.UVS:
-                format14 = subtable
+                if subtable.format == 15:
+                    format15 = subtable
+                else:
+                    format14 = subtable
             else:
                 log.warning(
                     "Dropped cmap subtable from font '%s':\t"
@@ -119,7 +122,9 @@ def computeMegaCmap(merger, cmapTables):
         elif format4 is not None:
             chosenCmapTables.append((format4, fontIdx))
 
-        if format14 is not None:
+        if format15 is not None:
+            chosenUvsTables.append(format15)
+        elif format14 is not None:
             chosenUvsTables.append(format14)
 
     # Build the unicode mapping

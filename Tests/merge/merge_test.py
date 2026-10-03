@@ -390,6 +390,76 @@ def _merge_and_recompile(fontfiles, options=None):
     return ttLib.TTFont(buf)
 
 
+@pytest.mark.parametrize("first_format", [14, 15])
+@pytest.mark.parametrize("second_format", [14, 15])
+@pytest.mark.parametrize("high_glyph_ids", [False, True])
+def test_merge_extended_uvs(first_format, second_format, high_glyph_ids):
+    fontfiles = []
+    count = 0x8001 if high_glyph_ids else 4
+    for index, format in enumerate((first_format, second_format)):
+        font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000 * (index + 1), count))
+        glyphOrder = font.getGlyphOrder()
+        uvs = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(format)
+        uvs.platformID = 0
+        uvs.platEncID = 5
+        uvs.language = 0
+        uvs.cmap = {}
+        uvs.uvsDict = {
+            0xFE00: [(0x10000 * (index + 1), glyphOrder[-1])],
+            0xE0100 + index: [(0x10000 * (index + 1) + 1, None)],
+        }
+        font["cmap"].tables.append(uvs)
+        fontfiles.append(_compile(font))
+
+    merger = Merger()
+    merged = merger.merge(fontfiles)
+    assert merged["cmap"].tables[0].format == (15 if high_glyph_ids else 14)
+    expected = {
+        0xFE00: [
+            (0x10000, merger.glyphOrder[count - 1]),
+            (0x20000, merger.glyphOrder[-1]),
+        ],
+        0xE0100: [(0x10001, None)],
+        0xE0101: [(0x20001, None)],
+    }
+    assert merged["cmap"].tables[0].uvsDict == expected
+    roundtripped = ttLib.TTFont(_compile(merged))
+    actual = roundtripped["cmap"].tables[0].uvsDict
+    for selector, mappings in expected.items():
+        assert [codepoint for codepoint, _ in actual[selector]] == [
+            codepoint for codepoint, _ in mappings
+        ]
+        for (_, actualGlyph), (_, expectedGlyph) in zip(actual[selector], mappings):
+            if expectedGlyph is None:
+                assert actualGlyph is None
+            else:
+                assert roundtripped.getGlyphID(actualGlyph) == merged.getGlyphID(
+                    expectedGlyph
+                )
+
+
+@pytest.mark.parametrize("reverse_order", [False, True])
+def test_merge_prefers_format15_uvs(reverse_order):
+    font = ttLib.TTFont(_make_fontfile_with_glyphs(0x10000, 4))
+    glyphOrder = font.getGlyphOrder()
+    subtables = []
+    for format, glyph in ((14, glyphOrder[2]), (15, glyphOrder[3])):
+        uvs = ttLib.getTableModule("cmap").CmapSubtable.newSubtable(format)
+        uvs.platformID = 0
+        uvs.platEncID = 5
+        uvs.language = 0
+        uvs.cmap = {}
+        uvs.uvsDict = {0xFE00: [(0x10000, glyph)]}
+        subtables.append(uvs)
+    font["cmap"].tables.extend(reversed(subtables) if reverse_order else subtables)
+
+    merger = Merger()
+    merger.glyphOrder = glyphOrder
+    merger.duplicateGlyphsPerFont = [{}]
+    merged = ttLib.newTable("cmap").merge(merger, [font["cmap"]])
+    assert merged.tables[0].uvsDict == {0xFE00: [(0x10000, glyphOrder[3])]}
+
+
 def test_merge_head_different_units_per_em():
     heads = []
     for units_per_em in (1000, 2048):
