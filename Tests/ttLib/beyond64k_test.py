@@ -520,6 +520,136 @@ def test_max_context_extended_layout(extended_header):
     assert maxCtxFont(font) == 3
 
 
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_reorder_extended_layout(extended_header, extended_formats, lazy):
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.misc.testTools import getXML
+    from fontTools.ttLib.beyond64k import _convert_layout_formats
+    from fontTools.ttLib.reorderGlyphs import reorderGlyphs
+
+    fb = FontBuilder(1000)
+    order = [".notdef", "a", "b", "c", "d", "a_b", "acute", "grave"]
+    fb.setupGlyphOrder(order)
+    fb.setupPost()
+    addOpenTypeFeaturesFromString(
+        fb.font,
+        """
+        languagesystem DFLT dflt;
+        markClass acute <anchor 0 0> @TOP;
+        markClass grave <anchor 50 0> @TOP;
+        feature liga { sub a b by a_b; } liga;
+        feature rclt { rsub c [a b]' d by [b a]; } rclt;
+        feature kern {
+            pos a -50;
+            pos b -60;
+            pos a [b c] -30;
+            pos b [a d] -40;
+            pos [a c] [b d] -15;
+        } kern;
+        feature curs {
+            pos cursive a <anchor 0 0> <anchor 300 0>;
+            pos cursive b <anchor 0 10> <anchor 400 10>;
+        } curs;
+        feature mark {
+            pos base a <anchor 100 300> mark @TOP;
+            pos base b <anchor 200 400> mark @TOP;
+            pos ligature a_b <anchor 100 300> mark @TOP
+                ligComponent <anchor 200 300> mark @TOP;
+        } mark;
+        feature mkmk {
+            pos mark acute <anchor 100 300> mark @TOP;
+            pos mark grave <anchor 200 400> mark @TOP;
+        } mkmk;
+        table GDEF {
+            LigatureCaretByPos a_b 100;
+            LigatureCaretByPos d 200;
+        } GDEF;
+        """,
+    )
+
+    def roundtrip(font, lazy=False):
+        stream = BytesIO()
+        font.save(stream)
+        return TTFont(BytesIO(stream.getvalue()), lazy=lazy)
+
+    reference = roundtrip(fb.font)
+    font = roundtrip(fb.font)
+    if extended_header:
+        upper_tables(font, tables=["GDEF", "GSUB", "GPOS"])
+    for tag in ("GSUB", "GPOS"):
+        _convert_layout_formats(font[tag].table, extended_formats)
+    font = roundtrip(font, lazy=lazy)
+    new_order = order[:1] + list(reversed(order[1:]))
+    reorderGlyphs(reference, new_order)
+    reorderGlyphs(font, new_order)
+    font = roundtrip(font)
+    lower_tables(font, tables=["GDEF", "GSUB", "GPOS"])
+    for tag in ("GDEF", "GSUB", "GPOS"):
+        assert getXML(font[tag].toXML, font) == getXML(reference[tag].toXML, reference)
+
+
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_reorder_extended_contextual_layout(extended_header, lazy):
+    from fontTools.misc.testTools import getXML
+    from fontTools.ttLib.beyond64k import _convert_layout_formats
+    from fontTools.ttLib.reorderGlyphs import reorderGlyphs
+
+    font = build_contextual_layout_font()
+    lookup = builder.SingleSubstBuilder(font, None)
+    lookup.lookup_index = 0
+    rule = builder.ChainContextualRule(
+        [[".null", "CR"]],
+        [["period", "ellipsis"], ["space"]],
+        [[".null", "CR"]],
+        [[lookup], None],
+    )
+    ruleset = builder.ChainContextualRuleset()
+    ruleset.addRule(rule)
+    for tag, builder_type in (
+        ("GSUB", builder.ChainContextSubstBuilder),
+        ("GPOS", builder.ChainContextPosBuilder),
+    ):
+        lookup_builder = builder_type(font, None)
+        subtables = []
+        for chaining in (False, True):
+            subtables.extend(
+                [
+                    lookup_builder.buildFormat1Subtable(ruleset, chaining),
+                    lookup_builder.buildFormat2Subtable(
+                        ruleset, ruleset.format2ClassDefs(), chaining
+                    ),
+                    lookup_builder.buildFormat3Subtable(rule, chaining),
+                ]
+            )
+        font[tag].table.LookupList.Lookup = [
+            builder.buildLookup([st], table=tag) for st in subtables
+        ]
+
+    def roundtrip(font, lazy=False):
+        stream = BytesIO()
+        font.save(stream)
+        return TTFont(BytesIO(stream.getvalue()), lazy=lazy)
+
+    reference = roundtrip(font)
+    if extended_header:
+        upper_tables(font, tables=["GSUB", "GPOS"])
+    else:
+        for tag in ("GSUB", "GPOS"):
+            _convert_layout_formats(font[tag].table, True)
+    font = roundtrip(font, lazy=lazy)
+    order = font.getGlyphOrder()
+    order = order[:1] + list(reversed(order[1:]))
+    reorderGlyphs(reference, order)
+    reorderGlyphs(font, order)
+    font = roundtrip(font)
+    lower_tables(font, tables=["GSUB", "GPOS"])
+    for tag in ("GSUB", "GPOS"):
+        assert getXML(font[tag].toXML, font) == getXML(reference[tag].toXML, reference)
+
+
 def test_base_end_to_end_round_trip():
     font = TTFont()
     font.importXML(DATA_DIR / "TestTTF-Regular.ttx")
