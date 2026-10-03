@@ -1,10 +1,49 @@
 import pytest
 
+from io import BytesIO
 from pathlib import Path
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.reorderGlyphs import reorderGlyphs
 
 DATA_DIR = Path(__file__).parent / "data"
+
+
+@pytest.mark.parametrize("lazy", [True, False, None])
+@pytest.mark.parametrize("cursive", [False, True])
+def test_reorder_lazy_arrays(lazy, cursive):
+    fb = FontBuilder(1000)
+    order = [".notdef"] + [f"g{i}" for i in range(10)]
+    fb.setupGlyphOrder(order)
+    fb.setupPost()
+    if cursive:
+        statements = [
+            f"pos cursive g{i} <anchor {i} 0> <anchor {i + 100} 0>;" for i in range(10)
+        ]
+    else:
+        statements = [f"pos g{i} {i + 1};" for i in range(10)]
+    addOpenTypeFeaturesFromString(
+        fb.font, "feature kern { " + " ".join(statements) + " } kern;"
+    )
+    data = BytesIO()
+    fb.font.save(data)
+    font = TTFont(BytesIO(data.getvalue()), lazy=lazy)
+    reorderGlyphs(font, order[:1] + list(reversed(order[1:])))
+    output = BytesIO()
+    font.save(output)
+    font = TTFont(BytesIO(output.getvalue()))
+    subtable = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+    assert subtable.Coverage.glyphs == list(reversed(order[1:]))
+    if cursive:
+        assert [r.EntryAnchor.XCoordinate for r in subtable.EntryExitRecord] == list(
+            reversed(range(10))
+        )
+        assert [r.ExitAnchor.XCoordinate for r in subtable.EntryExitRecord] == list(
+            reversed(range(100, 110))
+        )
+    else:
+        assert [v.XAdvance for v in subtable.Value] == list(reversed(range(1, 11)))
 
 
 @pytest.mark.parametrize("lazy", [True, False, None])
