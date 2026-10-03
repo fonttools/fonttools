@@ -2315,10 +2315,16 @@ _equivalents = {
 #
 
 
-def _getLookupList(table):
+def _getLayoutList(table, name):
+    compact = getattr(table, name, None)
+    extended = getattr(table, name + "2", None)
     if getattr(table, "Version", 0) >= 0x00010002:
-        return getattr(table, "LookupList2", None) or getattr(table, "LookupList", None)
-    return getattr(table, "LookupList", None) or getattr(table, "LookupList2", None)
+        return extended or compact
+    return compact or extended
+
+
+def _getLookupList(table):
+    return _getLayoutList(table, "LookupList")
 
 
 def fixLookupOverFlows(ttf, overflowRecord):

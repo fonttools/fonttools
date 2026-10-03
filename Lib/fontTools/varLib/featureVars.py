@@ -107,7 +107,7 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
 def _existingVariableFeatures(table):
     existingFeatureVarsTags = set()
     if hasattr(table, "FeatureVariations") and table.FeatureVariations is not None:
-        features = table.FeatureList.FeatureRecord
+        features = ot._getLayoutList(table, "FeatureList").FeatureRecord
         for fvr in table.FeatureVariations.FeatureVariationRecord:
             for ftsr in fvr.FeatureTableSubstitution.SubstitutionRecord:
                 existingFeatureVarsTags.add(features[ftsr.FeatureIndex].FeatureTag)
@@ -362,6 +362,8 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
 
     featureTags = [featureTag] if isinstance(featureTag, str) else sorted(featureTag)
     processLast = "rvrn" not in featureTags or len(featureTags) > 1
+    featureList = ot._getLayoutList(table, "FeatureList")
+    scriptList = ot._getLayoutList(table, "ScriptList")
 
     #
     # if a <featureTag> feature is not present:
@@ -380,7 +382,7 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
 
     existingTags = {
         feature.FeatureTag
-        for feature in table.FeatureList.FeatureRecord
+        for feature in featureList.FeatureRecord
         if feature.FeatureTag in featureTags
     }
 
@@ -389,16 +391,16 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
         varFeatures = []
         for featureTag in sorted(newTags):
             varFeature = buildFeatureRecord(featureTag, [])
-            table.FeatureList.FeatureRecord.append(varFeature)
+            featureList.FeatureRecord.append(varFeature)
             varFeatures.append(varFeature)
-        table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
+        featureList.FeatureCount = len(featureList.FeatureRecord)
 
         sortFeatureList(table)
 
         for varFeature in varFeatures:
-            varFeatureIndex = table.FeatureList.FeatureRecord.index(varFeature)
+            varFeatureIndex = featureList.FeatureRecord.index(varFeature)
 
-            for scriptRecord in table.ScriptList.ScriptRecord:
+            for scriptRecord in scriptList.ScriptRecord:
                 if scriptRecord.Script.DefaultLangSys is None:
                     # We need to have a default LangSys to attach variations to.
                     langSys = ot.LangSys()
@@ -418,7 +420,7 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
         # so we must do this after the above
         varFeatureIndices.update(
             index
-            for index, feature in enumerate(table.FeatureList.FeatureRecord)
+            for index, feature in enumerate(featureList.FeatureRecord)
             if feature.FeatureTag in existingTags
         )
 
@@ -442,7 +444,7 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
             conditionTable.append(ct)
         records = []
         for varFeatureIndex in sorted(varFeatureIndices):
-            existingLookupIndices = table.FeatureList.FeatureRecord[
+            existingLookupIndices = featureList.FeatureRecord[
                 varFeatureIndex
             ].Feature.LookupListIndex
             combinedLookupIndices = (
@@ -549,7 +551,7 @@ def visit(visitor, obj, attr, value):
 
 
 @ShifterVisitor.register_attr(
-    (ot.SubstLookupRecord, ot.PosLookupRecord), "LookupListIndex"
+    (ot.SubstLookupRecord, ot.PosLookupRecord, ot.SeqLookup), "LookupListIndex"
 )
 def visit(visitor, obj, attr, value):
     setattr(obj, attr, visitor.shift + value)
@@ -562,7 +564,9 @@ def buildSubstitutionLookups(gsub, allSubstitutions, processLast=False):
     # Insert lookups at the beginning of the lookup vector
     # https://github.com/googlefonts/fontmake/issues/950
 
-    firstIndex = len(gsub.LookupList.Lookup) if processLast else 0
+    lookupList = ot._getLookupList(gsub)
+    featureList = ot._getLayoutList(gsub, "FeatureList")
+    firstIndex = len(lookupList.Lookup) if processLast else 0
     lookupMap = {}
     for i, substitutionMap in enumerate(allSubstitutions):
         lookupMap[substitutionMap] = firstIndex + i
@@ -571,19 +575,19 @@ def buildSubstitutionLookups(gsub, allSubstitutions, processLast=False):
         # Shift all lookup indices in gsub by len(allSubstitutions)
         shift = len(allSubstitutions)
         visitor = ShifterVisitor(shift)
-        visitor.visit(gsub.FeatureList.FeatureRecord)
-        visitor.visit(gsub.LookupList.Lookup)
+        visitor.visit(featureList.FeatureRecord)
+        visitor.visit(lookupList.Lookup)
         visitor.visit(getattr(gsub, "FeatureVariations", None))
 
     for i, subst in enumerate(allSubstitutions):
         substMap = dict(subst)
         lookup = buildLookup([buildSingleSubstSubtable(substMap)])
         if processLast:
-            gsub.LookupList.Lookup.append(lookup)
+            lookupList.Lookup.append(lookup)
         else:
-            gsub.LookupList.Lookup.insert(i, lookup)
-        assert gsub.LookupList.Lookup[lookupMap[subst]] is lookup
-    gsub.LookupList.LookupCount = len(gsub.LookupList.Lookup)
+            lookupList.Lookup.insert(i, lookup)
+        assert lookupList.Lookup[lookupMap[subst]] is lookup
+    lookupList.LookupCount = len(lookupList.Lookup)
     return lookupMap
 
 
@@ -662,12 +666,13 @@ def sortFeatureList(table):
     elsewhere. This is needed after the feature list has been modified.
     """
     # decorate, sort, undecorate, because we need to make an index remapping table
+    featureList = ot._getLayoutList(table, "FeatureList")
     tagIndexFea = [
         (fea.FeatureTag, index, fea)
-        for index, fea in enumerate(table.FeatureList.FeatureRecord)
+        for index, fea in enumerate(featureList.FeatureRecord)
     ]
     tagIndexFea.sort()
-    table.FeatureList.FeatureRecord = [fea for tag, index, fea in tagIndexFea]
+    featureList.FeatureRecord = [fea for tag, index, fea in tagIndexFea]
     featureRemap = dict(
         zip([index for tag, index, fea in tagIndexFea], range(len(tagIndexFea)))
     )
@@ -678,7 +683,8 @@ def sortFeatureList(table):
 
 def remapFeatures(table, featureRemap):
     """Go through the scripts list, and remap feature indices."""
-    for scriptIndex, script in enumerate(table.ScriptList.ScriptRecord):
+    scriptList = ot._getLayoutList(table, "ScriptList")
+    for scriptIndex, script in enumerate(scriptList.ScriptRecord):
         defaultLangSys = script.Script.DefaultLangSys
         if defaultLangSys is not None:
             _remapLangSys(defaultLangSys, featureRemap)
