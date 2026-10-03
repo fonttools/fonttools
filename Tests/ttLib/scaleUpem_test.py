@@ -1,4 +1,4 @@
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.scaleUpem import ScalerVisitor, scale_upem
 from fontTools.ttLib.tables import otTables
@@ -114,6 +114,23 @@ class ScaleUpemTest(unittest.TestCase):
         font = TTFont(self.get_path("TestVGID-Regular.otf"))
 
         scale_upem(font, 500)
+
+    def test_scale_upem_vorg(self):
+        font = TTFont(self.get_path("TestVGID-Regular.otf"))
+        order = font.getGlyphOrder()
+        vorg = font["VORG"] = newTable("VORG")
+        vorg.majorVersion, vorg.minorVersion = 1, 0
+        vorg.defaultVertOriginY = 800
+        vorg.VOriginRecords = {order[1]: 900, order[2]: -321}
+
+        scale_upem(font, font["head"].unitsPerEm * 2)
+
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        assert font["VORG"].defaultVertOriginY == 1600
+        assert font["VORG"][order[0]] == 1600
+        assert font["VORG"].VOriginRecords == {order[1]: 1800, order[2]: -642}
 
 
 def test_scale_upem_paint_glyph2():
