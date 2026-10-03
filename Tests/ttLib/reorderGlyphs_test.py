@@ -1,10 +1,48 @@
 import pytest
 
+from io import BytesIO
 from pathlib import Path
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.reorderGlyphs import reorderGlyphs
 
 DATA_DIR = Path(__file__).parent / "data"
+
+
+@pytest.mark.parametrize("lazy", [True, False, None])
+def test_reorder_lazy_ligatures(lazy):
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder([".notdef", "a", "b", "a_b", "unused"])
+    fb.setupPost()
+    addOpenTypeFeaturesFromString(fb.font, "feature liga { sub a b by a_b; } liga;")
+    data = BytesIO()
+    fb.font.save(data)
+    font = TTFont(BytesIO(data.getvalue()), lazy=lazy)
+    order = font.getGlyphOrder()
+    reorderGlyphs(font, order[:1] + list(reversed(order[1:])))
+    output = BytesIO()
+    font.save(output)
+    font = TTFont(BytesIO(output.getvalue()))
+    ligature = font["GSUB"].table.LookupList.Lookup[0].SubTable[0].ligatures["a"][0]
+    assert ligature.Component == ["b"]
+    assert ligature.LigGlyph == "a_b"
+
+
+def test_ensure_decompiled_high_level_ligatures():
+    from fontTools.otlLib.builder import buildLookup
+    from fontTools.ttLib.tables import otTables
+
+    otTables.LigatureSubst().ensureDecompiled(recurse=True)
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder([".notdef", "a", "b", "a_b"])
+    fb.setupPost()
+    addOpenTypeFeaturesFromString(fb.font, "feature liga { sub a b by a_b; } liga;")
+    subtable = otTables.LigatureSubst()
+    subtable.ligatures = {("a", "b"): "a_b"}
+    fb.font["GSUB"].table.LookupList.Lookup = [buildLookup([subtable])]
+    fb.font.ensureDecompiled(recurse=True)
+    assert subtable.ligatures == {("a", "b"): "a_b"}
 
 
 @pytest.mark.parametrize("lazy", [True, False, None])
