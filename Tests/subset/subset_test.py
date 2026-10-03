@@ -1944,6 +1944,43 @@ def singlepos2_font():
     return TTFont(buf)
 
 
+@pytest.mark.parametrize("keep_classes", [False, True])
+@pytest.mark.parametrize("extended", [False, True])
+def test_subset_null_gdef_varstore(singlepos2_font, keep_classes, extended):
+    font = singlepos2_font
+    gdef = ot.GDEF()
+    gdef.Version = 0x00010003
+    gdef.AttachList = gdef.LigCaretList = None
+    gdef.MarkAttachClassDef = gdef.MarkGlyphSetsDef = None
+    gdef.VarStore = None
+    gdef.GlyphClassDef = ot.ClassDef()
+    gdef.GlyphClassDef.classDefs = {"a" if keep_classes else "b": 1}
+    font["GDEF"] = newTable("GDEF")
+    font["GDEF"].table = gdef
+
+    if extended:
+        gdef.Version = 0x00010004
+
+    buf = io.BytesIO()
+    font.save(buf)
+    buf.seek(0)
+    font = TTFont(buf)
+    assert font["GDEF"].table.VarStore is None
+
+    subsetter = subset.Subsetter()
+    subsetter.populate(text="a")
+    subsetter.subset(font)
+    assert ("GDEF" in font) == keep_classes
+    if keep_classes:
+        assert font["GDEF"].table.GlyphClassDef.classDefs == {"a": 1}
+        assert font["GDEF"].table.Version == (0x00010004 if extended else 0x00010000)
+
+    output = io.BytesIO()
+    font.save(output)
+    output.seek(0)
+    assert ("GDEF" in TTFont(output)) == keep_classes
+
+
 def test_subset_single_pos_format(singlepos2_font):
     font = singlepos2_font
     # The input font has a SinglePos Format 2 subtable where each glyph has

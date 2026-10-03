@@ -2372,7 +2372,7 @@ def _pruneGDEF(font):
         return
     gdef = font["GDEF"]
     table = gdef.table
-    if not hasattr(table, "VarStore"):
+    if getattr(table, "VarStore", None) is None:
         return
 
     store = table.VarStore
@@ -2417,7 +2417,7 @@ def prune_post_subset(self, font, options):
         table.AttachList = None
     if hasattr(table, "VarStore"):
         _pruneGDEF(font)
-        if table.VarStore.VarDataCount == 0:
+        if table.VarStore is None or table.VarStore.VarDataCount == 0:
             if table.Version == 0x00010003:
                 table.Version = 0x00010002
     if (
