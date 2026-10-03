@@ -696,6 +696,36 @@ class TTGlyphPointPenTest(TTGlyphPenTestBase):
 
 
 class CubicGlyfTest:
+    @pytest.mark.parametrize("previous", [None, "line", "qcurve"])
+    def test_cubic_wrap_stays_in_current_contour(self, previous):
+        pen = TTGlyphPointPen(None)
+        prefix_flags = []
+        if previous is not None:
+            pen.beginPath()
+            for point in [(0, 0), (100, 0), (0, 100)]:
+                pen.addPoint(point, "line" if previous == "line" else None)
+            pen.endPath()
+            prefix_flags = [1 if previous == "line" else 0] * 3
+
+        pen.beginPath()
+        pen.addPoint((0, 200))
+        pen.addPoint((100, 300))
+        pen.addPoint((200, 200), "curve")
+        pen.addPoint((300, 100))
+        pen.addPoint((0, 100))
+        pen.endPath()
+        glyph = pen.glyph()
+        assert list(glyph.flags) == prefix_flags + [128, 128, 1, 128, 128]
+
+        recording = RecordingPen()
+        glyph.draw(recording, None)
+        assert recording.value[-4:] == [
+            ("moveTo", ((200, 200),)),
+            ("curveTo", ((300, 100), (0, 100), (0, 150))),
+            ("curveTo", ((0, 200), (100, 300), (200, 200))),
+            ("closePath", ()),
+        ]
+
     def test_cubic_simple(self):
         spen = TTGlyphPen(None)
         spen.moveTo((0, 0))

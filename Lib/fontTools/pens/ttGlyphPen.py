@@ -304,6 +304,8 @@ class TTGlyphPointPen(_TTGlyphBasePen, LogMixin, AbstractPointPen):
                 while flags[j] == 0:
                     flags[j] = flagCubic
                     j -= 1
+                    if j < contourStart:
+                        j = len(flags) - 1
                 flags[i] = flagOnCurve
 
     def addPoint(
