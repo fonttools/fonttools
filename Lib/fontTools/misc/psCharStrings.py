@@ -500,9 +500,10 @@ class SimpleT2Decompiler(object):
         numBlends = self.pop()
         numOps = numBlends * (self.numRegions + 1)
         if self.blender is None:
-            del self.operandStack[
-                -(numOps - numBlends) :
-            ]  # Leave the default operands on the stack.
+            if self.numRegions:
+                del self.operandStack[
+                    -(numOps - numBlends) :
+                ]  # Leave the default operands on the stack.
         else:
             argi = len(self.operandStack) - numOps
             end_args = tuplei = argi + numBlends
