@@ -164,6 +164,14 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
     return fvar
 
 
+def _normalize_design_value(value, triple):
+    """Normalize a design coordinate while preserving the user axis direction."""
+    if triple[0] > triple[2]:
+        normalized = models.normalizeValue(value, triple[::-1])
+        return -normalized if normalized else 0.0
+    return models.normalizeValue(value, triple)
+
+
 def _add_avar(font, axes, mappings, axisTags):
     """
     Add 'avar' table to font.
@@ -222,14 +230,16 @@ def _add_avar(font, axes, mappings, axisTags):
                 f"Axis '{axis.name}': there must be a mapping for the axis default "
                 f"value {axis.default}."
             )
-        # Ascending values
-        if sorted(vals) != vals:
+        # Mapping outputs must be monotonic in the design axis direction.
+        reverse = vals_triple[0] > vals_triple[2]
+        if sorted(vals, reverse=reverse) != vals:
             raise VarLibValidationError(
-                f"Axis '{axis.name}': mapping output values must be in ascending order."
+                f"Axis '{axis.name}': mapping output values must be in "
+                f"{'descending' if reverse else 'ascending'} order."
             )
 
         keys = [models.normalizeValue(v, keys_triple) for v in keys]
-        vals = [models.normalizeValue(v, vals_triple) for v in vals]
+        vals = [_normalize_design_value(v, vals_triple) for v in vals]
 
         if all(k == v for k, v in zip(keys, vals)):
             continue
@@ -247,14 +257,14 @@ def _add_avar(font, axes, mappings, axisTags):
 
         inputLocations = [
             {
-                axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
+                axes[name].tag: _normalize_design_value(v, vals_triples[axes[name].tag])
                 for name, v in mapping.inputLocation.items()
             }
             for mapping in mappings
         ]
         outputLocations = [
             {
-                axes[name].tag: models.normalizeValue(v, vals_triples[axes[name].tag])
+                axes[name].tag: _normalize_design_value(v, vals_triples[axes[name].tag])
                 for name, v in mapping.outputLocation.items()
             }
             for mapping in mappings
@@ -865,7 +875,7 @@ def _add_GSUB_feature_variations(
     font, axes, internal_axis_supports, rules, featureTags
 ):
     def normalize(name, value):
-        return models.normalizeLocation({name: value}, internal_axis_supports)[name]
+        return _normalize_design_value(value, internal_axis_supports[name])
 
     log.info("Generating GSUB FeatureVariations")
 
@@ -878,12 +888,16 @@ def _add_GSUB_feature_variations(
             space = {}
             for condition in conditions:
                 axis_name = condition["name"]
-                if condition["minimum"] is not None:
-                    minimum = normalize(axis_name, condition["minimum"])
+                minimum, maximum = condition["minimum"], condition["maximum"]
+                support = internal_axis_supports[axis_name]
+                if support[0] > support[2]:
+                    minimum, maximum = maximum, minimum
+                if minimum is not None:
+                    minimum = normalize(axis_name, minimum)
                 else:
                     minimum = -1.0
-                if condition["maximum"] is not None:
-                    maximum = normalize(axis_name, condition["maximum"])
+                if maximum is not None:
+                    maximum = normalize(axis_name, maximum)
                 else:
                     maximum = 1.0
                 tag = axis_tags[axis_name]
@@ -1037,7 +1051,10 @@ def load_designspace(designspace, log_enabled=True, *, require_sources=True):
         log.info("Internal axis supports:\n%s", pformat(internal_axis_supports))
 
     normalized_master_locs = [
-        models.normalizeLocation(m, internal_axis_supports)
+        {
+            name: _normalize_design_value(m.get(name, triple[1]), triple)
+            for name, triple in internal_axis_supports.items()
+        }
         for m in internal_master_locs
     ]
     if log_enabled:
