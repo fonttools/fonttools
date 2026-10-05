@@ -1,6 +1,7 @@
 from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 from io import StringIO
@@ -20,8 +21,6 @@ def makeCoverage(glyphs):
 @pytest.mark.parametrize("scale_x", [-0.5, 0, 0.5, 1, 2])
 @pytest.mark.parametrize("scale_y", [None, 0.25, 1])
 def test_var_component_xml_scale_y(scale_x, scale_y):
-    from fontTools.ttLib import TTFont
-
     font = TTFont()
     font.setGlyphOrder([".notdef", "a"])
     xml = f'<glyphName value="a"/><scaleX value="{scale_x}"/>'

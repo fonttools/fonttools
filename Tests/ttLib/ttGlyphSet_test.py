@@ -1,7 +1,7 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
 from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
-from fontTools.ttLib.tables.otTables import ConditionTable
+from fontTools.ttLib.tables.otTables import ConditionTable, VarComponentFlags
 from fontTools.pens.recordingPen import (
     RecordingPen,
     RecordingPointPen,
@@ -282,8 +282,6 @@ class TTGlyphSetTest(object):
 
     @pytest.mark.parametrize("scale", [-0.5, 0.5])
     def test_varc_xml_implicit_scale_y(self, scale):
-        from fontTools.ttLib.tables.otTables import VarComponentFlags
-
         font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
         component = (
             font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph[0].components[0]
