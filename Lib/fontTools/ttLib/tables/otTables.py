@@ -256,6 +256,8 @@ class VarComponent:
         if self.conditionIndex is not None:
             flags |= VarComponentFlags.HAVE_CONDITION
             data.append(_write_uint32var(self.conditionIndex))
+        else:
+            flags &= ~VarComponentFlags.HAVE_CONDITION
 
         numAxes = len(self.axisValues)
 

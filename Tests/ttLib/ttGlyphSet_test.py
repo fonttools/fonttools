@@ -784,6 +784,64 @@ class TTGlyphSetTest(object):
             glyphset["four"].drawPoints(pen)
         assert pen.value == []
 
+    @pytest.mark.parametrize("location", [{}, {"wght": 800}])
+    @pytest.mark.parametrize("from_xml", [False, True])
+    @pytest.mark.parametrize(
+        "pen_type, draw", [(RecordingPen, "draw"), (RecordingPointPen, "drawPoints")]
+    )
+    def test_varc_in_memory_component_conditions(
+        self, location, from_xml, pen_type, draw
+    ):
+        from fontTools.ttLib.tables.otTables import VarComponentFlags
+
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        expected = pen_type()
+        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(expected)
+
+        if from_xml:
+            xml = StringIO()
+            font.saveXML(xml)
+            xml.seek(0)
+            font = TTFont()
+            font.importXML(xml)
+        else:
+            # Constructors and XML import need not set derived binary flags.
+            for glyph in font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph:
+                for component in glyph.components:
+                    component.flags &= ~VarComponentFlags.HAVE_CONDITION
+
+        actual = pen_type()
+        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(actual)
+        assert actual.value == expected.value
+
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        actual = pen_type()
+        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(actual)
+        assert actual.value == expected.value
+
+    @pytest.mark.parametrize("location", [{}, {"wght": 800}])
+    @pytest.mark.parametrize("roundtrip", [False, True])
+    def test_varc_remove_component_condition(self, location, roundtrip):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        removed = 0
+        for glyph in font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph:
+            for component in glyph.components:
+                if component.conditionIndex is not None:
+                    component.conditionIndex = None
+                    removed += 1
+        assert removed == 1
+
+        if roundtrip:
+            stream = BytesIO()
+            font.save(stream)
+            font = TTFont(BytesIO(stream.getvalue()))
+
+        pen = RecordingPen()
+        font.getGlyphSet(location=location)["uniAC01"].draw(pen)
+        assert len(pen.value) == 3
+
     def test_varc_gvar_axes_without_fvar(self, tmp_path):
         font = TTFont(self.getpath("varc-static-gvar.ttf"))
         assert "fvar" not in font
