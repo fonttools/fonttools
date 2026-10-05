@@ -11,16 +11,16 @@ DATA_DIR = Path(__file__).parent / "data"
 
 
 @pytest.mark.parametrize("lazy", [True, False, None])
-@pytest.mark.parametrize("cursive", [False, True])
-def test_reorder_lazy_arrays(lazy, cursive):
+@pytest.mark.parametrize("pairpos", [False, True])
+def test_reorder_lazy_arrays(lazy, pairpos):
+    from fontTools.misc.lazyTools import LazyList
+
     fb = FontBuilder(1000)
     order = [".notdef"] + [f"g{i}" for i in range(10)]
     fb.setupGlyphOrder(order)
     fb.setupPost()
-    if cursive:
-        statements = [
-            f"pos cursive g{i} <anchor {i} 0> <anchor {i + 100} 0>;" for i in range(10)
-        ]
+    if pairpos:
+        statements = [f"pos g0 g{i} {i + 1};" for i in range(10)]
     else:
         statements = [f"pos g{i} {i + 1};" for i in range(10)]
     addOpenTypeFeaturesFromString(
@@ -29,20 +29,25 @@ def test_reorder_lazy_arrays(lazy, cursive):
     data = BytesIO()
     fb.font.save(data)
     font = TTFont(BytesIO(data.getvalue()), lazy=lazy)
+    subtable = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+    records = subtable.PairSet[0].PairValueRecord if pairpos else subtable.Value
+    assert isinstance(records, LazyList) == bool(lazy)
     reorderGlyphs(font, order[:1] + list(reversed(order[1:])))
     output = BytesIO()
     font.save(output)
     font = TTFont(BytesIO(output.getvalue()))
     subtable = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
-    assert subtable.Coverage.glyphs == list(reversed(order[1:]))
-    if cursive:
-        assert [r.EntryAnchor.XCoordinate for r in subtable.EntryExitRecord] == list(
-            reversed(range(10))
-        )
-        assert [r.ExitAnchor.XCoordinate for r in subtable.EntryExitRecord] == list(
-            reversed(range(100, 110))
-        )
+    if pairpos:
+        assert subtable.Coverage.glyphs == ["g0"]
+        pairs = subtable.PairSet[0].PairValueRecord
+        assert [record.SecondGlyph for record in pairs] == list(reversed(order[1:]))
+        assert {
+            (first, record.SecondGlyph): record.Value1.XAdvance
+            for first, pair_set in zip(subtable.Coverage.glyphs, subtable.PairSet)
+            for record in pair_set.PairValueRecord
+        } == {("g0", f"g{i}"): i + 1 for i in range(10)}
     else:
+        assert subtable.Coverage.glyphs == list(reversed(order[1:]))
         assert [v.XAdvance for v in subtable.Value] == list(reversed(range(1, 11)))
 
 

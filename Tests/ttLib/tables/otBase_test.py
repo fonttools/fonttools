@@ -1,6 +1,5 @@
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.lazyTools import LazyList
-from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import unittest
@@ -8,22 +7,24 @@ import unittest
 
 class BaseTableTest(unittest.TestCase):
     def test_ensureDecompiled_lazy_array(self):
-        font = TTFont(lazy=True)
-        child = otTables.Lookup()
-        child.reader = OTTableReader(deHexStr("0001 0000 0000"), tableTag="GSUB")
-        child.font = font
-        parent = otTables.LookupList()
-        parent.Lookup = LazyList([lambda i: child] * 10)
+        child = otTables.PairValueRecord()
+        child.SecondGlyph = "a"
+        parent = otTables.PairSet()
+        calls = []
 
+        def read_record(i):
+            calls.append(i)
+            return child
+
+        parent.PairValueRecord = LazyList([read_record] * 10)
         parent.ensureDecompiled(recurse=False)
-        self.assertIsInstance(parent.Lookup, LazyList)
-        self.assertIn("reader", vars(child))
+        self.assertIsInstance(parent.PairValueRecord, LazyList)
+        self.assertEqual(calls, [])
 
         parent.ensureDecompiled(recurse=True)
-        self.assertIsInstance(parent.Lookup, list)
-        self.assertNotIn("reader", vars(child))
-        self.assertEqual(child.LookupType, 1)
-        self.assertEqual(child.SubTable, [])
+        self.assertIsInstance(parent.PairValueRecord, list)
+        self.assertEqual(calls, list(range(10)))
+        self.assertEqual([r.SecondGlyph for r in parent.PairValueRecord], ["a"] * 10)
 
 
 class OTTableReaderTest(unittest.TestCase):
