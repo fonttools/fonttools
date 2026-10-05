@@ -1,9 +1,15 @@
+import logging
 import math
 import shutil
 from pathlib import Path
 
 import pytest
-from fontTools.designspaceLib import DesignSpaceDocument
+from fontTools.designspaceLib import (
+    DesignSpaceDocument,
+    DiscreteAxisDescriptor,
+    RangeAxisSubsetDescriptor,
+    VariableFontDescriptor,
+)
 from fontTools.designspaceLib.split import (
     _conditionSetFrom,
     convert5to4,
@@ -356,3 +362,241 @@ def test_makeNames_from_stat_labels_when_instance_has_no_names():
     # the localised STAT names apply when they translate the name in use
     assert unnamed.localisedStyleName == {"en": "Bold", "de": "Fett"}
     assert named.localisedStyleName == {"en": "Bold", "de": "Fett"}
+
+
+def test_split_source_outside_axes_warns(caplog):
+    doc = DesignSpaceDocument()
+    doc.addAxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=400,
+        default=400,
+        maximum=700,
+        map=[(400, 80), (700, 200)],
+    )
+    for name, w in (("Light", 30), ("Regular", 80), ("Bold", 200)):
+        doc.addSourceDescriptor(
+            name=name, filename=f"{name}.ufo", location={"Weight": w}
+        )
+
+    with caplog.at_level(logging.WARNING, logger="fontTools.designspaceLib.split"):
+        sub_docs = [sub for _, sub in splitInterpolable(doc)]
+
+    assert len(sub_docs) == 1
+    assert [s.name for s in sub_docs[0].sources] == ["Regular", "Bold"]
+    assert (
+        "Source 'Light' has location outside the document's axes, dropping: {'Weight': 350}"
+        in caplog.text
+    )
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="fontTools.designspaceLib.split"):
+        vf_docs = [vf_doc for _, vf_doc in splitVariableFonts(doc)]
+    assert len(vf_docs) == 1
+    assert [s.name for s in vf_docs[0].sources] == ["Regular", "Bold"]
+    assert (
+        "Source 'Light' has location outside the document's axes, dropping: {'Weight': 350}"
+        in caplog.text
+    )
+
+
+def test_split_instance_outside_axes_warns(caplog):
+    doc = DesignSpaceDocument()
+    doc.addAxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=400,
+        default=400,
+        maximum=700,
+        map=[(400, 80), (700, 200)],
+    )
+    doc.addSourceDescriptor(
+        name="Regular",
+        filename="Regular.ufo",
+        location={"Weight": 80},
+        familyName="TestFamily",
+    )
+    doc.addSourceDescriptor(
+        name="Bold",
+        filename="Bold.ufo",
+        location={"Weight": 200},
+        familyName="TestFamily",
+    )
+    for name, w in (
+        ("Thin", 30),
+        ("Regular", 80),
+        ("Bold", 200),
+        ("ExtraBold", 250),
+    ):
+        doc.addInstanceDescriptor(
+            name=name, filename=f"{name}.ttf", location={"Weight": w}
+        )
+
+    with caplog.at_level(logging.WARNING, logger="fontTools.designspaceLib.split"):
+        sub_docs = [sub for _, sub in splitInterpolable(doc)]
+
+    assert len(sub_docs) == 1
+    assert [i.name for i in sub_docs[0].instances] == ["Regular", "Bold"]
+    assert (
+        "Instance 'Thin' has location outside the document's axes, dropping: {'Weight': 350}"
+        in caplog.text
+    )
+    assert (
+        "Instance 'ExtraBold' has location outside the document's axes, dropping: {'Weight': 750}"
+        in caplog.text
+    )
+
+
+def test_split_explicit_variable_font_subspace_silent(caplog):
+    doc = DesignSpaceDocument()
+    doc.addAxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=100,
+        default=400,
+        maximum=900,
+    )
+    doc.addSourceDescriptor(
+        name="Light", filename="Light.ufo", location={"Weight": 100}
+    )
+    doc.addSourceDescriptor(
+        name="Regular", filename="Regular.ufo", location={"Weight": 400}
+    )
+    doc.addSourceDescriptor(name="Bold", filename="Bold.ufo", location={"Weight": 900})
+    doc.addSourceDescriptor(
+        name="OutOfRange", filename="OutOfRange.ufo", location={"Weight": 1000}
+    )
+    doc.addInstanceDescriptor(
+        name="Light", filename="Light.ttf", userLocation={"Weight": 100}
+    )
+    doc.addInstanceDescriptor(
+        name="Regular", filename="Regular.ttf", userLocation={"Weight": 400}
+    )
+    doc.addInstanceDescriptor(
+        name="Bold", filename="Bold.ttf", userLocation={"Weight": 900}
+    )
+    doc.addInstanceDescriptor(
+        name="OutOfRange", filename="OutOfRange.ttf", userLocation={"Weight": 1000}
+    )
+    vf = VariableFontDescriptor(
+        name="VFSub",
+        axisSubsets=[
+            RangeAxisSubsetDescriptor(name="Weight", userMinimum=100, userMaximum=500)
+        ],
+    )
+    doc.addVariableFont(vf)
+
+    with caplog.at_level(logging.WARNING, logger="fontTools.designspaceLib.split"):
+        vfs = list(splitVariableFonts(doc))
+
+    assert len(vfs) == 1
+    vf_name, vf_doc = vfs[0]
+    assert vf_name == "VFSub"
+    assert [s.name for s in vf_doc.sources] == ["Light", "Regular"]
+    assert [i.name for i in vf_doc.instances] == ["Light", "Regular"]
+    # Bold was dropped because it's outside the explicit variable-font sub-space,
+    # but since it's within the document's own axes, no warning should be logged for it.
+    assert "Bold" not in caplog.text
+    # OutOfRange is outside the document's own axes, so it should warn.
+    assert (
+        "Source 'OutOfRange' has location outside the document's axes, dropping: {'Weight': 1000}"
+        in caplog.text
+    )
+    assert (
+        "Instance 'OutOfRange' has location outside the document's axes, dropping: {'Weight': 1000}"
+        in caplog.text
+    )
+
+
+def test_split_variable_fonts_two_vfs_warns_once(caplog):
+    doc = DesignSpaceDocument()
+    doc.addAxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=100,
+        default=400,
+        maximum=900,
+    )
+    doc.addSourceDescriptor(
+        name="Light", filename="Light.ufo", location={"Weight": 100}
+    )
+    doc.addSourceDescriptor(name="Bold", filename="Bold.ufo", location={"Weight": 900})
+    doc.addSourceDescriptor(
+        name="OutOfRange", filename="OutOfRange.ufo", location={"Weight": 1000}
+    )
+    doc.addVariableFont(
+        VariableFontDescriptor(
+            name="VF1",
+            axisSubsets=[
+                RangeAxisSubsetDescriptor(
+                    name="Weight", userMinimum=100, userMaximum=400
+                )
+            ],
+        )
+    )
+    doc.addVariableFont(
+        VariableFontDescriptor(
+            name="VF2",
+            axisSubsets=[
+                RangeAxisSubsetDescriptor(
+                    name="Weight", userMinimum=400, userMaximum=900
+                )
+            ],
+        )
+    )
+
+    with caplog.at_level(logging.WARNING, logger="fontTools.designspaceLib.split"):
+        vfs = list(splitVariableFonts(doc))
+
+    assert len(vfs) == 2
+    matching_warnings = [
+        r for r in caplog.records if "Source 'OutOfRange'" in r.getMessage()
+    ]
+    assert len(matching_warnings) == 1
+
+
+def test_split_discrete_axis_source_outside_values_warns(caplog):
+    doc = DesignSpaceDocument()
+    doc.addAxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=400,
+        default=400,
+        maximum=700,
+    )
+    doc.addAxis(
+        DiscreteAxisDescriptor(
+            name="Italic",
+            tag="ital",
+            values=[0, 1],
+            default=0,
+        )
+    )
+    doc.addSourceDescriptor(
+        name="Roman",
+        filename="Roman.ufo",
+        location={"Weight": 400, "Italic": 0},
+    )
+    doc.addSourceDescriptor(
+        name="Italic",
+        filename="Italic.ufo",
+        location={"Weight": 400, "Italic": 1},
+    )
+    doc.addSourceDescriptor(
+        name="BadItalic",
+        filename="BadItalic.ufo",
+        location={"Weight": 400, "Italic": 2},
+    )
+
+    with caplog.at_level(logging.WARNING, logger="fontTools.designspaceLib.split"):
+        sub_docs = list(splitInterpolable(doc))
+
+    assert len(sub_docs) == 2
+    matching_warnings = [
+        r for r in caplog.records if "Source 'BadItalic'" in r.getMessage()
+    ]
+    assert len(matching_warnings) == 1
+    assert (
+        "Source 'BadItalic' has location outside the document's axes, dropping"
+        in matching_warnings[0].getMessage()
+    )
