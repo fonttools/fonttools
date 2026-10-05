@@ -651,7 +651,10 @@ def findFeatureVariationRecord(featureVariations, conditionTable):
         )
 
     for fvr in featureVariations.FeatureVariationRecord:
-        if conditionTable == fvr.ConditionSet.ConditionTable:
+        existingConditions = (
+            fvr.ConditionSet.ConditionTable if fvr.ConditionSet is not None else []
+        )
+        if conditionTable == existingConditions:
             return fvr
 
     return None

@@ -304,7 +304,12 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
         variations = table.FeatureVariations
         for record in variations.FeatureVariationRecord:
             applies = True
-            for condition in record.ConditionSet.ConditionTable:
+            conditions = (
+                record.ConditionSet.ConditionTable
+                if record.ConditionSet is not None
+                else []
+            )
+            for condition in conditions:
                 if condition.Format == 1:
                     axisIdx = condition.AxisIndex
                     axisTag = fvar.axes[axisIdx].axisTag

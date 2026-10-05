@@ -10,6 +10,30 @@ import tempfile
 import unittest
 
 
+def test_mutator_null_condition_set():
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.varLib.featureVars import addFeatureVariations
+
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder([".notdef", "A", "A.alt"])
+    fb.setupPost()
+    fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+    fb.setupFvar([("wght", 100, 400, 900, "Weight")], [])
+    font = fb.font
+    addFeatureVariations(
+        font,
+        [([{"wght": (-1.0, 1.0)}], {"A": "A.alt"})],
+        featureTag="ccmp",
+    )
+    record = font["GSUB"].table.FeatureVariations.FeatureVariationRecord[0]
+    assert record.ConditionSet is None
+    instance = make_instance(font, {"wght": 700}, inplace=True)
+    gsub = instance["GSUB"].table
+    assert not hasattr(gsub, "FeatureVariations")
+    assert gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex == [0]
+    assert gsub.LookupList.Lookup[0].SubTable[0].mapping == {"A": "A.alt"}
+
+
 class MutatorTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
