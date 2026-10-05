@@ -309,7 +309,9 @@ def _evaluateCondition(condition, axes, location, instancer):
     elif condition.Format == 2:
         # ConditionValue
         value = condition.DefaultValue
-        value += instancer[condition.VarIdx][0]
+        deltas = instancer[condition.VarIdx]
+        if deltas:
+            value += deltas[0]
         return value > 0
     elif condition.Format == 3:
         # ConditionAnd
