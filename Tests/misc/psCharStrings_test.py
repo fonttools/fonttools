@@ -263,7 +263,7 @@ def test_cff2_vsindex_zero_regions(use_blender, bytecode):
 
     store = buildVarStore(
         buildVarRegionList([{"TEST": (0, 1, 1)}], ["TEST"]),
-        [buildVarData([0], []), buildVarData([], [])],
+        [buildVarData([0], [], optimize=False), buildVarData([], [])],
     )
     private = PrivateDict(vstore=VarStoreData(otVarStore=store))
     private._isCFF2 = True
