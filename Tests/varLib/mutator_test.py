@@ -204,5 +204,41 @@ class MutatorTest(unittest.TestCase):
         self.expect_ttx(new_font, expected_ttx_path, tables)
 
 
+def test_mutator_null_substitution_first_match():
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.varLib.featureVars import (
+        addFeatureVariations,
+        buildConditionTable,
+        buildFeatureTableSubstitutionRecord,
+        buildFeatureVariationRecord,
+    )
+
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder([".notdef", "A", "A.alt"])
+    fb.setupPost()
+    fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+    fb.setupFvar([("wght", 100, 400, 900, "Weight")], [])
+    font = fb.font
+    addFeatureVariations(
+        font,
+        [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})],
+        featureTag="ccmp",
+    )
+    gsub = font["GSUB"].table
+    record = gsub.FeatureVariations.FeatureVariationRecord[0]
+    record.FeatureTableSubstitution = None
+    # A matching null substitution blocks the later matching record.
+    later = buildFeatureVariationRecord(
+        [buildConditionTable(0, 0.5, 1.0)],
+        [buildFeatureTableSubstitutionRecord(0, [0])],
+    )
+    gsub.FeatureVariations.FeatureVariationRecord.append(later)
+    gsub.FeatureVariations.FeatureVariationCount += 1
+    instance = make_instance(font, {"wght": 700}, inplace=True)
+    gsub = instance["GSUB"].table
+    assert not hasattr(gsub, "FeatureVariations")
+    assert gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex == []
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())
