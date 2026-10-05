@@ -244,6 +244,20 @@ class CmapSubtableTest(unittest.TestCase):
         subtable2.decompile(data, font)
         self.assertEqual(subtable2.cmap, {})
 
+    def test_compile_decompile_12_13_empty(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([])
+        for format in (12, 13):
+            with self.subTest(format=format):
+                subtable = self.makeSubtable(format, 3, 10, 0)
+                subtable.cmap = {}
+                data = subtable.compile(font)
+                self.assertEqual(len(data), 16)
+                subtable2 = CmapSubtable.newSubtable(format)
+                subtable2.decompile(data, font)
+                self.assertEqual(subtable2.cmap, {})
+                self.assertEqual(subtable2.compile(font), data)
+
     def test_compile_decompile_2_empty(self):
         # An all-.notdef (empty) Macintosh format 2 cmap must round-trip
         # instead of crashing on compile, just like format 4 above.
