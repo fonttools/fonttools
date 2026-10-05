@@ -1601,6 +1601,19 @@ class Glyph(object):
             return
 
         coordinates, endPts, flags = self.getCoordinates(glyfTable)
+        # Validate all contours before emitting any points to the pen.
+        start = 0
+        for end in endPts:
+            cFlags = flags[start : end + 1]
+            start = end + 1
+            # Without an on-curve point, the protocol implies quadratic controls.
+            if not any(f & flagOnCurve for f in cFlags) and any(
+                f & flagCubic for f in cFlags
+            ):
+                raise NotImplementedError(
+                    "All-off-curve cubic contours are not supported by drawPoints; "
+                    "use draw instead"
+                )
         if offset:
             coordinates = coordinates.copy()
             coordinates.translate((offset, 0))
@@ -1610,14 +1623,6 @@ class Glyph(object):
             contour = coordinates[start:end]
             cFlags = flags[start:end]
             start = end
-            # Without an on-curve point, the protocol implies quadratic controls.
-            if not any(f & flagOnCurve for f in cFlags) and any(
-                f & flagCubic for f in cFlags
-            ):
-                raise NotImplementedError(
-                    "All-off-curve cubic contours are not supported by drawPoints; "
-                    "use draw instead"
-                )
             pen.beginPath()
             # Start with the appropriate segment type based on the final segment
 
