@@ -164,14 +164,6 @@ def _add_fvar(font, axes, instances: List[InstanceDescriptor]):
     return fvar
 
 
-def _normalize_design_value(value, triple):
-    """Normalize a design coordinate while preserving the user axis direction."""
-    if triple[0] > triple[2]:
-        normalized = models.normalizeValue(value, triple[::-1])
-        return -normalized if normalized else 0.0
-    return models.normalizeValue(value, triple)
-
-
 def _add_avar(font, axes, mappings, axisTags):
     """
     Add 'avar' table to font.
@@ -239,7 +231,9 @@ def _add_avar(font, axes, mappings, axisTags):
             )
 
         keys = [models.normalizeValue(v, keys_triple) for v in keys]
-        vals = [_normalize_design_value(v, vals_triple) for v in vals]
+        vals = [
+            models.normalizeValue(v, vals_triple, allow_decreasing=True) for v in vals
+        ]
 
         if all(k == v for k, v in zip(keys, vals)):
             continue
@@ -257,14 +251,18 @@ def _add_avar(font, axes, mappings, axisTags):
 
         inputLocations = [
             {
-                axes[name].tag: _normalize_design_value(v, vals_triples[axes[name].tag])
+                axes[name].tag: models.normalizeValue(
+                    v, vals_triples[axes[name].tag], allow_decreasing=True
+                )
                 for name, v in mapping.inputLocation.items()
             }
             for mapping in mappings
         ]
         outputLocations = [
             {
-                axes[name].tag: _normalize_design_value(v, vals_triples[axes[name].tag])
+                axes[name].tag: models.normalizeValue(
+                    v, vals_triples[axes[name].tag], allow_decreasing=True
+                )
                 for name, v in mapping.outputLocation.items()
             }
             for mapping in mappings
@@ -875,7 +873,9 @@ def _add_GSUB_feature_variations(
     font, axes, internal_axis_supports, rules, featureTags
 ):
     def normalize(name, value):
-        return _normalize_design_value(value, internal_axis_supports[name])
+        return models.normalizeValue(
+            value, internal_axis_supports[name], allow_decreasing=True
+        )
 
     log.info("Generating GSUB FeatureVariations")
 
@@ -1051,10 +1051,7 @@ def load_designspace(designspace, log_enabled=True, *, require_sources=True):
         log.info("Internal axis supports:\n%s", pformat(internal_axis_supports))
 
     normalized_master_locs = [
-        {
-            name: _normalize_design_value(m.get(name, triple[1]), triple)
-            for name, triple in internal_axis_supports.items()
-        }
+        models.normalizeLocation(m, internal_axis_supports, allow_decreasing=True)
         for m in internal_master_locs
     ]
     if log_enabled:

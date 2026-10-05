@@ -1,3 +1,4 @@
+from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.ttLib import TTFont
 from fontTools.varLib.interpolatable import main as interpolatable_main
 import os
@@ -129,6 +130,21 @@ class InterpolatableTest(unittest.TestCase):
     def test_designspace(self):
         designspace_path = self.get_test_input("InterpolateLayout.designspace")
         self.assertIsNone(interpolatable_main([designspace_path]))
+
+    def test_designspace_decreasing_axis_map(self):
+        doc = DesignSpaceDocument.fromfile(
+            self.get_test_input("InterpolateLayout.designspace")
+        )
+        doc.axes[0].map = [(0, 1000), (1000, 0)]
+        for source in doc.sources:
+            source.location = {"weight": 1000 - source.location["weight"]}
+            # save absolute paths with tostring() rather than write(), which makes
+            # them relative to the temp dir and fails if it's on another drive
+            source.filename = source.path
+        path = self.temp_path(".designspace")
+        with open(path, "wb") as f:
+            f.write(doc.tostring())
+        self.assertIsNone(interpolatable_main([path]))
 
     def test_glyphsapp(self):
         pytest.importorskip("glyphsLib")

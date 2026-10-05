@@ -951,7 +951,7 @@ def main(args=None):
     # Normalize locations
     locations = [
         {
-            **normalizeLocation(loc, axis_triples),
+            **normalizeLocation(loc, axis_triples, allow_decreasing=True),
             **{k: v for k, v in loc.items() if k in discrete_axes},
         }
         for loc in locations

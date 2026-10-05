@@ -600,6 +600,24 @@ def test_normalise1():
     assert r == [("axisName_a", -1.0, 0.0, 1.0)]
 
 
+def test_normalizeLocation_decreasing_axis_map():
+    doc = DesignSpaceDocument()
+    doc.addAxis(
+        AxisDescriptor(
+            name="Optical size",
+            tag="opsz",
+            minimum=9,
+            default=144,
+            maximum=144,
+            map=[(9, 38), (42, 33), (72, 28), (144, 23)],
+        )
+    )
+    # normalized in user axis direction: -1 is the user minimum (design value 38)
+    for design, expected in [(38, -1), (33, -2 / 3), (28, -1 / 3), (23, 0)]:
+        location = doc.normalizeLocation({"Optical size": design})
+        assert location == {"Optical size": pytest.approx(expected)}
+
+
 def test_normalise2():
     # normalisation with minimum > 0
     doc = DesignSpaceDocument()

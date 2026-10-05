@@ -139,6 +139,7 @@ class VariableScalarBuilder:
                             axis.map_forward(axis.default),
                             axis.map_forward(axis.maximum),
                         ),
+                        allow_decreasing=True,
                     )
                     for user, design in axis.map
                 }
