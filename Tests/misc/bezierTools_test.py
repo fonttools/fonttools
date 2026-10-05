@@ -295,3 +295,15 @@ def test_linelike_curve_curve_regression():
     # sanity check that the two points are approximately equal
     # (before the fix, the dist was ~100)
     assert abs(dist) < 0.001
+
+
+def test_curve_curve_intersections_returns_approximation_at_extreme_scale():
+    extent = 1e308
+
+    intersections = curveCurveIntersections(
+        ((extent, -extent), (0.0, 0.0), (-extent, extent)),
+        ((0.0, 0.0), (1.0, 1.0), (2.0, 0.0)),
+    )
+
+    assert len(intersections) == 1
+    assert intersections[0].pt == (0.0, 0.0)
