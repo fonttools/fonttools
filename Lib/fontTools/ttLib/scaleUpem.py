@@ -383,7 +383,7 @@ def visit(visitor, paint):
     return False
 
 
-def scale_upem(font, new_upem):
+def scale_upem(font: ttLib.TTFont, new_upem: int) -> None:
     """Change the units-per-EM of font to the new value."""
     upem = font["head"].unitsPerEm
     visitor = ScalerVisitor(new_upem / upem)

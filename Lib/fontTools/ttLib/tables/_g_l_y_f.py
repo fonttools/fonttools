@@ -32,7 +32,10 @@ from fontTools.misc.loggingTools import deprecateFunction
 from enum import IntFlag
 from functools import partial
 from types import SimpleNamespace
-from typing import Set
+from typing import TYPE_CHECKING, Set
+
+if TYPE_CHECKING:
+    from fontTools.pens.basePen import AbstractPen
 
 log = logging.getLogger(__name__)
 
@@ -699,7 +702,7 @@ class Glyph(object):
 
     """
 
-    def __init__(self, data=b""):
+    def __init__(self, data: bytes = b"") -> None:
         if not data:
             # empty char
             self.numberOfContours = 0
@@ -711,7 +714,7 @@ class Glyph(object):
         self.__dict__.clear()
         self.data = data
 
-    def expand(self, glyfTable):
+    def expand(self, glyfTable: table__g_l_y_f) -> None:
         if not hasattr(self, "data"):
             # already unpacked
             return
@@ -733,8 +736,13 @@ class Glyph(object):
             self.decompileCoordinates(data)
 
     def compile(
-        self, glyfTable, recalcBBoxes=True, *, boundsDone=None, optimizeSize=True
-    ):
+        self,
+        glyfTable: table__g_l_y_f,
+        recalcBBoxes: bool = True,
+        *,
+        boundsDone: Set[str] | None = None,
+        optimizeSize: bool = True,
+    ) -> bytes | bytearray:
         if hasattr(self, "data"):
             if recalcBBoxes:
                 # must unpack glyph in order to recalculate bounding box
@@ -1190,7 +1198,9 @@ class Glyph(object):
             lastflag = flag
         return (compressedFlags, compressedXs, compressedYs)
 
-    def recalcBounds(self, glyfTable, *, boundsDone=None):
+    def recalcBounds(
+        self, glyfTable: table__g_l_y_f, *, boundsDone: Set[str] | None = None
+    ) -> None:
         """Recalculates the bounds of the glyph.
 
         Each glyph object stores its bounding box in the
@@ -1254,7 +1264,7 @@ class Glyph(object):
         self.xMin, self.yMin, self.xMax, self.yMax = bounds
         return True
 
-    def isComposite(self):
+    def isComposite(self) -> bool:
         """Test whether a glyph has components"""
         if hasattr(self, "data"):
             return struct.unpack(">h", self.data[:2])[0] == -1 if self.data else False
@@ -1482,7 +1492,9 @@ class Glyph(object):
         """Removes TrueType hinting instructions from the glyph."""
         self.trim(remove_hinting=True)
 
-    def draw(self, pen, glyfTable, offset=0):
+    def draw(
+        self, pen: "AbstractPen", glyfTable: table__g_l_y_f, offset: int = 0
+    ) -> None:
         """Draws the glyph using the supplied pen object.
 
         Arguments:
