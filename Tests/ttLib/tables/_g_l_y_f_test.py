@@ -1141,6 +1141,54 @@ class GlyphCubicTest:
             ]
 
 
+@pytest.mark.parametrize("length", [0, 1, 0x8000, 0xFFFF])
+@pytest.mark.parametrize("remove_hinting", [False, True])
+@pytest.mark.parametrize("expanded", [False, True])
+def test_zero_contour_instructions(length, remove_hinting, expanded):
+    header = struct.pack(">hhhhh", 0, 0, 0, 0, 0)
+    instructions = b"\x00" * length
+    data = header + struct.pack(">H", length) + instructions
+    glyph = Glyph(data + b"\x00\x00\x00")
+    if expanded:
+        glyph.expand(None)
+        assert glyph.program.getBytecode() == instructions
+    glyph.trim(remove_hinting=remove_hinting)
+    if remove_hinting or not length:
+        glyph.expand(None)
+        assert not getattr(glyph, "program", None)
+        assert glyph.compile(None) == b""
+    else:
+        if not expanded:
+            assert glyph.data == data
+        glyph.expand(None)
+        assert glyph.program.getBytecode() == instructions
+        assert glyph.compile(None) == data
+
+
+@pytest.mark.parametrize("data", [b"", b"\x00" * 10, b"\x00" * 11])
+@pytest.mark.parametrize("remove_hinting", [False, True])
+def test_trim_zero_contour_without_instructions(data, remove_hinting):
+    glyph = Glyph(data)
+    glyph.trim(remove_hinting=remove_hinting)
+    glyph.expand(None)
+    assert glyph.compile(None) == b""
+
+
+@pytest.mark.parametrize("split_glyphs", [False, True])
+def test_zero_contour_instructions_xml(tmp_path, split_glyphs):
+    font = TTFont(recalcTimestamp=False)
+    font.setGlyphOrder([".notdef", "space"])
+    font["glyf"] = glyf = newTable("glyf")
+    instructions = b"\xb0\x00\x21"
+    data = struct.pack(">hhhhhH", 0, 0, 0, 0, 0, len(instructions)) + instructions
+    glyf.glyphs = {".notdef": Glyph(), "space": Glyph(data)}
+    path = tmp_path / "empty.ttx"
+    font.saveXML(path, tables=["GlyphOrder", "glyf"], splitGlyphs=split_glyphs)
+    result = TTFont()
+    result.importXML(path)
+    assert result["glyf"]["space"].compile(result["glyf"]) == data
+
+
 def build_interpolatable_glyphs(contours, *transforms):
     # given a list of lists of (point, flag) tuples (one per contour), build a Glyph
     # then make len(transforms) copies transformed accordingly, and return a
