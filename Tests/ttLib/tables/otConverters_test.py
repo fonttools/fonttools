@@ -521,6 +521,26 @@ def test_CFF2Index_invalid_offSize(offSize, lazy):
         _readCFF2Index("00000001 " + offSize + " 01 01 AA", lazy)
 
 
+@pytest.mark.parametrize("optimize_speed", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_empty_varc_axis_tuples_roundtrip(optimize_speed, lazy):
+    from io import BytesIO
+    from pathlib import Path
+    from fontTools.ttLib import OPTIMIZE_FONT_SPEED
+
+    path = Path(__file__).parents[1] / "data" / "varc-ac00-ac01.ttf"
+    font = TTFont(path)
+    font.cfg[OPTIMIZE_FONT_SPEED] = optimize_speed
+    axis_indices = font["VARC"].table.AxisIndicesList.Item
+    # Exceed the lazy INDEX decoding threshold (count > 8).
+    axis_indices.extend([[] for _ in range(9)])
+    expected = list(axis_indices)
+    stream = BytesIO()
+    font.save(stream)
+    reloaded = TTFont(BytesIO(stream.getvalue()), lazy=lazy)
+    assert list(reloaded["VARC"].table.AxisIndicesList.Item) == expected
+
+
 if __name__ == "__main__":
     import sys
 
