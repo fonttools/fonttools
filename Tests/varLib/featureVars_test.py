@@ -137,50 +137,6 @@ def test_addFeatureVariations_new_feature(varfont):
     assert _substitution_features(gsub, rec_index=1) == [(0, "rclt")]
 
 
-@pytest.mark.parametrize("same_condition", [False, True])
-@pytest.mark.parametrize("explicit_empty", [False, True])
-@pytest.mark.parametrize("lazy", [False, True])
-def test_addFeatureVariations_null_substitution(
-    varfont, same_condition, explicit_empty, lazy
-):
-    condition = {"wght": (0.5, 1.0)}
-    addFeatureVariations(varfont, [([condition], {"A": "A.alt"})])
-    record = varfont["GSUB"].table.FeatureVariations.FeatureVariationRecord[0]
-    if explicit_empty:
-        record.FeatureTableSubstitution.SubstitutionRecord = []
-        record.FeatureTableSubstitution.SubstitutionCount = 0
-    else:
-        record.FeatureTableSubstitution = None
-
-    data = varfont["GSUB"].compile(varfont)
-    varfont.lazy = lazy
-    varfont["GSUB"] = newTable("GSUB")
-    varfont["GSUB"].decompile(data, varfont)
-
-    new_condition = condition if same_condition else {"wght": (-1.0, 0.0)}
-    addFeatureVariations(
-        varfont, [([new_condition], {"B": "B.alt"})], featureTag="ccmp"
-    )
-
-    data = varfont["GSUB"].compile(varfont)
-    varfont["GSUB"] = newTable("GSUB")
-    varfont["GSUB"].decompile(data, varfont)
-    gsub = varfont["GSUB"].table
-    records = gsub.FeatureVariations.FeatureVariationRecord
-    assert len(records) == (1 if same_condition else 2)
-    if not same_condition:
-        if explicit_empty:
-            assert records[0].FeatureTableSubstitution.SubstitutionCount == 0
-        else:
-            assert records[0].FeatureTableSubstitution is None
-    substitution = records[-1].FeatureTableSubstitution.SubstitutionRecord[0]
-    assert (
-        gsub.FeatureList.FeatureRecord[substitution.FeatureIndex].FeatureTag == "ccmp"
-    )
-    assert substitution.Feature.LookupListIndex == [1]
-    assert gsub.LookupList.Lookup[1].SubTable[0].mapping == {"B": "B.alt"}
-
-
 def test_addFeatureVariations_existing_condition(varfont):
     assert "GSUB" not in varfont
 
@@ -336,6 +292,50 @@ def run(test, n, quiet):
         print("Output:")
         pprint(output)
         print()
+
+
+@pytest.mark.parametrize("same_condition", [False, True])
+@pytest.mark.parametrize("explicit_empty", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_addFeatureVariations_null_substitution(
+    varfont, same_condition, explicit_empty, lazy
+):
+    condition = {"wght": (0.5, 1.0)}
+    addFeatureVariations(varfont, [([condition], {"A": "A.alt"})])
+    record = varfont["GSUB"].table.FeatureVariations.FeatureVariationRecord[0]
+    if explicit_empty:
+        record.FeatureTableSubstitution.SubstitutionRecord = []
+        record.FeatureTableSubstitution.SubstitutionCount = 0
+    else:
+        record.FeatureTableSubstitution = None
+
+    data = varfont["GSUB"].compile(varfont)
+    varfont.lazy = lazy
+    varfont["GSUB"] = newTable("GSUB")
+    varfont["GSUB"].decompile(data, varfont)
+
+    new_condition = condition if same_condition else {"wght": (-1.0, 0.0)}
+    addFeatureVariations(
+        varfont, [([new_condition], {"B": "B.alt"})], featureTag="ccmp"
+    )
+
+    data = varfont["GSUB"].compile(varfont)
+    varfont["GSUB"] = newTable("GSUB")
+    varfont["GSUB"].decompile(data, varfont)
+    gsub = varfont["GSUB"].table
+    records = gsub.FeatureVariations.FeatureVariationRecord
+    assert len(records) == (1 if same_condition else 2)
+    if not same_condition:
+        if explicit_empty:
+            assert records[0].FeatureTableSubstitution.SubstitutionCount == 0
+        else:
+            assert records[0].FeatureTableSubstitution is None
+    substitution = records[-1].FeatureTableSubstitution.SubstitutionRecord[0]
+    assert (
+        gsub.FeatureList.FeatureRecord[substitution.FeatureIndex].FeatureTag == "ccmp"
+    )
+    assert substitution.Feature.LookupListIndex == [1]
+    assert gsub.LookupList.Lookup[1].SubTable[0].mapping == {"B": "B.alt"}
 
 
 if __name__ == "__main__":
