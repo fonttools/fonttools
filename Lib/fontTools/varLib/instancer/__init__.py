@@ -1131,7 +1131,7 @@ def _remapVarIdxMap(table, attrName, varIndexMapping, glyphOrder):
 
 
 # TODO(anthrotype) Add support for HVAR/VVAR in CFF2
-def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
+def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=otRound):
     location = axisLimits.pinnedLocation()
     tableTag = tableFields.tableTag
     fvarAxes = varfont["fvar"].axes
@@ -1172,11 +1172,27 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields, *, round=round):
 
             if (
                 tableTag == "VVAR"
+                and "VORG" in varfont
                 and getattr(vhvar, tableFields.vOrigMapping) is not None
             ):
-                log.warning(
-                    "VORG table not yet updated to reflect changes in VVAR table"
-                )
+                vorg = varfont["VORG"]
+                originMapping = getattr(vhvar, tableFields.vOrigMapping).mapping
+                origins = {
+                    glyphName: vorg[glyphName]
+                    + round(defaultDeltas[originMapping[glyphName]])
+                    for glyphName in varfont.getGlyphOrder()
+                }
+                counts = collections.Counter(origins.values())
+                if counts:
+                    defaultOrigin, count = counts.most_common(1)[0]
+                    # Keep the old default when it is equally common.
+                    if counts[vorg.defaultVertOriginY] != count:
+                        vorg.defaultVertOriginY = defaultOrigin
+                vorg.VOriginRecords = {
+                    glyphName: origin
+                    for glyphName, origin in origins.items()
+                    if origin != vorg.defaultVertOriginY
+                }
 
             # For full instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
             if set(location).issuperset(axis.axisTag for axis in fvarAxes):
