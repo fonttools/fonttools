@@ -22,6 +22,7 @@ from fontTools.ttLib.tables._g_l_y_f import (
 )
 from fontTools.ttLib.tables import ttProgram
 import sys
+import struct
 import array
 from collections.abc import ValuesView, ItemsView
 from copy import deepcopy
@@ -1348,6 +1349,39 @@ def test_dropImpliedOnCurvePoints_incompatible_endPtsOfContours():
 
     with pytest.raises(ValueError, match="Incompatible endPtsOfContours"):
         dropImpliedOnCurvePoints(glyph1, glyph2)
+
+
+@pytest.mark.parametrize("length", [0x7FFF, 0x8000, 0xFFFF, 0x10000])
+@pytest.mark.parametrize("composite", [False, True])
+def test_unsigned_instruction_length(length, composite):
+    glyf = newTable("glyf")
+    glyf.glyphOrder = [".notdef", "base"]
+    pen = TTGlyphPen(None)
+    pen.moveTo((10, 20))
+    pen.lineTo((100, 20))
+    pen.lineTo((10, 100))
+    pen.closePath()
+    base = pen.glyph()
+    glyf.glyphs = {".notdef": Glyph(), "base": base}
+    if composite:
+        pen = TTGlyphPen(glyf)
+        pen.addComponent("base", (1, 0, 0, 1, 30, 40))
+        glyph = pen.glyph()
+    else:
+        glyph = base
+    glyph.program = ttProgram.Program()
+    glyph.program.fromBytecode([0] * length)
+
+    if length > 0xFFFF:
+        with pytest.raises(struct.error):
+            glyph.compile(glyf)
+        return
+    data = glyph.compile(glyf)
+    reloaded = Glyph(data)
+    reloaded.expand(glyf)
+    assert reloaded.program.getBytecode() == glyph.program.getBytecode()
+    assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
+    assert reloaded.compile(glyf) == data
 
 
 if __name__ == "__main__":
