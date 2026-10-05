@@ -56,6 +56,36 @@ def _localisedNames(statNames: Dict[str, str], name: Optional[str]) -> Dict[str,
     return statNames if statNames.get("en") == name else {}
 
 
+def _warnOutOfAxes(doc: DesignSpaceDocument) -> None:
+    docUserRegion = {
+        axis.name: (
+            tuple(axis.values)
+            if hasattr(axis, "values")
+            else Range(axis.minimum, axis.maximum, axis.default)
+        )
+        for axis in doc.axes
+    }
+    for source in doc.sources:
+        sourceUserLocation = doc.map_backward(source.designLocation)
+        if not locationInRegion(sourceUserLocation, docUserRegion):
+            LOGGER.warning(
+                "Source '%s' has location outside the document's axes, dropping: %s",
+                source.name or source.filename or "<unnamed source>",
+                sourceUserLocation,
+            )
+    for instance in doc.instances:
+        instanceUserLocation = instance.getFullUserLocation(doc)
+        if not locationInRegion(instanceUserLocation, docUserRegion):
+            LOGGER.warning(
+                "Instance '%s' has location outside the document's axes, dropping: %s",
+                instance.name
+                or instance.filename
+                or f"{instance.familyName or ''} {instance.styleName or ''}".strip()
+                or "<unnamed instance>",
+                instanceUserLocation,
+            )
+
+
 def splitInterpolable(
     doc: DesignSpaceDocument,
     makeNames: bool = True,
@@ -90,6 +120,7 @@ def splitInterpolable(
 
     .. versionadded:: 5.0
     """
+    _warnOutOfAxes(doc)
     discreteAxes = []
     interpolableUserRegion: Region = {}
     for axis in doc.axes:
@@ -145,6 +176,7 @@ def splitVariableFonts(
 
     .. versionadded:: 5.0
     """
+    _warnOutOfAxes(doc)
     # Make one DesignspaceDoc v5 for each variable font
     for vf in doc.getVariableFonts():
         vfUserRegion = getVFUserRegion(doc, vf)
