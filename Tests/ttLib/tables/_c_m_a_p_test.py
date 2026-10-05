@@ -520,6 +520,25 @@ class CmapSubtableTest(unittest.TestCase):
                         + [(0x3000, "a")]
                     }
                     data = table.compile(font)
+                    # The selector record starts after the 10-byte header.
+                    default_offset = struct.unpack_from(">L", data, 13)[0]
+                    num_ranges = struct.unpack_from(">L", data, default_offset)[0]
+                    expected_ranges = [
+                        (start + offset, min(256, count - offset) - 1)
+                        for start in ([0x1000, 0x2000] if gaps else [0x1000])
+                        for offset in range(0, count, 256)
+                    ]
+                    self.assertEqual(num_ranges, len(expected_ranges))
+                    actual_ranges = [
+                        (
+                            int.from_bytes(data[offset : offset + 3]),
+                            data[offset + 3],
+                        )
+                        for offset in range(
+                            default_offset + 4, default_offset + 4 + 4 * num_ranges, 4
+                        )
+                    ]
+                    self.assertEqual(actual_ranges, expected_ranges)
                     reloaded = self.makeSubtable(14, 0, 5, 0)
                     reloaded.decompile(data, font)
                     self.assertEqual(
