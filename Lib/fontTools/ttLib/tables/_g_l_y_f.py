@@ -779,6 +779,10 @@ class Glyph(object):
         return data
 
     def toXML(self, writer, ttFont, extended=True):
+        if not extended and any(
+            flag & flagCubic for flag in getattr(self, "flags", ())
+        ):
+            raise ttLib.TTLibError("Cubic flags require the extended GLYF table")
         if self.isComposite():
             for compo in self.components:
                 compo.toXML(writer, ttFont)
@@ -832,7 +836,11 @@ class Glyph(object):
                 flag = bool(safeEval(attrs["on"]))
                 if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
                     flag |= flagOverlapSimple
-                if extended and "cubic" in attrs and bool(safeEval(attrs["cubic"])):
+                if "cubic" in attrs and bool(safeEval(attrs["cubic"])):
+                    if not extended:
+                        raise ttLib.TTLibError(
+                            "Cubic flags require the extended GLYF table"
+                        )
                     flag |= flagCubic
                 flags.append(flag)
             if not hasattr(self, "coordinates"):
@@ -1037,8 +1045,8 @@ class Glyph(object):
         deltas.absoluteToRelative()
 
         flags = self.flags
-        if not extended:
-            flags = [flag & ~flagCubic for flag in flags]
+        if not extended and any(flag & flagCubic for flag in flags):
+            raise ttLib.TTLibError("Cubic flags require the extended GLYF table")
 
         if optimizeSize:
             # TODO(behdad): Add a configuration option for this?
@@ -1538,7 +1546,6 @@ class Glyph(object):
 
         self.expand(glyfTable)
         coordinates, endPts, flags = self.getCoordinates(glyfTable)
-        extended = glyfTable is None or glyfTable.extended
         if offset:
             coordinates = coordinates.copy()
             coordinates.translate((offset, 0))
@@ -1548,7 +1555,7 @@ class Glyph(object):
             end = end + 1
             contour = coordinates[start:end]
             cFlags = [flagOnCurve & f for f in flags[start:end]]
-            cuFlags = [flagCubic & f if extended else 0 for f in flags[start:end]]
+            cuFlags = [flagCubic & f for f in flags[start:end]]
             start = end
             if 1 not in cFlags:
                 assert all(cuFlags) or not any(cuFlags)
@@ -1640,7 +1647,6 @@ class Glyph(object):
             return
 
         coordinates, endPts, flags = self.getCoordinates(glyfTable)
-        extended = glyfTable is None or glyfTable.extended
         if offset:
             coordinates = coordinates.copy()
             coordinates.translate((offset, 0))
@@ -1648,7 +1654,7 @@ class Glyph(object):
         for end in endPts:
             end = end + 1
             contour = coordinates[start:end]
-            cFlags = [f if extended else f & ~flagCubic for f in flags[start:end]]
+            cFlags = flags[start:end]
             start = end
             # Without an on-curve point, the protocol implies quadratic controls.
             if not any(f & flagOnCurve for f in cFlags) and any(

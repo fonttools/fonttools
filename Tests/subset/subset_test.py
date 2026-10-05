@@ -11,6 +11,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.subset.svg import etree
 import difflib
@@ -2042,11 +2043,81 @@ def test_subset_null_gdef_varstore(singlepos2_font, keep_classes, extended):
     assert ("GDEF" in TTFont(output)) == keep_classes
 
 
+@pytest.mark.parametrize("beyond64k", [False, True])
+@pytest.mark.parametrize("lazy", [None, False, True])
+@pytest.mark.parametrize("xml_roundtrip", [False, True])
+def test_subset_variable_notdef_table_order(beyond64k, lazy, xml_roundtrip):
+    fb = FontBuilder(1000, beyond64k=beyond64k)
+    order = [".notdef", "A"]
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap({0x41: "A"})
+    pen = TTGlyphPen(None)
+    for points in (
+        [(50, 0), (50, 700), (450, 700), (450, 0)],
+        [(100, 50), (400, 50), (400, 650), (100, 650)],
+    ):
+        pen.moveTo(points[0])
+        for point in points[1:]:
+            pen.lineTo(point)
+        pen.closePath()
+    notdef = pen.glyph()
+    fb.setupGlyf({".notdef": notdef, "A": notdef})
+    fb.setupHorizontalMetrics({name: (500, 50) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "Variable Notdef", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    fb.setupFvar([("wght", 100, 400, 900, "Weight")], [])
+    deltas = [
+        (-20, 0),
+        (-20, 0),
+        (20, 0),
+        (20, 0),
+        (-10, -5),
+        (10, -5),
+        (10, 5),
+        (-10, 5),
+        (0, 0),
+        (40, 0),
+        (0, 0),
+        (0, 0),
+    ]
+    fb.setupGvar(
+        {name: [TupleVariation({"wght": (0, 1, 1)}, deltas)] for name in order}
+    )
+    font = fb.font
+    if xml_roundtrip:
+        xml = io.StringIO()
+        font.saveXML(xml)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+    stream = io.BytesIO()
+    font.save(stream)
+    stream.seek(0)
+    font = TTFont(stream, lazy=lazy)
+
+    subsetter = subset.Subsetter()
+    subsetter.populate(unicodes=[0x41])
+    subsetter.subset(font)
+    stream = io.BytesIO()
+    font.save(stream)
+    stream.seek(0)
+    result = TTFont(stream)
+    glyf_tag, gvar_tag = ("GLYF", "GVAR") if beyond64k else ("glyf", "gvar")
+    assert result[glyf_tag][".notdef"].numberOfContours == 0
+    assert result[gvar_tag].variations[".notdef"] == []
+    assert result[gvar_tag].variations["A"][0].coordinates == deltas
+
+
+@pytest.mark.parametrize("extension", [False, True])
 @pytest.mark.parametrize("extended_header", [False, True])
 @pytest.mark.parametrize("extended_formats", [False, True])
 @pytest.mark.parametrize("lazy", [False, True])
 @pytest.mark.parametrize("retain_gids", [False, True])
-def test_subset_extended_layout(extended_header, extended_formats, lazy, retain_gids):
+def test_subset_extended_layout(
+    extension, extended_header, extended_formats, lazy, retain_gids, monkeypatch
+):
     from fontTools.ttLib.beyond64k import (
         _convert_layout_formats,
         lower_tables,
@@ -2119,6 +2190,22 @@ def test_subset_extended_layout(extended_header, extended_formats, lazy, retain_
         font.save(buf)
         return TTFont(io.BytesIO(buf.getvalue()), lazy=lazy)
 
+    if extension:
+        for tag, extension_type, lookup_type in (
+            ("GSUB", ot.ExtensionSubst, 7),
+            ("GPOS", ot.ExtensionPos, 9),
+        ):
+            for lookup in fb.font[tag].table.LookupList.Lookup:
+                wrapped = []
+                for subtable in lookup.SubTable:
+                    wrapper = extension_type()
+                    wrapper.Format = 1
+                    wrapper.ExtensionLookupType = lookup.LookupType
+                    wrapper.ExtSubTable = subtable
+                    wrapped.append(wrapper)
+                lookup.SubTable = wrapped
+                lookup.LookupType = lookup_type
+
     reference = roundtrip(fb.font)
     font = roundtrip(fb.font)
     if extended_header:
@@ -2126,6 +2213,15 @@ def test_subset_extended_layout(extended_header, extended_formats, lazy, retain_
     for tag in ("GSUB", "GPOS"):
         _convert_layout_formats(font[tag].table, extended_formats)
     font = roundtrip(font, lazy=lazy)
+
+    if not extended_header and not extended_formats:
+
+        def no_recursive_walk(*args, **kwargs):
+            pytest.fail("Compact layout adaptation traversed a classic table")
+
+        monkeypatch.setattr(
+            "fontTools.ttLib.beyond64k.dfs_base_table", no_recursive_walk
+        )
 
     options = subset.Options()
     options.retain_gids = retain_gids
@@ -2145,6 +2241,7 @@ def test_subset_extended_layout(extended_header, extended_formats, lazy, retain_
             0x00010002 if extended_header else 0x00010000
         )
     assert font["GDEF"].table.Version == (0x00010004 if extended_header else 0x00010002)
+    monkeypatch.undo()
     font = roundtrip(font)
     lower_tables(font, tables=["GDEF", "GSUB", "GPOS"])
     for tag in ("GDEF", "GSUB", "GPOS"):

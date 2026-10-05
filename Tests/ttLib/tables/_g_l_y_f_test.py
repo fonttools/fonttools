@@ -1059,6 +1059,61 @@ class GlyphCubicTest:
                 args[0] for op, args, kwargs in pen.value if op == "addPoint"
             ] == list(glyph.coordinates)
 
+    @pytest.mark.parametrize("table_tag", ["glyf", "GLYF"])
+    @pytest.mark.parametrize("optimize_size", [False, True])
+    def test_cubic_requires_extended_serialization(self, table_tag, optimize_size):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates([(0, 0), (0, 100), (100, 100), (100, 0)])
+        glyph.flags = bytearray([flagOnCurve, flagCubic, flagCubic, flagOnCurve])
+        glyph.endPtsOfContours = [3]
+        glyph.program = ttProgram.Program()
+        table = newTable(table_tag)
+
+        # Drawing an in-memory outline must keep the actual segment type.
+        pen = RecordingPen()
+        glyph.draw(pen, table)
+        assert ("curveTo", ((0, 100), (100, 100), (100, 0))) in pen.value
+        point_pen = RecordingPointPen()
+        glyph.drawPoints(point_pen, table)
+        assert [
+            args[1] for op, args, kwargs in point_pen.value if op == "addPoint"
+        ] == ["line", None, None, "curve"]
+
+        if table_tag == "glyf":
+            with pytest.raises(TTLibError, match="extended GLYF"):
+                glyph.compile(table, optimizeSize=optimize_size)
+            with pytest.raises(TTLibError, match="extended GLYF"):
+                getXML(lambda writer, font: glyph.toXML(writer, font, extended=False))
+        else:
+            data = glyph.compile(table, optimizeSize=optimize_size)
+            reloaded = Glyph(data)
+            reloaded.expand(table)
+            assert reloaded.flags == glyph.flags
+            after = RecordingPen()
+            reloaded.draw(after, table)
+            assert after.value == pen.value
+
+    @pytest.mark.parametrize("table_tag", ["glyf", "GLYF"])
+    def test_import_cubic_flags(self, table_tag):
+        font = TTFont()
+        font.setGlyphOrder(["a"])
+        font[table_tag] = newTable(table_tag)
+        xml = """<TTGlyph name="a"><contour>
+            <pt x="0" y="0" on="1"/>
+            <pt x="0" y="100" on="0" cubic="1"/>
+            <pt x="100" y="100" on="0" cubic="1"/>
+            <pt x="100" y="0" on="1"/>
+        </contour><instructions/></TTGlyph>"""
+        if table_tag == "glyf":
+            with pytest.raises(TTLibError, match="extended GLYF"):
+                for name, attrs, content in parseXML(xml):
+                    font[table_tag].fromXML(name, attrs, content, font)
+        else:
+            for name, attrs, content in parseXML(xml):
+                font[table_tag].fromXML(name, attrs, content, font)
+            assert list(font[table_tag]["a"].flags) == [1, flagCubic, flagCubic, 1]
+
     def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
         font = TTFont(font_path)

@@ -4050,7 +4050,18 @@ class Subsetter(object):
                     log.info("%s pruned", tag)
 
     def _sort_tables(self, font):
-        tagOrder = ["GDEF", "GPOS", "GSUB", "fvar", "avar", "gvar", "name", "glyf"]
+        tagOrder = [
+            "GDEF",
+            "GPOS",
+            "GSUB",
+            "fvar",
+            "avar",
+            "gvar",
+            "GVAR",
+            "name",
+            "glyf",
+            "GLYF",
+        ]
         tagOrder = {t: i + 1 for i, t in enumerate(tagOrder)}
         tags = sorted(font.keys(), key=lambda tag: tagOrder.get(tag, 0))
         return [t for t in tags if t != "GlyphOrder"]

@@ -1,5 +1,7 @@
 from fontTools.misc import xmlWriter
-from fontTools.ttLib import TTFont, newTable
+import pytest
+
+from fontTools.ttLib import TTFont, TTLibError, newTable
 from fontTools.ttLib.tables._g_l_y_f import (
     ARGS_ARE_XY_VALUES,
     GID_IS_24_BIT,
@@ -32,10 +34,8 @@ def test_cubic_flag_is_uppercase_only():
     lower_glyph.expand(newTable("glyf"))
     assert not any(flag & flagCubic for flag in lower_glyph.flags)
 
-    data = cubic_glyph().compile(newTable("glyf"))
-    recompiled_glyph = Glyph(data)
-    recompiled_glyph.expand(newTable("GLYF"))
-    assert not any(flag & flagCubic for flag in recompiled_glyph.flags)
+    with pytest.raises(TTLibError, match="extended GLYF"):
+        cubic_glyph().compile(newTable("glyf"))
 
 
 def test_component_24bit_glyph_id():

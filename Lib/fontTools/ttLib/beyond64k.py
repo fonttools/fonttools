@@ -464,6 +464,27 @@ def _lower_layout_header(font, table, overwrite):
     _convert_layout_formats(table, False)
 
 
+def _has_extended_layout_formats(table):
+    # The dispatch formats live on lookup subtables, including those wrapped
+    # by extension lookups. Avoid descending through every rule/value record
+    # merely to discover that an ordinary compact font needs no conversion.
+    lookup_list = getattr(table, "LookupList", None)
+    if lookup_list is None:
+        return False
+    extended_formats = {
+        (table_type, conversion[0])
+        for conversions in (_CONTEXTUAL_LAYOUT_FORMATS, _EXPLICIT_LAYOUT_FORMATS)
+        for (table_type, _), conversion in conversions.items()
+    }
+    for lookup in lookup_list.Lookup:
+        for subtable in lookup.SubTable:
+            if isinstance(subtable, (otTables.ExtensionSubst, otTables.ExtensionPos)):
+                subtable = subtable.ExtSubTable
+            if (type(subtable), getattr(subtable, "Format", None)) in extended_formats:
+                return True
+    return False
+
+
 @contextmanager
 def _compact_layout_tables(font, *, restore=True):
     # Use compact in-memory layouts for algorithms that dispatch on them.
@@ -481,7 +502,8 @@ def _compact_layout_tables(font, *, restore=True):
             if table.table.Version >= version:
                 restore_actions.append((tag, upper))
                 lower(font, table, True)
-            elif _convert_layout_formats(table.table, False):
+            elif _has_extended_layout_formats(table.table):
+                _convert_layout_formats(table.table, False)
                 restore_actions.append((tag, None))
         yield
     finally:
@@ -492,6 +514,18 @@ def _compact_layout_tables(font, *, restore=True):
                 upper(font, font[tag], True)
             else:
                 _convert_layout_formats(font[tag].table, True)
+
+
+def _lower_glyf(font, table, overwrite):
+    from fontTools.ttLib.tables._g_l_y_f import flagCubic
+
+    # Validation has rejected active or hinted CUBIC bits. Explicit lowering
+    # may discard the remaining inert bits on unhinted on-curve points.
+    for glyph_name in font.getGlyphOrder():
+        glyph = table[glyph_name]
+        if hasattr(glyph, "flags"):
+            for i, flag in enumerate(glyph.flags):
+                glyph.flags[i] = flag & ~flagCubic
 
 
 def _upper_vorg(font, table, overwrite):
@@ -540,6 +574,7 @@ _UPPER_TABLES = {
 }
 _LOWER_TABLES = {
     **{upper: _TableConversion(lower) for lower, upper in _TABLE_PAIRS.items()},
+    "GLYF": _TableConversion("glyf", _lower_glyf),
     "BASE": _TableConversion("BASE", _lower_layout_formats),
     "COLR": _TableConversion("COLR", _lower_colr),
     "GDEF": _TableConversion("GDEF", _lower_gdef),
