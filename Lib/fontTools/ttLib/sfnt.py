@@ -46,7 +46,7 @@ class SFNTReader(object):
         # return default object
         return object.__new__(cls)
 
-    def __init__(self, file, checkChecksums=0, fontNumber=-1):
+    def __init__(self, file, checkChecksums=0, fontNumber=-1, _useLegacyTTC=False):
         self.file = file
         self.checkChecksums = checkChecksums
 
@@ -58,14 +58,19 @@ class SFNTReader(object):
         self.file.seek(0)
         if self.sfntVersion == b"ttcf":
             header = readTTCHeader(self.file)
-            numFonts = header.numFonts
+            if hasattr(header, "offsetTable2") and not _useLegacyTTC:
+                numFonts = header.numFonts2
+                offsetTable = header.offsetTable2
+            else:
+                numFonts = header.numFonts
+                offsetTable = header.offsetTable
             if not 0 <= fontNumber < numFonts:
                 raise TTLibFileIsCollectionError(
                     "specify a font number between 0 and %d (inclusive)"
                     % (numFonts - 1)
                 )
             self.numFonts = numFonts
-            self.file.seek(header.offsetTable[fontNumber])
+            self.file.seek(offsetTable[fontNumber])
             data = self.file.read(sfntDirectorySize)
             if len(data) != sfntDirectorySize:
                 raise TTLibError("Not a Font Collection (not enough data)")
@@ -442,7 +447,9 @@ ttcTailFormatV2 = """
 ttcTailSizeV2 = sstruct.calcsize(ttcTailFormatV2)
 
 TTC_V1 = 0x00010000
+TTC_V1_1 = 0x00010001
 TTC_V2 = 0x00020000
+TTC_V2_1 = 0x00020001
 
 sfntDirectoryFormat = """
 		> # big endian
@@ -696,26 +703,35 @@ def readTTCHeader(file):
     sstruct.unpack(ttcHeaderFormat, data, self)
     if self.TTCTag != "ttcf":
         raise TTLibError("Not a Font Collection")
-    assert self.Version in (TTC_V1, TTC_V2), (
+    assert self.Version in (TTC_V1, TTC_V1_1, TTC_V2, TTC_V2_1), (
         "unrecognized TTC version 0x%08x" % self.Version
     )
     self.offsetTable = struct.unpack(
         ">%dL" % self.numFonts, file.read(self.numFonts * 4)
     )
-    if self.Version == TTC_V2:
+    if self.Version in (TTC_V2, TTC_V2_1):
         # Unpack additional DSIG fields
         data = file.read(ttcTailSizeV2)
         if len(data) != ttcTailSizeV2:
             raise TTLibError("Not a Font Collection (not enough data)")
         sstruct.unpack(ttcTailFormatV2, data, self)
+    if self.Version in (TTC_V1_1, TTC_V2_1):
+        data = file.read(4)
+        if len(data) != 4:
+            raise TTLibError("Not a Font Collection (not enough data)")
+        self.numFonts2 = struct.unpack(">L", data)[0]
+        data = file.read(self.numFonts2 * 4)
+        if len(data) != self.numFonts2 * 4:
+            raise TTLibError("Not a Font Collection (not enough data)")
+        self.offsetTable2 = struct.unpack(">%dL" % self.numFonts2, data)
     return self
 
 
-def writeTTCHeader(file, numFonts, version=TTC_V1):
+def writeTTCHeader(file, numFonts, version=TTC_V1, numFonts2=0):
     self = SimpleNamespace()
     self.TTCTag = "ttcf"
     self.Version = version
-    assert self.Version in (TTC_V1, TTC_V2), (
+    assert self.Version in (TTC_V1, TTC_V1_1, TTC_V2, TTC_V2_1), (
         "unrecognized TTC version 0x%08x" % self.Version
     )
     self.numFonts = numFonts
@@ -723,10 +739,13 @@ def writeTTCHeader(file, numFonts, version=TTC_V1):
     file.write(sstruct.pack(ttcHeaderFormat, self))
     offset = file.tell()
     file.write(struct.pack(">%dL" % self.numFonts, *([0] * self.numFonts)))
-    if version == TTC_V2:
+    if version in (TTC_V2, TTC_V2_1):
         # write empty ulDsigTag, ulDsigLength, ulDsigOffset
         # Actual values are be written in TTCollection.save()
         file.write(struct.pack(">3L", 0, 0, 0))
+    if version in (TTC_V1_1, TTC_V2_1):
+        file.write(struct.pack(">L", numFonts2))
+        file.write(struct.pack(">%dL" % numFonts2, *([0] * numFonts2)))
     return offset
 
 

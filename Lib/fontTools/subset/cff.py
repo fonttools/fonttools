@@ -109,10 +109,6 @@ def subset_glyphs(self, s):
             csi = cs.charStringsIndex
             csi.items = [csi.items[i] for i in indices]
             del csi.file, csi.offsets
-            if hasattr(font, "FDSelect"):
-                sel = font.FDSelect
-                sel.format = None
-                sel.gidArray = [sel.gidArray[i] for i in indices]
             newCharStrings = {}
             for indicesIdx, charsetIdx in enumerate(indices):
                 g = font.charset[charsetIdx]
@@ -121,12 +117,23 @@ def subset_glyphs(self, s):
             cs.charStrings = newCharStrings
         else:
             cs.charStrings = {g: v for g, v in cs.charStrings.items() if g in glyphs}
+        if hasattr(font, "FDSelect"):
+            sel = font.FDSelect
+            sel.format = None
+            # FDSelect may also map VARC-only glyphs beyond the CFF2 charset.
+            sel.gidArray = [
+                sel.gidArray[i]
+                for i, g in enumerate(s.orig_glyph_order)
+                if g in glyphs and i < len(sel.gidArray)
+            ]
         font.charset = [g for g in font.charset if g in glyphs]
         font.numGlyphs = len(font.charset)
 
         if s.options.retain_gids:
             isCFF2 = cff.major > 1
             for g in s.glyphs_emptied:
+                if g not in cs:
+                    continue
                 _empty_charstring(font, g, isCFF2=isCFF2, ignoreWidth=True)
 
     return True  # any(cff[fontname].numGlyphs for fontname in cff.keys())

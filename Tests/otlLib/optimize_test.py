@@ -5,10 +5,66 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import pytest
+from io import BytesIO
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableWriter
+
+
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("extension", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_compact_extended_layout(extended_header, extended_formats, extension, lazy):
+    from fontTools.misc.testTools import getXML
+    from fontTools.otlLib.optimize.gpos import compact
+    from fontTools.ttLib.beyond64k import (
+        _convert_layout_formats,
+        lower_tables,
+        upper_tables,
+    )
+
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder([".notdef", "a", "b", "c", "d"])
+    use_extension = "useExtension" if extension else ""
+    addOpenTypeFeaturesFromString(
+        fb.font,
+        f"""
+        lookup PAIRS {use_extension} {{
+            pos a b -30;
+            pos [a c] [b d] -15;
+        }} PAIRS;
+        feature kern {{ lookup PAIRS; }} kern;
+        """,
+    )
+    original = BytesIO()
+    fb.font.save(original)
+    expected = TTFont(BytesIO(original.getvalue()))
+    compact(expected, 5)
+    expected_data = BytesIO()
+    expected.save(expected_data)
+    expected = TTFont(BytesIO(expected_data.getvalue()))
+
+    font = TTFont(BytesIO(original.getvalue()))
+    if extended_header:
+        upper_tables(font, tables=["GPOS"])
+    _convert_layout_formats(font["GPOS"].table, extended_formats)
+    data = BytesIO()
+    font.save(data)
+    font = TTFont(BytesIO(data.getvalue()), lazy=lazy)
+    compact(font, 5)
+    from fontTools.ttLib.tables.otTables import _getLookupList
+
+    lookup = _getLookupList(font["GPOS"].table).Lookup[0]
+    subtables = [st.ExtSubTable if extension else st for st in lookup.SubTable]
+    assert [st.Format for st in subtables] == ([3, 4] if extended_formats else [1, 2])
+    assert font["GPOS"].table.Version == (0x00010002 if extended_header else 0x00010000)
+    data = BytesIO()
+    font.save(data)
+    font = TTFont(BytesIO(data.getvalue()))
+    lower_tables(font, tables=["GPOS"])
+    assert getXML(font["GPOS"].toXML, font) == getXML(expected["GPOS"].toXML, expected)
 
 
 def test_main(tmpdir: Path):

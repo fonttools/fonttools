@@ -543,6 +543,31 @@ def test_buildPaintGlyph_Solid():
     assert layer.Paint.Alpha == 0.9
 
 
+def test_buildPaintGlyph2_Solid():
+    layer = _build(
+        ot.Paint,
+        (
+            ot.PaintFormat.PaintGlyph2,
+            (ot.PaintFormat.PaintSolid, 2),
+            "a",
+        ),
+    )
+    assert layer.Format == ot.PaintFormat.PaintGlyph2
+    assert layer.Glyph == "a"
+    assert layer.Paint.Format == ot.PaintFormat.PaintSolid
+
+
+def test_buildPaintGlyph_promotes_high_gid():
+    layer = LayerListBuilder(glyphMap={"a": 0x10000}).buildPaint(
+        (
+            ot.PaintFormat.PaintGlyph,
+            (ot.PaintFormat.PaintSolid, 2),
+            "a",
+        )
+    )
+    assert layer.Format == ot.PaintFormat.PaintGlyph2
+
+
 def test_buildPaintGlyph_VarLinearGradient():
     layer = _build(
         ot.Paint,

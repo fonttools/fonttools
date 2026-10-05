@@ -6,8 +6,12 @@ from fontTools.misc.textTools import tobytes, tostr
 from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.subset.svg import etree
 import difflib
@@ -19,6 +23,7 @@ import tempfile
 import unittest
 import pathlib
 import pytest
+from types import SimpleNamespace
 
 
 class SubsetTest:
@@ -73,6 +78,47 @@ class SubsetTest:
     # -----
     # Tests
     # -----
+
+    @pytest.mark.parametrize("vertical", [False, True])
+    @pytest.mark.parametrize("retain_gids", [False, True])
+    def test_uppercase_companion_tables(self, vertical, retain_gids):
+        from fontTools.ttLib.beyond64k import upper_tables
+
+        fb = FontBuilder(1000)
+        order = [".notdef", "a", "b", "unused"]
+        fb.setupGlyphOrder(order)
+        fb.setupCharacterMap({0x61: "a", 0x62: "b"})
+        fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+        fb.setupHorizontalHeader()
+        if vertical:
+            fb.setupVerticalMetrics({name: (1000, 0) for name in order})
+            fb.setupVerticalHeader()
+        fb.setupNameTable({"familyName": "Uppercase subset", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+        upper_tables(fb.font)
+        source = self.temp_path(".ttf")
+        output = self.temp_path(".ttf")
+        fb.font.save(source)
+
+        args = [source, "--unicodes=U+0062", "--output-file=" + output]
+        if retain_gids:
+            args.append("--retain-gids")
+        subset.main(args)
+        font = TTFont(output)
+        count = 3 if retain_gids else 2
+        assert font["MAXP"].numGlyphs == count
+        assert "GLYF" in font and "LOCA" in font
+        assert len(font["LOCA"].locations) == count + 1
+        assert font["HHEA"].numberOfHMetrics == (count if retain_gids else 1)
+        assert font["HMTX"].metrics["b"] == (500, 0)
+        if vertical:
+            assert font["VHEA"].numberOfVMetrics == (count if retain_gids else 1)
+            assert font["VMTX"].metrics["b"] == (1000, 0)
+        assert not {"maxp", "glyf", "loca", "hhea", "hmtx", "vhea", "vmtx"} & set(
+            font.keys()
+        )
 
     def test_layout_scripts(self):
         fontpath = self.compile_font(self.getpath("layout_scripts.ttx"), ".otf")
@@ -486,6 +532,56 @@ class SubsetTest:
         assert len(varc.MultiVarStore.MultiVarData[0].Item) == 5
         assert len(varc.MultiVarStore.SparseVarRegionList.Region) == 3
 
+    @pytest.mark.parametrize(
+        "edges",
+        [
+            {"a": ["a"]},
+            {"a": ["b"], "b": ["a"]},
+            {"a": ["b", "c"], "b": ["d"], "c": ["d"], "d": []},
+        ],
+    )
+    def test_varComposite_closure_visited(self, edges):
+        varc = newTable("VARC")
+        varc.table = ot.VARC()
+        varc.table.Coverage = ot.Coverage()
+        varc.table.Coverage.glyphs = list(edges)
+        varc.table.VarCompositeGlyphs = ot.VarCompositeGlyphs()
+        records = varc.table.VarCompositeGlyphs.VarCompositeGlyph = []
+        for names in edges.values():
+            glyph = ot.VarCompositeGlyph()
+            glyph.components = []
+            for name in names:
+                component = ot.VarComponent()
+                component.glyphName = name
+                glyph.components.append(component)
+            records.append(glyph)
+        state = SimpleNamespace(glyphs={"a"})
+        varc.closure_glyphs(state)
+        assert state.glyphs == set(edges)
+
+    def test_varComposite_self_reference_subset(self):
+        font = TTFont(self.getpath("..", "..", "cffLib", "data", "varc-short-cff2.otf"))
+        varc = font["VARC"].table
+        varc.Coverage.glyphs.insert(0, "leaf")
+        component = ot.VarComponent()
+        component.glyphName = "leaf"
+        glyph = ot.VarCompositeGlyph()
+        glyph.components = [component]
+        varc.VarCompositeGlyphs.VarCompositeGlyph.insert(0, glyph)
+
+        sub = subset.Subsetter()
+        sub.populate(glyphs=["composite"])
+        sub.subset(font)
+        data = io.BytesIO()
+        font.save(data)
+        font = TTFont(io.BytesIO(data.getvalue()))
+        glyphSet = font.getGlyphSet()
+        composite = font.getBestCmap()[65]
+        pen = BoundsPen(glyphSet)
+        glyphSet[composite].draw(pen)
+        assert pen.bounds == (600, 0, 800, 200)
+        assert len(font["VARC"].table.Coverage.glyphs) == 2
+
     def test_varComposite_condition_varidx(self):
         fontpath = self.getpath("..", "..", "ttLib", "data", "varc-ac00-ac01.ttf")
         font = TTFont(fontpath)
@@ -504,12 +600,21 @@ class SubsetTest:
         negatedCondition.ConditionTable = makeCondition(4)
         usedCondition = ot.ConditionTable()
         usedCondition.Format = 3
-        usedCondition.ConditionTable = [makeCondition(6), negatedCondition]
+        negatedNull = ot.ConditionTable()
+        negatedNull.Format = 5
+        negatedNull.ConditionTable = None
+        usedCondition.ConditionTable = [
+            None,
+            makeCondition(6),
+            negatedCondition,
+            negatedNull,
+        ]
 
         conditionList = ot.ConditionList()
-        conditionList.ConditionTable = [unusedCondition, usedCondition]
+        conditionList.ConditionTable = [unusedCondition, usedCondition, None]
         varc.ConditionList = conditionList
         varc.VarCompositeGlyphs.VarCompositeGlyph[0].components[0].conditionIndex = 1
+        varc.VarCompositeGlyphs.VarCompositeGlyph[0].components[1].conditionIndex = 2
 
         inputpath = self.temp_path(".ttf")
         font.save(inputpath)
@@ -518,10 +623,13 @@ class SubsetTest:
 
         subsetfont = TTFont(subsetpath)
         varc = subsetfont["VARC"].table
-        assert len(varc.ConditionList.ConditionTable) == 1
+        assert len(varc.ConditionList.ConditionTable) == 2
+        assert varc.ConditionList.ConditionTable[1] is None
         condition = varc.ConditionList.ConditionTable[0]
-        assert condition.ConditionTable[0].VarIdx == 3
-        assert condition.ConditionTable[1].ConditionTable.VarIdx == 2
+        assert condition.ConditionTable[0] is None
+        assert condition.ConditionTable[1].VarIdx == 3
+        assert condition.ConditionTable[2].ConditionTable.VarIdx == 2
+        assert condition.ConditionTable[3].ConditionTable is None
         assert len(varc.MultiVarStore.MultiVarData) == 1
         assert len(varc.MultiVarStore.MultiVarData[0].Item) == 4
 
@@ -1142,6 +1250,261 @@ class SubsetTest:
             subsetfont, self.getpath("cmap14_font1.uvs_non_default.ttx"), ["cmap"]
         )
 
+    def test_cmap_format15(self):
+        fontpath = self.compile_font(self.getpath("cmap14_font1.ttx"), ".otf")
+        inputpath = self.temp_path(".otf")
+        subsetpath = self.temp_path(".otf")
+
+        font = TTFont(fontpath)
+        cmap14 = next(t for t in font["cmap"].tables if t.format == 14)
+        cmap15 = CmapSubtable.newSubtable(15)
+        cmap15.platformID = cmap14.platformID
+        cmap15.platEncID = cmap14.platEncID
+        cmap15.language = cmap14.language
+        cmap15.cmap = {}
+        cmap15.uvsDict = cmap14.uvsDict
+        font["cmap"].tables[font["cmap"].tables.index(cmap14)] = cmap15
+        font.save(inputpath)
+
+        subset.main(
+            [inputpath, "--unicodes=4e10,e0100", "--output-file=%s" % subsetpath]
+        )
+        subsetfont = TTFont(subsetpath)
+        cmap15 = next(t for t in subsetfont["cmap"].tables if t.format == 15)
+
+        assert cmap15.uvsDict == {0xE0100: [(0x4E10, "g25")]}
+
+    def test_DMAP_precedes_cmap(self):
+        glyph_order = [
+            ".notdef",
+            "cmapA",
+            "dmapA",
+            "baseB",
+            "cmapB.var",
+            "dmapB.var",
+        ]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupCharacterMap(
+            {0x41: "cmapA", 0x42: "baseB"},
+            uvs=[(0x42, 0xFE00, "cmapB.var")],
+        )
+        fb.setupGlyf({name: Glyph() for name in glyph_order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyph_order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+
+        dmap4 = CmapSubtable.newSubtable(4)
+        dmap4.platformID = 3
+        dmap4.platEncID = 1
+        dmap4.language = 0
+        dmap4.cmap = {0x41: "dmapA"}
+        dmap14 = CmapSubtable.newSubtable(14)
+        dmap14.platformID = 0
+        dmap14.platEncID = 5
+        dmap14.language = 0xFF
+        dmap14.cmap = {}
+        dmap14.uvsDict = {0xFE00: [(0x42, "dmapB.var")]}
+        fb.font["DMAP"] = newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [dmap4, dmap14]
+
+        subsetter = subset.Subsetter()
+        subsetter.populate(unicodes=[0x41, 0x42, 0xFE00])
+        subsetter.subset(fb.font)
+
+        assert fb.font.getGlyphOrder() == [
+            ".notdef",
+            "dmapA",
+            "baseB",
+            "dmapB.var",
+        ]
+        assert fb.font["cmap"].getBestCmap() == {0x42: "baseB"}
+        assert not any(t.format in (14, 15) for t in fb.font["cmap"].tables)
+        assert fb.font["DMAP"].getBestCmap() == {0x41: "dmapA"}
+        assert next(
+            t for t in fb.font["DMAP"].tables if t.format in (14, 15)
+        ).uvsDict == {0xFE00: [(0x42, "dmapB.var")]}
+
+        data = io.BytesIO()
+        fb.font.save(data)
+        data.seek(0)
+        font = TTFont(data)
+        assert font.getBestCmap() == {0x41: "A", 0x42: "B"}
+        assert font.getGlyphID(font.getBestCmap()[0x41]) == 1
+        assert font.getGlyphID(font.getBestCmap()[0x42]) == 2
+
+    @pytest.mark.parametrize("notdef_glyph", [False, True])
+    @pytest.mark.parametrize("from_xml", [False, True])
+    @pytest.mark.parametrize("glyph_zero", [".notdef", "zero"])
+    @pytest.mark.parametrize("dmap_format", [4, 12, 13])
+    def test_DMAP_nominal_zero_fallback(
+        self, dmap_format, glyph_zero, from_xml, notdef_glyph
+    ):
+        order = [glyph_zero, "baseA", "baseB", "dmapB"]
+        fb = FontBuilder(1024)
+        fb.setupGlyphOrder(order)
+        fb.setupCharacterMap({0x41: "baseA", 0x42: "baseB"})
+        fb.setupGlyf({name: Glyph() for name in order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+        table = CmapSubtable.newSubtable(dmap_format)
+        table.platformID = 3
+        table.platEncID = 1 if dmap_format == 4 else 10
+        table.language = 0
+        table.cmap = {0x41: glyph_zero, 0x42: "dmapB"}
+        font = fb.font
+        font["DMAP"] = newTable("DMAP")
+        font["DMAP"].tableVersion = 0
+        font["DMAP"].tables = [table]
+        if from_xml:
+            data = io.BytesIO()
+            font.save(data)
+            font = TTFont(io.BytesIO(data.getvalue()))
+            font["DMAP"].tables[0].cmap[0x41] = glyph_zero
+            stream = io.StringIO()
+            font.saveXML(stream)
+            stream.seek(0)
+            font = TTFont()
+            font.importXML(stream)
+
+        options = subset.Options()
+        options.glyph_names = True
+        options.notdef_glyph = notdef_glyph
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(unicodes=[0x41, 0x42])
+        subsetter.subset(font)
+        assert font.getGlyphOrder() == ([glyph_zero] if notdef_glyph else []) + [
+            "baseA",
+            "dmapB",
+        ]
+        assert font.getBestCmap() == {0x41: "baseA", 0x42: "dmapB"}
+        assert font["DMAP"].getBestCmap() == {0x42: "dmapB"}
+        stream = io.BytesIO()
+        font.save(stream)
+        reloaded = TTFont(io.BytesIO(stream.getvalue()))
+        # Without .notdef, baseA becomes glyph zero and binary cmap omits it.
+        assert reloaded.getBestCmap() == (
+            font.getBestCmap() if notdef_glyph else {0x42: "dmapB"}
+        )
+
+    @pytest.mark.parametrize("unicodes", [[0x41, 0x42], [0x42]])
+    def test_DMAP_multiple_unicode_subtables(self, unicodes):
+        glyph_order = [".notdef", "baseA", "baseB", "dmapA", "dmapB"]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupCharacterMap({0x41: "baseA", 0x42: "baseB"})
+        fb.setupGlyf({name: Glyph() for name in glyph_order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyph_order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+
+        dmap12 = CmapSubtable.newSubtable(12)
+        dmap12.platformID = 3
+        dmap12.platEncID = 10
+        dmap12.language = 0
+        dmap12.cmap = {0x41: "dmapA"}
+        dmap4 = CmapSubtable.newSubtable(4)
+        dmap4.platformID = 3
+        dmap4.platEncID = 1
+        dmap4.language = 0
+        dmap4.cmap = {0x42: "dmapB"}
+        fb.font["DMAP"] = newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [dmap12, dmap4]
+
+        stream = io.BytesIO()
+        fb.font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        preferences = [[(3, 10), (3, 1)], [(3, 1)]]
+        expected = [
+            {u: g for u, g in font.getBestCmap(p).items() if u in unicodes}
+            for p in preferences
+        ]
+
+        options = subset.Options()
+        options.glyph_names = True
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(unicodes=unicodes)
+        subsetter.subset(font)
+
+        stream = io.BytesIO()
+        font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        assert [font.getBestCmap(p) for p in preferences] == expected
+
+    @pytest.mark.parametrize("cmap_format", [14, 15])
+    @pytest.mark.parametrize("dmap_format", [14, 15])
+    @pytest.mark.parametrize("glyph_zero", [".notdef", "zero"])
+    @pytest.mark.parametrize("dmap_mapping", ["zero", "default", "nonzero"])
+    def test_DMAP_UVS_fallback(
+        self, cmap_format, dmap_format, glyph_zero, dmap_mapping
+    ):
+        glyph_order = [glyph_zero, "baseA", "cmapA.var", "dmapA.var"]
+        fb = FontBuilder(1024, isTTF=True)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupCharacterMap({0x41: "baseA"})
+        fb.setupGlyf({name: Glyph() for name in glyph_order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in glyph_order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+
+        def uvs_table(format, glyph):
+            table = CmapSubtable.newSubtable(format)
+            table.platformID = 0
+            table.platEncID = 5
+            table.language = 0xFF
+            table.cmap = {}
+            table.uvsDict = {0xFE00: [(0x41, glyph)]}
+            return table
+
+        dmap_glyph = {
+            "zero": glyph_zero,
+            "default": None,
+            "nonzero": "dmapA.var",
+        }[dmap_mapping]
+        fb.font["cmap"].tables.append(uvs_table(cmap_format, "cmapA.var"))
+        fb.font["DMAP"] = newTable("DMAP")
+        fb.font["DMAP"].tableVersion = 0
+        fb.font["DMAP"].tables = [uvs_table(dmap_format, dmap_glyph)]
+
+        stream = io.BytesIO()
+        fb.font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        options = subset.Options()
+        options.glyph_names = True
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(unicodes=[0x41, 0xFE00])
+        subsetter.subset(font)
+
+        expected_glyphs = [glyph_zero, "baseA"]
+        if dmap_mapping == "zero":
+            expected_glyphs.append("cmapA.var")
+        elif dmap_mapping == "nonzero":
+            expected_glyphs.append("dmapA.var")
+        assert font.getGlyphOrder() == expected_glyphs
+
+        stream = io.BytesIO()
+        font.save(stream)
+        font = TTFont(io.BytesIO(stream.getvalue()))
+        assert font.getGlyphOrder() == expected_glyphs
+        cmap_uvs = [t for t in font["cmap"].tables if t.format in (14, 15)]
+        if dmap_mapping == "zero":
+            assert len(cmap_uvs) == 1
+            assert cmap_uvs[0].uvsDict == {0xFE00: [(0x41, "cmapA.var")]}
+        else:
+            assert not cmap_uvs
+        assert font["DMAP"].tables[0].uvsDict == {0xFE00: [(0x41, dmap_glyph)]}
+
     @pytest.mark.parametrize("text, n", [("!", 1), ("#", 2)])
     def test_GPOS_PairPos_Format2_useClass0(self, text, n):
         # Check two things related to class 0 ('every other glyph'):
@@ -1315,6 +1678,44 @@ def featureVarsTestFont():
     return TTFont(buf)
 
 
+def addLookupVariation(font):
+    gsub = font["GSUB"].table
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+
+    condition = ot.ConditionTable()
+    condition.Format = 1
+    condition.AxisIndex = 0
+    condition.FilterRangeMinValue = 0.25
+    condition.FilterRangeMaxValue = 1.0
+
+    lookupIndices = ot.LookupIndexList()
+    lookupIndices.LookupIndex = list(
+        gsub.FeatureList.FeatureRecord[featureIndices["dlig"]].Feature.LookupListIndex
+    )
+    lookupIndices.LookupIndexCount = len(lookupIndices.LookupIndex)
+
+    lookupCondition = ot.LookupConditionRecord()
+    lookupCondition.ConditionTable = condition
+    lookupCondition.LookupIndexList = lookupIndices
+
+    featureLookups = ot.FeatureLookupsTable()
+    featureLookups.Version = 0x00010000
+    featureLookups.Flags = 1
+    featureLookups.LookupConditionRecord = [lookupCondition]
+    featureLookups.LookupConditionCount = 1
+
+    lookupVariation = ot.LookupVariationRecord()
+    lookupVariation.FeatureIndex = featureIndices["rvrn"]
+    lookupVariation.FeatureLookupsTable = featureLookups
+
+    gsub.FeatureVariations.Version = 0x00010001
+    gsub.FeatureVariations.LookupVariationRecord = [lookupVariation]
+    gsub.FeatureVariations.LookupVariationCount = 1
+
+
 def test_subset_feature_variations_keep_all(featureVarsTestFont):
     font = featureVarsTestFont
 
@@ -1349,6 +1750,173 @@ def test_subset_feature_variations_drop_all(featureVarsTestFont):
     # all FeatureVariationRecords were dropped
     assert font["GSUB"].table.FeatureVariations is None
     assert font["GSUB"].table.Version == 0x00010000
+
+
+def test_subset_lookup_variations_remaps_features_and_lookups(featureVarsTestFont):
+    font = featureVarsTestFont
+    addLookupVariation(font)
+
+    options = subset.Options()
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("f"), ord("$")])
+    subsetter.subset(font)
+
+    gsub = font["GSUB"].table
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+    assert "dlig" not in featureIndices
+    assert "f_f" in font.getGlyphOrder()
+
+    record = gsub.FeatureVariations.LookupVariationRecord[0]
+    assert record.FeatureIndex == featureIndices["rvrn"]
+    lookupIndices = record.FeatureLookupsTable.LookupConditionRecord[
+        0
+    ].LookupIndexList.LookupIndex
+    assert len(lookupIndices) == 1
+    assert lookupIndices[0] < gsub.LookupList.LookupCount
+
+    output = io.BytesIO()
+    font.save(output)
+    output.seek(0)
+    roundtripped = TTFont(output)["GSUB"].table.FeatureVariations
+    assert roundtripped.LookupVariationCount == 1
+    assert (
+        roundtripped.LookupVariationRecord[0].FeatureLookupsTable.LookupConditionCount
+        == 1
+    )
+
+
+def test_subset_lookup_variations_keeps_empty_override(featureVarsTestFont):
+    font = featureVarsTestFont
+    addLookupVariation(font)
+
+    options = subset.Options()
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("$")])
+    subsetter.subset(font)
+
+    variations = font["GSUB"].table.FeatureVariations
+    assert variations.LookupVariationCount == 1
+    assert (
+        variations.LookupVariationRecord[0].FeatureLookupsTable.LookupConditionCount
+        == 0
+    )
+
+
+@pytest.mark.parametrize("lookupVariations", [False, True])
+@pytest.mark.parametrize("varIdx", [1, 7, 0x10000])
+def test_subset_preserves_condition_varstore(
+    featureVarsTestFont, lookupVariations, varIdx
+):
+    from fontTools.varLib.builder import buildVarData, buildVarRegionList, buildVarStore
+    from fontTools.varLib.varStore import VarStoreInstancer
+
+    font = featureVarsTestFont
+    value = ot.ConditionTable()
+    value.Format = 2
+    value.DefaultValue = -1
+    value.VarIdx = varIdx
+    negate = ot.ConditionTable()
+    negate.Format = 5
+    negate.ConditionTable = value
+    condition = ot.ConditionTable()
+    condition.Format = 3
+    condition.ConditionTable = [None, negate]
+    condition.ConditionCount = 2
+    variations = font["GSUB"].table.FeatureVariations
+    if lookupVariations:
+        addLookupVariation(font)
+        variations.LookupVariationRecord[0].FeatureLookupsTable.LookupConditionRecord[
+            0
+        ].ConditionTable = condition
+        variations.FeatureVariationRecord = []
+        variations.FeatureVariationCount = 0
+    else:
+        variations.FeatureVariationRecord[0].ConditionSet.ConditionTable = [condition]
+
+    gdef = ot.GDEF()
+    gdef.Version = 0x00010003
+    gdef.GlyphClassDef = gdef.AttachList = gdef.LigCaretList = None
+    gdef.MarkAttachClassDef = gdef.MarkGlyphSetsDef = None
+    gdef.VarStore = buildVarStore(
+        buildVarRegionList([{"wght": (0, 1, 1)}], ["wght"]),
+        [buildVarData([0], [[99], [2]], optimize=False)],
+    )
+    font["GDEF"] = newTable("GDEF")
+    font["GDEF"].table = gdef
+
+    subsetter = subset.Subsetter()
+    subsetter.populate(unicodes=[ord("f"), ord("$")])
+    subsetter.subset(font)
+    if varIdx == 1:
+        assert value.VarIdx == 0
+        assert font["GDEF"].table.VarStore.VarData[0].Item == [[2]]
+    else:
+        assert value.VarIdx == ot.NO_VARIATION_INDEX
+        assert "GDEF" not in font
+
+    output = io.BytesIO()
+    font.save(output)
+    output.seek(0)
+    roundtripped = TTFont(output)
+    variations = roundtripped["GSUB"].table.FeatureVariations
+    if lookupVariations:
+        condition = (
+            variations.LookupVariationRecord[0]
+            .FeatureLookupsTable.LookupConditionRecord[0]
+            .ConditionTable
+        )
+    else:
+        condition = variations.FeatureVariationRecord[0].ConditionSet.ConditionTable[0]
+    value = condition.ConditionTable[1].ConditionTable
+    assert value.VarIdx == (0 if varIdx == 1 else ot.NO_VARIATION_INDEX)
+    evaluator = VarStoreInstancer(
+        roundtripped["GDEF"].table.VarStore if "GDEF" in roundtripped else None,
+        roundtripped["fvar"].axes,
+        {"wght": 1},
+    )
+    assert value.DefaultValue + evaluator[value.VarIdx] == (1 if varIdx == 1 else -1)
+
+
+def test_subset_lookup_variations_prevents_feature_dedup(featureVarsTestFont):
+    font = featureVarsTestFont
+    addLookupVariation(font)
+    gsub = font["GSUB"].table
+    featureIndices = {
+        record.FeatureTag: index
+        for index, record in enumerate(gsub.FeatureList.FeatureRecord)
+    }
+    dligIndex = featureIndices["dlig"]
+    gsub.FeatureVariations.LookupVariationRecord[0].FeatureIndex = dligIndex
+
+    duplicate = ot.FeatureRecord()
+    duplicate.FeatureTag = "dlig"
+    duplicate.Feature = gsub.FeatureList.FeatureRecord[dligIndex].Feature
+    duplicateIndex = len(gsub.FeatureList.FeatureRecord)
+    gsub.FeatureList.FeatureRecord.append(duplicate)
+    gsub.FeatureList.FeatureCount += 1
+
+    for scriptRecord in gsub.ScriptList.ScriptRecord:
+        langSystems = [scriptRecord.Script.DefaultLangSys]
+        langSystems.extend(
+            record.LangSys for record in scriptRecord.Script.LangSysRecord
+        )
+        for langSystem in filter(None, langSystems):
+            if dligIndex in langSystem.FeatureIndex:
+                langSystem.FeatureIndex.append(duplicateIndex)
+                langSystem.FeatureCount += 1
+
+    options = subset.Options()
+    options.layout_features = ["*"]
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("f"), ord("$")])
+    subsetter.subset(font)
+
+    assert [record.FeatureTag for record in gsub.FeatureList.FeatureRecord].count(
+        "dlig"
+    ) == 2
 
 
 @pytest.mark.parametrize("explicit_empty", [False, True])
@@ -1437,7 +2005,8 @@ def singlepos2_font():
 
 
 @pytest.mark.parametrize("keep_classes", [False, True])
-def test_subset_null_gdef_varstore(singlepos2_font, keep_classes):
+@pytest.mark.parametrize("extended", [False, True])
+def test_subset_null_gdef_varstore(singlepos2_font, keep_classes, extended):
     font = singlepos2_font
     gdef = ot.GDEF()
     gdef.Version = 0x00010003
@@ -1448,6 +2017,9 @@ def test_subset_null_gdef_varstore(singlepos2_font, keep_classes):
     gdef.GlyphClassDef.classDefs = {"a" if keep_classes else "b": 1}
     font["GDEF"] = newTable("GDEF")
     font["GDEF"].table = gdef
+
+    if extended:
+        gdef.Version = 0x00010004
 
     buf = io.BytesIO()
     font.save(buf)
@@ -1460,13 +2032,268 @@ def test_subset_null_gdef_varstore(singlepos2_font, keep_classes):
     subsetter.subset(font)
     assert ("GDEF" in font) == keep_classes
     if keep_classes:
-        assert font["GDEF"].table.GlyphClassDef.classDefs == {"a": 1}
-        assert font["GDEF"].table.Version == 0x00010000
+        table = font["GDEF"].table
+        class_def = table.GlyphClassDef2 if extended else table.GlyphClassDef
+        assert class_def.classDefs == {"a": 1}
+        assert font["GDEF"].table.Version == (0x00010004 if extended else 0x00010000)
 
     output = io.BytesIO()
     font.save(output)
     output.seek(0)
     assert ("GDEF" in TTFont(output)) == keep_classes
+
+
+@pytest.mark.parametrize("beyond64k", [False, True])
+@pytest.mark.parametrize("lazy", [None, False, True])
+@pytest.mark.parametrize("xml_roundtrip", [False, True])
+def test_subset_variable_notdef_table_order(beyond64k, lazy, xml_roundtrip):
+    fb = FontBuilder(1000, beyond64k=beyond64k)
+    order = [".notdef", "A"]
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap({0x41: "A"})
+    pen = TTGlyphPen(None)
+    for points in (
+        [(50, 0), (50, 700), (450, 700), (450, 0)],
+        [(100, 50), (400, 50), (400, 650), (100, 650)],
+    ):
+        pen.moveTo(points[0])
+        for point in points[1:]:
+            pen.lineTo(point)
+        pen.closePath()
+    notdef = pen.glyph()
+    fb.setupGlyf({".notdef": notdef, "A": notdef})
+    fb.setupHorizontalMetrics({name: (500, 50) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "Variable Notdef", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    fb.setupFvar([("wght", 100, 400, 900, "Weight")], [])
+    deltas = [
+        (-20, 0),
+        (-20, 0),
+        (20, 0),
+        (20, 0),
+        (-10, -5),
+        (10, -5),
+        (10, 5),
+        (-10, 5),
+        (0, 0),
+        (40, 0),
+        (0, 0),
+        (0, 0),
+    ]
+    fb.setupGvar(
+        {name: [TupleVariation({"wght": (0, 1, 1)}, deltas)] for name in order}
+    )
+    font = fb.font
+    if xml_roundtrip:
+        xml = io.StringIO()
+        font.saveXML(xml)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+    stream = io.BytesIO()
+    font.save(stream)
+    stream.seek(0)
+    font = TTFont(stream, lazy=lazy)
+
+    subsetter = subset.Subsetter()
+    subsetter.populate(unicodes=[0x41])
+    subsetter.subset(font)
+    stream = io.BytesIO()
+    font.save(stream)
+    stream.seek(0)
+    result = TTFont(stream)
+    glyf_tag, gvar_tag = ("GLYF", "GVAR") if beyond64k else ("glyf", "gvar")
+    assert result[glyf_tag][".notdef"].numberOfContours == 0
+    assert result[gvar_tag].variations[".notdef"] == []
+    assert result[gvar_tag].variations["A"][0].coordinates == deltas
+
+
+@pytest.mark.parametrize("extension", [False, True])
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("retain_gids", [False, True])
+def test_subset_extended_layout(
+    extension, extended_header, extended_formats, lazy, retain_gids, monkeypatch
+):
+    from fontTools.ttLib.beyond64k import (
+        _convert_layout_formats,
+        lower_tables,
+        upper_tables,
+    )
+
+    fb = FontBuilder(1000)
+    order = [
+        ".notdef",
+        "a",
+        "b",
+        "c",
+        "d",
+        "a.alt",
+        "b.alt",
+        "a_b",
+        "acute",
+        "grave",
+        "unused",
+    ]
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap(
+        {
+            97: "a",
+            98: "b",
+            99: "c",
+            100: "d",
+            0x301: "acute",
+            0x300: "grave",
+            120: "unused",
+        }
+    )
+    fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+    fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "Extended Layout", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    fb.addOpenTypeFeatures("""
+        languagesystem DFLT dflt;
+        markClass acute <anchor 0 0> @TOP;
+        markClass grave <anchor 50 0> @TOP;
+        feature salt { sub b from [b.alt c]; } salt;
+        feature liga { sub a b by a_b; } liga;
+        feature ccmp { sub d by a b; } ccmp;
+        feature calt {
+            lookupflag UseMarkFilteringSet [acute grave];
+            sub c a' b by a.alt;
+        } calt;
+        feature rclt { rsub c a' b by a.alt; } rclt;
+        feature kern {
+            pos a -50;
+            pos a b -30;
+            pos [a c] [b d] -15;
+        } kern;
+        feature curs {
+            pos cursive a <anchor 0 0> <anchor 300 0>;
+            pos cursive b <anchor 0 0> <anchor 300 0>;
+        } curs;
+        feature mark {
+            pos base a <anchor 100 300> mark @TOP;
+            pos ligature a_b <anchor 100 300> mark @TOP
+                ligComponent <anchor 200 300> mark @TOP;
+        } mark;
+        feature mkmk { pos mark acute <anchor 100 300> mark @TOP; } mkmk;
+    """)
+
+    def roundtrip(font, lazy=False):
+        buf = io.BytesIO()
+        font.save(buf)
+        return TTFont(io.BytesIO(buf.getvalue()), lazy=lazy)
+
+    if extension:
+        for tag, extension_type, lookup_type in (
+            ("GSUB", ot.ExtensionSubst, 7),
+            ("GPOS", ot.ExtensionPos, 9),
+        ):
+            for lookup in fb.font[tag].table.LookupList.Lookup:
+                wrapped = []
+                for subtable in lookup.SubTable:
+                    wrapper = extension_type()
+                    wrapper.Format = 1
+                    wrapper.ExtensionLookupType = lookup.LookupType
+                    wrapper.ExtSubTable = subtable
+                    wrapped.append(wrapper)
+                lookup.SubTable = wrapped
+                lookup.LookupType = lookup_type
+
+    reference = roundtrip(fb.font)
+    font = roundtrip(fb.font)
+    if extended_header:
+        upper_tables(font, tables=["GDEF", "GSUB", "GPOS"])
+    for tag in ("GSUB", "GPOS"):
+        _convert_layout_formats(font[tag].table, extended_formats)
+    font = roundtrip(font, lazy=lazy)
+
+    if not extended_header and not extended_formats:
+
+        def no_recursive_walk(*args, **kwargs):
+            pytest.fail("Compact layout adaptation traversed a classic table")
+
+        monkeypatch.setattr(
+            "fontTools.ttLib.beyond64k.dfs_base_table", no_recursive_walk
+        )
+
+    options = subset.Options()
+    options.retain_gids = retain_gids
+    options.glyph_names = True
+    options.layout_features = ["*"]
+    for target in (reference, font):
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(text="abcd\u0301\u0300")
+        subsetter.subset(target)
+    assert font.getGlyphOrder() == reference.getGlyphOrder()
+    assert "a.alt" in font.getGlyphOrder()
+    assert "a_b" in font.getGlyphOrder()
+    assert "unused" not in font.getGlyphOrder()
+
+    for tag in ("GSUB", "GPOS"):
+        assert font[tag].table.Version == (
+            0x00010002 if extended_header else 0x00010000
+        )
+    assert font["GDEF"].table.Version == (0x00010004 if extended_header else 0x00010002)
+    monkeypatch.undo()
+    font = roundtrip(font)
+    lower_tables(font, tables=["GDEF", "GSUB", "GPOS"])
+    for tag in ("GDEF", "GSUB", "GPOS"):
+        assert getXML(font[tag].table.toXML, font) == getXML(
+            reference[tag].table.toXML, reference
+        )
+
+
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("retain_gids", [False, True])
+def test_subset_extended_layout_high_glyph_ids(lazy, retain_gids):
+    fb = FontBuilder(1000, beyond64k=True)
+    order = [".notdef"] + [f"unused{i}" for i in range(1, 0x10000)] + ["a", "b", "a_b"]
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap({97: "a", 98: "b"})
+    fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+    fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "High Layout GIDs", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    fb.addOpenTypeFeatures("""
+        feature liga { sub a b by a_b; } liga;
+        feature kern { pos a b -30; } kern;
+        table GDEF { GlyphClassDef [a b], [a_b], , ; } GDEF;
+    """)
+    buf = io.BytesIO()
+    fb.font.save(buf)
+    font = TTFont(io.BytesIO(buf.getvalue()), lazy=lazy)
+
+    options = subset.Options()
+    options.retain_gids = retain_gids
+    subsetter = subset.Subsetter(options=options)
+    subsetter.populate(text="ab")
+    subsetter.subset(font)
+    output = io.BytesIO()
+    font.save(output)
+    font = TTFont(io.BytesIO(output.getvalue()))
+    assert len(font.getGlyphOrder()) == (0x10003 if retain_gids else 4)
+    ligature = font["GSUB"].table.LookupList2.Lookup[0].SubTable[0].ligatures["a"][0]
+    assert font.getGlyphID(ligature.LigGlyph) == (0x10002 if retain_gids else 3)
+    assert ligature.Component == ["b"]
+    assert font["GDEF"].table.GlyphClassDef2.classDefs[ligature.LigGlyph] == 2
+    pair = (
+        font["GPOS"]
+        .table.LookupList2.Lookup[0]
+        .SubTable[0]
+        .PairSet[0]
+        .PairValueRecord[0]
+    )
+    assert pair.SecondGlyph == "b"
+    assert pair.Value1.XAdvance == -30
 
 
 def test_subset_single_pos_format(singlepos2_font):
@@ -1591,6 +2418,133 @@ def test_subset_empty_glyf(tmp_path, ttf_path):
 
     loca = subset_font["loca"]
     assert all(loc == 0 for loc in loca)
+
+
+@pytest.mark.parametrize("hinting", [False, True])
+def test_subset_remaps_24bit_glyf_component(hinting):
+    glyph_order = [".notdef"] + [None] * 0xFFFF + ["component", "composite"]
+    glyf = newTable("GLYF")
+    glyf.glyphOrder = glyph_order
+    glyf.glyphs = {}
+
+    for name in (".notdef", "component"):
+        glyph = glyf.glyphs[name] = Glyph()
+        glyph.data = b""
+    composite = glyf.glyphs["composite"] = Glyph()
+    composite.data = (
+        b"\xff\xff"  # numberOfContours
+        b"\0\0\0\0\0\0\0\0"  # bounds
+        b"\x21\x02"  # GID_IS_24_BIT | WE_HAVE_INSTRUCTIONS | ARGS_ARE_XY_VALUES
+        b"\x01\x00\x00"  # component glyph ID 0x10000
+        b"\x0a\x14"  # x, y
+        b"\0\x03\xb0\x01\x21"  # PUSHB 1; POP
+    )
+
+    subsetter = subset.Subsetter()
+    subsetter.glyphs = {".notdef", "component", "composite"}
+    subsetter.glyphs_emptied = frozenset()
+
+    glyf.subset_glyphs(subsetter)
+    options = subset.Options()
+    options.hinting = hinting
+    glyf.prune_post_subset(TTFont(), options)
+
+    assert glyf.glyphOrder == [".notdef", "component", "composite"]
+    assert composite.data[12:15] == b"\0\0\x01"
+    assert composite.getComponentNames(glyf) == ["component"]
+    composite.expand(glyf)
+    assert (composite.components[0].x, composite.components[0].y) == (10, 20)
+    assert hasattr(composite, "program") == hinting
+    if hinting:
+        assert composite.program.getBytecode() == b"\xb0\x01\x21"
+
+
+@pytest.mark.parametrize("extended", [False, True])
+@pytest.mark.parametrize("retain_gids", [False, True])
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("varc", [False, True])
+def test_subset_composite_closure(extended, retain_gids, nested, varc):
+    from fontTools.ttLib.beyond64k import upper_tables
+    from fontTools.pens.recordingPen import DecomposingRecordingPen
+
+    order = [".notdef", "leaf", "unused", "composite"]
+    glyphs = {name: TTGlyphPen(None).glyph() for name in order}
+    pen = TTGlyphPen(None)
+    pen.moveTo((100, 0))
+    pen.lineTo((200, 0))
+    pen.lineTo((100, 100))
+    pen.closePath()
+    glyphs["leaf"] = pen.glyph()
+    if nested:
+        pen = TTGlyphPen(glyphs)
+        pen.addComponent("leaf", (1, 0, 0, 1, 100, 50))
+        glyphs["unused"] = pen.glyph()
+    pen = TTGlyphPen(glyphs)
+    pen.addComponent("unused" if nested else "leaf", (1, 0, 0, 1, 100, 50))
+    glyphs["composite"] = pen.glyph()
+
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder(order)
+    fb.setupCharacterMap({65: "composite"})
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics({name: (500, 100) for name in order})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "Composite closure", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    if extended:
+        upper_tables(fb.font)
+    if varc:
+        component = ot.VarComponent()
+        component.glyphName = "composite"
+        glyph = ot.VarCompositeGlyph()
+        glyph.components = [component]
+        table = ot.VARC()
+        table.Version = 0x10000
+        table.Coverage = ot.Coverage()
+        table.Coverage.glyphs = ["composite"]
+        table.MultiVarStore = table.AxisIndicesList = table.ConditionList = None
+        table.VarCompositeGlyphs = ot.VarCompositeGlyphs()
+        table.VarCompositeGlyphs.VarCompositeGlyph = [glyph]
+        fb.font["VARC"] = newTable("VARC")
+        fb.font["VARC"].table = table
+
+    stream = io.BytesIO()
+    fb.font.save(stream)
+    font = TTFont(io.BytesIO(stream.getvalue()))
+    glyph_set = font.getGlyphSet()
+    pen = DecomposingRecordingPen(glyph_set)
+    glyph_set["composite"].draw(pen)
+    expected = pen.value
+
+    options = subset.Options()
+    options.glyph_names = True
+    options.retain_gids = retain_gids
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[65])
+    subsetter.subset(font)
+    assert "leaf" in subsetter.glyphs_retained
+    if nested:
+        assert "unused" in subsetter.glyphs_retained
+    stream = io.BytesIO()
+    font.save(stream)
+    font = TTFont(io.BytesIO(stream.getvalue()))
+    glyph_set = font.getGlyphSet()
+    pen = DecomposingRecordingPen(glyph_set)
+    glyph_set["composite"].draw(pen)
+    assert pen.value == expected
+
+
+def test_colr_paint_glyph2_closure():
+    paint = ot.Paint()
+    paint.Format = ot.PaintFormat.PaintGlyph2
+    paint.Glyph = "high"
+    paint.Paint = ot.Paint()
+    paint.Paint.Format = ot.PaintFormat.PaintSolid
+    paint.Paint.PaletteIndex = 0
+    paint.Paint.Alpha = 1.0
+
+    assert subset._paint_glyph_names(paint, ot.COLR()) == {"high"}
 
 
 @pytest.fixture

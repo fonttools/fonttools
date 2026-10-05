@@ -259,7 +259,7 @@ def main(args=None):
         v = float(fields[1])
         location[tag] = v
 
-    hhea = font["hhea"]
+    hhea = font["HHEA"] if "HHEA" in font else font["hhea"]
     ascent, descent = hhea.ascent, hhea.descent
 
     glyphset = font.getGlyphSet(location=location)

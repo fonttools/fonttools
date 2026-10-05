@@ -1,7 +1,7 @@
 import os
 import pytest
 from fontTools.designspaceLib import AxisDescriptor
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
@@ -116,6 +116,37 @@ def _verifyOutput(outPath, tables=None):
     assert refData == testData
 
 
+def _setupBeyond64kFontBuilder():
+    fb = FontBuilder(1024, isTTF=True, beyond64k=True)
+    fb.setupGlyphOrder([".notdef", "A"])
+    fb.setupCharacterMap({65: "A"})
+
+    pen = TTGlyphPen(None)
+    emptyGlyph = pen.glyph()
+
+    pen = TTGlyphPen(None)
+    pen.moveTo((50, 0))
+    pen.lineTo((50, 200))
+    pen.lineTo((250, 200))
+    pen.lineTo((250, 0))
+    pen.closePath()
+    glyph = pen.glyph()
+
+    fb.setupGlyf({".notdef": emptyGlyph, "A": glyph})
+    glyphTable = fb.font["GLYF"]
+    fb.setupHorizontalMetrics(
+        {
+            ".notdef": (600, 0),
+            "A": (500, glyphTable["A"].xMin),
+        }
+    )
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupNameTable({"familyName": "Upper", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    return fb
+
+
 def test_build_ttf(tmpdir):
     outPath = os.path.join(str(tmpdir), "test.ttf")
 
@@ -144,6 +175,54 @@ def test_build_ttf(tmpdir):
     _verifyOutput(outPath)
 
 
+def test_build_beyond64k_ttf(tmpdir):
+    outPath = os.path.join(str(tmpdir), "test.ttf")
+
+    fb = _setupBeyond64kFontBuilder()
+
+    assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(fb.font.keys())
+    assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(fb.font.keys())
+    assert fb.font["OS/2"].xAvgCharWidth == 550
+
+    fb.save(outPath)
+
+    font = TTFont(outPath)
+    assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
+    assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(font.keys())
+
+
+def test_build_beyond64k_ttf_xml_round_trip(tmpdir):
+    xmlPath = os.path.join(str(tmpdir), "test.ttx")
+    outPath = os.path.join(str(tmpdir), "test.ttf")
+
+    fb = _setupBeyond64kFontBuilder()
+    fb.font.saveXML(xmlPath)
+
+    font = TTFont()
+    font.importXML(xmlPath)
+    assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
+    assert not {"glyf", "loca", "maxp", "hhea", "hmtx"} & set(font.keys())
+
+    font.save(outPath)
+    font = TTFont(outPath)
+    assert font.getGlyphOrder() == [".notdef", "A"]
+    assert font["HMTX"]["A"] == (500, 50)
+    assert font["GLYF"]["A"].xMin == 50
+
+
+def test_setupGvar_uses_selected_table_family():
+    fb = FontBuilder(1024, isTTF=True)
+    fb.setupGvar({})
+    assert "gvar" in fb.font
+    assert "GVAR" not in fb.font
+
+    fb = FontBuilder(1024, isTTF=True, beyond64k=True)
+    fb.setupGvar({})
+    assert "GVAR" in fb.font
+    assert "gvar" not in fb.font
+    assert not hasattr(fb, "setupGVAR")
+
+
 def test_build_cubic_ttf(tmp_path):
     pen = TTGlyphPen(None)
     pen.moveTo((100, 100))
@@ -152,19 +231,32 @@ def test_build_cubic_ttf(tmp_path):
     glyph = pen.glyph()
     glyphs = {"A": glyph}
 
-    # cubic outlines are not allowed in glyf table format 0
-    fb = FontBuilder(1000, isTTF=True, glyphDataFormat=0)
-    with pytest.raises(
-        ValueError, match="Glyph 'A' has cubic Bezier outlines, but glyphDataFormat=0"
-    ):
+    # cubic outlines are not allowed in the glyf table
+    fb = FontBuilder(1000, isTTF=True)
+    with pytest.raises(ValueError, match="Glyph 'A' has cubic Bezier outlines"):
         fb.setupGlyf(glyphs)
-    # can skip check if feeling adventurous
-    fb.setupGlyf(glyphs, validateGlyphFormat=False)
 
-    # cubics are (will be) allowed in glyf table format 1
-    fb = FontBuilder(1000, isTTF=True, glyphDataFormat=1)
-    fb.setupGlyf(glyphs)
-    assert "A" in fb.font["glyf"].glyphs
+
+def test_build_cubic_beyond64k_ttf(tmp_path):
+    from fontTools.pens.recordingPen import RecordingPen
+
+    fb = _setupBeyond64kFontBuilder()
+    pen = TTGlyphPen(None)
+    pen.moveTo((100, 100))
+    pen.curveTo((200, 300), (300, 300), (400, 100))
+    pen.closePath()
+    fb.setupGlyf({".notdef": fb.font["GLYF"][".notdef"], "A": pen.glyph()})
+
+    path = tmp_path / "cubic.ttf"
+    fb.save(path)
+    font = TTFont(path)
+    pen = RecordingPen()
+    font["GLYF"]["A"].draw(pen, font["GLYF"])
+    assert pen.value == [
+        ("moveTo", ((100, 100),)),
+        ("curveTo", ((200, 300), (300, 300), (400, 100))),
+        ("closePath", ()),
+    ]
 
 
 def test_build_otf(tmpdir):
@@ -377,6 +469,70 @@ def test_setupPost(is_ttf, keep_glyph_names, make_cff2, post_format):
     assert fb.isTTF is is_ttf
     assert ("CFF2" in fb.font) is make_cff2
     assert fb.font["post"].formatType == post_format
+
+
+@pytest.mark.parametrize("count", [0xFFFF, 0x10000, 0x10001])
+@pytest.mark.parametrize("cff2", [False, True])
+def test_setupPost_beyond64k_count_limit(count, cff2):
+    fb = FontBuilder(1024, isTTF=not cff2, beyond64k=True)
+    order = [".notdef"] + [f"glyph{i}" for i in range(1, count)]
+    fb.setupGlyphOrder(order)
+    if cff2:
+        fb.font["CFF2"] = newTable("CFF2")
+
+    fb.setupPost()
+
+    post = fb.font["post"]
+    assert post.formatType == (2 if count <= 0xFFFF else 3)
+    fb.font["MAXP"].numGlyphs = count
+    if post.formatType == 2:
+        # Isolate the glyph-count boundary from post's separate name-index limit.
+        post.mapping = {name: "space" for name in order}
+    data = post.compile(fb.font)
+    reloaded = newTable("post")
+    reloaded.decompile(data, fb.font)
+    assert reloaded.formatType == post.formatType
+
+
+@pytest.mark.parametrize("supplementary", [False, True])
+@pytest.mark.parametrize("gid", [0xFFFF, 0x10000, 0x10001])
+def test_character_map_high_glyph_ids(gid, supplementary):
+    fb = FontBuilder(1024, beyond64k=True)
+    order = [".notdef"] + [f"glyph{i}" for i in range(1, gid + 1)]
+    fb.setupGlyphOrder(order)
+    mapping = {65: order[gid], 66: order[1]}
+    if supplementary:
+        mapping[0x10000] = order[gid]
+
+    fb.setupCharacterMap(mapping)
+
+    cmap = fb.font["cmap"]
+    reloaded = newTable("cmap")
+    reloaded.decompile(cmap.compile(fb.font), fb.font)
+    assert reloaded.getBestCmap() == mapping
+    if gid > 0xFFFF:
+        assert {(sub.platformID, sub.platEncID, sub.format) for sub in cmap.tables} == {
+            (3, 10, 12),
+            (0, 4, 12),
+        }
+
+
+@pytest.mark.parametrize("default", [False, True])
+@pytest.mark.parametrize("gid", [0xFFFF, 0x10000, 0x10001])
+def test_unicodeVariationSequences_high_glyph_ids(gid, default):
+    fb = FontBuilder(1024, beyond64k=True)
+    order = [".notdef"] + [f"glyph{i}" for i in range(1, gid + 1)]
+    fb.setupGlyphOrder(order)
+    mapping = {65: order[gid] if default else order[1]}
+    fb.setupCharacterMap(mapping, [(65, 0xFE00, order[gid])])
+
+    uvs = fb.font["cmap"].tables[-1]
+    assert uvs.format == (15 if gid > 0xFFFF and not default else 14)
+    reloaded = newTable("cmap")
+    reloaded.decompile(fb.font["cmap"].compile(fb.font), fb.font)
+    assert reloaded.getcmap(0, 5).uvsDict == {
+        0xFE00: [(65, None if default else order[gid])]
+    }
 
 
 def test_unicodeVariationSequences(tmpdir):

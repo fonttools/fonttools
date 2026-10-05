@@ -366,10 +366,14 @@ ot.VarStore.prune_regions = VarStore_prune_regions
 
 
 def _visit(self, func):
-    """Recurse down from self, if type of an object is ot.Device,
-    call func() on it.  Works on otData-style classes."""
+    """Visit Device and format-2 ConditionTable variation indices.
 
-    if type(self) == ot.Device:
+    Works on otData-style classes, including nested boolean conditions.
+    """
+
+    if type(self) == ot.Device or (
+        isinstance(self, ot.ConditionTable) and self.Format == 2
+    ):
         func(self)
 
     elif isinstance(self, list):
@@ -388,8 +392,10 @@ def _visit(self, func):
 
 
 def _Device_recordVarIdx(self, s):
-    """Add VarIdx in this Device table (if any) to the set s."""
-    if self.DeltaFormat == 0x8000:
+    """Add a Device or ConditionTable variation index to the set s."""
+    if isinstance(self, ot.ConditionTable):
+        s.add(self.VarIdx)
+    elif self.DeltaFormat == 0x8000:
         s.add((self.StartSize << 16) + self.EndSize)
 
 
@@ -400,6 +406,7 @@ def Object_collect_device_varidxes(self, varidxes):
 
 ot.GDEF.collect_device_varidxes = Object_collect_device_varidxes
 ot.GPOS.collect_device_varidxes = Object_collect_device_varidxes
+ot.GSUB.collect_device_varidxes = Object_collect_device_varidxes
 
 
 def _Device_mapVarIdx(self, mapping, done):
@@ -407,19 +414,24 @@ def _Device_mapVarIdx(self, mapping, done):
     if id(self) in done:
         return
     done.add(id(self))
-    if self.DeltaFormat == 0x8000:
+    if isinstance(self, ot.ConditionTable):
+        self.VarIdx = mapping.get(self.VarIdx, NO_VARIATION_INDEX)
+    elif self.DeltaFormat == 0x8000:
         varIdx = mapping[(self.StartSize << 16) + self.EndSize]
         self.StartSize = varIdx >> 16
         self.EndSize = varIdx & 0xFFFF
 
 
-def Object_remap_device_varidxes(self, varidxes_map):
-    mapper = partial(_Device_mapVarIdx, mapping=varidxes_map, done=set())
+def Object_remap_device_varidxes(self, varidxes_map, *, done=None):
+    if done is None:
+        done = set()
+    mapper = partial(_Device_mapVarIdx, mapping=varidxes_map, done=done)
     _visit(self, mapper)
 
 
 ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
 ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
+ot.GSUB.remap_device_varidxes = Object_remap_device_varidxes
 ot.BASE.remap_device_varidxes = Object_remap_device_varidxes
 
 
@@ -910,9 +922,11 @@ def main(args=None):
     print("After:  %7d bytes" % size)
 
     if outfile is not None:
-        gdef.table.remap_device_varidxes(varidx_map)
-        if "GPOS" in font:
-            font["GPOS"].table.remap_device_varidxes(varidx_map)
+        done = set()
+        gdef.table.remap_device_varidxes(varidx_map, done=done)
+        for tag in ("GSUB", "GPOS"):
+            if tag in font:
+                font[tag].table.remap_device_varidxes(varidx_map, done=done)
 
         font.save(outfile)
 

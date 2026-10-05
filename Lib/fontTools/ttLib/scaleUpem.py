@@ -10,9 +10,9 @@ import fontTools.ttLib.tables.otTables as otTables
 from fontTools.cffLib import VarStoreData
 import fontTools.cffLib.specializer as cffSpecializer
 from fontTools.varLib import builder  # for VarData.calculateNumShorts
+from fontTools.misc.fixedTools import otRound
 from fontTools.varLib.multiVarStore import OnlineMultiVarStoreBuilder
 from fontTools.misc.vector import Vector
-from fontTools.misc.fixedTools import otRound
 from fontTools.misc.iterTools import batched
 
 __all__ = ["scale_upem", "ScalerVisitor"]
@@ -32,7 +32,7 @@ class ScalerVisitor(TTVisitor):
         (ttLib.getTableClass("post"), ("underlinePosition", "underlineThickness")),
         (ttLib.getTableClass("VORG"), ("defaultVertOriginY")),
         (
-            ttLib.getTableClass("hhea"),
+            (ttLib.getTableClass("hhea"), ttLib.getTableClass("HHEA")),
             (
                 "ascent",
                 "descent",
@@ -45,7 +45,7 @@ class ScalerVisitor(TTVisitor):
             ),
         ),
         (
-            ttLib.getTableClass("vhea"),
+            (ttLib.getTableClass("vhea"), ttLib.getTableClass("VHEA")),
             (
                 "ascent",
                 "descent",
@@ -96,7 +96,13 @@ def visit(visitor, obj, attr, value):
 
 
 @ScalerVisitor.register_attr(
-    (ttLib.getTableClass("hmtx"), ttLib.getTableClass("vmtx")), "metrics"
+    (
+        ttLib.getTableClass("hmtx"),
+        ttLib.getTableClass("HMTX"),
+        ttLib.getTableClass("vmtx"),
+        ttLib.getTableClass("VMTX"),
+    ),
+    "metrics",
 )
 def visit(visitor, obj, attr, metrics):
     for g in metrics:
@@ -110,7 +116,9 @@ def visit(visitor, obj, attr, VOriginRecords):
         VOriginRecords[g] = visitor.scale(VOriginRecords[g])
 
 
-@ScalerVisitor.register_attr(ttLib.getTableClass("glyf"), "glyphs")
+@ScalerVisitor.register_attr(
+    (ttLib.getTableClass("glyf"), ttLib.getTableClass("GLYF")), "glyphs"
+)
 def visit(visitor, obj, attr, glyphs):
     for g in glyphs.values():
         for attr in ("xMin", "xMax", "yMin", "yMax"):
@@ -130,9 +138,11 @@ def visit(visitor, obj, attr, glyphs):
                 coordinates[i] = visitor.scale(x), visitor.scale(y)
 
 
-@ScalerVisitor.register_attr(ttLib.getTableClass("gvar"), "variations")
+@ScalerVisitor.register_attr(
+    (ttLib.getTableClass("gvar"), ttLib.getTableClass("GVAR")), "variations"
+)
 def visit(visitor, obj, attr, variations):
-    glyfTable = visitor.font["glyf"]
+    glyfTable = visitor.font[obj.glyphTableTag]
 
     for glyphName, varlist in variations.items():
         glyph = glyfTable[glyphName]
@@ -379,7 +389,10 @@ def visit(visitor, record):
 
 @ScalerVisitor.register(otTables.Paint)
 def visit(visitor, paint):
-    if paint.Format != otTables.PaintFormat.PaintGlyph:
+    if paint.Format not in {
+        otTables.PaintFormat.PaintGlyph,
+        otTables.PaintFormat.PaintGlyph2,
+    }:
         return True
 
     newPaint = otTables.Paint()

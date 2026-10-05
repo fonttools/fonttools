@@ -3,7 +3,14 @@ from io import BytesIO
 import struct
 import logging
 from contextlib import contextmanager
-from fontTools.ttLib.sfnt import TTC_V1, TTC_V2, readTTCHeader, writeTTCHeader
+from fontTools.ttLib.sfnt import (
+    TTC_V1,
+    TTC_V1_1,
+    TTC_V2,
+    TTC_V2_1,
+    readTTCHeader,
+    writeTTCHeader,
+)
 from fontTools.ttLib.tables.D_S_I_G_ import table_D_S_I_G_
 from fontTools.misc.timeTools import timestampNow
 
@@ -51,6 +58,11 @@ class TTCollection(object):
     """Object representing a TrueType Collection / OpenType Collection.
     The main API is self.fonts being a list of TTFont instances.
 
+    For TTC versions 1.1 and 2.1, ``fonts`` contains the preferred extended
+    font list and ``legacyFonts`` contains the compatibility font list. To
+    write one of these versions, set both attributes; FontTools does not derive
+    legacy fonts automatically.
+
     If shareTables is True, then different fonts in the collection
     might point to the same table object if the data for the table was
     the same in the font file.  Note, however, that this might result
@@ -73,11 +85,24 @@ class TTCollection(object):
         tableCache = {} if shareTables else None
 
         header = readTTCHeader(file)
-        for i in range(header.numFonts):
+        numFonts = getattr(header, "numFonts2", header.numFonts)
+        for i in range(numFonts):
             font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
             fonts.append(font)
 
-        if header.Version == TTC_V2:
+        if hasattr(header, "numFonts2"):
+            self.legacyFonts = []
+            for i in range(header.numFonts):
+                font = TTFont(
+                    file,
+                    fontNumber=i,
+                    _tableCache=tableCache,
+                    _useLegacyTTC=True,
+                    **kwargs,
+                )
+                self.legacyFonts.append(font)
+
+        if header.Version in (TTC_V2, TTC_V2_1):
             self.dsig: table_D_S_I_G_ | None = None
             if header.ulDsigOffset != 0:
                 self.dsig = table_D_S_I_G_("DSIG")
@@ -101,6 +126,8 @@ class TTCollection(object):
     def close(self):
         for font in self.fonts:
             font.close()
+        for font in getattr(self, "legacyFonts", ()):
+            font.close()
 
     def save(self, file, shareTables=True):
         """Save the font to disk. Similarly to the constructor,
@@ -118,12 +145,31 @@ class TTCollection(object):
 
         tableCache = {} if shareTables else None
 
-        # A V2 TTC will be saved if self.dsig is present, even if it is None
-        version = TTC_V2 if hasattr(self, "dsig") else TTC_V1
+        # A V2 TTC will be saved if self.dsig is present, even if it is None.
+        # The minor version is 1 when a legacy compatibility list is present.
+        hasLegacyFonts = hasattr(self, "legacyFonts")
+        if hasattr(self, "dsig"):
+            version = TTC_V2_1 if hasLegacyFonts else TTC_V2
+        else:
+            version = TTC_V1_1 if hasLegacyFonts else TTC_V1
+        legacyFonts = self.legacyFonts if hasLegacyFonts else []
 
         # Pin one 'modified' timestamp so the fonts' 'head' tables can be shared.
-        with _sharedModifiedTimestamp(self.fonts):
-            offsets_offset = writeTTCHeader(file, len(self.fonts), version=version)
+        with _sharedModifiedTimestamp([*legacyFonts, *self.fonts]):
+            offsets_offset = writeTTCHeader(
+                file,
+                len(legacyFonts) if hasLegacyFonts else len(self.fonts),
+                version=version,
+                numFonts2=len(self.fonts),
+            )
+            offsets2_offset = (
+                file.tell() - 4 * len(self.fonts) if hasLegacyFonts else None
+            )
+            legacyOffsets = []
+            for font in legacyFonts:
+                legacyOffsets.append(file.tell())
+                font._save(file, tableCache=tableCache)
+                file.seek(0, 2)
             offsets = []
             for font in self.fonts:
                 offsets.append(file.tell())
@@ -131,9 +177,12 @@ class TTCollection(object):
                 file.seek(0, 2)
 
         file.seek(offsets_offset)
-        file.write(struct.pack(">%dL" % len(self.fonts), *offsets))
+        if hasLegacyFonts:
+            file.write(struct.pack(">%dL" % len(legacyOffsets), *legacyOffsets))
+            file.seek(offsets2_offset)
+        file.write(struct.pack(">%dL" % len(offsets), *offsets))
 
-        if version == TTC_V2 and self.dsig is not None:
+        if version in (TTC_V2, TTC_V2_1) and self.dsig is not None:
             # Compile the DSIG if necessary
             if hasattr(self.dsig, "data"):
                 data = self.dsig.data
@@ -141,7 +190,9 @@ class TTCollection(object):
                 data = self.dsig.compile(None)
             # Write the DSIG tag, length, and offset
             # We are at the offset where the DSIG header starts
-            dsig_header_fields_offset = file.tell()
+            dsig_header_fields_offset = offsets_offset + 4 * (
+                len(legacyOffsets) if hasLegacyFonts else len(offsets)
+            )
             # The DSIG data will be written to the end of the file, go there
             file.seek(0, 2)
             dsig_offset = file.tell()

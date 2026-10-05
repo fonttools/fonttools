@@ -54,7 +54,7 @@ def _glyphsAreSame(
 
 
 def computeMegaUvs(merger, uvsTables):
-    """Returns merged UVS subtable (cmap format=14)."""
+    """Returns merged UVS mappings (cmap formats 14 and 15)."""
     uvsDict = {}
     cmap = merger.cmap
     for table in uvsTables:
@@ -82,21 +82,73 @@ def computeMegaUvs(merger, uvsTables):
 class _CmapUnicodePlatEncodings:
     BMP = {(4, 3, 1), (4, 0, 3), (4, 0, 4), (4, 0, 6)}
     FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
-    UVS = {(14, 0, 5)}
+    UVS = {(14, 0, 5), (15, 0, 5)}
+
+
+def _getUvsTable(cmap):
+    format14 = None
+    if cmap is not None:
+        for subtable in cmap.tables:
+            if (
+                subtable.format,
+                subtable.platformID,
+                subtable.platEncID,
+            ) not in _CmapUnicodePlatEncodings.UVS:
+                continue
+            if subtable.format == 15:
+                return subtable
+            format14 = subtable
+    return format14
+
+
+def _flattenDmap(font):
+    """Fold DMAP overrides into cmap before merging fonts."""
+    from fontTools.ttLib import newTable
+    from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+
+    cmap = newTable("cmap")
+    cmap.tableVersion = 0
+    nominal = CmapSubtable.newSubtable(12)
+    nominal.platformID, nominal.platEncID, nominal.language = 3, 10, 0
+    nominal.cmap = font.getBestCmap() or {}
+    cmap.tables = [nominal]
+
+    glyphZero = font.getGlyphOrder()[0]
+    uvsDict = {}
+    for tag in ("cmap", "DMAP"):
+        uvsTable = _getUvsTable(font.get(tag))
+        if uvsTable is None:
+            continue
+        for selector, mappings in uvsTable.uvsDict.items():
+            target = uvsDict.setdefault(selector, {})
+            # None is a default UVS; only glyph zero is a DMAP miss.
+            target.update(
+                (codepoint, glyph)
+                for codepoint, glyph in mappings
+                if tag != "DMAP" or glyph != glyphZero
+            )
+    if uvsDict:
+        uvs = CmapSubtable.newSubtable(14)
+        uvs.platformID, uvs.platEncID, uvs.language = 0, 5, 0
+        uvs.cmap = {}
+        uvs.uvsDict = {
+            selector: list(mappings.items()) for selector, mappings in uvsDict.items()
+        }
+        cmap.tables.insert(0, uvs)
+    font["cmap"] = cmap
+    del font["DMAP"]
 
 
 def computeMegaCmap(merger, cmapTables):
     """Sets merger.cmap and merger.uvsDict."""
 
-    # TODO Handle format=14.
-    # Only merge format 4 and 12 Unicode subtables, ignores all other subtables
+    # For nominal Unicode mappings, only merge formats 4 and 12.
     # If there is a format 12 table for a font, ignore the format 4 table of it
     chosenCmapTables = []
     chosenUvsTables = []
     for fontIdx, table in enumerate(cmapTables):
         format4 = None
         format12 = None
-        format14 = None
         for subtable in table.tables:
             properties = (subtable.format, subtable.platformID, subtable.platEncID)
             if properties in _CmapUnicodePlatEncodings.BMP:
@@ -104,7 +156,7 @@ def computeMegaCmap(merger, cmapTables):
             elif properties in _CmapUnicodePlatEncodings.FullRepertoire:
                 format12 = subtable
             elif properties in _CmapUnicodePlatEncodings.UVS:
-                format14 = subtable
+                continue
             else:
                 log.warning(
                     "Dropped cmap subtable from font '%s':\t"
@@ -119,8 +171,9 @@ def computeMegaCmap(merger, cmapTables):
         elif format4 is not None:
             chosenCmapTables.append((format4, fontIdx))
 
-        if format14 is not None:
-            chosenUvsTables.append(format14)
+        uvsTable = _getUvsTable(table)
+        if uvsTable is not None:
+            chosenUvsTables.append(uvsTable)
 
     # Build the unicode mapping
     merger.cmap = cmap = {}

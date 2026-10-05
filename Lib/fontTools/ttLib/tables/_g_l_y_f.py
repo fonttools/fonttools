@@ -90,9 +90,16 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     # Allowed values are (0, 1, 2, 4). '0' means no padding; '1' (default) also means
     # no padding, except for when padding would allow to use short loca offsets.
     padding = 1
+    locaTag = "loca"
+    maxpTag = "maxp"
+    hheaTag = "hhea"
+    hmtxTag = "hmtx"
+    vmtxTag = "vmtx"
+    gvarTag = "gvar"
+    extended = False
 
     def decompile(self, data, ttFont):
-        loca = ttFont["loca"]
+        loca = ttFont[self.locaTag]
         pos = int(loca[0])
         nextPos = 0
         noname = 0
@@ -172,10 +179,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                 locations[len(dataList)] = currentLocation
 
         data = b"".join(dataList)
-        if "loca" in ttFont:
-            ttFont["loca"].set(locations)
-        if "maxp" in ttFont:
-            ttFont["maxp"].numGlyphs = len(self.glyphs)
+        if self.locaTag in ttFont:
+            ttFont[self.locaTag].set(locations)
+        if self.maxpTag in ttFont:
+            ttFont[self.maxpTag].numGlyphs = len(self.glyphs)
         if not data:
             # As a special case when all glyph in the font are empty, add a zero byte
             # to the table, so that OTS doesn’t reject it, and to make the table work
@@ -220,7 +227,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     )
                     glyphWriter.begintag("ttFont", ttLibVersion=version)
                     glyphWriter.newline()
-                    glyphWriter.begintag("glyf")
+                    glyphWriter.begintag(self.tableTag)
                     glyphWriter.newline()
                     glyphWriter.comment(notice)
                     glyphWriter.newline()
@@ -238,11 +245,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
                     ],
                 )
                 glyphWriter.newline()
-                glyph.toXML(glyphWriter, ttFont)
+                if type(glyph).toXML is Glyph.toXML:
+                    glyph.toXML(glyphWriter, ttFont, extended=self.extended)
+                else:
+                    glyph.toXML(glyphWriter, ttFont)
                 glyphWriter.endtag("TTGlyph")
                 glyphWriter.newline()
                 if splitGlyphs:
-                    glyphWriter.endtag("glyf")
+                    glyphWriter.endtag(self.tableTag)
                     glyphWriter.newline()
                     glyphWriter.endtag("ttFont")
                     glyphWriter.newline()
@@ -271,7 +281,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
             if not isinstance(element, tuple):
                 continue
             name, attrs, content = element
-            glyph.fromXML(name, attrs, content, ttFont)
+            glyph.fromXML(name, attrs, content, ttFont, extended=self.extended)
         if not ttFont.recalcBBoxes:
             glyph.compact(self, 0)
 
@@ -316,7 +326,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         See :py:meth:`Glyph.removeHinting`.
         """
         for glyph in self.glyphs.values():
-            glyph.removeHinting()
+            glyph.removeHinting(extended=self.extended)
 
     def keys(self):
         return self.glyphs.keys()
@@ -518,10 +528,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
         For rationale see:
         https://github.com/fonttools/fonttools/pull/2266/files#r613569473
         """
-        vMetrics = getattr(ttFont.get("vmtx"), "metrics", None)
+        vMetrics = getattr(ttFont.get(self.vmtxTag), "metrics", None)
         if vMetrics is None:
             verticalAdvanceWidth = ttFont["head"].unitsPerEm
-            topSideY = getattr(ttFont.get("hhea"), "ascent", None)
+            topSideY = getattr(ttFont.get(self.hheaTag), "ascent", None)
             if topSideY is None:
                 if defaultVerticalOrigin is not None:
                     topSideY = defaultVerticalOrigin
@@ -537,7 +547,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
         """Old public name for self._getPhantomPoints().
         See: https://github.com/fonttools/fonttools/pull/2266"""
-        hMetrics = ttFont["hmtx"].metrics
+        hMetrics = ttFont[self.hmtxTag].metrics
         vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
         return self._getPhantomPoints(glyphName, hMetrics, vMetrics)
 
@@ -547,7 +557,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
         """Old public name for self._getCoordinatesAndControls().
         See: https://github.com/fonttools/fonttools/pull/2266"""
-        hMetrics = ttFont["hmtx"].metrics
+        hMetrics = ttFont[self.hmtxTag].metrics
         vMetrics = self._synthesizeVMetrics(glyphName, ttFont, defaultVerticalOrigin)
         return self._getCoordinatesAndControls(glyphName, hMetrics, vMetrics)
 
@@ -555,8 +565,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
     def setCoordinates(self, glyphName, ttFont):
         """Old public name for self._setCoordinates().
         See: https://github.com/fonttools/fonttools/pull/2266"""
-        hMetrics = ttFont["hmtx"].metrics
-        vMetrics = getattr(ttFont.get("vmtx"), "metrics", None)
+        hMetrics = ttFont[self.hmtxTag].metrics
+        vMetrics = getattr(ttFont.get(self.vmtxTag), "metrics", None)
         self._setCoordinates(glyphName, hMetrics, vMetrics)
 
 
@@ -669,6 +679,7 @@ USE_MY_METRICS = 0x0200  # apply these metrics to parent glyph
 OVERLAP_COMPOUND = 0x0400  # used by Apple in GX fonts
 SCALED_COMPONENT_OFFSET = 0x0800  # composite designed to have the component offset scaled (designed for Apple)
 UNSCALED_COMPONENT_OFFSET = 0x1000  # composite designed not to have the component offset scaled (designed for MS)
+GID_IS_24_BIT = 0x2000  # component glyph ID is encoded as uint24 in GLYF
 
 
 CompositeMaxpValues = namedtuple(
@@ -735,7 +746,9 @@ class Glyph(object):
         if self.isComposite():
             self.decompileComponents(data, glyfTable)
         else:
-            self.decompileCoordinates(data)
+            self.decompileCoordinates(
+                data, extended=glyfTable is None or glyfTable.extended
+            )
 
     def compile(
         self, glyfTable, recalcBBoxes=True, *, boundsDone=None, optimizeSize=True
@@ -759,10 +772,17 @@ class Glyph(object):
             instructions = self.program.getBytecode()
             data += struct.pack(">H", len(instructions)) + instructions
         else:
-            data = data + self.compileCoordinates(optimizeSize=optimizeSize)
+            data = data + self.compileCoordinates(
+                optimizeSize=optimizeSize,
+                extended=glyfTable is None or glyfTable.extended,
+            )
         return data
 
-    def toXML(self, writer, ttFont):
+    def toXML(self, writer, ttFont, extended=True):
+        if not extended and any(
+            flag & flagCubic for flag in getattr(self, "flags", ())
+        ):
+            raise ttLib.TTLibError("Cubic flags require the extended GLYF table")
         if self.isComposite():
             for compo in self.components:
                 compo.toXML(writer, ttFont)
@@ -781,7 +801,7 @@ class Glyph(object):
                     if self.flags[j] & flagOverlapSimple:
                         # Apple's rasterizer uses flagOverlapSimple in the first contour/first pt to flag glyphs that contain overlapping contours
                         attrs.append(("overlap", 1))
-                    if self.flags[j] & flagCubic:
+                    if extended and self.flags[j] & flagCubic:
                         attrs.append(("cubic", 1))
                     writer.simpletag("pt", attrs)
                     writer.newline()
@@ -799,7 +819,7 @@ class Glyph(object):
                 writer.simpletag("instructions")
             writer.newline()
 
-    def fromXML(self, name, attrs, content, ttFont):
+    def fromXML(self, name, attrs, content, ttFont, extended=True):
         if name == "contour":
             if self.numberOfContours < 0:
                 raise ttLib.TTLibError("can't mix composites and contours in glyph")
@@ -817,6 +837,10 @@ class Glyph(object):
                 if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
                     flag |= flagOverlapSimple
                 if "cubic" in attrs and bool(safeEval(attrs["cubic"])):
+                    if not extended:
+                        raise ttLib.TTLibError(
+                            "Cubic flags require the extended GLYF table"
+                        )
                     flag |= flagCubic
                 flags.append(flag)
             if not hasattr(self, "coordinates"):
@@ -889,7 +913,7 @@ class Glyph(object):
                     len(data),
                 )
 
-    def decompileCoordinates(self, data):
+    def decompileCoordinates(self, data, extended=True):
         endPtsOfContours = array.array("H")
         endPtsOfContours.frombytes(data[: 2 * self.numberOfContours])
         if sys.byteorder != "big":
@@ -941,8 +965,9 @@ class Glyph(object):
         assert yIndex == len(yCoordinates)
         coordinates.relativeToAbsolute()
         # discard all flags except "keepFlags"
+        keptFlags = keepFlags if extended else keepFlags & ~flagCubic
         for i in range(len(flags)):
-            flags[i] &= keepFlags
+            flags[i] &= keptFlags
         self.flags = flags
 
     def decompileCoordinatesRaw(self, nCoordinates, data, pos=0):
@@ -1004,7 +1029,7 @@ class Glyph(object):
             data = data + struct.pack(">H", len(instructions)) + instructions
         return data
 
-    def compileCoordinates(self, *, optimizeSize=True):
+    def compileCoordinates(self, *, optimizeSize=True, extended=True):
         assert len(self.coordinates) == len(self.flags)
         data = []
         endPtsOfContours = array.array("H", self.endPtsOfContours)
@@ -1019,12 +1044,16 @@ class Glyph(object):
         deltas.toInt()
         deltas.absoluteToRelative()
 
+        flags = self.flags
+        if not extended and any(flag & flagCubic for flag in flags):
+            raise ttLib.TTLibError("Cubic flags require the extended GLYF table")
+
         if optimizeSize:
             # TODO(behdad): Add a configuration option for this?
-            deltas = self.compileDeltasGreedy(self.flags, deltas)
-            # deltas = self.compileDeltasOptimal(self.flags, deltas)
+            deltas = self.compileDeltasGreedy(flags, deltas)
+            # deltas = self.compileDeltasOptimal(flags, deltas)
         else:
-            deltas = self.compileDeltasForSpeed(self.flags, deltas)
+            deltas = self.compileDeltasForSpeed(flags, deltas)
 
         data.extend(deltas)
         return b"".join(data)
@@ -1374,8 +1403,10 @@ class Glyph(object):
         components = []
         more = 1
         while more:
-            flags, glyphID = struct.unpack(">HH", data[i : i + 4])
-            i += 4
+            (flags,) = struct.unpack(">H", data[i : i + 2])
+            glyphIDSize = 3 if glyfTable.extended and flags & GID_IS_24_BIT else 2
+            glyphID = int.from_bytes(data[i + 2 : i + 2 + glyphIDSize], "big")
+            i += 2 + glyphIDSize
             flags = int(flags)
             components.append(glyfTable.getGlyphName(int(glyphID)))
 
@@ -1393,7 +1424,7 @@ class Glyph(object):
 
         return components
 
-    def trim(self, remove_hinting=False):
+    def trim(self, remove_hinting=False, *, extended=False):
         """Remove padding and, if requested, hinting, from a glyph.
         This works on both expanded and compacted glyphs, without
         expanding it."""
@@ -1471,7 +1502,7 @@ class Glyph(object):
                     we_have_instructions = True
                 data[i + 0] = flags >> 8
                 data[i + 1] = flags & 0xFF
-                i += 4
+                i += 5 if extended and flags & GID_IS_24_BIT else 4
                 flags = int(flags)
 
                 if flags & ARG_1_AND_2_ARE_WORDS:
@@ -1493,9 +1524,9 @@ class Glyph(object):
 
         self.data = data
 
-    def removeHinting(self):
+    def removeHinting(self, *, extended=False):
         """Removes TrueType hinting instructions from the glyph."""
-        self.trim(remove_hinting=True)
+        self.trim(remove_hinting=True, extended=extended)
 
     def draw(self, pen, glyfTable, offset=0):
         """Draws the glyph using the supplied pen object.
@@ -1824,11 +1855,12 @@ class GlyphComponent(object):
         return self.glyphName, trans
 
     def decompile(self, data, glyfTable):
-        flags, glyphID = struct.unpack(">HH", data[:4])
+        (flags,) = struct.unpack(">H", data[:2])
         self.flags = int(flags)
-        glyphID = int(glyphID)
+        glyphIDSize = 3 if glyfTable.extended and flags & GID_IS_24_BIT else 2
+        glyphID = int.from_bytes(data[2 : 2 + glyphIDSize], "big")
         self.glyphName = glyfTable.getGlyphName(int(glyphID))
-        data = data[4:]
+        data = data[2 + glyphIDSize :]
 
         if self.flags & ARG_1_AND_2_ARE_WORDS:
             if self.flags & ARGS_ARE_XY_VALUES:
@@ -1930,7 +1962,13 @@ class GlyphComponent(object):
                 data = data + struct.pack(">h", transform[0][0])
 
         glyphID = glyfTable.getGlyphID(self.glyphName)
-        return struct.pack(">HH", flags, glyphID) + data
+        if glyfTable.extended and glyphID > 0xFFFF:
+            flags |= GID_IS_24_BIT
+            glyphIDSize = 3
+        else:
+            flags &= ~GID_IS_24_BIT
+            glyphIDSize = 2
+        return struct.pack(">H", flags) + glyphID.to_bytes(glyphIDSize, "big") + data
 
     def toXML(self, writer, ttFont):
         attrs = [("glyphName", self.glyphName)]

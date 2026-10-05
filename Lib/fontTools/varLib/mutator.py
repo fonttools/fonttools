@@ -310,6 +310,8 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
                 else []
             )
             for condition in conditions:
+                if condition is None:
+                    continue
                 if condition.Format == 1:
                     axisIdx = condition.AxisIndex
                     axisTag = fvar.axes[axisIdx].axisTag

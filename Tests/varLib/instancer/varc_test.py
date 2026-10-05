@@ -150,6 +150,24 @@ def test_nested_conditions(varc_font):
     assert _draw(varc_font, location) != before
 
 
+@pytest.mark.parametrize("format", [None, 3, 4, 5])
+def test_null_conditions(varc_font, format):
+    condition = None
+    if format is not None:
+        condition = _condition(format, ConditionTable=None if format == 5 else [None])
+    varc_font["VARC"].table.ConditionList.ConditionTable[0] = condition
+    varc_font = _roundtrip(varc_font)
+    result = _roundtrip(instantiateVariableFont(varc_font, {"DUMY": 0.5}))
+    condition = result["VARC"].table.ConditionList.ConditionTable[0]
+    if format is None:
+        assert condition is None
+    else:
+        assert condition.Format == format
+        assert condition.ConditionTable == (None if format == 5 else [None])
+    location = {"DUMY": 0.5}
+    assert _draw(result, location) == _draw(varc_font, location)
+
+
 def test_remap_negated_condition(varc_font):
     conditions = varc_font["VARC"].table.ConditionList.ConditionTable
     conditions[0] = _condition(5, ConditionTable=conditions[0])

@@ -1,4 +1,7 @@
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.beyond64k import upper_tables
+from fontTools.ttLib.scaleUpem import ScalerVisitor, scale_upem
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.scaleUpem import scale_upem
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.pens.recordingPen import RecordingPen
@@ -12,7 +15,6 @@ import shutil
 import sys
 import tempfile
 import unittest
-import pytest
 
 
 class OutlinePen(RecordingPen):
@@ -60,10 +62,13 @@ def assert_scaled_outlines(before, after):
         "varc-static-gvar.ttf",
     ],
 )
-def test_scale_upem_varc_outlines(filename):
+@pytest.mark.parametrize("uppercase", [False, True])
+def test_scale_upem_varc_outlines(filename, uppercase):
     font = TTFont(ScaleUpemTest.get_path(filename))
     fvar = font.get("fvar")
     locations = [{}, {a.axisTag: 1 for a in fvar.axes}] if fvar is not None else [{}]
+    if uppercase:
+        upper_tables(font)
     before = [record_varc_outlines(font, loc) for loc in locations]
     font = scale_and_roundtrip(font)
     for loc, expected in zip(locations, before):
@@ -192,6 +197,35 @@ class ScaleUpemTest(unittest.TestCase):
         expected_ttx_path = self.get_path("I-512upem.ttx")
         self.expect_ttx(font, expected_ttx_path, tables)
 
+    def test_scale_upem_beyond64k_ttf(self):
+        font = TTFont(self.get_path("I.ttf"))
+        upper_tables(font)
+
+        scale_upem(font, 512)
+
+        assert font["head"].unitsPerEm == 512
+        assert font["HHEA"].ascent == 475
+        assert font["HHEA"].descent == -125
+        assert font["HMTX"]["I"] == (136, 44)
+        assert font["GLYF"]["I"].xMin == 44
+        assert font["GLYF"]["I"].xMax == 92
+        assert font["GVAR"].variations["I"][0].coordinates[1] == (-24, 0)
+
+        # Save / load to ensure calculated companion-table values are valid.
+        iobytes = BytesIO()
+        font.save(iobytes)
+        iobytes.seek(0)
+        font = TTFont(iobytes)
+        assert {"GLYF", "LOCA", "MAXP", "HHEA", "HMTX"} <= set(font.keys())
+        assert font["HMTX"]["I"] == (136, 44)
+
+    def test_scale_upem_otf(self):
+        # Just test that it doesn't crash
+
+        font = TTFont(self.get_path("TestVGID-Regular.otf"))
+
+        scale_upem(font, 500)
+
     def test_scale_upem_varComposite(self):
         font = TTFont(self.get_path("varc-ac00-ac01.ttf"))
         tables = [table_tag for table_tag in font.keys() if table_tag != "head"]
@@ -211,13 +245,6 @@ class ScaleUpemTest(unittest.TestCase):
         font = TTFont(self.get_path("varc-6868.ttf"))
         scale_upem(font, 500)
 
-    def test_scale_upem_otf(self):
-        # Just test that it doesn't crash
-
-        font = TTFont(self.get_path("TestVGID-Regular.otf"))
-
-        scale_upem(font, 500)
-
     def test_scale_upem_vorg(self):
         font = TTFont(self.get_path("TestVGID-Regular.otf"))
         order = font.getGlyphOrder()
@@ -234,3 +261,19 @@ class ScaleUpemTest(unittest.TestCase):
         assert font["VORG"].defaultVertOriginY == 1600
         assert font["VORG"][order[0]] == 1600
         assert font["VORG"].VOriginRecords == {order[1]: 1800, order[2]: -642}
+
+
+def test_scale_upem_paint_glyph2():
+    paint = otTables.Paint()
+    paint.Format = otTables.PaintFormat.PaintGlyph2
+    paint.Glyph = "high"
+    paint.Paint = otTables.Paint()
+    paint.Paint.Format = otTables.PaintFormat.PaintSolid
+    paint.Paint.PaletteIndex = 0
+    paint.Paint.Alpha = 1.0
+
+    ScalerVisitor(2).visit(paint)
+
+    assert paint.Format == otTables.PaintFormat.PaintScaleUniform
+    assert paint.Paint.Format == otTables.PaintFormat.PaintGlyph2
+    assert paint.Paint.Glyph == "high"
