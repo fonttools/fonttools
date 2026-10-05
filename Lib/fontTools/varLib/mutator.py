@@ -319,11 +319,12 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
                     break
 
             if applies:
-                assert record.FeatureTableSubstitution.Version == 0x00010000
-                for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-                    table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = (
-                        rec.Feature
-                    )
+                if record.FeatureTableSubstitution is not None:
+                    assert record.FeatureTableSubstitution.Version == 0x00010000
+                    for rec in record.FeatureTableSubstitution.SubstitutionRecord:
+                        table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = (
+                            rec.Feature
+                        )
                 break
         del table.FeatureVariations
 
