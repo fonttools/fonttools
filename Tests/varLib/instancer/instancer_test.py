@@ -713,6 +713,51 @@ class InstantiateVVARTest:
                 for glyph in glyphOrder
             ] == remainingOrigins
 
+    @pytest.mark.parametrize("delta, rounded", [(37, 19), (-37, -18)])
+    def test_uniform_origins_and_half_unit_rounding(self, varfont, delta, rounded):
+        glyphOrder = varfont.getGlyphOrder()
+        varfont["VORG"].VOriginRecords = {}
+        vvar = varfont["VVAR"].table
+        vvar.VarStore.VarData[0].Item[1] = [delta, 0]
+        vvar.VOrgMap = builder.buildVarIdxMap([1] * len(glyphOrder), glyphOrder)
+        vvar.AdvHeightMap = builder.buildVarIdxMap([1] * len(glyphOrder), glyphOrder)
+        instancer.instantiateVVAR(
+            varfont, instancer.NormalizedAxisLimits(wght=0.5, wdth=0)
+        )
+        vorg = varfont["VORG"]
+        assert vorg.defaultVertOriginY == 800 + rounded
+        assert vorg.VOriginRecords == {}
+        assert [vorg[glyph] for glyph in glyphOrder] == [800 + rounded] * len(
+            glyphOrder
+        )
+        assert varfont["vmtx"].metrics == {
+            glyph: (1000 + rounded, 100) for glyph in glyphOrder
+        }
+        reloaded = ttLib.newTable("VORG")
+        reloaded.decompile(vorg.compile(varfont), varfont)
+        assert reloaded.defaultVertOriginY == 800 + rounded
+        assert reloaded.VOriginRecords == {}
+
+    @pytest.mark.parametrize("delta, rounded", [(37, 19), (-37, -18)])
+    def test_hvar_half_unit_rounding(self, varfont, delta, rounded):
+        glyphOrder = varfont.getGlyphOrder()
+        varfont["hmtx"] = ttLib.newTable("hmtx")
+        varfont["hmtx"].metrics = {glyph: (1000, 100) for glyph in glyphOrder}
+        hvar = otTables.HVAR()
+        hvar.Version = 0x10000
+        hvar.VarStore = deepcopy(varfont["VVAR"].table.VarStore)
+        hvar.VarStore.VarData[0].Item[1] = [delta, 0]
+        hvar.AdvWidthMap = builder.buildVarIdxMap([1] * len(glyphOrder), glyphOrder)
+        hvar.LsbMap = hvar.RsbMap = None
+        varfont["HVAR"] = ttLib.newTable("HVAR")
+        varfont["HVAR"].table = hvar
+        instancer.instantiateHVAR(
+            varfont, instancer.NormalizedAxisLimits(wght=0.5, wdth=0)
+        )
+        assert varfont["hmtx"].metrics == {
+            glyph: (1000 + rounded, 100) for glyph in glyphOrder
+        }
+
     def test_no_origin_mapping(self, varfont):
         varfont["VVAR"].table.VOrgMap = None
         instancer.instantiateVVAR(
