@@ -1,7 +1,7 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
 from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
-from fontTools.ttLib.tables.otTables import ConditionTable
+from fontTools.ttLib.tables.otTables import ConditionTable, VarComponentFlags
 from fontTools.pens.recordingPen import (
     RecordingPen,
     RecordingPointPen,
@@ -375,6 +375,34 @@ class TTGlyphSetTest(object):
         glyph = glyphset["uniAC01"]
         glyph.draw(pen)
         assert len(pen.value) == 3
+
+    @pytest.mark.parametrize("scale", [-0.5, 0.5])
+    def test_varc_xml_implicit_scale_y(self, scale):
+        font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
+        component = (
+            font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph[0].components[0]
+        )
+        component.transform.scaleX = component.transform.scaleY = scale
+        component.flags |= VarComponentFlags.HAVE_SCALE_X
+        component.flags &= ~VarComponentFlags.HAVE_SCALE_Y
+
+        def draw(font):
+            glyphset = font.getGlyphSet()
+            pen = DecomposingRecordingPen(glyphset)
+            glyphset["uniAC00"].draw(pen)
+            return pen.value
+
+        expected = draw(font)
+        xml = StringIO()
+        font.saveXML(xml)
+        xml.seek(0)
+        font = TTFont()
+        font.importXML(xml)
+        assert draw(font) == expected
+
+        stream = BytesIO()
+        font.save(stream)
+        assert draw(TTFont(BytesIO(stream.getvalue()))) == expected
 
     @pytest.mark.parametrize(
         "location, negations, expected_components",

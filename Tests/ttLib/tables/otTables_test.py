@@ -1,6 +1,7 @@
 from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 from io import StringIO
@@ -15,6 +16,28 @@ def makeCoverage(glyphs):
     coverage = otTables.Coverage()
     coverage.glyphs = glyphs
     return coverage
+
+
+@pytest.mark.parametrize("scale_x", [-0.5, 0, 0.5, 1, 2])
+@pytest.mark.parametrize("scale_y", [None, 0.25, 1])
+def test_var_component_xml_scale_y(scale_x, scale_y):
+    font = TTFont()
+    font.setGlyphOrder([".notdef", "a"])
+    xml = f'<glyphName value="a"/><scaleX value="{scale_x}"/>'
+    if scale_y is not None:
+        xml += f'<scaleY value="{scale_y}"/>'
+    component = otTables.VarComponent()
+    component.fromXML("VarComponent", {}, list(parseXML(xml)), font)
+
+    assert component.transform.scaleX == scale_x
+    assert component.transform.scaleY == (scale_x if scale_y is None else scale_y)
+    assert bool(component.flags & otTables.VarComponentFlags.HAVE_SCALE_Y) == (
+        scale_y is not None
+    )
+
+    roundtripped = otTables.VarComponent()
+    assert roundtripped.decompile(component.compile(font), font, {}) == b""
+    assert roundtripped.transform == component.transform
 
 
 class SingleSubstTest(unittest.TestCase):
