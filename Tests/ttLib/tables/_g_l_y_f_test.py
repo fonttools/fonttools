@@ -1111,7 +1111,7 @@ class GlyphCubicTest:
 @pytest.mark.parametrize("composite", [False, True])
 def test_unsigned_instruction_length(length, composite):
     glyf = newTable("glyf")
-    glyf.glyphOrder = [".notdef", "base", "composite"]
+    glyf.glyphOrder = [".notdef", "base"]
     pen = TTGlyphPen(None)
     pen.moveTo((10, 20))
     pen.lineTo((100, 20))
