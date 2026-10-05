@@ -147,12 +147,13 @@ class _TTGlyphSetCFF(_TTGlyphSet):
 
     @contextmanager
     def pushLocation(self, location, reset: bool):
-        self.setLocation(location)
-        with _TTGlyphSet.pushLocation(self, location, reset) as value:
-            try:
-                yield value
-            finally:
+        try:
+            with _TTGlyphSet.pushLocation(self, location, reset) as value:
                 self.setLocation(self.location)
+                yield value
+        finally:
+            # Restore the blender after the base context pops the parent location.
+            self.setLocation(self.location)
 
 
 class _TTGlyphSetVARC(_TTGlyphSet):
