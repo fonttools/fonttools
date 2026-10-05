@@ -1509,6 +1509,15 @@ class AlternateSubst(FormatSwitchingBaseTable):
 
 
 class LigatureSubst(FormatSwitchingBaseTable):
+    def ensureDecompiled(self, recurse=False):
+        super().ensureDecompiled(recurse)
+        if recurse:
+            # The ligature dictionary is not described by otData converters.
+            for ligatures in getattr(self, "ligatures", {}).values():
+                if isinstance(ligatures, list):
+                    for ligature in ligatures:
+                        ligature.ensureDecompiled(recurse)
+
     def populateDefaults(self, propagator=None):
         if not hasattr(self, "ligatures"):
             self.ligatures = {}
