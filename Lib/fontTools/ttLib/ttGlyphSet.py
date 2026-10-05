@@ -152,6 +152,7 @@ class _TTGlyphSetCFF(_TTGlyphSet):
                 self.setLocation(self.location)
                 yield value
         finally:
+            # Restore the blender after the base context pops the parent location.
             self.setLocation(self.location)
 
 
