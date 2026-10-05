@@ -664,3 +664,18 @@ if __name__ == "__main__":
     import sys
 
     sys.exit(pytest.main(sys.argv))
+
+
+@pytest.mark.parametrize("convert", [generalizeProgram, specializeProgram])
+def test_zero_region_blend(convert):
+    program = [100, 200, 1, "blend", "rmoveto", 100, 0, "rlineto"]
+    result = convert(program, lambda vi: 0)
+    assert "blend" not in result
+    assert generalizeProgram(result) == [100, 200, "rmoveto", 100, 0, "rlineto"]
+
+
+@pytest.mark.parametrize("convert", [generalizeProgram, specializeProgram])
+def test_nested_zero_region_blend(convert):
+    program = [100, 200, 1, "blend", 2, "blend", "rmoveto"]
+    result = convert(program, lambda vi: 0)
+    assert generalizeProgram(result) == [100, 200, "rmoveto"]
