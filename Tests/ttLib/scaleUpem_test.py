@@ -1,5 +1,10 @@
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.scaleUpem import scale_upem
+from fontTools.ttLib.tables import otTables as ot
+from fontTools.pens.recordingPen import RecordingPen
+from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
+from copy import deepcopy
+import pytest
 from io import BytesIO
 import difflib
 import os
@@ -8,6 +13,128 @@ import sys
 import tempfile
 import unittest
 import pytest
+
+
+class OutlinePen(RecordingPen):
+    def addVarComponent(self, *args):
+        raise AttributeError
+
+
+def record_varc_outlines(font, location):
+    glyph_set = font.getGlyphSet(location=location, normalized=True)
+    result = {}
+    for name in font["VARC"].table.Coverage.glyphs:
+        pen = OutlinePen()
+        glyph_set[name].draw(pen)
+        result[name] = pen.value
+    return result
+
+
+def scale_and_roundtrip(font):
+    scale_upem(font, font["head"].unitsPerEm * 2)
+    data = BytesIO()
+    font.save(data)
+    return TTFont(BytesIO(data.getvalue()))
+
+
+def assert_scaled_outlines(before, after):
+    assert before.keys() == after.keys()
+    for name in before:
+        assert len(before[name]) == len(after[name])
+        for (op, points), (new_op, new_points) in zip(before[name], after[name]):
+            assert op == new_op
+            assert len(points) == len(new_points)
+            for point, new_point in zip(points, new_points):
+                if point is None:
+                    assert new_point is None
+                else:
+                    assert new_point == pytest.approx(tuple(2 * v for v in point))
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "varc-ac00-ac01.ttf",
+        "varc-6868.ttf",
+        "varc-ac01-conditional.ttf",
+        "varc-static-gvar.ttf",
+    ],
+)
+def test_scale_upem_varc_outlines(filename):
+    font = TTFont(ScaleUpemTest.get_path(filename))
+    fvar = font.get("fvar")
+    locations = [{}, {a.axisTag: 1 for a in fvar.axes}] if fvar is not None else [{}]
+    before = [record_varc_outlines(font, loc) for loc in locations]
+    font = scale_and_roundtrip(font)
+    for loc, expected in zip(locations, before):
+        assert_scaled_outlines(expected, record_varc_outlines(font, loc))
+    if fvar is None:
+        assert font["VARC"].table.MultiVarStore is None
+        assert "fvar" not in font
+
+
+def test_scale_upem_first_variation_is_transform_only():
+    font = TTFont(ScaleUpemTest.get_path("varc-6868.ttf"))
+    composites = font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph
+    component = next(
+        c
+        for g in composites
+        for c in g.components
+        if c.axisValuesVarIndex == ot.NO_VARIATION_INDEX
+        and c.transformVarIndex != ot.NO_VARIATION_INDEX
+    )
+    composites[0].components.insert(0, deepcopy(component))
+    location = {a.axisTag: 1 for a in font["fvar"].axes}
+    before = record_varc_outlines(font, location)
+    font = scale_and_roundtrip(font)
+    assert_scaled_outlines(before, record_varc_outlines(font, location))
+
+
+@pytest.mark.parametrize("wrapper_format", [None, 3, 4, 5])
+@pytest.mark.parametrize("delta", [0, 2])
+def test_scale_upem_preserves_condition_variations(wrapper_format, delta):
+    font = TTFont(ScaleUpemTest.get_path("varc-ac01-conditional.ttf"))
+    varc = font["VARC"].table
+    data = varc.MultiVarStore.MultiVarData[0]
+    data.Item.append([delta] * data.VarRegionCount)
+    condition = ot.ConditionTable()
+    condition.Format = 2
+    condition.DefaultValue = -1
+    condition.VarIdx = len(data.Item) - 1
+    if wrapper_format is None:
+        outer = condition
+    else:
+        outer = ot.ConditionTable()
+        outer.Format = wrapper_format
+        if wrapper_format == 5:
+            outer.ConditionTable = condition
+        else:
+            outer.ConditionCount = 1
+            outer.ConditionTable = [condition]
+    varc.ConditionList.ConditionTable[0] = outer
+    axes = font["fvar"].axes
+    locations = [{}, {axes[0].axisTag: 1}]
+    before = [record_varc_outlines(font, loc) for loc in locations]
+    values = [
+        tuple(MultiVarStoreInstancer(varc.MultiVarStore, axes, loc)[condition.VarIdx])
+        for loc in locations
+    ]
+    font = scale_and_roundtrip(font)
+    varc = font["VARC"].table
+    condition = varc.ConditionList.ConditionTable[0]
+    if wrapper_format is not None:
+        condition = (
+            condition.ConditionTable
+            if wrapper_format == 5
+            else condition.ConditionTable[0]
+        )
+    assert condition.DefaultValue == -1
+    for loc, expected, value in zip(locations, before, values):
+        deltas = MultiVarStoreInstancer(varc.MultiVarStore, font["fvar"].axes, loc)[
+            condition.VarIdx
+        ]
+        assert (deltas[0] if deltas else 0) == (value[0] if value else 0)
+        assert_scaled_outlines(expected, record_varc_outlines(font, loc))
 
 
 class ScaleUpemTest(unittest.TestCase):

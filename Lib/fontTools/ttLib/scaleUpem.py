@@ -146,10 +146,9 @@ def visit(visitor, obj, attr, variations):
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("VARC"), "table")
 def visit(visitor, obj, attr, varc):
-    # VarComposite variations are a pain
-
-    fvar = visitor.font["fvar"]
-    fvarAxes = [a.axisTag for a in fvar.axes]
+    fvar = visitor.font.get("fvar")
+    axes = fvar.axes if fvar is not None else []
+    fvarAxes = [a.axisTag for a in axes]
 
     store = varc.MultiVarStore
     storeBuilder = OnlineMultiVarStoreBuilder(fvarAxes)
@@ -171,7 +170,7 @@ def visit(visitor, obj, attr, varc):
                     minor = varIdx & 0xFFFF
                     varData = store.MultiVarData[major]
                     vec = varData.Item[minor]
-                    storeBuilder.setSupports(store.get_supports(major, fvar.axes))
+                    storeBuilder.setSupports(store.get_supports(major, axes))
                     if vec:
                         m = len(vec) // varData.VarRegionCount
                         vec = list(batched(vec, m))
@@ -185,12 +184,9 @@ def visit(visitor, obj, attr, varc):
                 if varIdx != otTables.NO_VARIATION_INDEX:
                     major = varIdx >> 16
                     minor = varIdx & 0xFFFF
-                    vec = varData.Item[varIdx & 0xFFFF]
-                    major = varIdx >> 16
-                    minor = varIdx & 0xFFFF
                     varData = store.MultiVarData[major]
                     vec = varData.Item[minor]
-                    storeBuilder.setSupports(store.get_supports(major, fvar.axes))
+                    storeBuilder.setSupports(store.get_supports(major, axes))
                     if vec:
                         m = len(vec) // varData.VarRegionCount
                         flags = component.flags
@@ -229,6 +225,24 @@ def visit(visitor, obj, attr, varc):
                         component.transformVarIndex = storeBuilder.storeDeltas(vec)
                     else:
                         component.transformVarIndex = otTables.NO_VARIATION_INDEX
+
+    if store is None:
+        return
+
+    # Condition deltas are dimensionless; preserve them without UPEM scaling.
+    if varc.ConditionList is not None:
+        varIdxes = set()
+        for condition in varc.ConditionList.ConditionTable:
+            condition.collect_varidxes(varIdxes)
+        mapping = {otTables.NO_VARIATION_INDEX: otTables.NO_VARIATION_INDEX}
+        for varIdx in sorted(varIdxes - {otTables.NO_VARIATION_INDEX}):
+            major, minor = varIdx >> 16, varIdx & 0xFFFF
+            varData = store.MultiVarData[major]
+            vec = varData.Item[minor]
+            storeBuilder.setSupports(store.get_supports(major, axes))
+            mapping[varIdx] = storeBuilder.storeDeltas([Vector([v]) for v in vec])
+        for condition in varc.ConditionList.ConditionTable:
+            condition.remap_varidxes(mapping)
 
     varc.MultiVarStore = storeBuilder.finish()
 
