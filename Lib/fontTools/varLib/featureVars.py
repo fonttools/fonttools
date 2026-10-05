@@ -573,6 +573,7 @@ def buildSubstitutionLookups(gsub, allSubstitutions, processLast=False):
         visitor = ShifterVisitor(shift)
         visitor.visit(gsub.FeatureList.FeatureRecord)
         visitor.visit(gsub.LookupList.Lookup)
+        visitor.visit(getattr(gsub, "FeatureVariations", None))
 
     for i, subst in enumerate(allSubstitutions):
         substMap = dict(subst)

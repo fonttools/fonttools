@@ -137,6 +137,25 @@ def test_addFeatureVariations_new_feature(varfont):
     assert _substitution_features(gsub, rec_index=1) == [(0, "rclt")]
 
 
+@pytest.mark.parametrize("same_condition", [False, True])
+def test_addFeatureVariations_prepend_lookup(varfont, same_condition):
+    condition = {"wght": (0.5, 1.0)}
+    addFeatureVariations(varfont, [([condition], {"A": "A.alt"})], featureTag="ccmp")
+    gsub = varfont["GSUB"].table
+    original_feature = (
+        gsub.FeatureVariations.FeatureVariationRecord[0]
+        .FeatureTableSubstitution.SubstitutionRecord[0]
+        .Feature
+    )
+    assert original_feature.LookupListIndex == [0]
+
+    new_condition = condition if same_condition else {"wght": (-1.0, 0.0)}
+    addFeatureVariations(varfont, [([new_condition], {"B": "B.alt"})])
+    assert original_feature.LookupListIndex == [1]
+    assert gsub.LookupList.Lookup[0].SubTable[0].mapping == {"B": "B.alt"}
+    assert gsub.LookupList.Lookup[1].SubTable[0].mapping == {"A": "A.alt"}
+
+
 def test_addFeatureVariations_existing_condition(varfont):
     assert "GSUB" not in varfont
 
