@@ -11,47 +11,6 @@ DATA_DIR = Path(__file__).parent / "data"
 
 
 @pytest.mark.parametrize("lazy", [True, False, None])
-@pytest.mark.parametrize("pairpos", [False, True])
-def test_reorder_lazy_arrays(lazy, pairpos):
-    from fontTools.misc.lazyTools import LazyList
-
-    fb = FontBuilder(1000)
-    order = [".notdef"] + [f"g{i}" for i in range(10)]
-    fb.setupGlyphOrder(order)
-    fb.setupPost()
-    if pairpos:
-        statements = [f"pos g0 g{i} {i + 1};" for i in range(10)]
-    else:
-        statements = [f"pos g{i} {i + 1};" for i in range(10)]
-    addOpenTypeFeaturesFromString(
-        fb.font, "feature kern { " + " ".join(statements) + " } kern;"
-    )
-    data = BytesIO()
-    fb.font.save(data)
-    font = TTFont(BytesIO(data.getvalue()), lazy=lazy)
-    subtable = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
-    records = subtable.PairSet[0].PairValueRecord if pairpos else subtable.Value
-    assert isinstance(records, LazyList) == bool(lazy)
-    reorderGlyphs(font, order[:1] + list(reversed(order[1:])))
-    output = BytesIO()
-    font.save(output)
-    font = TTFont(BytesIO(output.getvalue()))
-    subtable = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
-    if pairpos:
-        assert subtable.Coverage.glyphs == ["g0"]
-        pairs = subtable.PairSet[0].PairValueRecord
-        assert [record.SecondGlyph for record in pairs] == list(reversed(order[1:]))
-        assert {
-            (first, record.SecondGlyph): record.Value1.XAdvance
-            for first, pair_set in zip(subtable.Coverage.glyphs, subtable.PairSet)
-            for record in pair_set.PairValueRecord
-        } == {("g0", f"g{i}"): i + 1 for i in range(10)}
-    else:
-        assert subtable.Coverage.glyphs == list(reversed(order[1:]))
-        assert [v.XAdvance for v in subtable.Value] == list(reversed(range(1, 11)))
-
-
-@pytest.mark.parametrize("lazy", [True, False, None])
 def test_reorder_glyphs(lazy):
     font_path = DATA_DIR / "Test-Regular.ttf"
     font = TTFont(str(font_path), lazy=lazy)
@@ -130,3 +89,44 @@ def test_reorder_glyphs_bad_set(caplog):
     with pytest.raises(ValueError) as ex:
         reorderGlyphs(font, ga)
     assert "New glyph order does not contain the same set of glyphs" in str(ex.value)
+
+
+@pytest.mark.parametrize("lazy", [True, False, None])
+@pytest.mark.parametrize("pairpos", [False, True])
+def test_reorder_lazy_arrays(lazy, pairpos):
+    from fontTools.misc.lazyTools import LazyList
+
+    fb = FontBuilder(1000)
+    order = [".notdef"] + [f"g{i}" for i in range(10)]
+    fb.setupGlyphOrder(order)
+    fb.setupPost()
+    if pairpos:
+        statements = [f"pos g0 g{i} {i + 1};" for i in range(10)]
+    else:
+        statements = [f"pos g{i} {i + 1};" for i in range(10)]
+    addOpenTypeFeaturesFromString(
+        fb.font, "feature kern { " + " ".join(statements) + " } kern;"
+    )
+    data = BytesIO()
+    fb.font.save(data)
+    font = TTFont(BytesIO(data.getvalue()), lazy=lazy)
+    subtable = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+    records = subtable.PairSet[0].PairValueRecord if pairpos else subtable.Value
+    assert isinstance(records, LazyList) == bool(lazy)
+    reorderGlyphs(font, order[:1] + list(reversed(order[1:])))
+    output = BytesIO()
+    font.save(output)
+    font = TTFont(BytesIO(output.getvalue()))
+    subtable = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+    if pairpos:
+        assert subtable.Coverage.glyphs == ["g0"]
+        pairs = subtable.PairSet[0].PairValueRecord
+        assert [record.SecondGlyph for record in pairs] == list(reversed(order[1:]))
+        assert {
+            (first, record.SecondGlyph): record.Value1.XAdvance
+            for first, pair_set in zip(subtable.Coverage.glyphs, subtable.PairSet)
+            for record in pair_set.PairValueRecord
+        } == {("g0", f"g{i}"): i + 1 for i in range(10)}
+    else:
+        assert subtable.Coverage.glyphs == list(reversed(order[1:]))
+        assert [v.XAdvance for v in subtable.Value] == list(reversed(range(1, 11)))
