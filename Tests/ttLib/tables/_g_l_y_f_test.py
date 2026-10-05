@@ -1035,6 +1035,40 @@ class GlyphComponentTest:
 
 
 class GlyphCubicTest:
+    @pytest.mark.parametrize("count", [2, 4, 8])
+    @pytest.mark.parametrize("cubic", [False, True])
+    def test_drawPoints_all_offcurve(self, count, cubic):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates([(i, i % 2) for i in range(count)])
+        glyph.flags = array.array("B", [flagCubic if cubic else 0] * count)
+        glyph.endPtsOfContours = [count - 1]
+        glyph.program = ttProgram.Program()
+        pen = RecordingPointPen()
+
+        if cubic:
+            with pytest.raises(NotImplementedError, match="All-off-curve cubic"):
+                glyph.drawPoints(pen, None)
+            assert pen.value == []
+        else:
+            glyph.drawPoints(pen, None)
+            assert [
+                args[0] for op, args, kwargs in pen.value if op == "addPoint"
+            ] == list(glyph.coordinates)
+
+    def test_drawPoints_rejects_later_cubic_contour_atomically(self):
+        glyph = Glyph()
+        glyph.numberOfContours = 2
+        glyph.coordinates = GlyphCoordinates(
+            [(0, 0), (10, 0), (10, 10), (20, 0), (30, 0), (30, 10), (20, 10)]
+        )
+        glyph.flags = array.array("B", [flagOnCurve] * 3 + [flagCubic] * 4)
+        glyph.endPtsOfContours = [2, 6]
+        pen = RecordingPointPen()
+        with pytest.raises(NotImplementedError, match="All-off-curve cubic"):
+            glyph.drawPoints(pen, None)
+        assert pen.value == []
+
     def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
         font = TTFont(font_path)

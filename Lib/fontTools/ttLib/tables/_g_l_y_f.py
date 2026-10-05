@@ -1589,6 +1589,9 @@ class Glyph(object):
     def drawPoints(self, pen, glyfTable, offset=0):
         """Draw the glyph using the supplied pointPen. As opposed to Glyph.draw(),
         this will not change the point indices.
+
+        All-off-curve cubic contours cannot be represented without changing point
+        indices and raise NotImplementedError. Use Glyph.draw() for these outlines.
         """
 
         if self.isComposite():
@@ -1598,6 +1601,19 @@ class Glyph(object):
             return
 
         coordinates, endPts, flags = self.getCoordinates(glyfTable)
+        # Validate all contours before emitting any points to the pen.
+        start = 0
+        for end in endPts:
+            cFlags = flags[start : end + 1]
+            start = end + 1
+            # Without an on-curve point, the protocol implies quadratic controls.
+            if not any(f & flagOnCurve for f in cFlags) and any(
+                f & flagCubic for f in cFlags
+            ):
+                raise NotImplementedError(
+                    "All-off-curve cubic contours are not supported by drawPoints; "
+                    "use draw instead"
+                )
         if offset:
             coordinates = coordinates.copy()
             coordinates.translate((offset, 0))
