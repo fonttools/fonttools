@@ -1,6 +1,6 @@
 """Change the units-per-EM of a font.
 
-AAT, Graphite, and VARC tables are not supported. CFF/CFF2 fonts
+AAT and Graphite tables are not supported. CFF/CFF2 fonts
 are de-subroutinized."""
 
 from fontTools.ttLib.ttVisitor import TTVisitor
@@ -11,6 +11,9 @@ from fontTools.cffLib import VarStoreData
 import fontTools.cffLib.specializer as cffSpecializer
 from fontTools.varLib import builder  # for VarData.calculateNumShorts
 from fontTools.misc.fixedTools import otRound
+from fontTools.varLib.multiVarStore import OnlineMultiVarStoreBuilder
+from fontTools.misc.vector import Vector
+from fontTools.misc.iterTools import batched
 
 __all__ = ["scale_upem", "ScalerVisitor"]
 
@@ -153,7 +156,105 @@ def visit(visitor, obj, attr, variations):
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("VARC"), "table")
 def visit(visitor, obj, attr, varc):
-    raise NotImplementedError("Scaling fonts with VARC is not supported")
+    fvar = visitor.font.get("fvar")
+    axes = fvar.axes if fvar is not None else []
+    fvarAxes = [a.axisTag for a in axes]
+
+    store = varc.MultiVarStore
+    storeBuilder = OnlineMultiVarStoreBuilder(fvarAxes)
+
+    for g in varc.VarCompositeGlyphs.VarCompositeGlyph:
+        for component in g.components:
+            t = component.transform
+            t.translateX = visitor.scale(t.translateX)
+            t.translateY = visitor.scale(t.translateY)
+            t.tCenterX = visitor.scale(t.tCenterX)
+            t.tCenterY = visitor.scale(t.tCenterY)
+
+            if component.axisValuesVarIndex != otTables.NO_VARIATION_INDEX:
+                varIdx = component.axisValuesVarIndex
+                # TODO Move this code duplicated below to MultiVarStore.__getitem__,
+                # or a getDeltasAndSupports().
+                if varIdx != otTables.NO_VARIATION_INDEX:
+                    major = varIdx >> 16
+                    minor = varIdx & 0xFFFF
+                    varData = store.MultiVarData[major]
+                    vec = varData.Item[minor]
+                    storeBuilder.setSupports(store.get_supports(major, axes))
+                    if vec:
+                        m = len(vec) // varData.VarRegionCount
+                        vec = list(batched(vec, m))
+                        vec = [Vector(v) for v in vec]
+                        component.axisValuesVarIndex = storeBuilder.storeDeltas(vec)
+                    else:
+                        component.axisValuesVarIndex = otTables.NO_VARIATION_INDEX
+
+            if component.transformVarIndex != otTables.NO_VARIATION_INDEX:
+                varIdx = component.transformVarIndex
+                if varIdx != otTables.NO_VARIATION_INDEX:
+                    major = varIdx >> 16
+                    minor = varIdx & 0xFFFF
+                    varData = store.MultiVarData[major]
+                    vec = varData.Item[minor]
+                    storeBuilder.setSupports(store.get_supports(major, axes))
+                    if vec:
+                        m = len(vec) // varData.VarRegionCount
+                        flags = component.flags
+                        vec = list(batched(vec, m))
+                        newVec = []
+                        for v in vec:
+                            v = list(v)
+                            i = 0
+                            ## Scale translate & tCenter
+                            if flags & otTables.VarComponentFlags.HAVE_TRANSLATE_X:
+                                v[i] = visitor.scale(v[i])
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_TRANSLATE_Y:
+                                v[i] = visitor.scale(v[i])
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_ROTATION:
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_SCALE_X:
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_SCALE_Y:
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_SKEW_X:
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_SKEW_Y:
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_TCENTER_X:
+                                v[i] = visitor.scale(v[i])
+                                i += 1
+                            if flags & otTables.VarComponentFlags.HAVE_TCENTER_Y:
+                                v[i] = visitor.scale(v[i])
+                                i += 1
+
+                            newVec.append(Vector(v))
+                        vec = newVec
+
+                        component.transformVarIndex = storeBuilder.storeDeltas(vec)
+                    else:
+                        component.transformVarIndex = otTables.NO_VARIATION_INDEX
+
+    if store is None:
+        return
+
+    # Condition deltas are dimensionless; preserve them without UPEM scaling.
+    if varc.ConditionList is not None:
+        varIdxes = set()
+        for condition in varc.ConditionList.ConditionTable:
+            condition.collect_varidxes(varIdxes)
+        mapping = {otTables.NO_VARIATION_INDEX: otTables.NO_VARIATION_INDEX}
+        for varIdx in sorted(varIdxes - {otTables.NO_VARIATION_INDEX}):
+            major, minor = varIdx >> 16, varIdx & 0xFFFF
+            varData = store.MultiVarData[major]
+            vec = varData.Item[minor]
+            storeBuilder.setSupports(store.get_supports(major, axes))
+            mapping[varIdx] = storeBuilder.storeDeltas([Vector([v]) for v in vec])
+        for condition in varc.ConditionList.ConditionTable:
+            condition.remap_varidxes(mapping)
+
+    varc.MultiVarStore = storeBuilder.finish()
 
 
 @ScalerVisitor.register_attr(ttLib.getTableClass("kern"), "kernTables")
@@ -310,12 +411,7 @@ def visit(visitor, paint):
 
 
 def scale_upem(font, new_upem):
-    """Change the units-per-EM of font to the new value.
-
-    Fonts containing VARC are not supported.
-    """
-    if "VARC" in font:
-        raise NotImplementedError("Scaling fonts with VARC is not supported")
+    """Change the units-per-EM of font to the new value."""
     upem = font["head"].unitsPerEm
     visitor = ScalerVisitor(new_upem / upem)
     visitor.visit(font)

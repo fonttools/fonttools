@@ -600,6 +600,24 @@ def test_normalise1():
     assert r == [("axisName_a", -1.0, 0.0, 1.0)]
 
 
+def test_normalizeLocation_decreasing_axis_map():
+    doc = DesignSpaceDocument()
+    doc.addAxis(
+        AxisDescriptor(
+            name="Optical size",
+            tag="opsz",
+            minimum=9,
+            default=144,
+            maximum=144,
+            map=[(9, 38), (42, 33), (72, 28), (144, 23)],
+        )
+    )
+    # normalized in user axis direction: -1 is the user minimum (design value 38)
+    for design, expected in [(38, -1), (33, -2 / 3), (28, -1 / 3), (23, 0)]:
+        location = doc.normalizeLocation({"Optical size": design})
+        assert location == {"Optical size": pytest.approx(expected)}
+
+
 def test_normalise2():
     # normalisation with minimum > 0
     doc = DesignSpaceDocument()
@@ -669,6 +687,54 @@ def test_normalise4():
         r.append((axis.name, axis.map))
     r.sort()
     assert r == [("ddd", [(0, 0.0), (300, 0.5), (600, 0.5), (1000, 1.0)])]
+
+
+@pytest.mark.parametrize(
+    "minimum, default, maximum, mapping, normalized_range, normalized_map",
+    [
+        (
+            0,
+            400,
+            1000,
+            [(0, 0), (400, 100), (1000, 1000)],
+            (-1.0, 0.0, 1.0),
+            [(0, -1.0), (400, 0.0), (1000, 1.0)],
+        ),
+        (
+            100,
+            400,
+            900,
+            [(100, 0), (400, 100), (900, 1000)],
+            (-1.0, 0.0, 1.0),
+            [(100, -1.0), (400, 0.0), (900, 1.0)],
+        ),
+        (
+            0,
+            1000,
+            1000,
+            [(0, 100), (1000, 900)],
+            (-1.0, 0.0, 0.0),
+            [(0, -1.0), (1000, 0.0)],
+        ),
+    ],
+    ids=["offcentre-default", "shifted-bounds", "default-at-maximum"],
+)
+def test_normalize_mapped_axis_bounds(
+    minimum, default, maximum, mapping, normalized_range, normalized_map
+):
+    doc = DesignSpaceDocument()
+    axis = AxisDescriptor(
+        name="Weight",
+        tag="wght",
+        minimum=minimum,
+        default=default,
+        maximum=maximum,
+        map=mapping,
+    )
+    doc.addAxis(axis)
+    doc.normalize()
+    assert (axis.minimum, axis.default, axis.maximum) == normalized_range
+    assert axis.map == normalized_map
 
 
 def test_axisMapping():
@@ -793,6 +859,52 @@ def test_rulesConditions(tmpdir):
     assert evaluateRule(r4, dict(axisName_a=1000, axisName_b=0)) == True
     assert evaluateRule(r4, dict(axisName_a=0, axisName_b=0)) == False
     assert evaluateRule(r4, dict(axisName_a=1000, axisName_b=1000)) == False
+
+
+@pytest.mark.parametrize(
+    "default, mapping, minimum, maximum, normalized_minimum, normalized_maximum",
+    [
+        (0, [], 400, 600, 0.4, 0.6),
+        (400, [(0, 0), (400, 100), (1000, 1000)], 50, 550, -0.5, 0.5),
+    ],
+    ids=["unmapped", "mapped"],
+)
+def test_normalize_rule_conditions(
+    default, mapping, minimum, maximum, normalized_minimum, normalized_maximum
+):
+    doc = DesignSpaceDocument()
+    doc.addAxis(
+        AxisDescriptor(
+            name="Weight",
+            tag="wght",
+            minimum=0,
+            default=default,
+            maximum=1000,
+            map=mapping,
+        )
+    )
+    rule = RuleDescriptor(
+        name="r",
+        conditionSets=[
+            [dict(name="Weight", minimum=minimum, maximum=maximum)],
+            [
+                dict(name="Weight", minimum=None, maximum=maximum),
+                dict(name="Weight", minimum=minimum, maximum=None),
+            ],
+        ],
+        subs=[("a", "a.alt")],
+    )
+    doc.addRule(rule)
+
+    doc.normalize()
+
+    assert rule.conditionSets == [
+        [dict(name="Weight", minimum=normalized_minimum, maximum=normalized_maximum)],
+        [
+            dict(name="Weight", minimum=None, maximum=normalized_maximum),
+            dict(name="Weight", minimum=normalized_minimum, maximum=None),
+        ],
+    ]
 
 
 def test_rulesDocument(tmpdir):

@@ -52,7 +52,11 @@ def subList(truth, lst):
 
 
 def normalizeValue(
-    v: float, triple: Sequence[float], extrapolate: bool = False
+    v: float,
+    triple: Sequence[float],
+    extrapolate: bool = False,
+    *,
+    allow_decreasing: bool = False,
 ) -> float:
     """Normalizes value based on a min/default/max triple.
 
@@ -62,13 +66,30 @@ def normalizeValue(
     -1.0
     >>> normalizeValue(650, (100, 400, 900))
     0.5
+
+    If allow_decreasing is true, the triple can also be decreasing (e.g. the
+    design values of a designspace axis whose map falls as the user values
+    rise). Its first value still maps to -1 and its last to +1, so -1 is always
+    the minimum of the user axis, even when that is the largest number in the
+    triple.
+
+    >>> normalizeValue(38, (38, 28, 23), allow_decreasing=True)
+    -1.0
+    >>> normalizeValue(33, (38, 28, 23), allow_decreasing=True)
+    -0.5
+    >>> normalizeValue(23, (38, 28, 23), allow_decreasing=True)
+    1.0
     """
     lower, default, upper = triple
-    if not (lower <= default <= upper):
+    decreasing = allow_decreasing and lower > upper
+    if not (lower >= default >= upper if decreasing else lower <= default <= upper):
         raise ValueError(
             f"Invalid axis values, must be minimum, default, maximum: "
             f"{lower:3.3f}, {default:3.3f}, {upper:3.3f}"
         )
+    if decreasing:
+        normalized = normalizeValue(v, (upper, default, lower), extrapolate)
+        return -normalized if normalized else 0.0
     if not extrapolate:
         v = max(min(v, upper), lower)
 
@@ -90,6 +111,7 @@ def normalizeLocation(
     extrapolate: bool = False,
     *,
     validate: bool = False,
+    allow_decreasing: bool = False,
 ) -> dict[str, float]:
     """Normalizes location based on axis min/default/max values from axes.
 
@@ -136,7 +158,9 @@ def normalizeLocation(
     out = {}
     for tag, triple in axes.items():
         v = location.get(tag, triple[1])
-        out[tag] = normalizeValue(v, triple, extrapolate=extrapolate)
+        out[tag] = normalizeValue(
+            v, triple, extrapolate=extrapolate, allow_decreasing=allow_decreasing
+        )
     return out
 
 

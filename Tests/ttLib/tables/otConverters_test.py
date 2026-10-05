@@ -532,6 +532,7 @@ def test_empty_varc_axis_tuples_roundtrip(optimize_speed, lazy):
     font = TTFont(path)
     font.cfg[OPTIMIZE_FONT_SPEED] = optimize_speed
     axis_indices = font["VARC"].table.AxisIndicesList.Item
+    # Exceed the lazy INDEX decoding threshold (count > 8).
     axis_indices.extend([[] for _ in range(9)])
     expected = list(axis_indices)
     stream = BytesIO()

@@ -343,6 +343,9 @@ def _convertBlendOpToArgs(blendList):
     if not (numBlends * (numRegions + 1) == l):
         raise ValueError(blendList)
 
+    if numRegions == 0:
+        return args
+
     defaultArgs = [[arg] for arg in args[:numBlends]]
     deltaArgs = args[numBlends:]
     numDeltaValues = len(deltaArgs)

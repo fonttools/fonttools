@@ -469,9 +469,9 @@ class DecomposedTransform:
             skewX = math.atan((a * c + b * d) / (r * r))
         elif c != 0 or d != 0:
             s = math.sqrt(c * c + d * d)
-            rotation = math.pi / 2 - (
-                math.acos(-c / s) if d >= 0 else -math.acos(c / s)
-            )
+            rotation = math.atan2(-c, d)
+            if rotation == -math.pi:
+                rotation = math.pi
             scaleX, scaleY = (delta / s, s)
         else:
             # a = b = c = d = 0

@@ -247,6 +247,35 @@ class InterpolateLayoutTest(unittest.TestCase):
         self.expect_ttx(instfont, expected_ttx_path, tables)
         self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
 
+    def test_varlib_interpolate_layout_GPOS_only_decreasing_axis_map_ttf(self):
+        """Same as the LookupType 1 diff test, with the weight axis mirrored so
+        that design values decrease as user values increase."""
+        suffix = ".ttf"
+        ds_path = self.get_test_input("InterpolateLayout.designspace")
+        ufo_dir = self.get_test_input("master_ufo")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+
+        features = [
+            "feature xxxx { pos A <-80 0 -160 0>; } xxxx;",
+            "feature xxxx { pos A <-97 0 -195 0>; } xxxx;",
+        ]
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, ".ttx", "TestFamily2-")
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        doc = DesignSpaceDocument.fromfile(ds_path)
+        doc.axes[0].map = [(0, 1000), (1000, 0)]
+        for source in doc.sources:
+            source.location = {"weight": 1000 - source.location["weight"]}
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace(".ufo", suffix)
+        instfont = interpolate_layout(doc, {"weight": 500}, finder)
+
+        expected_ttx_path = self.get_test_output("InterpolateLayoutGPOS_1_diff.ttx")
+        self.expect_ttx(instfont, expected_ttx_path, ["GPOS"])
+
     def test_varlib_interpolate_layout_GPOS_only_LookupType_1_diff2_val_ttf(self):
         """Only GPOS; LookupType 1; different values and items in each master."""
         suffix = ".ttf"

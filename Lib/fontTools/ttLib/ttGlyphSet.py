@@ -183,6 +183,7 @@ class _TTGlyphSetCFF(_TTGlyphSet):
                 self.setLocation(self.location)
                 yield value
         finally:
+            # Restore the blender after the base context pops the parent location.
             self.setLocation(self.location)
 
 
@@ -364,10 +365,10 @@ def _evaluateCondition(condition, axes, location, instancer):
         from fontTools.ttLib.tables.otTables import NO_VARIATION_INDEX
 
         value = condition.DefaultValue
-        # NO_VARIATION_INDEX has a zero delta; the multi-store instancer returns
-        # an empty vector because it does not know the number of values.
         if condition.VarIdx != NO_VARIATION_INDEX:
-            value += instancer[condition.VarIdx][0]
+            deltas = instancer[condition.VarIdx]
+            if deltas:
+                value += deltas[0]
         return value > 0
     elif condition.Format == 3:
         # ConditionAnd

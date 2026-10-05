@@ -2,7 +2,11 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
 from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
-from fontTools.ttLib.tables.otTables import ConditionTable, NO_VARIATION_INDEX
+from fontTools.ttLib.tables.otTables import (
+    ConditionTable,
+    NO_VARIATION_INDEX,
+    VarComponentFlags,
+)
 from fontTools.pens.recordingPen import (
     RecordingPen,
     RecordingPointPen,
@@ -20,102 +24,6 @@ class TTGlyphSetTest(object):
     def getpath(testfile):
         path = os.path.dirname(__file__)
         return os.path.join(path, "data", testfile)
-
-    @pytest.mark.parametrize("initial", [{}, {"wght": 0.75, "CNTR": 0.5}])
-    @pytest.mark.parametrize("reset", [False, True])
-    def test_cff2_push_location_inherits_and_restores(self, initial, reset):
-        font = TTFont(self.getpath("I.otf"))
-        glyphset = font.getGlyphSet(location=initial, normalized=True)
-
-        def outline(glyphset):
-            pen = RecordingPen()
-            glyphset["I"].draw(pen)
-            return pen.value
-
-        def check(location):
-            assert glyphset.location == location
-            expected = font.getGlyphSet(location=location, normalized=True)
-            assert outline(glyphset) == outline(expected)
-
-        with glyphset.pushLocation({"wght": 0.25}, False):
-            parent = {**initial, "wght": 0.25}
-            check(parent)
-            with glyphset.pushLocation({"CNTR": 0.25}, reset):
-                check({**(initial if reset else parent), "CNTR": 0.25})
-            check(parent)
-            with glyphset.pushLocation({}, False):
-                check(parent)
-            check(parent)
-        check(initial)
-
-    def test_cff2_push_location_restores_after_exception(self):
-        font = TTFont(self.getpath("I.otf"))
-        location = {"wght": 0.75, "CNTR": 0.5}
-        glyphset = font.getGlyphSet(location=location, normalized=True)
-        expected = RecordingPen()
-        glyphset["I"].draw(expected)
-
-        with pytest.raises(ValueError, match="drawing failed"):
-            with glyphset.pushLocation({"wght": 0.25}, False):
-                raise ValueError("drawing failed")
-
-        assert glyphset.location == location
-        actual = RecordingPen()
-        glyphset["I"].draw(actual)
-        assert actual.value == expected.value
-
-    @pytest.mark.parametrize("reset", [False, True])
-    def test_varc_cff2_nested_locations(self, reset):
-        from fontTools.ttLib import newTable
-        from fontTools.ttLib.tables import otTables as ot
-
-        font = TTFont(self.getpath("I.otf"))
-        location = {"wght": 0.75, "CNTR": 0.5}
-        expected = []
-        for weight in (0.75 if reset else 0.25, 0.75):
-            pen = RecordingPen()
-            font.getGlyphSet(location={"wght": weight, "CNTR": 0.25}, normalized=True)[
-                "I"
-            ].draw(pen)
-            expected.extend(pen.value)
-
-        varc = font["VARC"] = newTable("VARC")
-        varc.table = ot.VARC()
-        varc.table.Version = 0x00010000
-        varc.table.Coverage = ot.Coverage()
-        varc.table.Coverage.glyphs = [".notdef", "I"]
-        varc.table.MultiVarStore = None
-        varc.table.ConditionList = None
-        varc.table.AxisIndicesList = ot.AxisIndicesList()
-        varc.table.AxisIndicesList.Item = [[0], [1]]
-        varc.table.VarCompositeGlyphs = ot.VarCompositeGlyphs()
-        parent, child = ot.VarCompositeGlyph(), ot.VarCompositeGlyph()
-        first, second, leaf = ot.VarComponent(), ot.VarComponent(), ot.VarComponent()
-        first.glyphName = second.glyphName = leaf.glyphName = "I"
-        first.axisIndicesIndex = 0
-        first.axisValues = (0.25,)
-        leaf.axisIndicesIndex = 1
-        leaf.axisValues = (0.25,)
-        if reset:
-            leaf.flags = ot.VarComponentFlags.RESET_UNSPECIFIED_AXES
-        parent.components = [first, second]
-        child.components = [leaf]
-        varc.table.VarCompositeGlyphs.VarCompositeGlyph = [parent, child]
-
-        def check(font):
-            glyphset = font.getGlyphSet(location=location, normalized=True)
-            pen = DecomposingRecordingPen(glyphset)
-            glyphset[".notdef"].draw(pen)
-            assert pen.value == expected
-            # Repeated drawing must not depend on a previous component's axes.
-            pen = DecomposingRecordingPen(glyphset)
-            glyphset[".notdef"].draw(pen)
-            assert pen.value == expected
-
-        check(font)
-        stream = BytesIO()
-        font.save(stream)
-        check(TTFont(BytesIO(stream.getvalue())))
 
     @pytest.mark.parametrize("initial", [{}, {"wght": 0.75}])
     @pytest.mark.parametrize("reset", [False, True])
@@ -332,6 +240,102 @@ class TTGlyphSetTest(object):
         actual = pen.value
 
         assert actual == expected, (location, actual, expected)
+
+    @pytest.mark.parametrize("initial", [{}, {"wght": 0.75, "CNTR": 0.5}])
+    @pytest.mark.parametrize("reset", [False, True])
+    def test_cff2_push_location_inherits_and_restores(self, initial, reset):
+        font = TTFont(self.getpath("I.otf"))
+        glyphset = font.getGlyphSet(location=initial, normalized=True)
+
+        def outline(glyphset):
+            pen = RecordingPen()
+            glyphset["I"].draw(pen)
+            return pen.value
+
+        def check(location):
+            assert glyphset.location == location
+            expected = font.getGlyphSet(location=location, normalized=True)
+            assert outline(glyphset) == outline(expected)
+
+        with glyphset.pushLocation({"wght": 0.25}, False):
+            parent = {**initial, "wght": 0.25}
+            check(parent)
+            with glyphset.pushLocation({"CNTR": 0.25}, reset):
+                check({**(initial if reset else parent), "CNTR": 0.25})
+            check(parent)
+            with glyphset.pushLocation({}, False):
+                check(parent)
+            check(parent)
+        check(initial)
+
+    def test_cff2_push_location_restores_after_exception(self):
+        font = TTFont(self.getpath("I.otf"))
+        location = {"wght": 0.75, "CNTR": 0.5}
+        glyphset = font.getGlyphSet(location=location, normalized=True)
+        expected = RecordingPen()
+        glyphset["I"].draw(expected)
+
+        with pytest.raises(ValueError, match="drawing failed"):
+            with glyphset.pushLocation({"wght": 0.25}, False):
+                raise ValueError("drawing failed")
+
+        assert glyphset.location == location
+        actual = RecordingPen()
+        glyphset["I"].draw(actual)
+        assert actual.value == expected.value
+
+    @pytest.mark.parametrize("reset", [False, True])
+    def test_varc_cff2_nested_locations(self, reset):
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables as ot
+
+        font = TTFont(self.getpath("I.otf"))
+        location = {"wght": 0.75, "CNTR": 0.5}
+        expected = []
+        for weight in (0.75 if reset else 0.25, 0.75):
+            pen = RecordingPen()
+            font.getGlyphSet(location={"wght": weight, "CNTR": 0.25}, normalized=True)[
+                "I"
+            ].draw(pen)
+            expected.extend(pen.value)
+
+        varc = font["VARC"] = newTable("VARC")
+        varc.table = ot.VARC()
+        varc.table.Version = 0x00010000
+        varc.table.Coverage = ot.Coverage()
+        varc.table.Coverage.glyphs = [".notdef", "I"]
+        varc.table.MultiVarStore = None
+        varc.table.ConditionList = None
+        varc.table.AxisIndicesList = ot.AxisIndicesList()
+        varc.table.AxisIndicesList.Item = [[0], [1]]
+        varc.table.VarCompositeGlyphs = ot.VarCompositeGlyphs()
+        parent, child = ot.VarCompositeGlyph(), ot.VarCompositeGlyph()
+        first, second, leaf = ot.VarComponent(), ot.VarComponent(), ot.VarComponent()
+        first.glyphName = second.glyphName = leaf.glyphName = "I"
+        first.axisIndicesIndex = 0
+        first.axisValues = (0.25,)
+        leaf.axisIndicesIndex = 1
+        leaf.axisValues = (0.25,)
+        if reset:
+            leaf.flags = ot.VarComponentFlags.RESET_UNSPECIFIED_AXES
+        parent.components = [first, second]
+        child.components = [leaf]
+        varc.table.VarCompositeGlyphs.VarCompositeGlyph = [parent, child]
+
+        def check(font):
+            glyphset = font.getGlyphSet(location=location, normalized=True)
+            pen = DecomposingRecordingPen(glyphset)
+            glyphset[".notdef"].draw(pen)
+            assert pen.value == expected
+            # Repeated drawing must not depend on a previous component's axes.
+            pen = DecomposingRecordingPen(glyphset)
+            glyphset[".notdef"].draw(pen)
+            assert pen.value == expected
+
+        check(font)
+        stream = BytesIO()
+        font.save(stream)
+        check(TTFont(BytesIO(stream.getvalue())))
 
     @pytest.mark.parametrize(
         "fontfile, locations, factor, expected",
@@ -710,64 +714,6 @@ class TTGlyphSetTest(object):
         pen = RecordingPen()
         font.getGlyphSet()["uniAC01"].draw(pen)
         assert len(pen.value) == expected_components
-
-    @pytest.mark.parametrize("location", [{}, {"wght": 800}])
-    @pytest.mark.parametrize("from_xml", [False, True])
-    @pytest.mark.parametrize(
-        "pen_type, draw", [(RecordingPen, "draw"), (RecordingPointPen, "drawPoints")]
-    )
-    def test_varc_in_memory_component_conditions(
-        self, location, from_xml, pen_type, draw
-    ):
-        from fontTools.ttLib.tables.otTables import VarComponentFlags
-
-        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
-        expected = pen_type()
-        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(expected)
-
-        if from_xml:
-            xml = StringIO()
-            font.saveXML(xml)
-            xml.seek(0)
-            font = TTFont()
-            font.importXML(xml)
-        else:
-            # Constructors and XML import need not set derived binary flags.
-            for glyph in font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph:
-                for component in glyph.components:
-                    component.flags &= ~VarComponentFlags.HAVE_CONDITION
-
-        actual = pen_type()
-        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(actual)
-        assert actual.value == expected.value
-
-        stream = BytesIO()
-        font.save(stream)
-        font = TTFont(BytesIO(stream.getvalue()))
-        actual = pen_type()
-        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(actual)
-        assert actual.value == expected.value
-
-    @pytest.mark.parametrize("location", [{}, {"wght": 800}])
-    @pytest.mark.parametrize("roundtrip", [False, True])
-    def test_varc_remove_component_condition(self, location, roundtrip):
-        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
-        removed = 0
-        for glyph in font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph:
-            for component in glyph.components:
-                if component.conditionIndex is not None:
-                    component.conditionIndex = None
-                    removed += 1
-        assert removed == 1
-
-        if roundtrip:
-            stream = BytesIO()
-            font.save(stream)
-            font = TTFont(BytesIO(stream.getvalue()))
-
-        pen = RecordingPen()
-        font.getGlyphSet(location=location)["uniAC01"].draw(pen)
-        assert len(pen.value) == 3
 
     @pytest.mark.parametrize("scale", [-0.5, 0.5])
     def test_varc_xml_implicit_scale_y(self, scale):
@@ -1207,6 +1153,64 @@ class TTGlyphSetTest(object):
         with pytest.raises(NotImplementedError, match="All-off-curve cubic"):
             glyphset["four"].drawPoints(pen)
         assert pen.value == []
+
+    @pytest.mark.parametrize("location", [{}, {"wght": 800}])
+    @pytest.mark.parametrize("from_xml", [False, True])
+    @pytest.mark.parametrize(
+        "pen_type, draw", [(RecordingPen, "draw"), (RecordingPointPen, "drawPoints")]
+    )
+    def test_varc_in_memory_component_conditions(
+        self, location, from_xml, pen_type, draw
+    ):
+        from fontTools.ttLib.tables.otTables import VarComponentFlags
+
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        expected = pen_type()
+        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(expected)
+
+        if from_xml:
+            xml = StringIO()
+            font.saveXML(xml)
+            xml.seek(0)
+            font = TTFont()
+            font.importXML(xml)
+        else:
+            # Constructors and XML import need not set derived binary flags.
+            for glyph in font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph:
+                for component in glyph.components:
+                    component.flags &= ~VarComponentFlags.HAVE_CONDITION
+
+        actual = pen_type()
+        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(actual)
+        assert actual.value == expected.value
+
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        actual = pen_type()
+        getattr(font.getGlyphSet(location=location)["uniAC01"], draw)(actual)
+        assert actual.value == expected.value
+
+    @pytest.mark.parametrize("location", [{}, {"wght": 800}])
+    @pytest.mark.parametrize("roundtrip", [False, True])
+    def test_varc_remove_component_condition(self, location, roundtrip):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        removed = 0
+        for glyph in font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph:
+            for component in glyph.components:
+                if component.conditionIndex is not None:
+                    component.conditionIndex = None
+                    removed += 1
+        assert removed == 1
+
+        if roundtrip:
+            stream = BytesIO()
+            font.save(stream)
+            font = TTFont(BytesIO(stream.getvalue()))
+
+        pen = RecordingPen()
+        font.getGlyphSet(location=location)["uniAC01"].draw(pen)
+        assert len(pen.value) == 3
 
     def test_varc_gvar_axes_without_fvar(self, tmp_path):
         font = TTFont(self.getpath("varc-static-gvar.ttf"))

@@ -1114,6 +1114,19 @@ class GlyphCubicTest:
                 font[table_tag].fromXML(name, attrs, content, font)
             assert list(font[table_tag]["a"].flags) == [1, flagCubic, flagCubic, 1]
 
+    def test_drawPoints_rejects_later_cubic_contour_atomically(self):
+        glyph = Glyph()
+        glyph.numberOfContours = 2
+        glyph.coordinates = GlyphCoordinates(
+            [(0, 0), (10, 0), (10, 10), (20, 0), (30, 0), (30, 10), (20, 10)]
+        )
+        glyph.flags = array.array("B", [flagOnCurve] * 3 + [flagCubic] * 4)
+        glyph.endPtsOfContours = [2, 6]
+        pen = RecordingPointPen()
+        with pytest.raises(NotImplementedError, match="All-off-curve cubic"):
+            glyph.drawPoints(pen, None)
+        assert pen.value == []
+
     def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
         font = TTFont(font_path)
@@ -1187,39 +1200,6 @@ class GlyphCubicTest:
                 ("curveTo", ((0, 1), (0, 1), (0, 0))),
                 ("closePath", ()),
             ]
-
-
-@pytest.mark.parametrize("length", [0x7FFF, 0x8000, 0xFFFF, 0x10000])
-@pytest.mark.parametrize("composite", [False, True])
-def test_unsigned_instruction_length(length, composite):
-    glyf = newTable("glyf")
-    glyf.glyphOrder = [".notdef", "base", "composite"]
-    pen = TTGlyphPen(None)
-    pen.moveTo((10, 20))
-    pen.lineTo((100, 20))
-    pen.lineTo((10, 100))
-    pen.closePath()
-    base = pen.glyph()
-    glyf.glyphs = {".notdef": Glyph(), "base": base}
-    if composite:
-        pen = TTGlyphPen(glyf)
-        pen.addComponent("base", (1, 0, 0, 1, 30, 40))
-        glyph = pen.glyph()
-    else:
-        glyph = base
-    glyph.program = ttProgram.Program()
-    glyph.program.fromBytecode([0] * length)
-
-    if length > 0xFFFF:
-        with pytest.raises(struct.error):
-            glyph.compile(glyf)
-        return
-    data = glyph.compile(glyf)
-    reloaded = Glyph(data)
-    reloaded.expand(glyf)
-    assert reloaded.program.getBytecode() == glyph.program.getBytecode()
-    assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
-    assert reloaded.compile(glyf) == data
 
 
 @pytest.mark.parametrize("length", [0, 1, 0x8000, 0xFFFF])
@@ -1536,6 +1516,39 @@ def test_dropImpliedOnCurvePoints_incompatible_endPtsOfContours():
 
     with pytest.raises(ValueError, match="Incompatible endPtsOfContours"):
         dropImpliedOnCurvePoints(glyph1, glyph2)
+
+
+@pytest.mark.parametrize("length", [0x7FFF, 0x8000, 0xFFFF, 0x10000])
+@pytest.mark.parametrize("composite", [False, True])
+def test_unsigned_instruction_length(length, composite):
+    glyf = newTable("glyf")
+    glyf.glyphOrder = [".notdef", "base"]
+    pen = TTGlyphPen(None)
+    pen.moveTo((10, 20))
+    pen.lineTo((100, 20))
+    pen.lineTo((10, 100))
+    pen.closePath()
+    base = pen.glyph()
+    glyf.glyphs = {".notdef": Glyph(), "base": base}
+    if composite:
+        pen = TTGlyphPen(glyf)
+        pen.addComponent("base", (1, 0, 0, 1, 30, 40))
+        glyph = pen.glyph()
+    else:
+        glyph = base
+    glyph.program = ttProgram.Program()
+    glyph.program.fromBytecode([0] * length)
+
+    if length > 0xFFFF:
+        with pytest.raises(struct.error):
+            glyph.compile(glyf)
+        return
+    data = glyph.compile(glyf)
+    reloaded = Glyph(data)
+    reloaded.expand(glyf)
+    assert reloaded.program.getBytecode() == glyph.program.getBytecode()
+    assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
+    assert reloaded.compile(glyf) == data
 
 
 if __name__ == "__main__":

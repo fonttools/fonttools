@@ -3162,7 +3162,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             triple = [
                 axis.map_forward(v) for v in (axis.minimum, axis.default, axis.maximum)
             ]
-            new[axis.name] = normalizeValue(value, triple)
+            new[axis.name] = normalizeValue(value, triple, allow_decreasing=True)
         return new
 
     def normalize(self):
@@ -3187,26 +3187,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                         glyphMaster["location"]
                     )
             item.location = self.normalizeLocation(item.location)
-        # the axes
-        for axis in self.axes:
-            # scale the map first
-            newMap = []
-            for inputValue, outputValue in axis.map:
-                newOutputValue = self.normalizeLocation({axis.name: outputValue}).get(
-                    axis.name
-                )
-                newMap.append((inputValue, newOutputValue))
-            if newMap:
-                axis.map = newMap
-            # finally the axis values
-            minimum = self.normalizeLocation({axis.name: axis.minimum}).get(axis.name)
-            maximum = self.normalizeLocation({axis.name: axis.maximum}).get(axis.name)
-            default = self.normalizeLocation({axis.name: axis.default}).get(axis.name)
-            # and set them in the axis.minimum
-            axis.minimum = minimum
-            axis.maximum = maximum
-            axis.default = default
-        # now the rules
+        # rules also need the original axis data
         for rule in self.rules:
             newConditionSets = []
             for conditions in rule.conditionSets:
@@ -3229,6 +3210,31 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                     )
                 newConditionSets.append(newConditions)
             rule.conditionSets = newConditionSets
+        # the axes
+        for axis in self.axes:
+            # Convert user-space bounds to design coordinates before changing the map.
+            minimum = self.normalizeLocation(
+                {axis.name: axis.map_forward(axis.minimum)}
+            ).get(axis.name)
+            maximum = self.normalizeLocation(
+                {axis.name: axis.map_forward(axis.maximum)}
+            ).get(axis.name)
+            default = self.normalizeLocation(
+                {axis.name: axis.map_forward(axis.default)}
+            ).get(axis.name)
+            # scale the map outputs
+            newMap = []
+            for inputValue, outputValue in axis.map:
+                newOutputValue = self.normalizeLocation({axis.name: outputValue}).get(
+                    axis.name
+                )
+                newMap.append((inputValue, newOutputValue))
+            if newMap:
+                axis.map = newMap
+            # finally the axis values
+            axis.minimum = minimum
+            axis.maximum = maximum
+            axis.default = default
 
     def loadSourceFonts(self, opener, **kwargs):
         """Ensure SourceDescriptor.font attributes are loaded, and return list of fonts.
