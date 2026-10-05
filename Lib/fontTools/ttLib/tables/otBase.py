@@ -1,4 +1,5 @@
 from fontTools.config import OPTIONS
+from fontTools.misc.lazyTools import LazyList
 from fontTools.misc.textTools import Tag, bytesjoin
 from .DefaultTable import DefaultTable
 from enum import IntEnum
@@ -903,6 +904,10 @@ class BaseTable(object):
             del self.font
             self.decompile(reader, font)
         if recurse:
+            # Resolve lazy arrays before traversing their child tables.
+            for name, value in self.__dict__.items():
+                if isinstance(value, LazyList):
+                    setattr(self, name, list(value))
             for subtable in self.iterSubTables():
                 subtable.value.ensureDecompiled(recurse)
 

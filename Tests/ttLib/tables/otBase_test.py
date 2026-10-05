@@ -1,6 +1,30 @@
 from fontTools.misc.textTools import deHexStr
+from fontTools.misc.lazyTools import LazyList
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import unittest
+
+
+class BaseTableTest(unittest.TestCase):
+    def test_ensureDecompiled_lazy_array(self):
+        child = otTables.PairValueRecord()
+        child.SecondGlyph = "a"
+        parent = otTables.PairSet()
+        calls = []
+
+        def read_record(i):
+            calls.append(i)
+            return child
+
+        parent.PairValueRecord = LazyList([read_record] * 10)
+        parent.ensureDecompiled(recurse=False)
+        self.assertIsInstance(parent.PairValueRecord, LazyList)
+        self.assertEqual(calls, [])
+
+        parent.ensureDecompiled(recurse=True)
+        self.assertIsInstance(parent.PairValueRecord, list)
+        self.assertEqual(calls, list(range(10)))
+        self.assertEqual([r.SecondGlyph for r in parent.PairValueRecord], ["a"] * 10)
 
 
 class OTTableReaderTest(unittest.TestCase):
