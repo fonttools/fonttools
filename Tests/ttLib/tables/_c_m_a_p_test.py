@@ -41,6 +41,34 @@ class CmapSubtableTest(unittest.TestCase):
         self.assertEqual("utf_16_be", subtable.getEncoding())
         self.assertEqual(True, subtable.isUnicode())
 
+    def test_compact_glyph_id_limits(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef"] + [f"g{i}" for i in range(1, 0x10002)])
+        for format in (2, 4):
+            for virtual in (False, True):
+                for companion in (False, True):
+                    for gid in (0xFFFF, 0x10000, 0x10001):
+                        with self.subTest(
+                            format=format, virtual=virtual, companion=companion, gid=gid
+                        ):
+                            subtable = self.makeSubtable(format, 3, 1, 0)
+                            subtable.cmap = {
+                                65: f"gid{gid}" if virtual else font.getGlyphName(gid)
+                            }
+                            if companion:
+                                subtable.cmap[66] = "g2"
+                            if gid > 0xFFFF:
+                                with self.assertRaisesRegex(struct.error, "glyph ID"):
+                                    subtable.compile(font)
+                            else:
+                                data = subtable.compile(font)
+                                reloaded = CmapSubtable.newSubtable(format)
+                                reloaded.decompile(data, font)
+                                expected = {65: font.getGlyphName(gid)}
+                                if companion:
+                                    expected[66] = "g2"
+                                self.assertEqual(reloaded.cmap, expected)
+
     def test_toUnicode_macroman(self):
         subtable = self.makeSubtable(4, 1, 0, 7)  # MacRoman
         self.assertEqual("mac_roman", subtable.getEncoding())
