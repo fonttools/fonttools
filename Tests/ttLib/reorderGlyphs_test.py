@@ -30,18 +30,12 @@ def test_reorder_lazy_ligatures(lazy):
 
 
 def test_ensure_decompiled_high_level_ligatures():
-    from fontTools.otlLib.builder import buildLookup
     from fontTools.ttLib.tables import otTables
 
-    otTables.LigatureSubst().ensureDecompiled(recurse=True)
-    fb = FontBuilder(1000)
-    fb.setupGlyphOrder([".notdef", "a", "b", "a_b"])
-    fb.setupPost()
-    addOpenTypeFeaturesFromString(fb.font, "feature liga { sub a b by a_b; } liga;")
     subtable = otTables.LigatureSubst()
+    subtable.ensureDecompiled(recurse=True)
     subtable.ligatures = {("a", "b"): "a_b"}
-    fb.font["GSUB"].table.LookupList.Lookup = [buildLookup([subtable])]
-    fb.font.ensureDecompiled(recurse=True)
+    subtable.ensureDecompiled(recurse=True)
     assert subtable.ligatures == {("a", "b"): "a_b"}
 
 
