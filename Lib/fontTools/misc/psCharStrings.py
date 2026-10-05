@@ -334,7 +334,7 @@ class SimpleT2Decompiler(object):
         self.operandStack = []
         self.hintCount = 0
         self.hintMaskBytes = 0
-        self.numRegions = 0
+        self.numRegions = None
         self.vsIndex = 0
 
     def execute(self, charString, *, pushToStack=None):
@@ -495,14 +495,15 @@ class SimpleT2Decompiler(object):
         raise NotImplementedError
 
     def op_blend(self, index):
-        if self.numRegions == 0:
+        if self.numRegions is None:
             self.numRegions = self.private.getNumRegions()
         numBlends = self.pop()
         numOps = numBlends * (self.numRegions + 1)
         if self.blender is None:
-            del self.operandStack[
-                -(numOps - numBlends) :
-            ]  # Leave the default operands on the stack.
+            if self.numRegions:
+                del self.operandStack[
+                    -(numOps - numBlends) :
+                ]  # Leave the default operands on the stack.
         else:
             argi = len(self.operandStack) - numOps
             end_args = tuplei = argi + numBlends

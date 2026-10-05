@@ -10,6 +10,7 @@ from fontTools.misc.psCharStrings import (
 )
 from fontTools.pens.recordingPen import RecordingPen
 import unittest
+import pytest
 
 
 def hexenc(s):
@@ -209,6 +210,78 @@ class T2CharStringTest(unittest.TestCase):
         pen = RecordingPen()
         cs.draw(pen)
         self.assertEqual(pen.value[-1], ("closePath", ()))
+
+
+@pytest.mark.parametrize("num_regions", [0, 1, 2])
+@pytest.mark.parametrize("num_blends", [1, 2])
+@pytest.mark.parametrize("use_blender", [False, True])
+@pytest.mark.parametrize("bytecode", [False, True])
+def test_cff2_blend_stack(num_regions, num_blends, use_blender, bytecode):
+    from fontTools.cffLib import VarStoreData
+    from fontTools.varLib.builder import buildVarData, buildVarRegionList, buildVarStore
+
+    store = buildVarStore(
+        buildVarRegionList([{"TEST": (0, 1, 1)}] * num_regions, ["TEST"]),
+        [buildVarData(list(range(num_regions)), [], optimize=False)],
+    )
+    private = PrivateDict(vstore=VarStoreData(otVarStore=store))
+    private._isCFF2 = True
+    private.nominalWidthX = private.defaultWidthX = None
+    defaults = [100, 200] if num_blends == 2 else [200]
+    deltas = [
+        10 * (i + 1) * (j + 1) for j in range(num_blends) for i in range(num_regions)
+    ]
+    program = (
+        ([] if num_blends == 2 else [100])
+        + defaults
+        + deltas
+        + [num_blends, "blend", "rmoveto", 100, 0, "rlineto", -100, 100, "rlineto"]
+    )
+    charstring = T2CharString(program=program, private=private)
+    if bytecode:
+        charstring.compile(isCFF2=True)
+        charstring = T2CharString(bytecode=charstring.bytecode, private=private)
+    pen = RecordingPen()
+    blender = (lambda index, deltas: sum(deltas)) if use_blender else None
+    charstring.draw(pen, blender=blender)
+    delta = 10 * sum(range(1, num_regions + 1)) if use_blender else 0
+    x = 100 + (delta if num_blends == 2 else 0)
+    y = 200 + delta * num_blends
+    assert pen.value == [
+        ("moveTo", ((x, y),)),
+        ("lineTo", ((x + 100, y),)),
+        ("lineTo", ((x, y + 100),)),
+        ("closePath", ()),
+    ]
+
+
+@pytest.mark.parametrize("use_blender", [False, True])
+@pytest.mark.parametrize("bytecode", [False, True])
+def test_cff2_vsindex_zero_regions(use_blender, bytecode):
+    from fontTools.cffLib import VarStoreData
+    from fontTools.varLib.builder import buildVarData, buildVarRegionList, buildVarStore
+
+    store = buildVarStore(
+        buildVarRegionList([{"TEST": (0, 1, 1)}], ["TEST"]),
+        [buildVarData([0], [], optimize=False), buildVarData([], [])],
+    )
+    private = PrivateDict(vstore=VarStoreData(otVarStore=store))
+    private._isCFF2 = True
+    private.nominalWidthX = private.defaultWidthX = None
+    program = [1, "vsindex", 100, 200, 1, "blend", "rmoveto", 100, 0, "rlineto"]
+    charstring = T2CharString(program=program, private=private)
+    if bytecode:
+        charstring.compile(isCFF2=True)
+        charstring = T2CharString(bytecode=charstring.bytecode, private=private)
+    pen = RecordingPen()
+    charstring.draw(
+        pen, blender=(lambda index, deltas: sum(deltas)) if use_blender else None
+    )
+    assert pen.value == [
+        ("moveTo", ((100, 200),)),
+        ("lineTo", ((200, 200),)),
+        ("closePath", ()),
+    ]
 
 
 if __name__ == "__main__":
