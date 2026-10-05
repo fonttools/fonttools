@@ -532,6 +532,49 @@ class CmapSubtableTest(unittest.TestCase):
             font.importXML(f)
         self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
 
+    def test_default_uvs_range_limit(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder([".notdef", "a"])
+        for count in (255, 256, 257, 512, 513, 768):
+            for gaps in (False, True):
+                with self.subTest(count=count, gaps=gaps):
+                    points = list(range(0x1000, 0x1000 + count))
+                    if gaps:
+                        points.extend(range(0x2000, 0x2000 + count))
+                    table = self.makeSubtable(14, 0, 5, 0)
+                    table.cmap = {}
+                    table.uvsDict = {
+                        0xFE00: [(cp, None) for cp in reversed(points)]
+                        + [(0x3000, "a")]
+                    }
+                    data = table.compile(font)
+                    # The selector record starts after the 10-byte header.
+                    default_offset = struct.unpack_from(">L", data, 13)[0]
+                    num_ranges = struct.unpack_from(">L", data, default_offset)[0]
+                    expected_ranges = [
+                        (start + offset, min(256, count - offset) - 1)
+                        for start in ([0x1000, 0x2000] if gaps else [0x1000])
+                        for offset in range(0, count, 256)
+                    ]
+                    self.assertEqual(num_ranges, len(expected_ranges))
+                    actual_ranges = [
+                        (
+                            int.from_bytes(data[offset : offset + 3]),
+                            data[offset + 3],
+                        )
+                        for offset in range(
+                            default_offset + 4, default_offset + 4 + 4 * num_ranges, 4
+                        )
+                    ]
+                    self.assertEqual(actual_ranges, expected_ranges)
+                    reloaded = self.makeSubtable(14, 0, 5, 0)
+                    reloaded.decompile(data, font)
+                    self.assertEqual(
+                        reloaded.uvsDict,
+                        {0xFE00: [(cp, None) for cp in points] + [(0x3000, "a")]},
+                    )
+                    self.assertEqual(reloaded.compile(font), data)
+
     def test_sort_subtables_with_duplicate_keys(self):
         # https://github.com/fonttools/fonttools/issues/4035
         # Sorting subtables that share (platformID, platEncID, language) but
