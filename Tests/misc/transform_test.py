@@ -137,6 +137,30 @@ class TransformTest(object):
 
 
 class DecomposedTransformTest(object):
+    @pytest.mark.parametrize("xx", [0.0, -0.0])
+    @pytest.mark.parametrize(
+        "yx, yy",
+        [
+            (1, -1),
+            (-1, -1),
+            (0.0, -1),
+            (-0.0, -1),
+            (1, 0),
+            (-1, 0),
+            (1, 1),
+            (-1, 1),
+            (0, 1),
+            (0, 0),
+        ],
+    )
+    def test_fromTransform_zero_first_column(self, xx, yx, yy):
+        transform = Transform(xx, 0, yx, yy, 3, 5)
+        decomposed = DecomposedTransform.fromTransform(transform)
+
+        assert -180 < decomposed.rotation <= 180
+        assert decomposed.skewY == 0
+        assert decomposed.toTransform() == pytest.approx(tuple(transform))
+
     def test_identity(self):
         t = DecomposedTransform()
         assert (
