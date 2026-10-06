@@ -465,10 +465,11 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
                 fvr.FeatureTableSubstitution = buildFeatureVariationRecord(
                     conditionTable, []
                 ).FeatureTableSubstitution
-            fvr.FeatureTableSubstitution.SubstitutionRecord.extend(records)
-            fvr.FeatureTableSubstitution.SubstitutionCount = len(
-                fvr.FeatureTableSubstitution.SubstitutionRecord
-            )
+            substitutionRecords = fvr.FeatureTableSubstitution.SubstitutionRecord
+            substitutionRecords.extend(records)
+            # The spec requires records sorted by increasing FeatureIndex
+            substitutionRecords.sort(key=lambda r: r.FeatureIndex)
+            fvr.FeatureTableSubstitution.SubstitutionCount = len(substitutionRecords)
         else:
             featureVariationRecords.append(
                 buildFeatureVariationRecord(conditionTable, records)
