@@ -137,6 +137,53 @@ def test_scale_upem_preserves_condition_variations(wrapper_format, delta):
         assert_scaled_outlines(expected, record_varc_outlines(font, loc))
 
 
+def _build_cff_font_without_font_matrix():
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.pens.t2CharStringPen import T2CharStringPen
+
+    fb = FontBuilder(1000, isTTF=False)
+    fb.setupGlyphOrder([".notdef", "A"])
+    fb.setupCharacterMap({0x41: "A"})
+    pen = T2CharStringPen(600, None)
+    pen.moveTo((100, 0))
+    pen.lineTo((500, 0))
+    pen.lineTo((300, 700))
+    pen.closePath()
+    charString = pen.getCharString()
+    fb.setupCFF("Test-Regular", {}, {".notdef": charString, "A": charString}, {})
+    fb.setupHorizontalMetrics({".notdef": (600, 100), "A": (600, 100)})
+    fb.setupHorizontalHeader(ascent=800, descent=-200)
+    fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    data = BytesIO()
+    fb.save(data)
+    return TTFont(BytesIO(data.getvalue()))
+
+
+def test_scale_upem_cff_default_font_matrix():
+    # https://github.com/fonttools/fonttools/issues/4251
+    from fontTools.cffLib import TopDict
+
+    default = list(TopDict.defaults["FontMatrix"])
+    font = _build_cff_font_without_font_matrix()
+    topDict = font["CFF "].cff.topDictIndex[0]
+    assert "FontMatrix" not in topDict.rawDict
+
+    try:
+        font = scale_and_roundtrip(font)
+        # The shared class-level default is left alone...
+        assert TopDict.defaults["FontMatrix"] == default
+    finally:
+        # ...and restored even if not, so a regression cannot leak into other tests.
+        TopDict.defaults["FontMatrix"][:] = default
+    # ...and the scaled matrix is written explicitly.
+    topDict = font["CFF "].cff.topDictIndex[0]
+    assert font["head"].unitsPerEm == 2000
+    assert "FontMatrix" in topDict.rawDict
+    assert topDict.FontMatrix == [0.0005, 0, 0, 0.0005, 0, 0]
+
+
 class ScaleUpemTest(unittest.TestCase):
     def setUp(self):
         self.tempdir = None
