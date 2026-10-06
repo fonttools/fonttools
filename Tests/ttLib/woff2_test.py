@@ -1,5 +1,6 @@
 from fontTools import ttLib
 from fontTools.ttLib import woff2
+from fontTools.ttLib.sfnt import WOFFFlavorData
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools.ttLib.woff2 import (
     WOFF2Reader,
@@ -425,6 +426,15 @@ class WOFF2FlavorDataTest(unittest.TestCase):
         self.assertEqual(flavorData.majorVersion, 1)
         self.assertEqual(flavorData.minorVersion, 1)
 
+    def test_copy_major_minorVersion(self):
+        for dataClass in (WOFFFlavorData, WOFF2FlavorData):
+            with self.subTest(dataClass=dataClass):
+                data = dataClass()
+                data.majorVersion, data.minorVersion = (1, 7)
+                flavorData = WOFF2FlavorData(data=data)
+                self.assertEqual(flavorData.majorVersion, 1)
+                self.assertEqual(flavorData.minorVersion, 7)
+
     def test_mutually_exclusive_args(self):
         msg = "arguments are mutually exclusive"
         reader = DummyReader(self.file)
@@ -606,6 +616,20 @@ class WOFF2WriterTest(unittest.TestCase):
         flavorData = self.writer.flavorData = WOFF2FlavorData()
         flavorData.majorVersion, flavorData.minorVersion = (10, 11)
         self.assertEqual((10, 11), self.writer._getVersion())
+
+    def test_roundtrip_flavorData_version(self):
+        flavorData = WOFF2FlavorData()
+        flavorData.majorVersion, flavorData.minorVersion = (1, 7)
+        writer = WOFF2Writer(
+            BytesIO(), self.numTables, self.font.sfntVersion, flavorData=flavorData
+        )
+        for tag in self.tags:
+            writer[tag] = self.font.getTableData(tag)
+        writer.close()
+
+        reader = WOFF2Reader(BytesIO(writer.file.getvalue()))
+        self.assertEqual(reader.majorVersion, 1)
+        self.assertEqual(reader.minorVersion, 7)
 
     def test_hmtx_trasform(self):
         tableTransforms = {"glyf", "loca", "hmtx"}
