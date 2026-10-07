@@ -307,8 +307,9 @@ def visit(visitor, obj, attr, cff):
             else:
                 setattr(topDict, attr, visitor.scale(value))
 
-        for i in range(6):
-            topDict.FontMatrix[i] /= visitor.scaleFactor
+        # Assign a new list: a Top DICT without an explicit FontMatrix returns the
+        # shared class-level default, which must not be modified in place.
+        topDict.FontMatrix = [v / visitor.scaleFactor for v in topDict.FontMatrix]
 
         for private in privates:
             for attr in (
