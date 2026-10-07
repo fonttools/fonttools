@@ -1773,7 +1773,7 @@ class Parser(object):
                     + (yAdvDevice if yAdvDevice else ())
                 ]
             )
-            if allDeltas[0] < -128 or allDeltas[-1] > 127:
+            if allDeltas and (allDeltas[0] < -128 or allDeltas[-1] > 127):
                 raise FeatureLibError(
                     "Device value out of valid range (-128..127)",
                     self.cur_token_location_,
