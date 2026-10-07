@@ -151,6 +151,16 @@ class CffLibTest(DataFilesHandler):
             self.assertEqual(topDict.Encoding[9], "space")
             self.assertEqual(topDict.Encoding[32], "space")
 
+    def test_non_ascii_font_name_round_trip(self):
+        font = TTFont(self.getpath("LinLibertine_RBI.otf"))
+        font["CFF "].cff.fontNames = ["Caf\u00e9Sans"]
+
+        data = BytesIO()
+        font.save(data)
+        data.seek(0)
+
+        self.assertEqual(TTFont(data)["CFF "].cff.fontNames, ["Caf\u00e9Sans"])
+
 
 class CFFToCFF2Test(DataFilesHandler):
     def test_roundtrip_with_local_subrs(self):

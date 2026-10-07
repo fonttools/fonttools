@@ -95,7 +95,9 @@ class CFFFontSet(object):
         if not isCFF2:
             self.offSize = struct.unpack("B", file.read(1))[0]
             file.seek(self.hdrSize)
-            self.fontNames = list(tostr(s) for s in Index(file, isCFF2=isCFF2))
+            self.fontNames = list(
+                tostr(s, encoding="latin1") for s in Index(file, isCFF2=isCFF2)
+            )
             self.topDictIndex = TopDictIndex(file, isCFF2=isCFF2)
             self.strings = IndexedStrings(file)
         else:  # isCFF2

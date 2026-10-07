@@ -1661,6 +1661,15 @@ class Builder(object):
 
     def add_marks_(self, location, lookupBuilder, marks):
         """Helper for add_mark_{base,liga,mark}_pos."""
+        seenMarkClasses = set()
+        for _, markClass in marks:
+            if markClass.name in seenMarkClasses:
+                raise FeatureLibError(
+                    "Mark class @%s used more than once in the same anchor list"
+                    % markClass.name,
+                    location,
+                )
+            seenMarkClasses.add(markClass.name)
         for _, markClass in marks:
             for markClassDef in markClass.definitions:
                 for mark in markClassDef.glyphs.glyphSet():
