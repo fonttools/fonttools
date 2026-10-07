@@ -500,7 +500,9 @@ class Builder(object):
         if "windescent" in self.os2_:
             table.usWinDescent = self.os2_["windescent"]
         if "vendor" in self.os2_:
-            table.achVendID = safeEval("'''" + self.os2_["vendor"] + "'''")
+            # A Tag is padded with trailing spaces, not NULs (see #3280)
+            vendor = safeEval("'''" + self.os2_["vendor"] + "'''")
+            table.achVendID = vendor.ljust(4)
         if "weightclass" in self.os2_:
             table.usWeightClass = self.os2_["weightclass"]
         if "widthclass" in self.os2_:

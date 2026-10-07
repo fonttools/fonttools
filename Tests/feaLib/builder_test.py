@@ -872,6 +872,10 @@ class BuilderTest(unittest.TestCase):
             "} STAT;",
         )
 
+    def test_OS2_vendor_padded_with_spaces(self):
+        font = self.build('table OS/2 { Vendor "AB"; } OS/2;')
+        self.assertEqual(font["OS/2"].achVendID, "AB  ")
+
     def test_STAT_design_axis_name(self):
         self.assertRaisesRegex(
             FeatureLibError,
