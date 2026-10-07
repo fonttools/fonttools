@@ -65,8 +65,10 @@ def _convertCFF2ToCFF(cff, otFont):
     defaults = buildDefaults(privateDictOperators)
     order = buildOrder(privateDictOperators)
     for fd in fdArray:
-        fd.setCFF2(False)
+        # Load the Private dict (and hence its local Subrs) before switching the
+        # FontDict to CFF, otherwise they would be decompiled as CFF data.
         privateDict = fd.Private
+        fd.setCFF2(False)
         privateDict.order = order
         for key in order:
             if key not in privateDict.rawDict and key in defaults:

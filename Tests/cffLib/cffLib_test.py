@@ -163,6 +163,38 @@ class CffLibTest(DataFilesHandler):
 
 
 class CFFToCFF2Test(DataFilesHandler):
+    def test_roundtrip_with_local_subrs(self):
+        from fontTools.cffLib.CFFToCFF2 import convertCFFToCFF2
+        from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
+        from fontTools.pens.recordingPen import RecordingPen
+
+        def drawGlyphs(font):
+            glyphSet = font.getGlyphSet()
+            result = []
+            for glyphName in font.getGlyphOrder():
+                pen = RecordingPen()
+                glyphSet[glyphName].draw(pen)
+                result.append((glyphSet[glyphName].width, pen.value))
+            return result
+
+        font = TTFont(self.getpath("CFFToCFF2-1.otf"))
+        expected = drawGlyphs(font)
+        convertCFFToCFF2(font)
+        buf = BytesIO()
+        font.save(buf)
+        buf.seek(0)
+
+        # Load the CFF2 font without touching the charstrings, so that the
+        # local Subrs are still undecompiled when converting back to CFF.
+        font = TTFont(buf, recalcBBoxes=False)
+        convertCFF2ToCFF(font)
+        buf = BytesIO()
+        font.save(buf)
+        buf.seek(0)
+
+        font = TTFont(buf)
+        self.assertEqual(drawGlyphs(font), expected)
+
     def test_conversion(self):
         font_path = self.getpath("CFFToCFF2-1.otf")
         font = TTFont(font_path)
