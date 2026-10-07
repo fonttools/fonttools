@@ -2511,6 +2511,13 @@ class BaseDict(object):
         setattr(self, name, value)
         return value
 
+    def __delattr__(self, name):
+        # Also drop the raw value, if any, otherwise __getattr__ would just
+        # load the attribute again from rawDict.
+        inRawDict = self.rawDict.pop(name, None) is not None
+        if name in self.__dict__ or not inRawDict:
+            super().__delattr__(name)
+
     def toXML(self, xmlWriter):
         for name in self.order:
             if name in self.skipNames:
