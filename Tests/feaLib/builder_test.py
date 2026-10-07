@@ -1126,6 +1126,51 @@ class BuilderTest(unittest.TestCase):
             "} mark;",
         )
 
+    def test_mark_base_pos_same_mark_class_twice(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Mark class @TOP used more than once",
+            self.build,
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mark {"
+            "    pos base a <anchor 91 -316> mark @TOP <anchor 91 -226> mark @TOP;"
+            "} mark;",
+        )
+
+    def test_mark_lig_pos_same_mark_class_twice(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Mark class @TOP used more than once",
+            self.build,
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mark {"
+            "    pos ligature f_i <anchor 281 -309> mark @TOP"
+            "        <anchor 281 -219> mark @TOP"
+            "        ligComponent <anchor NULL>;"
+            "} mark;",
+        )
+
+    def test_mark_mark_pos_same_mark_class_twice(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Mark class @TOP used more than once",
+            self.build,
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mkmk {"
+            "    pos mark grave <anchor 1 2> mark @TOP <anchor 3 4> mark @TOP;"
+            "} mkmk;",
+        )
+
+    def test_mark_lig_pos_same_mark_class_in_different_components(self):
+        font = self.build(
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mark {"
+            "    pos ligature f_i <anchor 100 500> mark @TOP"
+            "        ligComponent <anchor 300 500> mark @TOP;"
+            "} mark;"
+        )
+        assert "GPOS" in font
+
     def test_build_specific_tables(self):
         features = "feature liga {sub f i by f_i;} liga;"
         font = self.build(features)
