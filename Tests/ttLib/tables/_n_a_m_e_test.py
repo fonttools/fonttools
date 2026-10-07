@@ -320,6 +320,41 @@ class NameTableTest(unittest.TestCase):
         self.assertIn("ltag", font.tables)
         self.assertEqual(font["ltag"].tags, ["az-Arab"])
 
+    def test_addMultilingualName_macLanguageCodes(self):
+        # https://github.com/fonttools/fonttools/issues/3733
+        # Spanish must not end up as Macintosh langEstonian (27), and
+        # Irish must use langIrishGaelic (35), not langIrishGaelicScript.
+        font = FakeFont(glyphs=[".notdef", "A"])
+        nameTable = font.tables["name"] = newTable("name")
+        nameTable.addMultilingualName(
+            {"es": "Ancho", "et": "Laius", "ga": "Leithead", "ga-Latg": "Leithead"},
+            ttFont=font,
+            windows=False,
+        )
+        self.assertEqual(
+            names(nameTable),
+            [
+                (256, 1, 0, 6, "Ancho"),
+                (256, 1, 0, 35, "Leithead"),
+                (256, 1, 0, 146, "Leithead"),
+                (256, 1, 29, 27, "Laius"),
+            ],
+        )
+        self.assertNotIn("ltag", font.tables)
+
+    def test_addMultilingualName_windowsSamiLanguageCodes(self):
+        # https://github.com/fonttools/fonttools/issues/3733
+        # 0x1C3B is Southern Sami (Sweden), not Skolt Sami.
+        nameTable = newTable("name")
+        nameTable.addMultilingualName({"sms": "Skolt", "sma": "Southern"}, mac=False)
+        self.assertEqual(
+            names(nameTable),
+            [
+                (256, 3, 1, 0x1C3B, "Southern"),
+                (256, 3, 1, 0x203B, "Skolt"),
+            ],
+        )
+
     def test_addMultilingualName_noTTFont(self):
         # If the ttFont argument is not passed, the implementation
         # should add whatever names it can, but it should not crash
