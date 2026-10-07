@@ -939,6 +939,53 @@ class TTGlyphSetTest(object):
         font.getGlyphSet(location=location)["uniAC01"].draw(pen)
         assert len(pen.value) == 3
 
+    def test_glyf_width_without_hvar(self):
+        # #3964: for a glyf-based variable font without an HVAR table, the
+        # advance width at a non-default location used to be reported as the
+        # stale default from hmtx until the glyph was drawn. ``width`` is
+        # now a lazy property on _TTGlyphGlyf that computes the right value
+        # from the gvar phantom points on first access when there is no HVAR
+        # to interpolate from.
+        from fontTools.pens.basePen import NullPen
+
+        font = TTFont()
+        font.importXML(self.getpath("I-512upem.ttx"))
+
+        # With HVAR, the width is populated at construction time.
+        glyph = font.getGlyphSet(location={"wght": 1000})["I"]
+        assert glyph.width == 170
+
+        # Default location is the hmtx value regardless of HVAR.
+        glyph = font.getGlyphSet()["I"]
+        assert glyph.width == 136
+
+        del font["HVAR"]
+
+        # No HVAR + default location: hmtx value is correct.
+        glyph = font.getGlyphSet()["I"]
+        assert glyph.width == 136
+
+        # No HVAR + non-default: the lazy property returns the correct
+        # phantom-point-derived width on first read, without the caller
+        # having to draw first.
+        glyph = font.getGlyphSet(location={"wght": 1000})["I"]
+        assert glyph.width == 170
+
+        # An explicit default-location dict ({"wght": 400} normalizes to
+        # {"wght": 0.0}) is still the hmtx value, not an unknown.
+        glyph = font.getGlyphSet(location={"wght": 400})["I"]
+        assert glyph.width == 136
+
+        # draw() still populates and returns consistent widths.
+        glyph = font.getGlyphSet(location={"wght": 1000})["I"]
+        glyph.draw(NullPen())
+        assert glyph.width == 170
+
+        # drawPoints() goes through draw() and does the same.
+        glyph = font.getGlyphSet(location={"wght": 1000})["I"]
+        glyph.drawPoints(RecordingPointPen())
+        assert glyph.width == 170
+
     def test_varc_gvar_axes_without_fvar(self, tmp_path):
         font = TTFont(self.getpath("varc-static-gvar.ttf"))
         assert "fvar" not in font
