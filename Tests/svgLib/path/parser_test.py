@@ -404,6 +404,28 @@ def test_invalid_implicit_command():
 @pytest.mark.parametrize(
     "pathdef",
     [
+        "M",  # moveto with no coordinates
+        "M0,0 L5",  # lineto missing its y
+        "M0,0 L1,1 2",  # trailing implicit lineto missing its y
+        "M0,0 H",  # horizontal lineto with no coordinate
+        "M0,0 V",  # vertical lineto with no coordinate
+        "M0,0 C1,1 2,2",  # curveto missing its end point
+        "M0,0 S1,1",  # smooth curveto missing its end point
+        "M0,0 Q1,1",  # quadratic curveto missing its end point
+        "M0,0 T",  # smooth quadratic with no end point
+    ],
+)
+def test_too_few_coordinates(pathdef):
+    # A drawto command with fewer numbers than it needs should raise a clear
+    # ValueError, like the parser's other errors, instead of a bare IndexError
+    # from popping an empty token list.
+    with pytest.raises(ValueError, match="Not enough coordinates"):
+        parse_path(pathdef, RecordingPen())
+
+
+@pytest.mark.parametrize(
+    "pathdef",
+    [
         "L 5 5",
         "Z",
         # bare coordinates aren't a moveto either
