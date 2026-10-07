@@ -4,6 +4,7 @@ from fontTools import ttLib
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.fontBuilder import FontBuilder
 from fontTools.merge import Merger, main as merge_main
+from fontTools.otlLib.builder import buildMathTable
 import difflib
 import os
 import re
@@ -374,6 +375,75 @@ def test_merge_OS2_mixed_versions(v1, v2):
     ]
     merged = _merge_and_recompile(fontfiles)
     assert merged["OS/2"].version == max(v1, v2)
+
+
+def _make_fontfile_with_MATH(glyphs, **kwargs):
+    glyphOrder = [".notdef"] + glyphs
+    fb = FontBuilder(unitsPerEm=1000)
+    fb.setupGlyphOrder(glyphOrder)
+    fb.setupCharacterMap({})
+    fb.setupGlyf({gn: Glyph() for gn in glyphOrder})
+    fb.setupHorizontalMetrics({gn: (500, 0) for gn in glyphOrder})
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "TestMATH", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    if kwargs:
+        buildMathTable(fb.font, **kwargs)
+    return _compile(fb.font)
+
+
+def test_merge_MATH():
+    # https://github.com/fonttools/fonttools/issues/3823
+    fontfiles = [
+        _make_fontfile_with_MATH(
+            ["a", "parenleft", "parenleft.size1"],
+            constants={"AxisHeight": 250},
+            italicsCorrections={"a": 10},
+            mathKerns={"a": {"TopRight": ([100], [10, 20])}},
+            minConnectorOverlap=20,
+            vertGlyphVariants={
+                "parenleft": [("parenleft", 700), ("parenleft.size1", 1000)]
+            },
+        ),
+        _make_fontfile_with_MATH(
+            ["b", "integral", "minus"],
+            constants={"AxisHeight": 300},
+            italicsCorrections={"b": 20},
+            topAccentAttachments={"b": 250},
+            extendedShapes={"integral"},
+            minConnectorOverlap=30,
+            horizGlyphVariants={"minus": [("minus", 500)]},
+        ),
+        _make_fontfile_with_MATH(["c"]),
+    ]
+    merged = _merge_and_recompile(fontfiles)
+
+    table = merged["MATH"].table
+    assert table.MathConstants.AxisHeight.Value == 250
+
+    glyphInfo = table.MathGlyphInfo
+    italics = glyphInfo.MathItalicsCorrectionInfo
+    assert italics.Coverage.glyphs == ["a", "b"]
+    assert [v.Value for v in italics.ItalicsCorrection] == [10, 20]
+    topAccent = glyphInfo.MathTopAccentAttachment
+    assert topAccent.TopAccentCoverage.glyphs == ["b"]
+    assert [v.Value for v in topAccent.TopAccentAttachment] == [250]
+    assert glyphInfo.ExtendedShapeCoverage.glyphs == ["integral"]
+    assert glyphInfo.MathKernInfo.MathKernCoverage.glyphs == ["a"]
+    assert len(glyphInfo.MathKernInfo.MathKernInfoRecords) == 1
+
+    variants = table.MathVariants
+    assert variants.MinConnectorOverlap == 20
+    assert variants.VertGlyphCoverage.glyphs == ["parenleft"]
+    assert [
+        r.VariantGlyph for r in variants.VertGlyphConstruction[0].MathGlyphVariantRecord
+    ] == ["parenleft", "parenleft.size1"]
+    assert variants.HorizGlyphCoverage.glyphs == ["minus"]
+    assert [
+        r.VariantGlyph
+        for r in variants.HorizGlyphConstruction[0].MathGlyphVariantRecord
+    ] == ["minus"]
 
 
 if __name__ == "__main__":

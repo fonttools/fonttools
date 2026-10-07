@@ -168,6 +168,42 @@ otTables.BaseTagList.mergeMap = {
     "BaselineTag": sumLists,
 }
 
+otTables.MathConstants.mergeMap = {
+    "*": first,
+}
+
+otTables.MathGlyphInfo.mergeMap = {
+    "*": mergeObjects,
+}
+
+otTables.MathItalicsCorrectionInfo.mergeMap = {
+    "Coverage": mergeObjects,
+    "ItalicsCorrectionCount": sum,
+    "ItalicsCorrection": sumLists,
+}
+
+otTables.MathTopAccentAttachment.mergeMap = {
+    "TopAccentCoverage": mergeObjects,
+    "TopAccentAttachmentCount": sum,
+    "TopAccentAttachment": sumLists,
+}
+
+otTables.MathKernInfo.mergeMap = {
+    "MathKernCoverage": mergeObjects,
+    "MathKernCount": sum,
+    "MathKernInfoRecords": sumLists,
+}
+
+otTables.MathVariants.mergeMap = {
+    "MinConnectorOverlap": first,
+    "VertGlyphCoverage": mergeObjects,
+    "HorizGlyphCoverage": mergeObjects,
+    "VertGlyphCount": sum,
+    "HorizGlyphCount": sum,
+    "VertGlyphConstruction": sumLists,
+    "HorizGlyphConstruction": sumLists,
+}
+
 otTables.GDEF.mergeMap = otTables.GSUB.mergeMap = otTables.GPOS.mergeMap = (
     otTables.BASE.mergeMap
 ) = otTables.JSTF.mergeMap = otTables.MATH.mergeMap = {
