@@ -1343,6 +1343,46 @@ class BuilderTest(unittest.TestCase):
         fvr = table.FeatureVariations.FeatureVariationRecord[0]
         assert fvr.FeatureTableSubstitution.SubstitutionCount == 2
 
+    def test_conditionset_multiple_features_sorted(self):
+        """Test that FeatureTableSubstitution records are sorted by FeatureIndex
+        when several `variation` blocks sharing a `conditionset` are not in
+        feature tag order."""
+
+        features = """
+            languagesystem DFLT dflt;
+
+            conditionset heavy {
+                wght 600 1000;
+            } heavy;
+
+            variation calt heavy { sub a by b; } calt;
+            variation rlig heavy { sub b by c; } rlig;
+            variation liga heavy { sub c by d; } liga;
+            variation ss01 heavy { sub d by e; } ss01;
+            variation ss02 heavy { sub e by f; } ss02;
+            variation ss03 heavy { sub f by g; } ss03;
+        """
+
+        font = makeTTFont()
+        font["name"] = newTable("name")
+        addFvar(font, [("wght", 0, 0, 1000, "Weight")], [])
+        del font["name"]
+        addOpenTypeFeaturesFromString(font, features)
+
+        table = font["GSUB"].table
+        assert [r.FeatureTag for r in table.FeatureList.FeatureRecord] == [
+            "calt",
+            "liga",
+            "rlig",
+            "ss01",
+            "ss02",
+            "ss03",
+        ]
+        assert table.FeatureVariations.FeatureVariationCount == 1
+        fts = table.FeatureVariations.FeatureVariationRecord[0].FeatureTableSubstitution
+        assert fts.SubstitutionCount == 6
+        assert [r.FeatureIndex for r in fts.SubstitutionRecord] == [0, 1, 2, 3, 4, 5]
+
     def test_condition_set_avar(self):
         """Test that the `avar` table is consulted when normalizing user-space
         values."""

@@ -188,6 +188,22 @@ def test_addFeatureVariations_existing_condition(varfont):
     assert _substitution_features(gsub, rec_index=0) == [(0, "ccmp"), (1, "rlig")]
 
 
+def test_addFeatureVariations_existing_condition_sorted(varfont):
+    # Add 'rlig' first, then 'ccmp' with the same condition: 'ccmp' is inserted
+    # before 'rlig' in the FeatureList, and the FeatureTableSubstitution records
+    # must still be sorted by FeatureIndex.
+    addFeatureVariations(
+        varfont, [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})], featureTag="rlig"
+    )
+    addFeatureVariations(
+        varfont, [([{"wght": (0.5, 1.0)}], {"B": "B.alt"})], featureTag="ccmp"
+    )
+
+    gsub = varfont["GSUB"].table
+    assert len(gsub.FeatureVariations.FeatureVariationRecord) == 1
+    assert _substitution_features(gsub, rec_index=0) == [(0, "ccmp"), (1, "rlig")]
+
+
 @pytest.mark.parametrize("same_condition", [False, True])
 @pytest.mark.parametrize("explicit_empty", [False, True])
 @pytest.mark.parametrize("lazy", [False, True])
