@@ -2079,6 +2079,24 @@ class ParserTest(unittest.TestCase):
             " <device NULL> <device 33 -113, 44 -114, 55 115>>",
         )
 
+    def test_valuerecord_format_c_all_devices_null(self):
+        doc = self.parse(
+            "feature test {"
+            "    valueRecordDef <-80 0 -160 0"
+            "        <device NULL> <device NULL> <device NULL> <device NULL>> foo;"
+            "} test;"
+        )
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, -80)
+        self.assertEqual(value.yPlacement, 0)
+        self.assertEqual(value.xAdvance, -160)
+        self.assertEqual(value.yAdvance, 0)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.asFea(), "<-80 0 -160 0>")
+
     def test_valuerecord_format_d(self):
         doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")
         value = doc.statements[0].statements[0].value
