@@ -3,6 +3,8 @@ from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import stripVariableItemsFromTTX
 from fontTools.misc.textTools import Tag
 from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.fontBuilder import FontBuilder
 from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
@@ -2673,6 +2675,72 @@ def makeFeatureVarsFont(conditionalSubstitutions):
 
 
 class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize("pinned_axis", ["wght", "wdth"])
+    def test_partial_instance_preserves_rule_substitutions(self, pinned_axis):
+        fb = FontBuilder(1000)
+        order = [".notdef", "dollar", "dollar.nostroke", "A", "a"]
+        fb.setupGlyphOrder(order)
+        fb.setupCharacterMap({0x24: "dollar", 0x41: "A", 0x61: "a"})
+        fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Rules", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+        fb.setupFvar(
+            [
+                ("wght", 100, 400, 900, "Weight"),
+                ("wdth", 50, 100, 200, "Width"),
+            ],
+            [],
+        )
+        featureVars.addFeatureVariations(
+            fb.font,
+            [
+                ([{"wght": (0.2, 1)}], {"dollar": "dollar.nostroke"}),
+                ([{"wdth": (0.75, 1)}], {"A": "a"}),
+            ],
+        )
+
+        def roundtrip(font):
+            stream = BytesIO()
+            font.save(stream)
+            stream.seek(0)
+            return ttLib.TTFont(stream)
+
+        def substitutions(font, location):
+            gsub = font["GSUB"].table
+            feature = gsub.FeatureList.FeatureRecord[0].Feature
+            axes = [axis.axisTag for axis in font["fvar"].axes]
+            variations = getattr(gsub, "FeatureVariations", None)
+            for record in variations.FeatureVariationRecord if variations else []:
+                conditions = (
+                    record.ConditionSet.ConditionTable if record.ConditionSet else []
+                )
+                if all(
+                    condition.FilterRangeMinValue
+                    <= location.get(axes[condition.AxisIndex], 0)
+                    <= condition.FilterRangeMaxValue
+                    for condition in conditions
+                ):
+                    feature = record.FeatureTableSubstitution.SubstitutionRecord[
+                        0
+                    ].Feature
+                    break
+            return _getSubstitutions(gsub, feature.LookupListIndex)
+
+        original = roundtrip(fb.font)
+        partial = roundtrip(
+            instancer.instantiateVariableFont(
+                original, {pinned_axis: 900 if pinned_axis == "wght" else 200}
+            )
+        )
+        remaining_axis = "wdth" if pinned_axis == "wght" else "wght"
+        for value in (-1, 0, 0.5, 0.8, 1):
+            assert substitutions(partial, {remaining_axis: value}) == substitutions(
+                original, {pinned_axis: 1, remaining_axis: value}
+            )
+
     @pytest.mark.parametrize(
         "location, appliedSubs, expectedRecords",
         [
@@ -2694,7 +2762,7 @@ class InstantiateFeatureVariationsTest(object):
                         {"cntr": (0.75, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
                     ),
-                    ({}, {}),
+                    ({}, {"uni0024": "uni0024.nostroke"}),
                 ],
             ),
             (
@@ -2713,7 +2781,7 @@ class InstantiateFeatureVariationsTest(object):
                         {"wght": (0.20886, 1.0)},
                         {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
                     ),
-                    ({}, {}),
+                    ({}, {"uni0041": "uni0061"}),
                 ],
             ),
             (
