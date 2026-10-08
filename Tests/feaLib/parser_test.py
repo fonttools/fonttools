@@ -1929,6 +1929,25 @@ class ParserTest(unittest.TestCase):
         s = doc.statements[0].statements[0]
         self.assertIsInstance(s, ast.SubtableStatement)
 
+    def test_table_BASE_script_list_without_tag_list(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "BaseScriptList must be preceded by BaseTagList",
+            self.parse,
+            "table BASE { HorizAxis.BaseScriptList latn romn 0; } BASE;",
+        )
+
+    def test_table_BASE_default_baseline_not_in_tag_list(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Default baseline "ideo" is not in BaseTagList',
+            self.parse,
+            "table BASE {"
+            "    VertAxis.BaseTagList romn;"
+            "    VertAxis.BaseScriptList latn ideo 0;"
+            "} BASE;",
+        )
+
     def test_table_badEnd(self):
         self.assertRaisesRegex(
             FeatureLibError,
