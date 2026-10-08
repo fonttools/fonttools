@@ -1305,6 +1305,10 @@ class cmap_format_12_or_13(CmapSubtable):
                 + self.data
             )
         charCodes = list(self.cmap.keys())
+        if not charCodes:
+            return struct.pack(
+                ">HHLLL", self.format, self.reserved, 16, self.language, 0
+            )
         names = list(self.cmap.values())
         nameMap = ttFont.getReverseGlyphMap()
         try:
