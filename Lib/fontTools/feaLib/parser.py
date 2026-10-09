@@ -1351,6 +1351,7 @@ class Parser(object):
 
     def parse_table_BASE_(self, table):
         statements = table.statements
+        horiz_bases = vert_bases = None
         while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
@@ -1360,7 +1361,12 @@ class Parser(object):
             elif self.is_cur_keyword_("HorizAxis.BaseTagList"):
                 horiz_bases = self.parse_base_tag_list_()
             elif self.is_cur_keyword_("HorizAxis.BaseScriptList"):
-                horiz_scripts = self.parse_base_script_list_(len(horiz_bases))
+                if horiz_bases is None:
+                    raise FeatureLibError(
+                        "BaseScriptList must be preceded by BaseTagList",
+                        self.cur_token_location_,
+                    )
+                horiz_scripts = self.parse_base_script_list_(horiz_bases)
                 statements.append(
                     self.ast.BaseAxis(
                         horiz_bases,
@@ -1385,7 +1391,12 @@ class Parser(object):
             elif self.is_cur_keyword_("VertAxis.BaseTagList"):
                 vert_bases = self.parse_base_tag_list_()
             elif self.is_cur_keyword_("VertAxis.BaseScriptList"):
-                vert_scripts = self.parse_base_script_list_(len(vert_bases))
+                if vert_bases is None:
+                    raise FeatureLibError(
+                        "BaseScriptList must be preceded by BaseTagList",
+                        self.cur_token_location_,
+                    )
+                vert_scripts = self.parse_base_script_list_(vert_bases)
                 statements.append(
                     self.ast.BaseAxis(
                         vert_bases,
@@ -1658,22 +1669,27 @@ class Parser(object):
         self.expect_symbol_(";")
         return bases
 
-    def parse_base_script_list_(self, count):
+    def parse_base_script_list_(self, bases):
         assert self.cur_token_ in (
             "HorizAxis.BaseScriptList",
             "VertAxis.BaseScriptList",
         ), self.cur_token_
-        scripts = [self.parse_base_script_record_(count)]
+        scripts = [self.parse_base_script_record_(bases)]
         while self.next_token_ == ",":
             self.expect_symbol_(",")
-            scripts.append(self.parse_base_script_record_(count))
+            scripts.append(self.parse_base_script_record_(bases))
         self.expect_symbol_(";")
         return scripts
 
-    def parse_base_script_record_(self, count):
+    def parse_base_script_record_(self, bases):
         script_tag = self.expect_script_tag_()
         base_tag = self.expect_script_tag_()
-        coords = [self.expect_number_() for i in range(count)]
+        if base_tag not in bases:
+            raise FeatureLibError(
+                'Default baseline "%s" is not in BaseTagList' % base_tag.strip(),
+                self.cur_token_location_,
+            )
+        coords = [self.expect_number_() for i in range(len(bases))]
         return script_tag, base_tag, coords
 
     def parse_base_minmax_(self):
