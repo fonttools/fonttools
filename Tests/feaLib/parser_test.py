@@ -1370,6 +1370,30 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(mc.glyphSet(), ("acute", "grave"))
         self.assertEqual((mc.anchor.x, mc.anchor.y), (350, 3))
 
+    def test_nameid_windows_unpaired_surrogate(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Name string is not valid utf_16_be",
+            self.parse,
+            r'table name { nameid 9 "Joachim \d800"; } name;',
+        )
+
+    def test_nameid_mac_unencodable_character(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Name string is not valid mac_roman",
+            self.parse,
+            'table name { nameid 9 1 "A\U0001f600"; } name;',
+        )
+
+    def test_stat_name_unpaired_surrogate(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Name string is not valid utf_16_be",
+            self.parse,
+            r'table STAT { ElidedFallbackName { name "\dc00"; }; } STAT;',
+        )
+
     def test_nameid_windows_utf16(self):
         doc = self.parse(r'table name { nameid 9 "M\00fcller-Lanc\00e9"; } name;')
         name = doc.statements[0].statements[0]
