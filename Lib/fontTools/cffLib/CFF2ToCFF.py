@@ -131,6 +131,20 @@ def _convertCFF2ToCFF(cff, otFont):
     # stack-use fixup. So we remove all unused subroutines now.
     cff.remove_unused_subroutines()
 
+    if len(fdArray) == 1:
+        # With a single FontDict there's no need for a CID-keyed font; make a
+        # name-keyed one instead, which keeps the glyph names and is what most
+        # client code expects.
+        topDict.Private = fdArray[0].Private
+        for key in ("FDArray", "FDSelect"):
+            topDict.rawDict.pop(key, None)
+            if hasattr(topDict, key):
+                delattr(topDict, key)
+        for attr in ("fdArray", "fdSelect"):
+            if hasattr(charStrings, attr):
+                delattr(charStrings, attr)
+        return
+
     mapping = {
         name: ("cid" + str(n).zfill(5) if n else ".notdef")
         for n, name in enumerate(topDict.charset)
