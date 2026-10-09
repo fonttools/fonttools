@@ -715,7 +715,9 @@ def main(args=None):
             from fontTools.designspaceLib import DesignSpaceDocument
 
             designspace = DesignSpaceDocument.fromfile(args.inputs[0])
-            args.inputs = [master.path for master in designspace.sources]
+            args.inputs = [
+                (master.path, master.layerName) for master in designspace.sources
+            ]
             locations = [master.location for master in designspace.sources]
             discrete_axes = {
                 a.name for a in designspace.axes if not hasattr(a, "minimum")
@@ -894,6 +896,10 @@ def main(args=None):
         locations = [{} for _ in fonts]
 
     for filename in args.inputs:
+        layerName = None
+        if isinstance(filename, tuple):
+            filename, layerName = filename
+
         if filename.endswith(".ufo"):
             from fontTools.ufoLib import UFOReader
 
@@ -901,7 +907,7 @@ def main(args=None):
             info = SimpleNamespace()
             font.readInfo(info)
             upem = info.unitsPerEm
-            fonts.append(font)
+            fonts.append(font.getGlyphSet(layerName=layerName))
         else:
             from fontTools.ttLib import TTFont
 
@@ -909,7 +915,10 @@ def main(args=None):
             upem = font["head"].unitsPerEm
             fonts.append(font)
 
-        names.append(basename(filename).rsplit(".", 1)[0])
+        name = basename(filename).rsplit(".", 1)[0]
+        if layerName is not None:
+            name += " (%s)" % layerName
+        names.append(name)
 
     if len(fonts) < 2:
         log.warning("Font file does not seem to be variable. Nothing to check.")
