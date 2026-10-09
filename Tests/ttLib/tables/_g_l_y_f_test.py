@@ -1458,6 +1458,93 @@ def build_composite_dag(n):
     return glyf
 
 
+def test_composite_dag_under_point_limit():
+    glyf = build_composite_dag(13)
+    glyph = glyf["g13"]
+
+    coords, endPts, flags = glyph.getCoordinates(glyf)
+    assert len(coords) == len(flags) == 32768
+    assert endPts == list(range(3, 32768, 4))
+    assert list(coords[:4]) == [(0, 0), (0, 10), (10, 10), (10, 0)]
+    assert set(coords) == {(0, 0), (0, 10), (10, 10), (10, 0)}
+
+    assert glyph.getCompositeMaxpValues(glyf) == (32768, 8192, 13)
+    assert glyph.getCompositeMaxpValues(glyf, maxpValuesCache={}) == (
+        32768,
+        8192,
+        13,
+    )
+
+
+def test_composite_point_limit():
+    glyf = newTable("glyf")
+    big = Glyph()
+    big.numberOfContours = 1
+    big.coordinates = GlyphCoordinates([(i % 100, i // 100) for i in range(0xFFFF)])
+    big.endPtsOfContours = [0xFFFF - 1]
+    big.flags = array.array("B", [flagOnCurve] * 0xFFFF)
+    dot = Glyph()
+    dot.numberOfContours = 1
+    dot.coordinates = GlyphCoordinates([(0, 0)])
+    dot.endPtsOfContours = [0]
+    dot.flags = array.array("B", [flagOnCurve])
+    glyf.glyphs = {"big": big, "dot": dot}
+    for name, components in [("atLimit", ["big"]), ("overLimit", ["big", "dot"])]:
+        pen = TTGlyphPen(glyf)
+        for component in components:
+            pen.addComponent(component, (1, 0, 0, 1, 0, 0))
+        glyf.glyphs[name] = pen.glyph()
+    glyf.glyphOrder = list(glyf.glyphs)
+
+    coords, endPts, flags = glyf["atLimit"].getCoordinates(glyf)
+    assert len(coords) == len(flags) == 0xFFFF
+    assert endPts == [0xFFFF - 1]
+
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["overLimit"].getCoordinates(glyf)
+
+
+def test_composite_dag_over_point_limit():
+    glyf = build_composite_dag(20)
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["g20"].getCoordinates(glyf)
+    # 4 * 2**14 points is one more than the limit
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["g14"].getCoordinates(glyf)
+
+
+def test_composite_dag_empty_leaf():
+    glyf = build_composite_dag(22)
+    glyf.glyphs["g0"] = Glyph()
+    assert glyf["g22"].getCoordinates(glyf) == (GlyphCoordinates(), [], bytearray())
+
+
+@pytest.mark.parametrize("round", [noRound, otRound])
+def test_getCoordinates_reused_component(round):
+    glyf = build_composite_dag(1)
+    transforms = [
+        (0.5, 0, 0, 1.5, 3, 7),
+        (1, 0, 0, 1, -20, 5),
+        (0.3, 0.2, -0.1, 0.7, 11.5, 0),
+    ]
+    for i, transform in enumerate(transforms):
+        pen = TTGlyphPen(glyf)
+        pen.addComponent("g1", transform)
+        glyf.glyphs[f"single{i}"] = pen.glyph()
+    pen = TTGlyphPen(glyf)
+    for transform in transforms + transforms[::-1]:
+        pen.addComponent("g1", transform)
+    glyf.glyphs["multi"] = pen.glyph()
+
+    coords, endPts, flags = glyf["multi"].getCoordinates(glyf, round=round)
+    expected = GlyphCoordinates()
+    for i in list(range(len(transforms))) + list(reversed(range(len(transforms)))):
+        expected.extend(glyf[f"single{i}"].getCoordinates(glyf, round=round)[0])
+    assert coords == expected
+    assert endPts == list(range(3, len(expected), 4))
+    assert flags == bytearray([flagOnCurve]) * len(expected)
+
+
 def test_maxp_recalc_composite_dag():
     n = 20
     glyf = build_composite_dag(n)
