@@ -1,3 +1,4 @@
+from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import getXML, parseXML
@@ -1430,6 +1431,98 @@ def test_unsigned_instruction_length(length, composite):
     assert reloaded.program.getBytecode() == glyph.program.getBytecode()
     assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
     assert reloaded.compile(glyf) == data
+
+
+def build_composite_dag(n):
+    """Return a glyf table where composite 'g{k}' uses 'g{k-1}' twice, for k
+    from 1 to n, and 'g0' is a square: 'g{k}' flattens to 4 * 2**k points.
+    """
+
+    def square():
+        pen = TTGlyphPen(None)
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((10, 10))
+        pen.lineTo((10, 0))
+        pen.closePath()
+        return pen.glyph()
+
+    glyf = newTable("glyf")
+    glyf.glyphOrder = [".notdef"] + [f"g{k}" for k in range(n + 1)]
+    glyf.glyphs = {".notdef": square(), "g0": square()}
+    for k in range(1, n + 1):
+        pen = TTGlyphPen(glyf)
+        pen.addComponent(f"g{k-1}", (1, 0, 0, 1, 0, 0))
+        pen.addComponent(f"g{k-1}", (1, 0, 0, 1, 0, 0))
+        glyf.glyphs[f"g{k}"] = pen.glyph()
+    return glyf
+
+
+def test_maxp_recalc_composite_dag():
+    n = 20
+    glyf = build_composite_dag(n)
+    fb = FontBuilder(unitsPerEm=1000, isTTF=True)
+    fb.setupGlyphOrder(glyf.glyphOrder)
+    fb.setupGlyf(glyf.glyphs, calcGlyphBounds=False)
+    boundsDone = set()
+    for glyphName in glyf.glyphOrder:
+        glyf[glyphName].recalcBounds(glyf, boundsDone=boundsDone)
+    fb.setupHorizontalMetrics({name: (10, 0) for name in glyf.glyphOrder})
+    font = fb.font
+
+    # bounds of composites with integer offsets don't need flattening
+    font["glyf"].compile(font)
+
+    maxp = font["maxp"]
+    maxp.recalc(font)
+    assert maxp.maxPoints == 4
+    assert maxp.maxContours == 1
+    assert maxp.maxCompositePoints == 4 * 2**n
+    assert maxp.maxCompositeContours == 2**n
+    assert maxp.maxComponentElements == 2
+    assert maxp.maxComponentDepth == n
+    head = font["head"]
+    assert (head.xMin, head.yMin, head.xMax, head.yMax) == (0, 0, 10, 10)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "ttx/data/TestTTF.ttf",
+        "qu2cu/data/NotoSansArabic-Regular.quadratic.subset.ttf",
+        "subset/data/BungeeColor-Regular.ttx",
+        "varLib/data/MutatorSans_All_Variable.ttx",
+        "varLib/instancer/data/PartialInstancerTest3-VF.ttx",
+        None,
+    ],
+)
+def test_getCompositeMaxpValues_cache(path):
+    if path is None:
+        glyf = build_composite_dag(12)
+    else:
+        path = Path(__file__).parent.parent.parent / path
+        if path.suffix == ".ttx":
+            font = TTFont()
+            font.importXML(path)
+        else:
+            font = TTFont(path)
+        glyf = font["glyf"]
+    composites = [name for name in glyf.glyphOrder if glyf[name].isComposite()]
+    assert composites
+
+    for depth in (1, 3):
+        expected = {
+            name: glyf[name].getCompositeMaxpValues(glyf, depth) for name in composites
+        }
+        for glyphNames in (composites, composites[::-1]):
+            cache = {}
+            for name in glyphNames:
+                assert (
+                    glyf[name].getCompositeMaxpValues(
+                        glyf, depth, maxpValuesCache=cache
+                    )
+                    == expected[name]
+                )
 
 
 if __name__ == "__main__":

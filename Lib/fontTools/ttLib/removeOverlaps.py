@@ -196,11 +196,14 @@ def _remove_glyf_overlaps(
     # process all simple glyphs first, then composites with increasing component depth,
     # so that by the time we test for component intersections the respective base glyphs
     # have already been simplified
+    maxpValuesCache = {}
     glyphNames = sorted(
         glyphNames,
         key=lambda name: (
             (
-                glyfTable[name].getCompositeMaxpValues(glyfTable).maxComponentDepth
+                glyfTable[name]
+                .getCompositeMaxpValues(glyfTable, maxpValuesCache=maxpValuesCache)
+                .maxComponentDepth
                 if glyfTable[name].isComposite()
                 else 0
             ),

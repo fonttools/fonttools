@@ -1013,11 +1013,14 @@ def instantiateGvar(varfont, axisLimits, optimize=True):
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the
     # base glyph yet.
+    maxpValuesCache = {}
     glyphnames = sorted(
         glyf.glyphOrder,
         key=lambda name: (
             (
-                glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+                glyf[name]
+                .getCompositeMaxpValues(glyf, maxpValuesCache=maxpValuesCache)
+                .maxComponentDepth
                 if glyf[name].isComposite()
                 else 0
             ),

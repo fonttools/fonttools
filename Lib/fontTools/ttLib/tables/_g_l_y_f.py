@@ -844,21 +844,41 @@ class Glyph(object):
                 name, attrs, content = element
                 self.program.fromXML(name, attrs, content, ttFont)
 
-    def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
+    def getCompositeMaxpValues(
+        self, glyfTable, maxComponentDepth=1, *, maxpValuesCache=None
+    ):
+        """Return the number of points and contours of the flattened composite
+        glyph, and its maximum component depth.
+
+        ``maxpValuesCache`` is an optional dict that can be shared across calls
+        for the same glyf table to avoid recomputing the values of components
+        that are used more than once.
+        """
         assert self.isComposite()
         nContours = 0
         nPoints = 0
         initialMaxComponentDepth = maxComponentDepth
         for compo in self.components:
-            baseGlyph = glyfTable[compo.glyphName]
+            glyphName = compo.glyphName
+            baseGlyph = glyfTable[glyphName]
             if baseGlyph.numberOfContours == 0:
                 continue
             elif baseGlyph.numberOfContours > 0:
                 nP, nC = baseGlyph.getMaxpValues()
             else:
-                nP, nC, componentDepth = baseGlyph.getCompositeMaxpValues(
-                    glyfTable, initialMaxComponentDepth + 1
-                )
+                # cached depths are relative to the component's own depth
+                depthOffset = initialMaxComponentDepth + 1
+                if maxpValuesCache is not None and glyphName in maxpValuesCache:
+                    nP, nC, componentDepth = maxpValuesCache[glyphName]
+                    componentDepth += depthOffset
+                else:
+                    nP, nC, componentDepth = baseGlyph.getCompositeMaxpValues(
+                        glyfTable, depthOffset, maxpValuesCache=maxpValuesCache
+                    )
+                    if maxpValuesCache is not None:
+                        maxpValuesCache[glyphName] = CompositeMaxpValues(
+                            nP, nC, componentDepth - depthOffset
+                        )
                 maxComponentDepth = max(maxComponentDepth, componentDepth)
             nPoints = nPoints + nP
             nContours = nContours + nC
