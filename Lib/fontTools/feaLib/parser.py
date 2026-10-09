@@ -1456,7 +1456,13 @@ class Parser(object):
                 elif self.cur_token_ in ranges:
                     value = []
                     while self.next_token_ != ";":
-                        value.append(self.expect_number_())
+                        number = self.expect_number_()
+                        if key == "unicoderange" and not 0 <= number <= 127:
+                            raise FeatureLibError(
+                                "UnicodeRange bits must be between 0 and 127",
+                                self.cur_token_location_,
+                            )
+                        value.append(number)
                 elif self.is_cur_keyword_("Vendor"):
                     value = self.expect_string_()
                 statements.append(
