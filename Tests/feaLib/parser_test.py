@@ -1948,6 +1948,14 @@ class ParserTest(unittest.TestCase):
             "} BASE;",
         )
 
+    def test_table_OS_2_unicode_range_bit_out_of_range(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "UnicodeRange bits must be between 0 and 127",
+            self.parse,
+            "table OS/2 { UnicodeRange 0 200; } OS/2;",
+        )
+
     def test_table_badEnd(self):
         self.assertRaisesRegex(
             FeatureLibError,
