@@ -77,6 +77,40 @@ class CffLibTest(DataFilesHandler):
         topDict2 = font2["CFF "].cff.topDictIndex[0]
         self.assertEqual(topDict2.Encoding[32], "space")
 
+    def test_topDict_delattr(self):
+        font = TTFont(
+            self.getpath("LinLibertine_RBI.otf"),
+            recalcBBoxes=False,
+            recalcTimestamp=False,
+        )
+        topDict = font["CFF "].cff.topDictIndex[0]
+
+        # not loaded from rawDict yet
+        del topDict.Notice
+        self.assertFalse(hasattr(topDict, "Notice"))
+
+        # already loaded from rawDict
+        self.assertEqual(topDict.FullName, "Linux Libertine O Bold Italic")
+        del topDict.FullName
+        self.assertFalse(hasattr(topDict, "FullName"))
+
+        with self.assertRaises(AttributeError):
+            del topDict.Notice
+
+        private = topDict.Private
+        del topDict.Private
+        self.assertFalse(hasattr(topDict, "Private"))
+        topDict.Private = private
+
+        data = BytesIO()
+        font.save(data)
+        data.seek(0)
+        topDict2 = TTFont(data)["CFF "].cff.topDictIndex[0]
+        self.assertFalse(hasattr(topDict2, "Notice"))
+        self.assertFalse(hasattr(topDict2, "FullName"))
+        self.assertTrue(hasattr(topDict2, "FamilyName"))
+        self.assertIsInstance(topDict2.Private, PrivateDict)
+
     def test_CFF_deepcopy(self):
         """Test that deepcopying a TTFont with a CFF table does not recurse
         infinitely."""
