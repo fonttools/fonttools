@@ -1314,8 +1314,9 @@ class Parser(object):
     def unescape_string_(self, string, encoding, location=None):
         try:
             return self._unescape_string(string, encoding)
-        except UnicodeDecodeError as e:
-            # e.g. an unpaired surrogate such as "\d800" in a Windows name
+        except UnicodeError as e:
+            # e.g. an unpaired surrogate such as "\d800" in a Windows name, or a
+            # character that a Macintosh encoding cannot represent
             raise FeatureLibError(
                 f"Name string is not valid {encoding}: {e.reason}", location
             ) from e

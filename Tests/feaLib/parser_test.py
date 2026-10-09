@@ -1378,6 +1378,14 @@ class ParserTest(unittest.TestCase):
             r'table name { nameid 9 "Joachim \d800"; } name;',
         )
 
+    def test_nameid_mac_unencodable_character(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Name string is not valid mac_roman",
+            self.parse,
+            'table name { nameid 9 1 "A\U0001F600"; } name;',
+        )
+
     def test_stat_name_unpaired_surrogate(self):
         self.assertRaisesRegex(
             FeatureLibError,
