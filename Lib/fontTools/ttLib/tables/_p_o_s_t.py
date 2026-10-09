@@ -99,7 +99,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
         if sys.byteorder != "big":
             indices.byteswap()
         data = data[2 * numGlyphs :]
-        maxIndex = max(indices)
+        maxIndex = max(indices, default=0)
         self.extraNames = extraNames = unpackPStrings(data, maxIndex - 257)
         self.glyphOrder = glyphOrder = [""] * int(ttFont["maxp"].numGlyphs)
         for glyphID in range(numGlyphs):
