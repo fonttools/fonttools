@@ -1994,6 +1994,14 @@ class ParserTest(unittest.TestCase):
             "} BASE;",
         )
 
+    def test_table_OS_2_vendor_not_ascii(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Vendor ID must be ASCII",
+            self.parse,
+            'table OS/2 { Vendor "\u00e9\u00e9"; } OS/2;',
+        )
+
     def test_table_OS_2_unicode_range_bit_out_of_range(self):
         self.assertRaisesRegex(
             FeatureLibError,
