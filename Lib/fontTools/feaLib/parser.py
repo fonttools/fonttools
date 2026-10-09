@@ -1260,12 +1260,13 @@ class Parser(object):
             langID = langID or 0x0409  # English
 
         string = self.expect_string_()
+        string_location = self.cur_token_location_
         self.expect_symbol_(";")
 
         encoding = getEncoding(platformID, platEncID, langID)
         if encoding is None:
             raise FeatureLibError("Unsupported encoding", location)
-        unescaped = self.unescape_string_(string, encoding)
+        unescaped = self.unescape_string_(string, encoding, string_location)
         return platformID, platEncID, langID, unescaped
 
     def parse_stat_name_(self):
@@ -1291,10 +1292,11 @@ class Parser(object):
             langID = langID or 0x0409  # English
 
         string = self.expect_string_()
+        string_location = self.cur_token_location_
         encoding = getEncoding(platformID, platEncID, langID)
         if encoding is None:
             raise FeatureLibError("Unsupported encoding", location)
-        unescaped = self.unescape_string_(string, encoding)
+        unescaped = self.unescape_string_(string, encoding, string_location)
         return platformID, platEncID, langID, unescaped
 
     def parse_nameid_(self):
@@ -1309,7 +1311,16 @@ class Parser(object):
             nameID, platformID, platEncID, langID, string, location=location
         )
 
-    def unescape_string_(self, string, encoding):
+    def unescape_string_(self, string, encoding, location=None):
+        try:
+            return self._unescape_string(string, encoding)
+        except UnicodeDecodeError as e:
+            # e.g. an unpaired surrogate such as "\d800" in a Windows name
+            raise FeatureLibError(
+                f"Name string is not valid {encoding}: {e.reason}", location
+            ) from e
+
+    def _unescape_string(self, string, encoding):
         if encoding == "utf_16_be":
             s = re.sub(r"\\[0-9a-fA-F]{4}", self.unescape_unichr_, string)
         else:
