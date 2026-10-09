@@ -1477,6 +1477,10 @@ class Parser(object):
                         value.append(number)
                 elif self.is_cur_keyword_("Vendor"):
                     value = self.expect_string_()
+                    if not value.isascii():
+                        raise FeatureLibError(
+                            "Vendor ID must be ASCII", self.cur_token_location_
+                        )
                 statements.append(
                     self.ast.OS2Field(key, value, location=self.cur_token_location_)
                 )
