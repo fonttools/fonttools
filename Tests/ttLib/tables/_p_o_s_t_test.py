@@ -68,6 +68,19 @@ class postTest(unittest.TestCase):
         table.decompile(POST_FORMAT_2_0_DATA, font)
         self.assertEqual(getXML(table.toXML), POST_FORMAT_2_0_XML)
 
+    def test_zero_num_glyphs(self):
+        # post.numGlyphs should match maxp.numGlyphs, but some broken fonts
+        # set it to zero; https://github.com/fonttools/fonttools/issues/3060
+        data = POST_FORMAT_2_0_DATA[:32] + deHexStr("0000")
+        font = FakeFont([".notdef", "a", "b"])
+        font["maxp"] = FakeMaxp(3)
+        table = newTable("post")
+        table.decompile(data, font)
+        self.assertEqual(table.extraNames, [])
+        self.assertEqual(
+            table.getGlyphOrder(), ["glyph00000", "glyph00001", "glyph00002"]
+        )
+
 
 if __name__ == "__main__":
     import sys
