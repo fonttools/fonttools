@@ -1636,6 +1636,28 @@ class ParserTest(unittest.TestCase):
             "STAT;",
         )
 
+    def test_stat_axis_value_too_many_values(self):  # STAT AxisValue
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected 1, 2 or 3 values for axis opsz, but 4 were found.",
+            self.parse,
+            "table STAT { DesignAxis opsz 0 "
+            '{name "Optical Size";}; '
+            'AxisValue {location opsz 8 6 10 12; name "Caption";}; } '
+            "STAT;",
+        )
+
+    def test_stat_axis_value_no_values(self):  # STAT AxisValue
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected 1, 2 or 3 values for axis opsz, but 0 were found.",
+            self.parse,
+            "table STAT { DesignAxis opsz 0 "
+            '{name "Optical Size";}; '
+            'AxisValue {location opsz; name "Caption";}; } '
+            "STAT;",
+        )
+
     def test_stat_axis_value_format4(self):  # STAT AxisValue
         self.assertRaisesRegex(
             FeatureLibError,

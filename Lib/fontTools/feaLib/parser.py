@@ -1623,6 +1623,12 @@ class Parser(object):
                     "Expected integer or float.",
                     self.next_token_location_,
                 )
+        if not 1 <= len(values) <= 3:
+            raise FeatureLibError(
+                f"Expected 1, 2 or 3 values for axis {tag.strip()}, "
+                f"but {len(values)} were found.",
+                self.next_token_location_,
+            )
         if len(values) == 3:
             nominal, min_val, max_val = values
             if nominal < min_val or nominal > max_val:
