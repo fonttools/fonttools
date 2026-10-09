@@ -1,6 +1,10 @@
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.ttLib import TTFont
 from fontTools.varLib.interpolatable import main as interpolatable_main
+from fontTools.varLib.interpolatableHelpers import find_parents_and_order
+from contextlib import redirect_stdout
+from io import StringIO
+import json
 import os
 import shutil
 import sys
@@ -126,6 +130,21 @@ class InterpolatableTest(unittest.TestCase):
         ttx_dir = self.get_test_input("master_ufo")
         ufo_paths = self.get_file_list(ttx_dir, ".ufo", "TestFamily2-")
         self.assertIsNone(interpolatable_main(ufo_paths))
+
+    def test_interpolatable_cff2_json(self):
+        pytest.importorskip("scipy.sparse.csgraph")
+        ttx_path = self.get_test_input(
+            "variable_ttx_interpolatable_cff2", "interpolatable-test.ttx"
+        )
+        self.temp_dir()
+        _, otf_path = self.compile_font(ttx_path, ".otf", self.tempdir)
+        output = StringIO()
+        with redirect_stdout(output):
+            problems = interpolatable_main(["--json", otf_path])
+
+        self.assertEqual(json.loads(output.getvalue()), problems)
+        self.assertEqual(problems["uni0408"][0]["master_1_idx"], 2)
+        self.assertEqual(problems["uni0408"][0]["master_2_idx"], 3)
 
     def test_designspace(self):
         designspace_path = self.get_test_input("InterpolateLayout.designspace")
@@ -344,6 +363,48 @@ class InterpolatableTest(unittest.TestCase):
         )
         # Just make sure the code runs.
         interpolatable_main((input_path,))
+
+
+@pytest.mark.parametrize(
+    "locations, discrete_axes, parents, order",
+    [
+        ([{}, {"wght": 0.5}, {"wght": 1}], set(), [None, 0, 1], [0, 1, 2]),
+        ([{"wght": 1}, {}, {"wght": 0.5}], set(), [2, None, 1], [1, 2, 0]),
+        (
+            [{}, {"wght": 1}, {"wdth": 2}, {"wght": 1, "wdth": 2}],
+            set(),
+            [None, 0, 0, 2],
+            [0, 1, 2, 3],
+        ),
+        (
+            [
+                {"ital": 0},
+                {"ital": 0, "wght": 0.5},
+                {"ital": 1},
+                {"ital": 1, "wght": 0.5},
+            ],
+            {"ital"},
+            [None, 0, None, 2],
+            [0, 2, 1, 3],
+        ),
+    ],
+)
+def test_find_parents_and_order_scipy(locations, discrete_axes, parents, order):
+    pytest.importorskip("scipy.sparse.csgraph")
+    actual_parents, actual_order = find_parents_and_order(
+        [None] * len(locations), locations, discrete_axes=discrete_axes
+    )
+    assert actual_parents == parents
+    assert actual_order == order
+    assert all(type(i) is int for i in actual_order)
+    assert all(i is None or type(i) is int for i in actual_parents)
+    assert json.loads(json.dumps([actual_parents, actual_order])) == [parents, order]
+
+
+def test_find_parents_and_order_without_locations():
+    parents, order = find_parents_and_order([None] * 3, None)
+    assert (parents, order) == ([None, 0, 1], [0, 1, 2])
+    assert json.loads(json.dumps([parents, order])) == [[None, 0, 1], [0, 1, 2]]
 
 
 if __name__ == "__main__":
