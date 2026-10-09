@@ -1383,7 +1383,7 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             "Name string is not valid mac_roman",
             self.parse,
-            'table name { nameid 9 1 "A\U0001F600"; } name;',
+            'table name { nameid 9 1 "A\U0001f600"; } name;',
         )
 
     def test_stat_name_unpaired_surrogate(self):
