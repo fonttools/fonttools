@@ -44,6 +44,20 @@ class NameTableTest(unittest.TestCase):
         self.assertEqual("Sem Fracções", table.getDebugName(292))
         self.assertEqual(None, table.getDebugName(999))
 
+    def test_getDebugName_prefers_windows_english(self):
+        table = table__n_a_m_e()
+        table.names = [
+            makeName("Mac Bold", 258, 1, 0, 0),  # Mac, MacRoman, English
+            makeName("Mac Gras", 258, 1, 0, 1),  # Mac, MacRoman, French
+            makeName("Windows Gras", 258, 3, 1, 0x40C),  # Windows, French
+            makeName("Windows Bold", 258, 3, 1, 0x409),  # Windows, English
+            makeName("Mac Regular", 259, 1, 0, 0),  # Mac, MacRoman, English
+            makeName("Windows Normal", 259, 3, 1, 0x40C),  # Windows, French
+        ]
+        self.assertEqual("Windows Bold", table.getDebugName(258))
+        # falls back to the Mac English name if there's no Windows English one
+        self.assertEqual("Mac Regular", table.getDebugName(259))
+
     def test_setName(self):
         table = table__n_a_m_e()
         table.setName("Regular", 2, 1, 0, 0)
