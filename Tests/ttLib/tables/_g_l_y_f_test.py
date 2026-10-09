@@ -1550,10 +1550,7 @@ def test_maxp_recalc_composite_dag():
     glyf = build_composite_dag(n)
     fb = FontBuilder(unitsPerEm=1000, isTTF=True)
     fb.setupGlyphOrder(glyf.glyphOrder)
-    fb.setupGlyf(glyf.glyphs, calcGlyphBounds=False)
-    boundsDone = set()
-    for glyphName in glyf.glyphOrder:
-        glyf[glyphName].recalcBounds(glyf, boundsDone=boundsDone)
+    fb.setupGlyf(glyf.glyphs)
     fb.setupHorizontalMetrics({name: (10, 0) for name in glyf.glyphOrder})
     font = fb.font
 
