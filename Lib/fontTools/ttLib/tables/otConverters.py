@@ -73,8 +73,8 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
             converterClass = SubStruct
         elif spec.name == "FeatureParams":
             converterClass = FeatureParams
-        elif spec.name == "FeatureList":
-            converterClass = FeatureList
+        elif spec.name == "FeatureVariations":
+            converterClass = FeatureVariations
         elif spec.name == "Feature" and spec.type == "LOffset":
             converterClass = AlternateFeature
         elif spec.name in ("CIDGlyphMapping", "GlyphCIDMapping"):
@@ -767,24 +767,26 @@ class Table24(Table):
         writer.writeUInt24(0)
 
 
-class FeatureList(Table):
+class FeatureVariations(LTable):
     def read(self, reader, font, tableDict):
-        value = super().read(reader, font, tableDict)
-        # Keep the original tags: subsetting can change FeatureList before
-        # FeatureVariations is decompiled from its lazy reader.
-        reader["FeatureTags"] = (
-            tuple(record.FeatureTag for record in value.FeatureRecord)
-            if value is not None
-            else ()
-        )
-        return value
+        if self.readOffset(reader.copy()) != 0:
+            # Keep the original tags: subsetting can change FeatureList before
+            # FeatureVariations is decompiled from its lazy reader. A null
+            # FeatureVariations offset must leave FeatureList lazy.
+            featureList = tableDict.get("FeatureList")
+            reader["FeatureTags"] = tuple(
+                record.FeatureTag
+                for record in getattr(featureList, "FeatureRecord", ())
+            )
+        return super().read(reader, font, tableDict)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        writer["FeatureTags"] = (
-            tuple(record.FeatureTag for record in value.FeatureRecord)
-            if value is not None
-            else ()
-        )
+        if value is not None:
+            featureList = tableDict.get("FeatureList")
+            writer["FeatureTags"] = tuple(
+                record.FeatureTag
+                for record in getattr(featureList, "FeatureRecord", ())
+            )
         super().write(writer, font, tableDict, value, repeatIndex)
 
 

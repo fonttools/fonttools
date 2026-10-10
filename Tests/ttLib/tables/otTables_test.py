@@ -191,6 +191,50 @@ def test_feature_variations_params_after_feature_list_mutation(table_tag):
     assert rebuilt.compile(font)
 
 
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize(
+    "version,has_variations",
+    [(0x00010000, False), (0x00010001, False), (0x00010001, True)],
+)
+def test_empty_feature_list_compile(table_tag, version, has_variations):
+    font = TTFont()
+    font.setGlyphOrder([".notdef"])
+    table = newTable(table_tag)
+    table.table = getattr(otTables, table_tag)()
+    table.table.Version = version
+    table.table.ScriptList = otTables.ScriptList()
+    table.table.FeatureList = otTables.FeatureList()
+    table.table.LookupList = otTables.LookupList()
+    # Missing repeated fields compile as empty arrays without populateDefaults.
+    if has_variations:
+        table.table.FeatureVariations = otTables.FeatureVariations()
+        table.table.FeatureVariations.Version = 0x00010000
+    data = table.compile(font)
+    rebuilt = newTable(table_tag)
+    rebuilt.decompile(data, font)
+    assert rebuilt.table.FeatureList.FeatureCount == 0
+    assert rebuilt.table.FeatureList.FeatureRecord == []
+    if has_variations:
+        assert rebuilt.table.FeatureVariations.FeatureVariationRecord == []
+
+
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("version", [0x00010000, 0x00010001])
+@pytest.mark.parametrize("feature_count", [0, 10])
+def test_feature_list_stays_lazy_without_variations(table_tag, version, feature_count):
+    font = TTFont(lazy=True)
+    table = _feature_variations_table(font, table_tag, ["aalt"] * feature_count, [])
+    table.table.Version = version
+    table.table.FeatureVariations = None
+    data = table.compile(font)
+    rebuilt = newTable(table_tag)
+    rebuilt.decompile(data, font)
+    feature_list = rebuilt.table.FeatureList
+    assert "reader" in feature_list.__dict__
+    assert "FeatureRecord" not in feature_list.__dict__
+    assert feature_list.FeatureCount == feature_count
+
+
 def test_feature_variations_params_null_offset():
     converter = otTables.FeatureTableSubstitutionRecord().getConverterByName("Feature")
     font = TTFont()
