@@ -332,6 +332,8 @@ def find_parents_and_order(glyphsets, locations, *, discrete_axes=set()):
             rows, cols = tree.nonzero()
             graph = defaultdict(set)
             for row, col in zip(rows, cols):
+                # Keep master indices JSON-serializable, like the non-SciPy path.
+                row, col = int(row), int(col)
                 graph[row].add(col)
                 graph[col].add(row)
 
