@@ -73,6 +73,10 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
             converterClass = SubStruct
         elif spec.name == "FeatureParams":
             converterClass = FeatureParams
+        elif spec.name == "FeatureList":
+            converterClass = FeatureList
+        elif spec.name == "Feature" and spec.type == "LOffset":
+            converterClass = AlternateFeature
         elif spec.name in ("CIDGlyphMapping", "GlyphCIDMapping"):
             converterClass = StructWithLength
         else:
@@ -761,6 +765,41 @@ class Table24(Table):
 
     def writeNullOffset(self, writer):
         writer.writeUInt24(0)
+
+
+class FeatureList(Table):
+    def read(self, reader, font, tableDict):
+        value = super().read(reader, font, tableDict)
+        # Keep the original tags: subsetting can change FeatureList before
+        # FeatureVariations is decompiled from its lazy reader.
+        reader["FeatureTags"] = (
+            tuple(record.FeatureTag for record in value.FeatureRecord)
+            if value is not None
+            else ()
+        )
+        return value
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        writer["FeatureTags"] = (
+            tuple(record.FeatureTag for record in value.FeatureRecord)
+            if value is not None
+            else ()
+        )
+        super().write(writer, font, tableDict, value, repeatIndex)
+
+
+class AlternateFeature(LTable):
+    """Resolve a FeatureTableSubstitutionRecord's tag through its FeatureIndex."""
+
+    def read(self, reader, font, tableDict):
+        if "FeatureTags" in reader and self.readOffset(reader.copy()) != 0:
+            reader["FeatureTag"] = reader["FeatureTags"][tableDict["FeatureIndex"]]
+        return super().read(reader, font, tableDict)
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        if value is not None and "FeatureTags" in (writer.localState or {}):
+            writer["FeatureTag"] = writer["FeatureTags"][tableDict["FeatureIndex"]]
+        super().write(writer, font, tableDict, value, repeatIndex)
 
 
 # TODO Clean / merge the SubTable and SubStruct

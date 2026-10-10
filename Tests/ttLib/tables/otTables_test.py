@@ -1,7 +1,7 @@
 from fontTools.misc.testTools import getXML, parseXML, parseXmlInto, FakeFont
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 from io import StringIO
@@ -16,6 +16,236 @@ def makeCoverage(glyphs):
     coverage = otTables.Coverage()
     coverage.glyphs = glyphs
     return coverage
+
+
+def _feature_variations_table(font, table_tag, features, substitutions):
+    font.setGlyphOrder([".notdef", "a", "b"])
+    if table_tag == "GSUB":
+        lookup = '<SingleSubst><Substitution in="a" out="b"/></SingleSubst>'
+    else:
+        lookup = (
+            '<SinglePos Format="1"><Coverage><Glyph value="a"/></Coverage>'
+            '<ValueFormat value="1"/><Value XPlacement="10"/></SinglePos>'
+        )
+    lookups = "".join(
+        f'<Lookup index="{i}"><LookupType value="1"/><LookupFlag value="0"/>'
+        f"{lookup}</Lookup>"
+        for i in range(2)
+    )
+    feature_records = "".join(
+        f'<FeatureRecord index="{i}"><FeatureTag value="{tag}"/>'
+        '<Feature><LookupListIndex index="0" value="0"/></Feature></FeatureRecord>'
+        for i, tag in enumerate(features)
+    )
+    substitution_records = "".join(
+        f'<SubstitutionRecord index="{i}"><FeatureIndex value="{index}"/>'
+        f'<Feature>{params}<LookupListIndex index="0" value="1"/></Feature>'
+        "</SubstitutionRecord>"
+        for i, (index, params) in enumerate(substitutions)
+    )
+    table = newTable(table_tag)
+    table.table = parseXmlInto(
+        font,
+        getattr(otTables, table_tag)(),
+        f'<Version value="0x00010001"/><ScriptList/><LookupList>{lookups}</LookupList>'
+        f"<FeatureList>{feature_records}</FeatureList>"
+        '<FeatureVariations><Version value="0x00010000"/>'
+        '<FeatureVariationRecord index="0"><ConditionSet/>'
+        '<FeatureTableSubstitution><Version value="0x00010000"/>'
+        f"{substitution_records}</FeatureTableSubstitution>"
+        "</FeatureVariationRecord></FeatureVariations>",
+    )
+    return table
+
+
+FEATURE_PARAMS = [
+    ("kern", "", None),
+    (
+        "size",
+        '<FeatureParamsSize><DesignSize value="12.0"/><SubfamilyID value="1"/>'
+        '<SubfamilyNameID value="256"/><RangeStart value="10.0"/>'
+        '<RangeEnd value="14.0"/></FeatureParamsSize>',
+        otTables.FeatureParamsSize,
+    ),
+    (
+        "ss02",
+        '<FeatureParamsStylisticSet><Version value="0"/>'
+        '<UINameID value="270"/></FeatureParamsStylisticSet>',
+        otTables.FeatureParamsStylisticSet,
+    ),
+    (
+        "cv01",
+        '<FeatureParamsCharacterVariants><Format value="0"/>'
+        '<FeatUILabelNameID value="256"/><FeatUITooltipTextNameID value="257"/>'
+        '<SampleTextNameID value="258"/><NumNamedParameters value="2"/>'
+        '<FirstParamUILabelNameID value="259"/>'
+        '<Character index="0" value="0x0041"/>'
+        '<Character index="1" value="0x10000"/></FeatureParamsCharacterVariants>',
+        otTables.FeatureParamsCharacterVariants,
+    ),
+]
+
+
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("feature_count", [1, 10])
+@pytest.mark.parametrize(
+    "feature_tag,params,param_class", FEATURE_PARAMS, ids=[c[0] for c in FEATURE_PARAMS]
+)
+def test_feature_variations_params_roundtrip(
+    table_tag, lazy, feature_count, feature_tag, params, param_class
+):
+    font = TTFont(lazy=lazy)
+    # Unrelated features precede the referenced feature, including a lazy array.
+    features = ["aalt"] * (feature_count - 1) + [feature_tag]
+    table = _feature_variations_table(
+        font, table_tag, features, [(feature_count - 1, params)]
+    )
+    data = table.compile(font)
+    rebuilt = newTable(table_tag)
+    rebuilt.decompile(data, font)
+    variation = rebuilt.table.FeatureVariations.FeatureVariationRecord[0]
+    record = variation.FeatureTableSubstitution.SubstitutionRecord[0]
+    assert record.FeatureIndex == feature_count - 1
+    assert record.Feature.LookupListIndex == [1]
+    assert rebuilt.table.FeatureList.FeatureRecord[-1].Feature.LookupListIndex == [0]
+    actual = record.Feature.FeatureParams
+    assert type(actual) is (param_class or type(None))
+    expected = table.table.FeatureVariations.FeatureVariationRecord[0]
+    expected = expected.FeatureTableSubstitution.SubstitutionRecord[
+        0
+    ].Feature.FeatureParams
+    if actual is not None:
+        assert getXML(actual.toXML, font) == getXML(expected.toXML, font)
+    xml_roundtrip = newTable(table_tag)
+    xml_roundtrip.table = parseXmlInto(
+        font,
+        getattr(otTables, table_tag)(),
+        "\n".join(getXML(rebuilt.table.toXML, font)[1:-1]),
+    )
+    assert xml_roundtrip.compile(font) == data
+
+
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_feature_variations_params_mixed_tags(table_tag, lazy):
+    font = TTFont(lazy=lazy)
+    cases = sorted(FEATURE_PARAMS * 3, key=lambda case: case[0])
+    features = ["aalt"] * 8 + [tag for tag, _, _ in cases]
+    table = _feature_variations_table(
+        font,
+        table_tag,
+        features,
+        [(8 + i, params) for i, (_, params, _) in enumerate(cases)],
+    )
+    data = table.compile(font)
+    rebuilt = newTable(table_tag)
+    rebuilt.decompile(data, font)
+    records = rebuilt.table.FeatureVariations.FeatureVariationRecord[0]
+    records = records.FeatureTableSubstitution.SubstitutionRecord
+    # Access in reverse order; tags must not depend on the previous lazy read.
+    for i in reversed(range(len(cases))):
+        record = records[i]
+        assert record.FeatureIndex == 8 + i
+        assert type(record.Feature.FeatureParams) is (cases[i][2] or type(None))
+        if record.Feature.FeatureParams is not None:
+            expected = table.table.FeatureVariations.FeatureVariationRecord[0]
+            expected = expected.FeatureTableSubstitution.SubstitutionRecord[
+                i
+            ].Feature.FeatureParams
+            assert getXML(record.Feature.FeatureParams.toXML, font) == getXML(
+                expected.toXML, font
+            )
+    assert rebuilt.compile(font) == data
+
+
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+def test_feature_variations_params_wrong_type(table_tag):
+    font = TTFont()
+    table = _feature_variations_table(
+        font, table_tag, ["cv01"], [(0, FEATURE_PARAMS[2][1])]
+    )
+    with pytest.raises(
+        AssertionError, match="Wrong FeatureParams type for feature 'cv01'"
+    ):
+        table.compile(font)
+
+
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+def test_feature_variations_params_after_feature_list_mutation(table_tag):
+    font = TTFont(lazy=True)
+    table = _feature_variations_table(
+        font, table_tag, ["aalt", "ss02"], [(1, FEATURE_PARAMS[2][1])]
+    )
+    data = table.compile(font)
+    rebuilt = newTable(table_tag)
+    rebuilt.decompile(data, font)
+    # Subsetting edits FeatureList before it decompiles/remaps FeatureVariations.
+    rebuilt.table.FeatureList.FeatureRecord.pop(0)
+    record = rebuilt.table.FeatureVariations.FeatureVariationRecord[0]
+    record = record.FeatureTableSubstitution.SubstitutionRecord[0]
+    assert record.FeatureIndex == 1
+    assert type(record.Feature.FeatureParams) is otTables.FeatureParamsStylisticSet
+    assert record.Feature.FeatureParams.UINameID == 270
+    record.FeatureIndex = 0
+    assert rebuilt.compile(font)
+
+
+def test_feature_variations_params_null_offset():
+    converter = otTables.FeatureTableSubstitutionRecord().getConverterByName("Feature")
+    font = TTFont()
+    # Null offsets don't require a referenced FeatureRecord or tag context.
+    record = {"FeatureIndex": 0xFFFF}
+    assert converter.read(OTTableReader(b"\0\0\0\0"), font, record) is None
+    writer = OTTableWriter()
+    converter.write(writer, font, record, None)
+    assert writer.getAllData() == b"\0\0\0\0"
+
+
+@pytest.mark.parametrize("operation", ["read", "write"])
+def test_feature_variations_params_without_context(operation):
+    # A standalone record without parameters does not need a FeatureList.
+    data = deHexStr("0000 00000006 0000 0000")
+    font = TTFont()
+    record = otTables.FeatureTableSubstitutionRecord()
+    if operation == "read":
+        record.decompile(OTTableReader(data), font)
+        assert record.FeatureIndex == 0
+        assert record.Feature.FeatureParams is None
+        assert record.Feature.LookupListIndex == []
+    else:
+        record.FeatureIndex = 0
+        record.Feature = otTables.Feature()
+        record.Feature.FeatureParams = None
+        record.Feature.LookupListIndex = []
+        writer = OTTableWriter()
+        record.compile(writer, font)
+        assert writer.getAllData() == data
+
+
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_feature_variations_params_decompile(table_tag, lazy):
+    # Independently encoded layout table: ss02 FeatureParams is in an alternate
+    # Feature table only. A compiler regression must not mask a reader regression.
+    data = deHexStr(
+        "00010001 000e 0010 001c 0000001e"  # layout header
+        "0000"  # ScriptList
+        "0001 73733032 0008 0000 0000"  # FeatureList + ss02 Feature
+        "0000"  # LookupList
+        "00010000 00000001 00000010 00000012"  # FeatureVariations + record
+        "0000"  # ConditionSet
+        "00010000 0001 0000 0000000c"  # FeatureTableSubstitution + record
+        "0004 0000 0000 010e"  # alternate Feature + ss02 Version/UINameID
+    )
+    font = TTFont(lazy=lazy)
+    table = newTable(table_tag)
+    table.decompile(data, font)
+    record = table.table.FeatureVariations.FeatureVariationRecord[0]
+    params = record.FeatureTableSubstitution.SubstitutionRecord[0].Feature.FeatureParams
+    assert isinstance(params, otTables.FeatureParamsStylisticSet)
+    assert params.Version == 0
+    assert params.UINameID == 270
 
 
 @pytest.mark.parametrize("scale_x", [-0.5, 0, 0.5, 1, 2])
