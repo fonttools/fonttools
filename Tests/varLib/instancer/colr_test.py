@@ -241,3 +241,159 @@ def test_scale_outside_f2dot14_becomes_transform(font, format, sign):
     assert matrix.xy == matrix.yx == 0
     cx, cy = (37, -29) if format in (19, 23) else (0, 0)
     assert (matrix.dx, matrix.dy) == (cx * (1 - sign * 2.5), cy * (1 - sign * 2.5))
+
+
+def _radial_alpha(paint, x, y):
+    from math import sqrt
+
+    if paint.Format == ot.PaintFormat.PaintSolid:
+        return None if paint.Alpha == 0 else paint.Alpha
+    dx, dy, dr = paint.x1 - paint.x0, paint.y1 - paint.y0, paint.r1 - paint.r0
+    px, py = x - paint.x0, y - paint.y0
+    a = dx * dx + dy * dy - dr * dr
+    b = -2 * (px * dx + py * dy + paint.r0 * dr)
+    c = px * px + py * py - paint.r0 * paint.r0
+    discriminant = b * b - 4 * a * c
+    if discriminant < 0:
+        return None
+    roots = [(-b - sqrt(discriminant)) / (2 * a), (-b + sqrt(discriminant)) / (2 * a)]
+    roots = [root for root in roots if paint.r0 + root * dr >= -1e-8]
+    if not roots:
+        return None
+    t = max(roots)
+    stops = sorted(paint.ColorLine.ColorStop, key=lambda stop: stop.StopOffset)
+    first, last = stops[0].StopOffset, stops[-1].StopOffset
+    width = last - first
+    if paint.ColorLine.Extend == ot.ExtendMode.REPEAT:
+        t = first + (t - first) % width
+    elif paint.ColorLine.Extend == ot.ExtendMode.REFLECT:
+        q = (t - first) % (2 * width)
+        t = first + (q if q <= width else 2 * width - q)
+    if t < first:
+        return stops[0].Alpha
+    for left, right in zip(stops, stops[1:]):
+        if t < right.StopOffset:
+            q = (t - left.StopOffset) / (right.StopOffset - left.StopOffset)
+            return left.Alpha + q * (right.Alpha - left.Alpha)
+    return stops[-1].Alpha
+
+
+def _negative_radial_font(font, radii, extend, middle=0.5):
+    line = dict(
+        Extend=extend,
+        ColorStop=[
+            dict(
+                StopOffset=offset,
+                PaletteIndex=0,
+                Alpha=alpha,
+                VarIndexBase=ot.NO_VARIATION_INDEX,
+            )
+            for offset, alpha in [(0, 0.25), (middle, 0.5), (1, 1)]
+        ],
+    )
+    paint = dict(
+        Format=7,
+        ColorLine=line,
+        x0=10,
+        y0=15,
+        r0=100,
+        x1=410,
+        y1=215,
+        r1=100,
+        VarIndexBase=0,
+    )
+    rows = [[0], [0], [radii[0] - 100], [0], [0], [radii[1] - 100]]
+    font["COLR"] = buildCOLR(
+        {"a": paint},
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=buildVarStore(
+            buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"]),
+            [buildVarData([0], rows)],
+        ),
+    )
+    return roundtrip(font)
+
+
+@pytest.mark.parametrize(
+    "radii", [(-100, 500), (500, -100), (-100, -200), (-200, -100), (-100, -100)]
+)
+@pytest.mark.parametrize("extend", ["pad", "repeat", "reflect"])
+@pytest.mark.parametrize("unordered", [False, True])
+def test_full_negative_radial_preserves_geometry_and_color_line(
+    font, radii, extend, unordered
+):
+    from copy import deepcopy
+
+    font = _negative_radial_font(font, radii, extend)
+    if unordered:
+        stops = paints(font)[0].ColorLine.ColorStop
+        stops[:] = [stops[2], stops[0], stops[1]]
+    expected = deepcopy(paints(font)[0])
+    expected.r0, expected.r1 = radii
+    result = instance(font, {"wght": 900, "wdth": 100})
+    actual = paints(result)[0]
+    assert result["COLR"].table.VarStore is None
+    if actual.Format == ot.PaintFormat.PaintRadialGradient:
+        assert actual.r0 >= 0 and actual.r1 >= 0
+    else:
+        assert radii[0] == radii[1]
+        assert actual.Format == ot.PaintFormat.PaintSolid and actual.Alpha == 0
+    for x in (-2000, -1000, -200, 0, 100, 400, 800, 1500):
+        for y in (-1200, -100, 0, 100, 300, 1500):
+            value = _radial_alpha(expected, x, y)
+            if value is None:
+                assert _radial_alpha(actual, x, y) is None
+            else:
+                assert _radial_alpha(actual, x, y) == pytest.approx(value)
+    for pinned in ("wght", "wdth"):
+        limits = {"wght": 900, "wdth": 100}
+        partial = instance(font, {pinned: limits.pop(pinned)})
+        composed = instance(partial, limits)
+        assert composed.getTableData("COLR") == result.getTableData("COLR")
+
+
+def test_full_negative_radial_preserves_fractional_stop_precision(font):
+    radii = (500, -100)
+    font = _negative_radial_font(font, radii, "pad", middle=1 / 16384)
+    result = instance(font, {"wght": 900, "wdth": 100})
+    paint = paints(result)[0]
+    assert (paint.r0, paint.r1) == (650, 50)
+    assert [stop.StopOffset for stop in paint.ColorLine.ColorStop] == [
+        0.25,
+        0.25 + 1 / 16384,
+        1.25,
+    ]
+    from copy import deepcopy
+
+    expected = deepcopy(paints(font)[0])
+    expected.r0, expected.r1 = radii
+    for x in (-200, 0, 100, 400, 800):
+        for y in (-100, 0, 300):
+            value = _radial_alpha(expected, x, y)
+            if value is None:
+                assert _radial_alpha(paint, x, y) is None
+            else:
+                assert _radial_alpha(paint, x, y) == pytest.approx(value)
+
+    for pinned in ("wght", "wdth"):
+        limits = {"wght": 900, "wdth": 100}
+        partial = instance(font, {pinned: limits.pop(pinned)})
+        composed = instance(partial, limits)
+        assert composed.getTableData("COLR") == result.getTableData("COLR")
+
+
+def test_negative_radial_keeps_shared_color_lines_unchanged(font):
+    from copy import deepcopy
+
+    font = _negative_radial_font(font, (-100, 500), "pad")
+    original = paints(font)[0]
+    other = deepcopy(original)
+    other.VarIndexBase = ot.NO_VARIATION_INDEX
+    other.ColorLine = original.ColorLine
+    record = ot.BaseGlyphPaintRecord()
+    record.BaseGlyph, record.Paint = "b", other
+    font["COLR"].table.BaseGlyphList.BaseGlyphPaintRecord.append(record)
+    negative, unchanged = paints(instance(font, {"wght": 900, "wdth": 100}))
+    assert [s.StopOffset for s in negative.ColorLine.ColorStop] == [-1, -0.5, 0]
+    assert [s.StopOffset for s in unchanged.ColorLine.ColorStop] == [0, 0.5, 1]

@@ -3,6 +3,92 @@
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otConverters import BaseFixedValue, Angle
 from fontTools.misc.roundTools import otRound
+from math import ceil, floor, gcd
+from copy import copy
+
+
+def _instantiateRadialGradient(paint):
+    if paint.Format != ot.PaintFormat.PaintVarRadialGradient:
+        return
+    r0, r1 = paint.r0, paint.r1
+    if r0 >= 0 and r1 >= 0:
+        return
+    line = paint.ColorLine
+    if r0 == r1 or not line.ColorStop:
+        # Equal negative radii have no nonnegative-radius intersection.
+        paint.__dict__.clear()
+        paint.Format = ot.PaintFormat.PaintSolid
+        paint.PaletteIndex, paint.Alpha = 0xFFFF, 0
+        return
+    dr = r1 - r0
+    ordered = sorted(line.ColorStop, key=lambda stop: stop.StopOffset)
+    first = ordered[0].StopOffset
+    last = ordered[-1].StopOffset
+    # Fractional shifts must preserve both integer circles and F2Dot14 stops.
+    lattice = gcd(16384, paint.x1 - paint.x0, paint.y1 - paint.y0, dr)
+    for shift in range(16):
+        b = 1 << shift
+        coarse = ceil(-r0 / dr) if dr > 0 else floor(r0 / -dr) - b
+        fine = (
+            ceil(-r0 / dr * lattice) / lattice
+            if dr > 0
+            else floor(r0 / -dr * lattice) / lattice - b
+        )
+        for a in (coarse, fine):
+            # omega = a + b*q, with positive b, preserves the largest valid root.
+            geometry = (
+                paint.x0 + a * (paint.x1 - paint.x0),
+                paint.y0 + a * (paint.y1 - paint.y0),
+                r0 + a * dr,
+                paint.x0 + (a + b) * (paint.x1 - paint.x0),
+                paint.y0 + (a + b) * (paint.y1 - paint.y0),
+                r0 + (a + b) * dr,
+            )
+            if any(not -32768 <= geometry[i] <= 32767 for i in (0, 1, 3, 4)) or any(
+                not 0 <= geometry[i] <= 65535 for i in (2, 5)
+            ):
+                continue
+            stops = ordered
+            offsets = [(stop.StopOffset - a) / b for stop in stops]
+            tip = -geometry[2] / (b * dr)
+            if line.Extend == ot.ExtendMode.PAD:
+                if dr > 0 and offsets[-1] <= tip:
+                    stops, offsets = [stops[-1]], [0]
+                elif dr < 0 and offsets[0] > tip:
+                    stops, offsets = [stops[0]], [0]
+            else:
+                period = (last - first) / b
+                if line.Extend == ot.ExtendMode.REFLECT:
+                    period *= 2
+                if period <= 0:
+                    paint.__dict__.clear()
+                    paint.Format = ot.PaintFormat.PaintSolid
+                    paint.PaletteIndex, paint.Alpha = 0xFFFF, 0
+                    return
+                # Moving a repeating color line by whole periods changes no colors.
+                n = ceil((-2 - offsets[0]) / period)
+                if n > floor(((32767 / 16384) - offsets[-1]) / period):
+                    continue
+                offsets = [offset + n * period for offset in offsets]
+            if any(
+                not -32768 <= offset * 16384 <= 32767
+                or offset * 16384 != otRound(offset * 16384)
+                for offset in offsets
+            ):
+                continue
+            paint.x0, paint.y0, paint.r0, paint.x1, paint.y1, paint.r1 = map(
+                int, geometry
+            )
+            # Color lines can be shared by gradients with different geometries.
+            paint.ColorLine = copy(line)
+            paint.ColorLine.ColorStop = [copy(stop) for stop in stops]
+            paint.ColorLine.StopCount = len(stops)
+            for stop, offset in zip(paint.ColorLine.ColorStop, offsets):
+                stop.StopOffset = offset
+            return
+    raise ValueError(
+        "COLR radial gradient with negative radii cannot be represented without rounding"
+    )
 
 
 def _instantiateScale(paint):
@@ -77,13 +163,14 @@ def instantiateCOLR(varfont, axisLimits):
                 value = conv.fromInt(bits)
             else:
                 value += otRound(delta)
-                if name in ("r0", "r1"):
+                if name in ("r0", "r1") and not static:
                     value = min(65535, max(0, value))
             setattr(table, name, value)
 
         if static:
             if isinstance(table, ot.Paint):
                 _instantiateScale(table)
+                _instantiateRadialGradient(table)
             if hasattr(table, "VarIndexBase"):
                 del table.VarIndexBase
             if (
