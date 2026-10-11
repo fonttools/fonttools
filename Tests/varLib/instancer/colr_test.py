@@ -648,3 +648,89 @@ def test_negative_radial_wide_stops_use_full_unsigned_radius_range(font):
         1,
         32767 / 16384,
     ]
+
+
+@pytest.mark.parametrize(
+    "dx,dy",
+    [
+        (40000, -40000),
+        (-40000, 40000),
+        (2**32 + 1, -(2**32 + 3)),
+        (2**46 + 3, -(2**46) + 5),
+        (2**46 + 3, 0),
+    ],
+)
+def test_large_translation_factors_roundtrip(font, dx, dy):
+    from fontTools.varLib.instancer.colr import _translateMatrices, _wrapTransforms
+    from fontTools.misc.transform import Transform
+
+    child = (
+        buildCOLR(
+            {"a": dict(Format=2, PaletteIndex=0, Alpha=1)},
+            version=1,
+            glyphMap=font.getReverseGlyphMap(),
+        )
+        .table.BaseGlyphList.BaseGlyphPaintRecord[0]
+        .Paint
+    )
+    root = _wrapTransforms(child, _translateMatrices(dx, dy))
+    font["COLR"] = buildCOLR({"a": root}, version=1, glyphMap=font.getReverseGlyphMap())
+    result = paints(roundtrip(font))[0]
+    matrix, depth = Transform(), 0
+    while result.Format == ot.PaintFormat.PaintTransform:
+        affine = result.Transform
+        matrix = matrix.transform(
+            (affine.xx, affine.yx, affine.xy, affine.yy, affine.dx, affine.dy)
+        )
+        result = result.Paint
+        depth += 1
+        assert depth <= 10
+    assert tuple(matrix) == (1, 0, 0, 1, dx, dy)
+
+
+@pytest.mark.parametrize("explicit_map", [False, True])
+@pytest.mark.parametrize("sign", [-1, 1])
+def test_full_large_translate_and_both_partial_orders(font, explicit_map, sign):
+    from fontTools.misc.transform import Transform
+
+    rows = [[sign * 10000], [-sign * 10000]]
+    store = buildVarStore(
+        buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"]),
+        [buildVarData([0], rows)],
+    )
+    font["COLR"] = buildCOLR(
+        {
+            "a": dict(
+                Format=15,
+                Paint=dict(Format=2, PaletteIndex=0, Alpha=1),
+                dx=sign * 30000,
+                dy=-sign * 30000,
+                VarIndexBase=0,
+            )
+        },
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=store,
+        varIndexMap=buildDeltaSetIndexMap([0, 0, 1]) if explicit_map else None,
+    )
+    if explicit_map:
+        paints(font)[0].VarIndexBase = 1
+    font = roundtrip(font)
+    for partial_limits, final_limits in [
+        ({}, {"wght": 900, "wdth": 100}),
+        ({"wght": 900}, {"wdth": 100}),
+        ({"wdth": 100}, {"wght": 900}),
+    ]:
+        partial = instance(font, partial_limits) if partial_limits else font
+        result = instance(partial, final_limits)
+        paint = paints(result)[0]
+        assert paint.Format == ot.PaintFormat.PaintTransform
+        matrix = Transform()
+        while paint.Format == ot.PaintFormat.PaintTransform:
+            affine = paint.Transform
+            matrix = matrix.transform(
+                (affine.xx, affine.yx, affine.xy, affine.yy, affine.dx, affine.dy)
+            )
+            paint = paint.Paint
+        assert tuple(matrix) == (1, 0, 0, 1, sign * 40000, -sign * 40000)
+        assert result["COLR"].table.VarStore is None

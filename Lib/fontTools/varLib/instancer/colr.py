@@ -122,6 +122,46 @@ def _scaleMatrices(sx, sy):
     return matrices
 
 
+def _wrapTransforms(child, matrices):
+    for xx, yx, xy, yy, dx, dy in reversed(matrices):
+        matrix = ot.Affine2x3()
+        matrix.xx, matrix.yx, matrix.xy, matrix.yy = xx, yx, xy, yy
+        matrix.dx, matrix.dy = dx, dy
+        wrapper = ot.Paint()
+        wrapper.Format = ot.PaintFormat.PaintTransform
+        wrapper.Paint, wrapper.Transform = child, matrix
+        child = wrapper
+    return child
+
+
+def _translateMatrices(dx, dy):
+    # T(k*q + r) = S(k) T(q) S(1/k) T(r). Power-of-two factors keep
+    # every translation exact while bounding both coefficients and depth.
+    k = 16384
+    matrices, remainders = [], []
+    while not (-32768 <= dx < 32768 and -32768 <= dy < 32768):
+        qx, qy = trunc(dx / k), trunc(dy / k)
+        remainders.append((dx - qx * k, dy - qy * k))
+        matrices.append((k, 0, 0, k, 0, 0))
+        dx, dy = qx, qy
+    matrices.append((1, 0, 0, 1, dx, dy))
+    for dx, dy in reversed(remainders):
+        matrices.append((1 / k, 0, 0, 1 / k, 0, 0))
+        matrices.append((1, 0, 0, 1, dx, dy))
+    return matrices
+
+
+def _instantiateTranslate(paint):
+    if paint.Format != ot.PaintFormat.PaintVarTranslate:
+        return
+    if -32768 <= paint.dx <= 32767 and -32768 <= paint.dy <= 32767:
+        return
+    wrapper = _wrapTransforms(paint.Paint, _translateMatrices(paint.dx, paint.dy))
+    del paint.dx, paint.dy
+    paint.Format = ot.PaintFormat.PaintTransform
+    paint.Paint, paint.Transform = wrapper.Paint, wrapper.Transform
+
+
 def _instantiateScale(paint):
     """Use an affine transform when a static scale no longer fits F2Dot14."""
     if paint.Format not in (
@@ -155,15 +195,8 @@ def _instantiateScale(paint):
                 + matrices
                 + [(1, 0, 0, 1, -cx / 2, -cy / 2)] * 2
             )
-        for xx, yx, xy, yy, dx, dy in reversed(matrices):
-            matrix = ot.Affine2x3()
-            matrix.xx, matrix.yx, matrix.xy, matrix.yy = xx, yx, xy, yy
-            matrix.dx, matrix.dy = dx, dy
-            wrapper = ot.Paint()
-            wrapper.Format = ot.PaintFormat.PaintTransform
-            wrapper.Paint, wrapper.Transform = child, matrix
-            child = wrapper
-        transform, child = child.Transform, child.Paint
+        wrapper = _wrapTransforms(child, matrices)
+        transform, child = wrapper.Transform, wrapper.Paint
     for name in ("scale", "scaleX", "scaleY", "centerX", "centerY"):
         if hasattr(paint, name):
             delattr(paint, name)
@@ -274,6 +307,7 @@ def instantiateCOLR(varfont, axisLimits):
         if static and apply:
             if isinstance(table, ot.Paint):
                 _instantiateScale(table)
+                _instantiateTranslate(table)
                 _instantiateRadialGradient(table)
             if hasattr(table, "VarIndexBase"):
                 del table.VarIndexBase
