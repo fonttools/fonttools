@@ -233,13 +233,14 @@ def test_constant_store_becomes_static_with_an_axis_remaining(font):
     assert all(p.Format in (2, 4) for p in paints(result))
 
 
+@pytest.mark.parametrize("delta", [16384, 2147483647])
 @pytest.mark.parametrize("format", [17, 19, 21, 23])
 @pytest.mark.parametrize("sign", [1, -1])
 @pytest.mark.parametrize("center", [37, 30000, -32768])
-def test_scale_outside_f2dot14_becomes_transform(font, format, sign, center):
+def test_scale_outside_f2dot14_becomes_transform(font, format, sign, center, delta):
     regions = buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"])
     store = buildVarStore(
-        regions, [buildVarData([0], [[sign * 16384]] * 2 + [[0]] * 2)]
+        regions, [buildVarData([0], [[sign * delta]] * 2 + [[0]] * 2)]
     )
     paint = dict(
         Format=format,
@@ -261,22 +262,29 @@ def test_scale_outside_f2dot14_becomes_transform(font, format, sign, center):
     paint = paints(result)[0]
     assert paint.Format == ot.PaintFormat.PaintTransform
     xx = yy = 1
-    dx = dy = 0
+    xy = yx = dx = dy = 0
     depth = 0
     while paint.Format == ot.PaintFormat.PaintTransform:
         matrix = paint.Transform
-        assert matrix.xy == matrix.yx == 0
-        dx += xx * matrix.dx
-        dy += yy * matrix.dy
-        xx *= matrix.xx
-        yy *= matrix.yy
+        dx, dy = (
+            dx + xx * matrix.dx + xy * matrix.dy,
+            dy + yx * matrix.dx + yy * matrix.dy,
+        )
+        xx, xy, yx, yy = (
+            xx * matrix.xx + xy * matrix.yx,
+            xx * matrix.xy + xy * matrix.yy,
+            yx * matrix.xx + yy * matrix.yx,
+            yx * matrix.xy + yy * matrix.yy,
+        )
         paint = paint.Paint
         depth += 1
-        assert depth <= 5
+        assert depth <= 20
     assert paint.Format == ot.PaintFormat.PaintSolid
-    assert xx == yy == sign * 2.5
+    assert xy == yx == 0
+    expected = sign * (1.5 + delta / 16384)
+    assert xx == yy == expected
     cx, cy = (center, -29) if format in (19, 23) else (0, 0)
-    assert (dx, dy) == (cx * (1 - sign * 2.5), cy * (1 - sign * 2.5))
+    assert (dx, dy) == (cx * (1 - expected), cy * (1 - expected))
 
 
 @pytest.mark.parametrize("explicit_map", [False, True])
@@ -432,3 +440,40 @@ def test_rebased_long_delta_sums_keep_retained_variation(font, sign, explicit_ma
         assert paints(direct)[0].Transform.xx == 1.5 + sign * (
             16 if weight == 900 else -16
         )
+
+
+@pytest.mark.parametrize(
+    "sx,sy",
+    [
+        (2**32 + 1 / 16384, 1),
+        (1, -(2**33 - 1 / 16384)),
+        (-(2**28) + 33 / 16384, 2**30 + 3 / 16384),
+        (131073 + 8191 / 16384, 0),
+    ],
+)
+def test_large_scale_factors_survive_fixed_serialization(font, sx, sy):
+    from fontTools.varLib.instancer.colr import _scaleMatrices
+
+    paint = dict(Format=2, PaletteIndex=0, Alpha=1)
+    for xx, yx, xy, yy, dx, dy in reversed(_scaleMatrices(sx, sy)):
+        paint = dict(
+            Format=12,
+            Paint=paint,
+            Transform=dict(xx=xx, yx=yx, xy=xy, yy=yy, dx=dx, dy=dy),
+        )
+    font["COLR"] = buildCOLR(
+        {"a": paint}, version=1, glyphMap=font.getReverseGlyphMap()
+    )
+    paint = paints(roundtrip(font))[0]
+    xx = yy = 1
+    xy = yx = 0
+    while paint.Format == 12:
+        matrix = paint.Transform
+        xx, xy, yx, yy = (
+            xx * matrix.xx + xy * matrix.yx,
+            xx * matrix.xy + xy * matrix.yy,
+            yx * matrix.xx + yy * matrix.yx,
+            yx * matrix.xy + yy * matrix.yy,
+        )
+        paint = paint.Paint
+    assert (xx, yx, xy, yy) == (sx, 0, 0, sy)

@@ -4,6 +4,47 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otConverters import BaseFixedValue, Angle, Short, UShort
 from fontTools.misc.roundTools import otRound
 from fontTools.varLib.builder import buildVarRegion
+from math import trunc
+
+
+def _scaleMatrices(sx, sy):
+    """Bound affine fields while retaining a large scale's fractional bits."""
+    if -32768 <= sx < 32768 and -32768 <= sy < 32768:
+        return [(sx, 0, 0, sy, 0, 0)]
+    matrices = []
+    for axis, value in enumerate((sx, sy)):
+        if -32768 <= value < 32768:
+            factors = [(value, 0, 0, 1, 0, 0)]
+        else:
+            shifts = 0
+            scaled = value
+            while abs(scaled) >= 2**28:
+                scaled /= 2
+                shifts += 1
+            unit = 2 ** -max(0, shifts - 2)
+            k = 16384
+            m = trunc(scaled / k)
+            r = (scaled - k * m) / unit
+            x = trunc(r / m)
+            k += x * unit
+            r -= x * m
+            # Eliminating the -unit pivot gives diag(value, 1).
+            # The pivot permits extra fractional precision after downscaling.
+            factors = [
+                (2**shifts, 0, 0, 1 / unit, 0, 0),
+                (1, 0, k, 1, 0, 0),
+                (unit, 0, 0, 1, 0, 0),
+                (k, -unit, r, m, 0, 0),
+                (1 / unit, 0, 0, 1, 0, 0),
+                (1, 0, m, 1, 0, 0),
+                (unit, 0, 0, 1, 0, 0),
+                (0, 1, -1, 0, 0, 0),
+            ]
+        for xx, yx, xy, yy, dx, dy in factors:
+            matrix = (yy, xy, yx, xx, dy, dx) if axis else (xx, yx, xy, yy, dx, dy)
+            if matrix != (1, 0, 0, 1, 0, 0):
+                matrices.append(matrix)
+    return matrices
 
 
 def _instantiateScale(paint):
@@ -27,19 +68,21 @@ def _instantiateScale(paint):
     transform.xy, transform.yy = 0, sy
     transform.dx, transform.dy = cx * (1 - sx), cy * (1 - sy)
     child = paint.Paint
-    if not (-32768 <= transform.dx < 32768 and -32768 <= transform.dy < 32768):
-        # A centered scale can overflow even the wider translation fields.
-        # Keep translations separate, splitting the center so its inverse fits.
-        for xx, yy, dx, dy in (
-            (1, 1, -cx / 2, -cy / 2),
-            (1, 1, -cx / 2, -cy / 2),
-            (sx, sy, 0, 0),
-            (1, 1, cx / 2, cy / 2),
-            (1, 1, cx / 2, cy / 2),
-        ):
+    if not all(
+        -32768 <= value < 32768 for value in (sx, sy, transform.dx, transform.dy)
+    ):
+        # Keep large centered translations separate. Halving the center also
+        # makes the inverse of -32768 representable in Fixed.
+        matrices = _scaleMatrices(sx, sy)
+        if cx or cy:
+            matrices = (
+                [(1, 0, 0, 1, cx / 2, cy / 2)] * 2
+                + matrices
+                + [(1, 0, 0, 1, -cx / 2, -cy / 2)] * 2
+            )
+        for xx, yx, xy, yy, dx, dy in reversed(matrices):
             matrix = ot.Affine2x3()
-            matrix.xx, matrix.yy = xx, yy
-            matrix.xy = matrix.yx = 0
+            matrix.xx, matrix.yx, matrix.xy, matrix.yy = xx, yx, xy, yy
             matrix.dx, matrix.dy = dx, dy
             wrapper = ot.Paint()
             wrapper.Format = ot.PaintFormat.PaintTransform
