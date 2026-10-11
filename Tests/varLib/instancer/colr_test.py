@@ -397,3 +397,39 @@ def test_negative_radial_keeps_shared_color_lines_unchanged(font):
     negative, unchanged = paints(instance(font, {"wght": 900, "wdth": 100}))
     assert [s.StopOffset for s in negative.ColorLine.ColorStop] == [-1, -0.5, 0]
     assert [s.StopOffset for s in unchanged.ColorLine.ColorStop] == [0, 0.5, 1]
+
+
+@pytest.mark.parametrize(
+    "deltas", [(-1, -1, 1, 1), (1, 1, -1, -1), (1, -1, 1, -1), (-1, 1, -1, 1)]
+)
+@pytest.mark.parametrize("weight", [400, 525, 650, 775, 900])
+def test_clip_edges_round_outward_in_full_and_composed_instances(font, deltas, weight):
+    from math import floor, ceil
+
+    store = buildVarStore(
+        buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"]),
+        [buildVarData([0], [[delta] for delta in deltas])],
+    )
+    font["COLR"] = buildCOLR(
+        {"a": dict(Format=2, PaletteIndex=0, Alpha=1)},
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=store,
+        clipBoxes={"a": (50, 50, 500, 500, 0)},
+    )
+    font = roundtrip(font)
+    scalar = (weight - 400) / 500
+    expected = tuple(
+        (floor if i < 2 else ceil)(base + scalar * delta)
+        for i, (base, delta) in enumerate(zip((50, 50, 500, 500), deltas))
+    )
+    for partial_limits, final_limits in [
+        ({}, {"wght": weight, "wdth": 100}),
+        ({"wght": weight}, {"wdth": 100}),
+        ({"wdth": 100}, {"wght": weight}),
+    ]:
+        partial = instance(font, partial_limits) if partial_limits else font
+        result = instance(partial, final_limits)
+        clip = result["COLR"].table.ClipList.clips["a"]
+        assert clip.Format == 1
+        assert (clip.xMin, clip.yMin, clip.xMax, clip.yMax) == expected

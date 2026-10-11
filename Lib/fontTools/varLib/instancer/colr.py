@@ -162,6 +162,8 @@ def instantiateCOLR(varfont, axisLimits):
                         bits = (bits + 32768) % 65536 - 32768
                 value = conv.fromInt(bits)
             else:
+                if isinstance(table, ot.ClipBox):
+                    delta = floor(delta) if name in ("xMin", "yMin") else ceil(delta)
                 value += otRound(delta)
                 if name in ("r0", "r1") and not static:
                     value = min(65535, max(0, value))
