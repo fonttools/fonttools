@@ -1149,6 +1149,18 @@ def merge(merger, self, lst):
         self.Format = 1
 
 
+@MutatorMerger.merger(ot.MathValueRecord)
+def merge(merger, self, lst):
+    self.__dict__ = lst[0].__dict__.copy()
+    dev = getattr(self, "DeviceTable", None)
+    if dev is None or dev.DeltaFormat != 0x8000:
+        return
+    varidx = (dev.StartSize << 16) + dev.EndSize
+    self.Value += otRound(merger.instancer[varidx])
+    if merger.deleteVariations:
+        self.DeviceTable = None
+
+
 @MutatorMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
     # Hack till we become selfless.

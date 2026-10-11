@@ -1402,11 +1402,8 @@ def instantiateOTL(varfont, axisLimits):
     ):
         return
 
-    if "GPOS" in varfont:
-        msg = "Instantiating GDEF and GPOS tables"
-    else:
-        msg = "Instantiating GDEF table"
-    log.info(msg)
+    tags = [tag for tag in ("GDEF", "GPOS", "MATH") if tag in varfont]
+    log.info("Instantiating %s tables", " and ".join(tags))
 
     gdef = varfont["GDEF"].table
     varStore = gdef.VarStore
@@ -1421,18 +1418,20 @@ def instantiateOTL(varfont, axisLimits):
     # This 'merger' also works as a 'visitor' that traverses the OTL tables and
     # calls specific methods when instances of a given type are found.
     # Specifically, it adds default deltas to GPOS Anchors/ValueRecords and GDEF
-    # LigatureCarets, and optionally deletes all VariationIndex tables if the
-    # VarStore is fully instanced.
+    # LigatureCarets and MATH values, and optionally deletes VariationIndex tables
+    # if the VarStore is fully instanced.
     merger = MutatorMerger(
         varfont, defaultDeltas, deleteVariations=(not varStore.VarRegionList.Region)
     )
-    merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS"])
+    merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS", "MATH"])
 
     if varStore.VarRegionList.Region:
         varIndexMapping = varStore.optimize()
         gdef.remap_device_varidxes(varIndexMapping)
         if "GPOS" in varfont:
             varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
+        if "MATH" in varfont:
+            varfont["MATH"].table.remap_device_varidxes(varIndexMapping)
     else:
         # Downgrade GDEF.
         del gdef.VarStore
