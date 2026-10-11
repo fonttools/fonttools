@@ -25,10 +25,31 @@ def _instantiateScale(paint):
     transform.xx, transform.yx = sx, 0
     transform.xy, transform.yy = 0, sy
     transform.dx, transform.dy = cx * (1 - sx), cy * (1 - sy)
+    child = paint.Paint
+    if not (-32768 <= transform.dx < 32768 and -32768 <= transform.dy < 32768):
+        # A centered scale can overflow even the wider translation fields.
+        # Keep translations separate, splitting the center so its inverse fits.
+        for xx, yy, dx, dy in (
+            (1, 1, -cx / 2, -cy / 2),
+            (1, 1, -cx / 2, -cy / 2),
+            (sx, sy, 0, 0),
+            (1, 1, cx / 2, cy / 2),
+            (1, 1, cx / 2, cy / 2),
+        ):
+            matrix = ot.Affine2x3()
+            matrix.xx, matrix.yy = xx, yy
+            matrix.xy = matrix.yx = 0
+            matrix.dx, matrix.dy = dx, dy
+            wrapper = ot.Paint()
+            wrapper.Format = ot.PaintFormat.PaintTransform
+            wrapper.Paint, wrapper.Transform = child, matrix
+            child = wrapper
+        transform, child = child.Transform, child.Paint
     for name in ("scale", "scaleX", "scaleY", "centerX", "centerY"):
         if hasattr(paint, name):
             delattr(paint, name)
     paint.Format = ot.PaintFormat.PaintTransform
+    paint.Paint = child
     paint.Transform = transform
 
 

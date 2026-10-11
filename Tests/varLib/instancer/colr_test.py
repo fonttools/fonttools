@@ -212,7 +212,8 @@ def test_constant_store_becomes_static_with_an_axis_remaining(font):
 
 @pytest.mark.parametrize("format", [17, 19, 21, 23])
 @pytest.mark.parametrize("sign", [1, -1])
-def test_scale_outside_f2dot14_becomes_transform(font, format, sign):
+@pytest.mark.parametrize("center", [37, 30000, -32768])
+def test_scale_outside_f2dot14_becomes_transform(font, format, sign, center):
     regions = buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"])
     store = buildVarStore(
         regions, [buildVarData([0], [[sign * 16384]] * 2 + [[0]] * 2)]
@@ -227,7 +228,7 @@ def test_scale_outside_f2dot14_becomes_transform(font, format, sign):
     else:
         paint["scaleX"] = paint["scaleY"] = sign * 1.5
     if format in (19, 23):
-        paint["centerX"], paint["centerY"] = 37, -29
+        paint["centerX"], paint["centerY"] = center, -29
         if format == 23:
             store.VarData[0].Item[1][0] = 0
     font["COLR"] = buildCOLR(
@@ -236,8 +237,20 @@ def test_scale_outside_f2dot14_becomes_transform(font, format, sign):
     result = instance(roundtrip(font), {"wght": 900, "wdth": 100})
     paint = paints(result)[0]
     assert paint.Format == ot.PaintFormat.PaintTransform
-    matrix = paint.Transform
-    assert matrix.xx == matrix.yy == sign * 2.5
-    assert matrix.xy == matrix.yx == 0
-    cx, cy = (37, -29) if format in (19, 23) else (0, 0)
-    assert (matrix.dx, matrix.dy) == (cx * (1 - sign * 2.5), cy * (1 - sign * 2.5))
+    xx = yy = 1
+    dx = dy = 0
+    depth = 0
+    while paint.Format == ot.PaintFormat.PaintTransform:
+        matrix = paint.Transform
+        assert matrix.xy == matrix.yx == 0
+        dx += xx * matrix.dx
+        dy += yy * matrix.dy
+        xx *= matrix.xx
+        yy *= matrix.yy
+        paint = paint.Paint
+        depth += 1
+        assert depth <= 5
+    assert paint.Format == ot.PaintFormat.PaintSolid
+    assert xx == yy == sign * 2.5
+    cx, cy = (center, -29) if format in (19, 23) else (0, 0)
+    assert (dx, dy) == (cx * (1 - sign * 2.5), cy * (1 - sign * 2.5))
