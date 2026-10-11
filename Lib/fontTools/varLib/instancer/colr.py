@@ -54,6 +54,42 @@ def _instantiateScale(paint):
     paint.Transform = transform
 
 
+def _splitLongDeltas(data):
+    """Repeat region indices when a rebased column exceeds a signed long."""
+    if all(-2147483648 <= value <= 2147483647 for row in data.Item for value in row):
+        return
+    indices = []
+    items = [[] for _ in data.Item]
+    for column, region in enumerate(data.VarRegionIndex):
+        values = [row[column] for row in data.Item]
+        count = max(
+            (
+                max((d + 2147483646) // 2147483647, (-d + 2147483647) // 2147483648)
+                for d in values
+            ),
+            default=1,
+        )
+        count = max(1, count)
+        if len(indices) + count > 65535:
+            raise ValueError("COLR has too many variation columns")
+        indices.extend([region] * count)
+        for row, delta in zip(items, values):
+            for _ in range(count):
+                word = min(2147483647, max(-2147483648, delta))
+                row.append(word)
+                delta -= word
+    data.VarRegionIndex = indices
+    data.VarRegionCount = len(indices)
+    data.Item = items
+    longColumns = sum(
+        any(not -32768 <= row[column] <= 32767 for row in items)
+        for column in range(len(indices))
+    )
+    if longColumns > 32767:
+        raise ValueError("COLR has too many long variation columns")
+    data.calculateNumShorts()
+
+
 def instantiateCOLR(varfont, axisLimits):
     from . import instantiateItemVariationStore
 
@@ -153,31 +189,14 @@ def instantiateCOLR(varfont, axisLimits):
         regions.Region.append(buildVarRegion({}, range(regions.RegionAxisCount)))
         regions.RegionCount = len(regions.Region)
         for outer, data in enumerate(colr.VarStore.VarData):
-            defaults = [
-                otRound(deltas[(outer << 16) | inner])
-                for inner in range(len(data.Item))
-            ]
-            # A sum of valid long deltas can exceed a signed 32-bit word.
-            # Repeating the constant region permits an exact decomposition.
-            columns = max(
-                (
-                    max((d + 2147483646) // 2147483647, (-d + 2147483647) // 2147483648)
-                    for d in defaults
-                ),
-                default=1,
-            )
-            columns = max(1, columns)
-            if len(data.VarRegionIndex) + columns > 65535:
-                raise ValueError("COLR has too many variation columns")
-            data.VarRegionIndex.extend([index] * columns)
+            data.VarRegionIndex.append(index)
+            for inner, row in enumerate(data.Item):
+                row.append(otRound(deltas[(outer << 16) | inner]))
             data.VarRegionCount = len(data.VarRegionIndex)
-            for row, delta in zip(data.Item, defaults):
-                for _ in range(columns):
-                    word = min(2147483647, max(-2147483648, delta))
-                    row.append(word)
-                    delta -= word
             data.calculateNumShorts()
         deltas = dict.fromkeys(deltas, 0)
+    for data in colr.VarStore.VarData:
+        _splitLongDeltas(data)
     for root in roots:
         visit(root)
     if static:

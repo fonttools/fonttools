@@ -398,3 +398,37 @@ def test_partial_default_sum_larger_than_a_long_delta(font):
     )
     assert instancer[0] == 4294967294
     assert paints(instance(partial, {"wdth": 125}))[0].Alpha == 1
+
+
+@pytest.mark.parametrize("sign", [1, -1])
+@pytest.mark.parametrize("explicit_map", [False, True])
+def test_rebased_long_delta_sums_keep_retained_variation(font, sign, explicit_map):
+    regions = buildVarRegionList(
+        [{"wght": (0, 1, 1)}] * 2 + [{"wdth": (0, 1, 1)}] * 2,
+        ["wght", "wdth"],
+    )
+    row = [sign * 2147483647] * 2 + [-sign * 2147483647] * 2
+    store = buildVarStore(regions, [buildVarData(list(range(4)), [row])])
+    font["COLR"] = buildCOLR(
+        {
+            "a": dict(
+                Format=21,
+                Paint=dict(Format=2, PaletteIndex=0, Alpha=1),
+                scale=1.5,
+                VarIndexBase=0,
+            )
+        },
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=store,
+        varIndexMap=buildDeltaSetIndexMap([0]) if explicit_map else None,
+    )
+    for weight in (400, 900):
+        partial = instance(roundtrip(font), {"wght": weight})
+        width = 100 + 25 * (16383 if weight == 900 else 1) / 16384
+        direct = instance(font, {"wght": weight, "wdth": width})
+        composed = instance(partial, {"wdth": width})
+        assert direct.getTableData("COLR") == composed.getTableData("COLR")
+        assert paints(direct)[0].Transform.xx == 1.5 + sign * (
+            16 if weight == 900 else -16
+        )
