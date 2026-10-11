@@ -175,9 +175,14 @@ def _instantiateScale(paint):
         sx = sy = paint.scale
     else:
         sx, sy = paint.scaleX, paint.scaleY
-    if -2 <= sx < 2 and -2 <= sy < 2:
-        return
     cx, cy = getattr(paint, "centerX", 0), getattr(paint, "centerY", 0)
+    if (
+        -2 <= sx < 2
+        and -2 <= sy < 2
+        and -32768 <= cx <= 32767
+        and -32768 <= cy <= 32767
+    ):
+        return
     transform = ot.Affine2x3()
     transform.xx, transform.yx = sx, 0
     transform.xy, transform.yy = 0, sy
@@ -186,14 +191,11 @@ def _instantiateScale(paint):
     if not all(
         -32768 <= value < 32768 for value in (sx, sy, transform.dx, transform.dy)
     ):
-        # Keep large centered translations separate. Halving the center also
-        # makes the inverse of -32768 representable in Fixed.
+        # Keep centered translations separate when the combined matrix is wide.
         matrices = _scaleMatrices(sx, sy)
         if cx or cy:
             matrices = (
-                [(1, 0, 0, 1, cx / 2, cy / 2)] * 2
-                + matrices
-                + [(1, 0, 0, 1, -cx / 2, -cy / 2)] * 2
+                _translateMatrices(cx, cy) + matrices + _translateMatrices(-cx, -cy)
             )
         wrapper = _wrapTransforms(child, matrices)
         transform, child = wrapper.Transform, wrapper.Paint
@@ -203,6 +205,28 @@ def _instantiateScale(paint):
     paint.Format = ot.PaintFormat.PaintTransform
     paint.Paint = child
     paint.Transform = transform
+
+
+def _instantiateCenteredAngles(paint):
+    if paint.Format == ot.PaintFormat.PaintVarRotateAroundCenter:
+        fmt, names = ot.PaintFormat.PaintRotate, ("angle",)
+    elif paint.Format == ot.PaintFormat.PaintVarSkewAroundCenter:
+        fmt, names = ot.PaintFormat.PaintSkew, ("xSkewAngle", "ySkewAngle")
+    else:
+        return
+    cx, cy = paint.centerX, paint.centerY
+    if -32768 <= cx <= 32767 and -32768 <= cy <= 32767:
+        return
+    origin = ot.Paint()
+    origin.Format = fmt
+    origin.Paint = _wrapTransforms(paint.Paint, _translateMatrices(-cx, -cy))
+    for name in names:
+        setattr(origin, name, getattr(paint, name))
+        delattr(paint, name)
+    wrapper = _wrapTransforms(origin, _translateMatrices(cx, cy))
+    del paint.centerX, paint.centerY
+    paint.Format = ot.PaintFormat.PaintTransform
+    paint.Paint, paint.Transform = wrapper.Paint, wrapper.Transform
 
 
 def _splitLongDeltas(data):
@@ -308,6 +332,7 @@ def instantiateCOLR(varfont, axisLimits):
             if isinstance(table, ot.Paint):
                 _instantiateScale(table)
                 _instantiateTranslate(table)
+                _instantiateCenteredAngles(table)
                 _instantiateRadialGradient(table)
             if hasattr(table, "VarIndexBase"):
                 del table.VarIndexBase

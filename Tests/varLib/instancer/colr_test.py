@@ -734,3 +734,86 @@ def test_full_large_translate_and_both_partial_orders(font, explicit_map, sign):
             paint = paint.Paint
         assert tuple(matrix) == (1, 0, 0, 1, sign * 40000, -sign * 40000)
         assert result["COLR"].table.VarStore is None
+
+
+@pytest.mark.parametrize("format", [19, 23, 27, 31])
+@pytest.mark.parametrize("explicit_map", [False, True])
+@pytest.mark.parametrize(
+    "cx,cy,delta_x,delta_y",
+    [
+        (30000, -30000, 2500, -2500),
+        (-30000, 30000, -2500, 2500),
+        (1, -3, 2**30, -(2**30)),
+        (-1, 3, -(2**30), 2**30),
+    ],
+)
+def test_full_wide_centers_and_both_partial_orders(
+    font, format, explicit_map, cx, cy, delta_x, delta_y
+):
+    from fontTools.misc.transform import Transform
+
+    paint = dict(
+        Format=format,
+        Paint=dict(Format=2, PaletteIndex=0, Alpha=1),
+        centerX=cx,
+        centerY=cy,
+        VarIndexBase=0,
+    )
+    if format == 19:
+        paint.update(scaleX=1.25, scaleY=0.75)
+        deltas, linear = [1024, -1024, delta_x, delta_y], (1.5, 0, 0, 0.5)
+    elif format == 23:
+        paint.update(scale=1.25)
+        deltas, linear = [1024, delta_x, delta_y], (1.5, 0, 0, 1.5)
+    elif format == 27:
+        paint.update(angle=45)
+        deltas, linear = [1024, delta_x, delta_y], (0, 1, -1, 0)
+    else:
+        paint.update(xSkewAngle=22.5, ySkewAngle=-22.5)
+        deltas, linear = [512, -512, delta_x, delta_y], (1, -1, -1, 1)
+    rows = [[delta] * 4 for delta in deltas]
+    store = buildVarStore(
+        buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"]),
+        [buildVarData([0] * 4, rows)],
+    )
+    index_map = None
+    if explicit_map:
+        paint["VarIndexBase"] = 1
+        index_map = buildDeltaSetIndexMap([0, *range(len(rows))])
+    font["COLR"] = buildCOLR(
+        {"a": paint},
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=store,
+        varIndexMap=index_map,
+    )
+    font = roundtrip(font)
+    cx += delta_x * 4
+    cy += delta_y * 4
+    xx, yx, xy, yy = linear
+    expected = (*linear, cx - xx * cx - xy * cy, cy - yx * cx - yy * cy)
+    for partial_limits, final_limits in [
+        ({}, {"wght": 900, "wdth": 100}),
+        ({"wght": 900}, {"wdth": 100}),
+        ({"wdth": 100}, {"wght": 900}),
+    ]:
+        partial = instance(font, partial_limits) if partial_limits else font
+        result = instance(partial, final_limits)
+        current, matrix, depth = paints(result)[0], Transform(), 0
+        while current.Format != ot.PaintFormat.PaintSolid:
+            if current.Format == ot.PaintFormat.PaintTransform:
+                m = current.Transform
+                values = (m.xx, m.yx, m.xy, m.yy, m.dx, m.dy)
+            elif current.Format == ot.PaintFormat.PaintRotate:
+                assert current.angle == 90
+                values = (0, 1, -1, 0, 0, 0)
+            else:
+                assert current.Format == ot.PaintFormat.PaintSkew
+                assert (current.xSkewAngle, current.ySkewAngle) == (45, -45)
+                values = (1, -1, -1, 1, 0, 0)
+            matrix = matrix.transform(values)
+            current = current.Paint
+            depth += 1
+            assert depth <= 15
+        assert tuple(matrix) == expected
+        assert result["COLR"].table.VarStore is None
