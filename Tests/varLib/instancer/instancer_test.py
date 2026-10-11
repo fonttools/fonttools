@@ -1160,6 +1160,83 @@ def getBaseCoord(varfont):
 
 
 class InstantiateOTLTest(object):
+    @pytest.mark.parametrize("full", [False, True])
+    @pytest.mark.parametrize("delta", [1, 3, 7])
+    @pytest.mark.parametrize("kind", ["GDEF", "BASE", "GPOS"])
+    def test_preserves_ppem_devices(self, request, full, delta, kind):
+        from fontTools.otlLib.builder import buildDevice
+
+        vf = request.getfixturevalue("varfont" + kind)
+        hint = buildDevice({10: delta})
+        if kind == "GDEF":
+            record = vf["GDEF"].table.LigCaretList.LigGlyph[0].CaretValue[0]
+            record.DeviceTable = hint
+            original = record.Coordinate
+        elif kind == "BASE":
+            record = getBaseCoord(vf)
+            record.DeviceTable = hint
+            original = record.Coordinate
+        else:
+            subtable = vf["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+            record = subtable.PairSet[0].PairValueRecord[0].Value1
+            record.XAdvDevice = hint
+            original = record.XAdvance
+        limits = {"wght": 1.0}
+        if full:
+            limits["wdth"] = 0.0
+        instancer.instantiateOTL(vf, instancer.NormalizedAxisLimits(limits))
+        if kind == "GDEF":
+            record = vf["GDEF"].table.LigCaretList.LigGlyph[0].CaretValue[0]
+        elif kind == "BASE":
+            record = getBaseCoord(vf)
+        else:
+            subtable = vf["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+            record = subtable.PairSet[0].PairValueRecord[0].Value1
+        if kind in ("GDEF", "BASE"):
+            assert record.Format == 3
+            assert record.Coordinate == original
+            device = record.DeviceTable
+        else:
+            assert record.XAdvance == original
+            assert subtable.ValueFormat1 == 0x44
+            device = record.XAdvDevice
+        assert device.DeltaFormat == hint.DeltaFormat
+        assert device.DeltaValue == [delta]
+
+    @pytest.mark.parametrize("full", [False, True])
+    @pytest.mark.parametrize("delta", [1, 3, 7])
+    @pytest.mark.parametrize("hint_axis", ["X", "Y"])
+    def test_preserves_mixed_anchor_devices(self, varfontGPOS2, full, delta, hint_axis):
+        from fontTools.otlLib.builder import buildDevice
+
+        vf = varfontGPOS2
+        anchor = (
+            vf["GPOS"]
+            .table.LookupList.Lookup[0]
+            .SubTable[0]
+            .BaseArray.BaseRecord[0]
+            .BaseAnchor[0]
+        )
+        hint = buildDevice({10: delta})
+        setattr(anchor, hint_axis + "DeviceTable", hint)
+        limits = {"wght": 1.0}
+        if full:
+            limits["wdth"] = 0.0
+        instancer.instantiateOTL(vf, instancer.NormalizedAxisLimits(limits))
+        anchor = (
+            vf["GPOS"]
+            .table.LookupList.Lookup[0]
+            .SubTable[0]
+            .BaseArray.BaseRecord[0]
+            .BaseAnchor[0]
+        )
+        assert anchor.Format == 3
+        assert anchor.XCoordinate == (270 if hint_axis == "X" else 330)
+        assert anchor.YCoordinate == 450
+        assert getattr(anchor, hint_axis + "DeviceTable").DeltaValue == [delta]
+        if full and hint_axis == "Y":
+            assert getattr(anchor, "XDeviceTable", None) is None
+
     @pytest.mark.parametrize(
         "location, expected",
         [
