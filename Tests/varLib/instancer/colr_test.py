@@ -13,6 +13,7 @@ from fontTools.varLib.builder import (
     buildVarStore,
 )
 from fontTools.varLib.instancer import instantiateVariableFont
+from fontTools.varLib.varStore import VarStoreInstancer
 
 
 @pytest.fixture
@@ -66,6 +67,28 @@ def test_partial_and_composed_instances(font):
     composed = instance(partial, {"wdth": 125})
     direct = instance(font, {"wght": 650, "wdth": 125})
     assert composed.getTableData("COLR") == direct.getTableData("COLR")
+
+
+@pytest.mark.parametrize("explicit_map", [False, True])
+def test_partial_overflow_keeps_unbounded_alpha_in_the_store(font, explicit_map):
+    colr = font["COLR"].table
+    for index in (0, 3):
+        colr.VarStore.VarData[0].Item[index] = [32768, -49152]
+    if explicit_map:
+        colr.VarIndexMap = buildDeltaSetIndexMap(list(range(6)))
+    partial = instance(font, {"wght": 900})
+    store = partial["COLR"].table.VarStore
+    assert store.VarRegionList.RegionAxisCount == 1
+    instancer = VarStoreInstancer(store, partial["fvar"].axes, {})
+    assert paints(partial)[0].Alpha + instancer[0] / 16384 == 3
+    assert any(
+        all(a.StartCoord == a.PeakCoord == a.EndCoord == 0 for a in r.VarRegionAxis)
+        for r in store.VarRegionList.Region
+    )
+    for width in (100, 112.5, 118.75, 125):
+        composed = instance(partial, {"wdth": width})
+        direct = instance(font, {"wght": 900, "wdth": width})
+        assert composed.getTableData("COLR") == direct.getTableData("COLR")
 
 
 def test_moved_default_and_axis_range(font):
@@ -254,3 +277,124 @@ def test_scale_outside_f2dot14_becomes_transform(font, format, sign, center):
     assert xx == yy == sign * 2.5
     cx, cy = (center, -29) if format in (19, 23) else (0, 0)
     assert (dx, dy) == (cx * (1 - sign * 2.5), cy * (1 - sign * 2.5))
+
+
+@pytest.mark.parametrize("explicit_map", [False, True])
+def test_partial_scale_and_stop_overflows_and_moved_default(explicit_map):
+    font = TTFont()
+    font.importXML(Path(__file__).parent / "data" / "COLRv1-partial-overflow.ttx")
+    if explicit_map:
+        font["COLR"].table.VarIndexMap = buildDeltaSetIndexMap(list(range(4)))
+    partial = instance(font, {"wght": 1})
+    for width in (0.5, 0.75, 1):
+        composed = instance(partial, {"wdth": width})
+        direct = instance(font, {"wght": 1, "wdth": width})
+        assert composed.getTableData("COLR") == direct.getTableData("COLR")
+    rebased = instance(font, {"wght": (0, 0.5, 1)})
+    for weight, width in ((0, 0.5), (0.5, 0.75), (1, 1)):
+        limits = {"wght": weight, "wdth": width}
+        assert instance(rebased, limits).getTableData("COLR") == instance(
+            font, limits
+        ).getTableData("COLR")
+
+
+def test_constant_colr_regions_apply_at_the_default(font):
+    store = buildVarStore(
+        buildVarRegionList([{}], ["wght", "wdth"]), [buildVarData([0], [[32768]])]
+    )
+    font["COLR"] = buildCOLR(
+        {"a": dict(Format=3, PaletteIndex=0, Alpha=0, VarIndexBase=0)},
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=store,
+    )
+    direct = instance(font, {"wght": 400, "wdth": 100})
+    assert paints(direct)[0].Alpha == 1
+    partial = instance(font, {"wght": 400})
+    assert instance(partial, {"wdth": 100}).getTableData("COLR") == direct.getTableData(
+        "COLR"
+    )
+
+
+@pytest.mark.parametrize("field", ["translate", "radius", "affine", "clip"])
+def test_partial_overflow_of_integer_and_fixed_fields(font, field):
+    rows = [[0, 0] for _ in range(6)]
+    solid = dict(Format=2, PaletteIndex=0, Alpha=1)
+    clips = None
+    if field == "translate":
+        paint = dict(Format=15, Paint=solid, dx=30000, dy=0, VarIndexBase=0)
+        rows[0] = [10000, -40000]
+    elif field == "radius":
+        paint = dict(
+            Format=7,
+            ColorLine=dict(
+                Extend="pad",
+                ColorStop=[
+                    dict(
+                        StopOffset=0,
+                        PaletteIndex=0,
+                        Alpha=1,
+                        VarIndexBase=ot.NO_VARIATION_INDEX,
+                    )
+                ],
+            ),
+            x0=0,
+            y0=0,
+            r0=100,
+            x1=400,
+            y1=0,
+            r1=500,
+            VarIndexBase=0,
+        )
+        rows[2] = [-200, 400]
+    elif field == "affine":
+        paint = dict(
+            Format=13,
+            Paint=solid,
+            Transform=dict(xx=30000, yx=0, xy=0, yy=1, dx=0, dy=0, VarIndexBase=0),
+        )
+        rows[0] = [10000 * 65536, -30000 * 65536]
+    else:
+        paint = solid
+        clips = {"a": (0, 0, 30000, 100, 0)}
+        rows[2] = [10000, -40000]
+    store = buildVarStore(
+        buildVarRegionList(
+            [{"wght": (0, 1, 1)}, {"wdth": (0, 1, 1)}], ["wght", "wdth"]
+        ),
+        [buildVarData([0, 1], rows)],
+    )
+    font["COLR"] = buildCOLR(
+        {"a": paint},
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=store,
+        clipBoxes=clips,
+    )
+    partial = instance(roundtrip(font), {"wght": 900})
+    for width in (112.5, 118.75, 125):
+        assert instance(partial, {"wdth": width}).getTableData("COLR") == instance(
+            font, {"wght": 900, "wdth": width}
+        ).getTableData("COLR")
+
+
+def test_partial_default_sum_larger_than_a_long_delta(font):
+    regions = buildVarRegionList(
+        [{"wght": (0, 1, 1)}, {"wght": (0, 1, 1)}, {"wdth": (0, 1, 1)}],
+        ["wght", "wdth"],
+    )
+    store = buildVarStore(
+        regions, [buildVarData([0, 1, 2], [[2147483647, 2147483647, -2147483647]])]
+    )
+    font["COLR"] = buildCOLR(
+        {"a": dict(Format=3, PaletteIndex=0, Alpha=1, VarIndexBase=0)},
+        version=1,
+        glyphMap=font.getReverseGlyphMap(),
+        varStore=store,
+    )
+    partial = instance(font, {"wght": 900})
+    instancer = VarStoreInstancer(
+        partial["COLR"].table.VarStore, partial["fvar"].axes, {}
+    )
+    assert instancer[0] == 4294967294
+    assert paints(instance(partial, {"wdth": 125}))[0].Alpha == 1

@@ -1,8 +1,9 @@
 """Instantiate COLRv1 paint values and their item variation store."""
 
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otConverters import BaseFixedValue, Angle
+from fontTools.ttLib.tables.otConverters import BaseFixedValue, Angle, Short, UShort
 from fontTools.misc.roundTools import otRound
+from fontTools.varLib.builder import buildVarRegion
 
 
 def _instantiateScale(paint):
@@ -67,14 +68,16 @@ def instantiateCOLR(varfont, axisLimits):
     static = not any(any(row) for data in colr.VarStore.VarData for row in data.Item)
     mapping = colr.VarIndexMap.mapping if colr.VarIndexMap is not None else []
     visited = set()
+    preserveDefaults = False
 
-    def visit(table):
+    def visit(table, apply=True):
+        nonlocal preserveDefaults
         if id(table) in visited:
             return
         visited.add(id(table))
         table.ensureDecompiled()
         for entry in table.iterSubTables():
-            visit(entry.value)
+            visit(entry.value, apply)
 
         for name in table.getVariableAttrs():
             conv = table.getConverterByName(name)
@@ -89,6 +92,11 @@ def instantiateCOLR(varfont, axisLimits):
             value = getattr(table, name)
             if isinstance(conv, BaseFixedValue):
                 bits = otRound(conv.toInt(value) + delta)
+                if not apply:
+                    limit = 1 << (conv.staticSize * 8 - 1)
+                    if not -limit <= bits < limit:
+                        preserveDefaults = True
+                    continue
                 if name == "Alpha" and static:
                     bits = min(1 << 14, max(0, bits))
                 elif isinstance(conv, Angle) and isinstance(table, ot.Paint):
@@ -97,12 +105,19 @@ def instantiateCOLR(varfont, axisLimits):
                         bits = (bits + 32768) % 65536 - 32768
                 value = conv.fromInt(bits)
             else:
+                if not apply:
+                    derived = value + otRound(delta)
+                    if isinstance(conv, Short):
+                        preserveDefaults |= not -32768 <= derived <= 32767
+                    elif isinstance(conv, UShort):
+                        preserveDefaults |= not 0 <= derived <= 65535
+                    continue
                 value += otRound(delta)
                 if name in ("r0", "r1"):
                     value = min(65535, max(0, value))
             setattr(table, name, value)
 
-        if static:
+        if static and apply:
             if isinstance(table, ot.Paint):
                 _instantiateScale(table)
             if hasattr(table, "VarIndexBase"):
@@ -117,15 +132,54 @@ def instantiateCOLR(varfont, axisLimits):
             elif hasattr(type(table), "NoVarType"):
                 table.__class__ = type(table).NoVarType
 
+    roots = []
     if colr.BaseGlyphList is not None:
-        for record in colr.BaseGlyphList.BaseGlyphPaintRecord:
-            visit(record.Paint)
+        roots.extend(record.Paint for record in colr.BaseGlyphList.BaseGlyphPaintRecord)
     if colr.LayerList is not None:
-        for paint in colr.LayerList.Paint:
-            visit(paint)
+        roots.extend(colr.LayerList.Paint)
     if colr.ClipList is not None:
-        for clip in colr.ClipList.clips.values():
-            visit(clip)
+        roots.extend(colr.ClipList.clips.values())
+    if not static:
+        for root in roots:
+            visit(root, apply=False)
+        visited.clear()
+    if preserveDefaults:
+        # Base fields cannot encode the moved default. Keep them unchanged and
+        # represent the default deltas with an always-active variation region.
+        regions = colr.VarStore.VarRegionList
+        index = len(regions.Region)
+        if index >= 32767:
+            raise ValueError("COLR has no room for a constant variation region")
+        regions.Region.append(buildVarRegion({}, range(regions.RegionAxisCount)))
+        regions.RegionCount = len(regions.Region)
+        for outer, data in enumerate(colr.VarStore.VarData):
+            defaults = [
+                otRound(deltas[(outer << 16) | inner])
+                for inner in range(len(data.Item))
+            ]
+            # A sum of valid long deltas can exceed a signed 32-bit word.
+            # Repeating the constant region permits an exact decomposition.
+            columns = max(
+                (
+                    max((d + 2147483646) // 2147483647, (-d + 2147483647) // 2147483648)
+                    for d in defaults
+                ),
+                default=1,
+            )
+            columns = max(1, columns)
+            if len(data.VarRegionIndex) + columns > 65535:
+                raise ValueError("COLR has too many variation columns")
+            data.VarRegionIndex.extend([index] * columns)
+            data.VarRegionCount = len(data.VarRegionIndex)
+            for row, delta in zip(data.Item, defaults):
+                for _ in range(columns):
+                    word = min(2147483647, max(-2147483648, delta))
+                    row.append(word)
+                    delta -= word
+            data.calculateNumShorts()
+        deltas = dict.fromkeys(deltas, 0)
+    for root in roots:
+        visit(root)
     if static:
         colr.VarStore = None
         colr.VarIndexMap = None
