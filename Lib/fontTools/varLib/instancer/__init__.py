@@ -2639,6 +2639,21 @@ def instantiateVariableFont(
 
     axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
 
+    # Explicitly retaining an axis's original range requires no instancing.
+    # In particular it must not trigger VARC's referenced-axis restriction.
+    axisLimits = AxisLimits(
+        {
+            axis.axisTag: axisLimits[axis.axisTag]
+            for axis in varfont["fvar"].axes
+            if axis.axisTag in axisLimits
+            and (
+                axisLimits[axis.axisTag].minimum == axisLimits[axis.axisTag].maximum
+                or tuple(axisLimits[axis.axisTag])
+                != (axis.minValue, axis.defaultValue, axis.maxValue)
+            )
+        }
+    )
+
     # Keep the limited VARC support consistent even when avar2 partial
     # instancing bypasses _instantiateVariationTables.
     if "VARC" in varfont:

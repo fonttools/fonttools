@@ -143,6 +143,32 @@ def test_reject_full_instance(varc_font):
         instantiateVariableFont(varc_font, {}, static=True)
 
 
+@pytest.mark.parametrize("tag", ["wght", "opsz", "0000", "COND", None])
+@pytest.mark.parametrize("pin_unrelated", [False, True])
+def test_original_ranges_preserve_referenced_axes(varc_font, tag, pin_unrelated):
+    limits = {
+        a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
+        for a in varc_font["fvar"].axes
+        if tag is None or a.axisTag == tag
+    }
+    baseline = {"DUMY": 0.5} if pin_unrelated else {}
+    limits.update(baseline)
+    expected = _roundtrip(instantiateVariableFont(varc_font, baseline))
+    result = _roundtrip(instantiateVariableFont(varc_font, limits))
+    assert result.getTableData("VARC") == expected.getTableData("VARC")
+    assert result.getTableData("fvar") == expected.getTableData("fvar")
+    for location in ({}, {"wght": 840.3, "COND": 0.75}, {"0000": -0.5}):
+        assert _draw(result, location) == _draw(expected, location)
+
+
+def test_degenerate_axis_is_still_removed_when_explicitly_pinned(varc_font):
+    axis = varc_font["fvar"].axes[0]
+    assert axis.axisTag == "DUMY"
+    axis.minValue = axis.defaultValue = axis.maxValue = 0
+    result = _roundtrip(instantiateVariableFont(varc_font, {"DUMY": None}))
+    assert "DUMY" not in [a.axisTag for a in result["fvar"].axes]
+
+
 def test_nested_conditions(varc_font):
     location = {"wght": 840.3, "COND": 0}
     before = _draw(varc_font, location)
