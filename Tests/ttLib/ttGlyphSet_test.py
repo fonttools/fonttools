@@ -976,6 +976,12 @@ class TTGlyphSetTest(object):
         glyph = font.getGlyphSet(location={"wght": 400})["I"]
         assert glyph.width == 136
 
+        # No HVAR + non-default + no gvar entry: ``.notdef`` doesn't vary,
+        # so the fallback branch returns the hmtx advance directly without
+        # going through the phantom-point computation.
+        glyph = font.getGlyphSet(location={"wght": 1000})[".notdef"]
+        assert glyph.width == 227
+
         # draw() still populates and returns consistent widths.
         glyph = font.getGlyphSet(location={"wght": 1000})["I"]
         glyph.draw(NullPen())
