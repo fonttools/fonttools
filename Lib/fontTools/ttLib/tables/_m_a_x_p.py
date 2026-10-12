@@ -35,6 +35,9 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/maxp
     """
 
+    tableVersion: int
+    numGlyphs: int
+
     dependencies = ["glyf"]
 
     def decompile(self, data, ttFont):
