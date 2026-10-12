@@ -128,6 +128,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
     def getDebugName(self, nameID: int) -> str | None:
         englishName: str | None = None
+        macEnglishName: str | None = None
         someName: str | None = None
         for name in self.names:
             if name.nameID != nameID:
@@ -138,11 +139,17 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
                 continue
 
             someName = unistr
-            if (name.platformID, name.langID) in ((1, 0), (3, 0x409)):
+            # Prefer the Windows English name; Mac names are legacy, and
+            # may not match the Windows ones.
+            if (name.platformID, name.langID) == (3, 0x409):
                 englishName = unistr
                 break
+            if (name.platformID, name.langID) == (1, 0) and macEnglishName is None:
+                macEnglishName = unistr
         if englishName:
             return englishName
+        elif macEnglishName:
+            return macEnglishName
         elif someName:
             return someName
         else:
