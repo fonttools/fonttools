@@ -1392,7 +1392,6 @@ def _instantiateBASE(varfont, axisLimits):
 
 
 def instantiateOTL(varfont, axisLimits):
-    # TODO(anthrotype) Support partial instancing of JSTF table
     _instantiateBASE(varfont, axisLimits)
 
     if (
@@ -1402,7 +1401,7 @@ def instantiateOTL(varfont, axisLimits):
     ):
         return
 
-    tags = [tag for tag in ("GDEF", "GPOS", "MATH") if tag in varfont]
+    tags = [tag for tag in ("GDEF", "GPOS", "MATH", "JSTF") if tag in varfont]
     log.info("Instantiating %s tables", " and ".join(tags))
 
     gdef = varfont["GDEF"].table
@@ -1423,7 +1422,7 @@ def instantiateOTL(varfont, axisLimits):
     merger = MutatorMerger(
         varfont, defaultDeltas, deleteVariations=(not varStore.VarRegionList.Region)
     )
-    merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS", "MATH"])
+    merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS", "MATH", "JSTF"])
 
     if varStore.VarRegionList.Region:
         varIndexMapping = varStore.optimize()
@@ -1432,6 +1431,8 @@ def instantiateOTL(varfont, axisLimits):
             varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
         if "MATH" in varfont:
             varfont["MATH"].table.remap_device_varidxes(varIndexMapping)
+        if "JSTF" in varfont:
+            varfont["JSTF"].table.remap_device_varidxes(varIndexMapping)
     else:
         # Downgrade GDEF.
         del gdef.VarStore
