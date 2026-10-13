@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.pens.recordingPen import DecomposingRecordingPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables
@@ -159,6 +160,44 @@ def test_original_ranges_preserve_referenced_axes(varc_font, tag, pin_unrelated)
     assert result.getTableData("fvar") == expected.getTableData("fvar")
     for location in ({}, {"wght": 840.3, "COND": 0.75}, {"0000": -0.5}):
         assert _draw(result, location) == _draw(expected, location)
+
+
+@pytest.mark.parametrize("limit", [(356.5, 840.3), (356.5, 356.5, 840.3)])
+def test_original_decimal_weight_range(varc_font, limit):
+    expected = _roundtrip(instantiateVariableFont(varc_font, {}))
+    result = _roundtrip(instantiateVariableFont(varc_font, {"wght": limit}))
+    assert result.getTableData("VARC") == expected.getTableData("VARC")
+    assert result.getTableData("fvar") == expected.getTableData("fvar")
+    for location in ({}, {"wght": 840.3, "COND": 0.75}, {"0000": -0.5}):
+        assert _draw(result, location) == _draw(expected, location)
+
+
+@pytest.mark.parametrize("quantize_fvar", [False, True])
+def test_original_range_compares_both_sides_at_fixed_precision(
+    varc_font, quantize_fvar
+):
+    decimal_range = (-0.3, 0.1, 0.3)
+    fixed_range = tuple(floatToFixedToFloat(v, 16) for v in decimal_range)
+    axis = next(a for a in varc_font["fvar"].axes if a.axisTag == "COND")
+    axis.minValue, axis.defaultValue, axis.maxValue = (
+        fixed_range if quantize_fvar else decimal_range
+    )
+    limit = decimal_range if quantize_fvar else fixed_range
+    expected = _roundtrip(instantiateVariableFont(varc_font, {}))
+    result = _roundtrip(instantiateVariableFont(varc_font, {"COND": limit}))
+    assert result.getTableData("VARC") == expected.getTableData("VARC")
+    assert result.getTableData("fvar") == expected.getTableData("fvar")
+
+
+@pytest.mark.parametrize("index", [0, 1, 2], ids=["minimum", "default", "maximum"])
+def test_reject_range_changes_at_fixed_precision(varc_font, index):
+    axis = next(a for a in varc_font["fvar"].axes if a.axisTag == "COND")
+    limit = [axis.minValue, axis.defaultValue, axis.maxValue]
+    limit[index] += (-1 if index == 2 else 1) / (1 << 16)
+    with pytest.raises(
+        NotImplementedError, match="Instancing across VarComponent axes"
+    ):
+        instantiateVariableFont(varc_font, {"COND": limit})
 
 
 def test_degenerate_axis_is_still_removed_when_explicitly_pinned(varc_font):

@@ -98,6 +98,7 @@ Both TrueType-flavored (glyf+gvar) variable and CFF2 variable fonts are supporte
 """
 
 from fontTools.misc.fixedTools import (
+    floatToFixed,
     floatToFixedToFloat,
     strToFixedToFloat,
     otRound,
@@ -2641,6 +2642,7 @@ def instantiateVariableFont(
 
     # Explicitly retaining an axis's original range requires no instancing.
     # In particular it must not trigger VARC's referenced-axis restriction.
+    # Compare at fvar's 16.16 precision so decimal inputs match stored values.
     axisLimits = AxisLimits(
         {
             axis.axisTag: axisLimits[axis.axisTag]
@@ -2648,8 +2650,13 @@ def instantiateVariableFont(
             if axis.axisTag in axisLimits
             and (
                 axisLimits[axis.axisTag].minimum == axisLimits[axis.axisTag].maximum
-                or tuple(axisLimits[axis.axisTag])
-                != (axis.minValue, axis.defaultValue, axis.maxValue)
+                or any(
+                    floatToFixed(value, 16) != floatToFixed(original, 16)
+                    for value, original in zip(
+                        axisLimits[axis.axisTag],
+                        (axis.minValue, axis.defaultValue, axis.maxValue),
+                    )
+                )
             )
         }
     )
