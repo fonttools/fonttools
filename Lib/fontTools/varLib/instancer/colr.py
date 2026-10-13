@@ -108,3 +108,7 @@ def instantiateCOLR(varfont, axisLimits):
     if static:
         colr.VarStore = None
         colr.VarIndexMap = None
+    elif mapping:
+        # An explicit map keeps VarIndexBase sequences valid when rows move.
+        varIndexMapping = colr.VarStore.optimize()
+        colr.VarIndexMap.mapping = [varIndexMapping[index] for index in mapping]

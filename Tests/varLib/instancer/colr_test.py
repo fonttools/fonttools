@@ -68,6 +68,79 @@ def test_partial_and_composed_instances(font):
     assert composed.getTableData("COLR") == direct.getTableData("COLR")
 
 
+@pytest.mark.parametrize("split_store", [False, True])
+@pytest.mark.parametrize("move_default", [False, True])
+def test_optimizes_mapped_partial_store(font, split_store, move_default):
+    colr = font["COLR"].table
+    mapping = list(range(6))
+    if split_store:
+        # Reverse the rows and split them across two outer indices. The map
+        # restores their original meanings, including consecutive stop fields.
+        rows = list(reversed(colr.VarStore.VarData[0].Item))
+        colr.VarStore.VarData = [
+            buildVarData([0, 1], rows[:3]),
+            buildVarData([0, 1], rows[3:]),
+        ]
+        colr.VarStore.VarDataCount = 2
+        mapping = [0x10002, 0x10001, 0x10000, 2, 1, 0]
+    colr.VarIndexMap = buildDeltaSetIndexMap(mapping + [ot.NO_VARIATION_INDEX])
+    partial = instance(font, {"wght": (400, 650, 900) if move_default else 650})
+    table = partial["COLR"].table
+    # Duplicate and zero rows are removed, while the mapping slots stay intact.
+    assert sum(data.ItemCount for data in table.VarStore.VarData) == (
+        2 if move_default else 1
+    )
+    mapping = table.VarIndexMap.mapping
+    assert len(mapping) == 7
+    assert mapping[0] == mapping[3] != ot.NO_VARIATION_INDEX
+    assert mapping[1] == mapping[5]
+    assert mapping[2] == mapping[4] == mapping[6] == ot.NO_VARIATION_INDEX
+    first, second, gradient = paints(partial)
+    assert (first.VarIndexBase, second.VarIndexBase) == (0, 1)
+    assert [s.VarIndexBase for s in gradient.ColorLine.ColorStop] == [2, 4]
+    assert gradient.VarIndexBase == ot.NO_VARIATION_INDEX
+    for weight in ((400, 650, 900) if move_default else (650,)):
+        for width in (75, 100, 125):
+            limits = {"wdth": width}
+            if move_default:
+                limits["wght"] = weight
+            composed = instance(partial, limits)
+            direct = instance(font, {"wght": weight, "wdth": width})
+            assert composed.getTableData("COLR") == direct.getTableData("COLR")
+
+
+@pytest.mark.parametrize("empty_map", [False, True])
+def test_partial_implicit_mapping_preserves_consecutive_rows(font, empty_map):
+    if empty_map:
+        mapping = ot.DeltaSetIndexMap()
+        mapping.mapping = []
+        font["COLR"].table.VarIndexMap = mapping
+    partial = instance(font, {"wght": 650})
+    assert partial["COLR"].table.VarStore.VarData[0].ItemCount == 6
+    for width in (75, 100, 125):
+        composed = instance(partial, {"wdth": width})
+        direct = instance(font, {"wght": 650, "wdth": width})
+        assert composed.getTableData("COLR") == direct.getTableData("COLR")
+
+
+@pytest.mark.parametrize(
+    "mapping", [[3], [ot.NO_VARIATION_INDEX, 3], [3, ot.NO_VARIATION_INDEX]]
+)
+def test_optimized_short_map_repeats_last_entry(font, mapping):
+    font["COLR"].table.VarIndexMap = buildDeltaSetIndexMap(mapping)
+    paints(font)[0].VarIndexBase = 3
+    partial = instance(font, {"wght": 650})
+    table = partial["COLR"].table
+    assert sum(data.ItemCount for data in table.VarStore.VarData) == 1
+    assert table.VarIndexMap.mapping == [
+        0 if index == 3 else ot.NO_VARIATION_INDEX for index in mapping
+    ]
+    for width in (75, 100, 125):
+        composed = instance(partial, {"wdth": width})
+        direct = instance(font, {"wght": 650, "wdth": width})
+        assert composed.getTableData("COLR") == direct.getTableData("COLR")
+
+
 def test_moved_default_and_axis_range(font):
     result = instance(font, {"wght": (400, 650, 900)})
     assert paints(result)[0].Alpha == 1.5
