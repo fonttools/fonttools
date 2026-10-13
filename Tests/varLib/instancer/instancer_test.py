@@ -3454,6 +3454,25 @@ def test_main(varfont, tmpdir):
     assert instancer.main(args) is None
 
 
+def test_main_missing_fvar(tmpdir):
+    font = ttLib.TTFont()
+    font.importXML(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "ttLib",
+            "data",
+            "TestTTF-Regular.ttx",
+        )
+    )
+    fontfile = str(tmpdir / "static.ttf")
+    font.save(fontfile)
+
+    with pytest.raises(ValueError, match="Missing required table fvar"):
+        instancer.main([fontfile])
+
+
 def test_main_exit_nonexistent_file(capsys):
     with pytest.raises(SystemExit):
         instancer.main([""])

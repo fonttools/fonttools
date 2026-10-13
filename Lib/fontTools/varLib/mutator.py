@@ -185,6 +185,9 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
     OVERLAP_SIMPLE and OVERLAP_COMPOUND bits are set to 1.  See
     https://docs.microsoft.com/en-us/typography/opentype/spec/glyf
     """
+    if "fvar" not in varfont:
+        raise ValueError("Missing required table fvar")
+
     if not inplace:
         # make a copy to leave input varfont unmodified
         stream = BytesIO()
