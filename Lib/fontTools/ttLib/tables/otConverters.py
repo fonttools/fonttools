@@ -795,11 +795,20 @@ class AlternateFeature(LTable):
 
     def read(self, reader, font, tableDict):
         if "FeatureTags" in reader and self.readOffset(reader.copy()) != 0:
-            reader["FeatureTag"] = reader["FeatureTags"][tableDict["FeatureIndex"]]
+            featureTags = reader["FeatureTags"]
+            featureIndex = tableDict["FeatureIndex"]
+            # An invalid index must not prevent reading an alternate without params.
+            reader["FeatureTag"] = (
+                featureTags[featureIndex] if featureIndex < len(featureTags) else None
+            )
         return super().read(reader, font, tableDict)
 
     def write(self, writer, font, tableDict, value, repeatIndex=None):
-        if value is not None and "FeatureTags" in (writer.localState or {}):
+        if (
+            value is not None
+            and getattr(value, "FeatureParams", None) is not None
+            and "FeatureTags" in (writer.localState or {})
+        ):
             writer["FeatureTag"] = writer["FeatureTags"][tableDict["FeatureIndex"]]
         super().write(writer, font, tableDict, value, repeatIndex)
 

@@ -292,6 +292,63 @@ def test_feature_variations_params_decompile(table_tag, lazy):
     assert params.UINameID == 270
 
 
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("feature_index", [1, 0xFFFF])
+def test_feature_variations_out_of_range_index_decompile(
+    table_tag, lazy, feature_index
+):
+    # Encode this independently so a compiler failure cannot mask a reader failure.
+    data = deHexStr(
+        "00010001 000e 0010 001c 0000001e"  # layout header
+        "0000"  # ScriptList
+        "0001 73733032 0008 0000 0000"  # FeatureList + ss02 Feature
+        "0000"  # LookupList
+        "00010000 00000001 00000010 00000012"  # FeatureVariations + record
+        "0000"  # ConditionSet
+        f"00010000 0001 {feature_index:04x} 0000000c"  # substitution + record
+        "0000 0000"  # alternate Feature without parameters or lookups
+    )
+    font = TTFont(lazy=lazy)
+    table = newTable(table_tag)
+    table.decompile(data, font)
+    record = table.table.FeatureVariations.FeatureVariationRecord[0]
+    record = record.FeatureTableSubstitution.SubstitutionRecord[0]
+    assert record.FeatureIndex == feature_index
+    assert record.Feature.FeatureParams is None
+    assert record.Feature.LookupListIndex == []
+
+
+@pytest.mark.parametrize("table_tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("features", [[], ["ss02"]], ids=["empty", "one-feature"])
+@pytest.mark.parametrize("max_index", [False, True], ids=["past-end", "max-index"])
+@pytest.mark.parametrize("omit_params", [False, True])
+def test_feature_variations_out_of_range_index_compile(
+    table_tag, features, max_index, omit_params
+):
+    font = TTFont()
+    feature_index = 0xFFFF if max_index else len(features)
+    table = _feature_variations_table(font, table_tag, features, [(feature_index, "")])
+    if omit_params:
+        record = table.table.FeatureVariations.FeatureVariationRecord[0]
+        del record.FeatureTableSubstitution.SubstitutionRecord[0].Feature.FeatureParams
+    data = table.compile(font)
+    rebuilt = newTable(table_tag)
+    rebuilt.decompile(data, font)
+    record = rebuilt.table.FeatureVariations.FeatureVariationRecord[0]
+    record = record.FeatureTableSubstitution.SubstitutionRecord[0]
+    assert record.FeatureIndex == feature_index
+    assert record.Feature.FeatureParams is None
+    assert record.Feature.LookupListIndex == [1]
+    xml_roundtrip = newTable(table_tag)
+    xml_roundtrip.table = parseXmlInto(
+        font,
+        getattr(otTables, table_tag)(),
+        "\n".join(getXML(rebuilt.table.toXML, font)[1:-1]),
+    )
+    assert xml_roundtrip.compile(font) == data
+
+
 @pytest.mark.parametrize("scale_x", [-0.5, 0, 0.5, 1, 2])
 @pytest.mark.parametrize("scale_y", [None, 0.25, 1])
 def test_var_component_xml_scale_y(scale_x, scale_y):
