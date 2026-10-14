@@ -98,6 +98,7 @@ Both TrueType-flavored (glyf+gvar) variable and CFF2 variable fonts are supporte
 """
 
 from fontTools.misc.fixedTools import (
+    floatToFixed,
     floatToFixedToFloat,
     strToFixedToFloat,
     otRound,
@@ -125,6 +126,7 @@ from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
 from .featureVars import instantiateFeatureVariations
+from .colr import instantiateCOLR
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
 from fontTools.ttLib.tables.otTables import VarComponentFlags
@@ -2552,6 +2554,8 @@ def _instantiateVariationTables(varfont, limits, optimize, downgradeCFF2):
     if "VVAR" in varfont:
         instantiateVVAR(varfont, limits)
 
+    instantiateCOLR(varfont, limits)
+
     instantiateOTL(varfont, limits)
 
     instantiateFeatureVariations(varfont, limits)
@@ -2638,6 +2642,27 @@ def instantiateVariableFont(
             log.info("Pinning unspecified axes to default: %s", unspecified)
 
     axisLimits = AxisLimits(axisLimits).limitAxesAndPopulateDefaults(varfont)
+
+    # Explicitly retaining an axis's original range requires no instancing.
+    # In particular it must not trigger VARC's referenced-axis restriction.
+    # Compare at fvar's 16.16 precision so decimal inputs match stored values.
+    axisLimits = AxisLimits(
+        {
+            axis.axisTag: axisLimits[axis.axisTag]
+            for axis in varfont["fvar"].axes
+            if axis.axisTag in axisLimits
+            and (
+                axisLimits[axis.axisTag].minimum == axisLimits[axis.axisTag].maximum
+                or any(
+                    floatToFixed(value, 16) != floatToFixed(original, 16)
+                    for value, original in zip(
+                        axisLimits[axis.axisTag],
+                        (axis.minValue, axis.defaultValue, axis.maxValue),
+                    )
+                )
+            )
+        }
+    )
 
     # Keep the limited VARC support consistent even when avar2 partial
     # instancing bypasses _instantiateVariationTables.
@@ -3009,6 +3034,7 @@ def main(args=None):
         recalcTimestamp=options.recalc_timestamp,
         recalcBBoxes=options.recalc_bounds,
     )
+    sanityCheckVariableTables(varfont)
 
     isFullInstance = options.static or {
         axisTag

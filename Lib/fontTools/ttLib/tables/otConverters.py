@@ -73,6 +73,10 @@ def buildConverters(tableSpec: list[FieldSpec], tableNamespace):
             converterClass = SubStruct
         elif spec.name == "FeatureParams":
             converterClass = FeatureParams
+        elif spec.name == "FeatureVariations":
+            converterClass = FeatureVariations
+        elif spec.name == "Feature" and spec.type == "LOffset":
+            converterClass = AlternateFeature
         elif spec.name in ("CIDGlyphMapping", "GlyphCIDMapping"):
             converterClass = StructWithLength
         else:
@@ -761,6 +765,52 @@ class Table24(Table):
 
     def writeNullOffset(self, writer):
         writer.writeUInt24(0)
+
+
+class FeatureVariations(LTable):
+    def read(self, reader, font, tableDict):
+        if self.readOffset(reader.copy()) != 0:
+            # Keep the original tags: subsetting can change FeatureList before
+            # FeatureVariations is decompiled from its lazy reader. A null
+            # FeatureVariations offset must leave FeatureList lazy.
+            featureList = tableDict.get("FeatureList")
+            reader["FeatureTags"] = tuple(
+                record.FeatureTag
+                for record in getattr(featureList, "FeatureRecord", ())
+            )
+        return super().read(reader, font, tableDict)
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        if value is not None:
+            featureList = tableDict.get("FeatureList")
+            writer["FeatureTags"] = tuple(
+                record.FeatureTag
+                for record in getattr(featureList, "FeatureRecord", ())
+            )
+        super().write(writer, font, tableDict, value, repeatIndex)
+
+
+class AlternateFeature(LTable):
+    """Resolve a FeatureTableSubstitutionRecord's tag through its FeatureIndex."""
+
+    def read(self, reader, font, tableDict):
+        if "FeatureTags" in reader and self.readOffset(reader.copy()) != 0:
+            featureTags = reader["FeatureTags"]
+            featureIndex = tableDict["FeatureIndex"]
+            # An invalid index must not prevent reading an alternate without params.
+            reader["FeatureTag"] = (
+                featureTags[featureIndex] if featureIndex < len(featureTags) else None
+            )
+        return super().read(reader, font, tableDict)
+
+    def write(self, writer, font, tableDict, value, repeatIndex=None):
+        if (
+            value is not None
+            and getattr(value, "FeatureParams", None) is not None
+            and "FeatureTags" in (writer.localState or {})
+        ):
+            writer["FeatureTag"] = writer["FeatureTags"][tableDict["FeatureIndex"]]
+        super().write(writer, font, tableDict, value, repeatIndex)
 
 
 # TODO Clean / merge the SubTable and SubStruct

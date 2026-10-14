@@ -188,3 +188,29 @@ def test_subset_preserves_passthrough_jstf_variation_rows(font):
     subsetter.subset(font)
     result = instantiateVariableFont(roundtrip(font), {"wght": 1})
     check_values(result, 1, 0.5)
+
+
+@pytest.mark.parametrize("full", [False, True])
+@pytest.mark.parametrize("delta", [1, 3, 7])
+def test_jstf_preserves_ppem_devices(font, full, delta):
+    from fontTools.otlLib.builder import buildDevice
+
+    for value in values(font):
+        if hasattr(value, "XPlacement"):
+            value.YPlaDevice = buildDevice({10: delta})
+        else:
+            value.YDeviceTable = buildDevice({10: delta})
+    limits = {"wght": 1}
+    if full:
+        limits["wdth"] = 0
+    result = roundtrip(instantiateVariableFont(font, limits))
+    for value in values(result):
+        if hasattr(value, "XPlacement"):
+            assert value.XPlacement == 20
+            assert value.YPlacement == 20
+            assert value.YPlaDevice.DeltaValue == [delta]
+        else:
+            assert value.Format == 3
+            assert value.XCoordinate == 130
+            assert value.YCoordinate == 200
+            assert value.YDeviceTable.DeltaValue == [delta]

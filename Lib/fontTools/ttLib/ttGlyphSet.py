@@ -215,6 +215,32 @@ class _TTGlyph(ABC):
 
 
 class _TTGlyphGlyf(_TTGlyph):
+    def __init__(self, glyphSet, glyphName, *, recalcBounds=True):
+        super().__init__(glyphSet, glyphName, recalcBounds=recalcBounds)
+        # Without HVAR the advance at a non-default location comes from the
+        # gvar phantom points: compute it lazily on first access.
+        if (
+            glyphSet.location
+            and glyphSet.hvarTable is None
+            and glyphSet.gvarTable is not None
+        ):
+            self._width = None
+
+    @property
+    def width(self):
+        if self._width is None:
+            if self.name in self.glyphSet.gvarTable.variations:
+                # no HVAR: this also sets self._width from the phantom points
+                self._getGlyphInstance()
+            else:
+                # no gvar entry: glyph doesn't vary, hmtx advance is right
+                self._width = self.glyphSet.hMetrics[self.name][0]
+        return self._width
+
+    @width.setter
+    def width(self, value):
+        self._width = value
+
     def draw(self, pen):
         """Draw the glyph onto ``pen``. See fontTools.pens.basePen for details
         how that works.

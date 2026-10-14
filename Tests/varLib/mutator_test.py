@@ -78,6 +78,10 @@ class MutatorTest(unittest.TestCase):
         if not self.tempdir:
             self.tempdir = tempfile.mkdtemp()
 
+    def test_requires_fvar_table(self):
+        with self.assertRaisesRegex(ValueError, "Missing required table fvar"):
+            make_instance(TTFont(), {}, inplace=True)
+
     def read_ttx(self, path):
         lines = []
         with open(path, "r", encoding="utf-8") as ttx:
