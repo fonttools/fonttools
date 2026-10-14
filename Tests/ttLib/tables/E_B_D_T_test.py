@@ -1,8 +1,9 @@
+import io
 import struct
 
 import pytest
 
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import C_B_D_T_, E_B_D_T_
 from fontTools.ttLib.tables.E_B_D_T_ import _extFileName, _writeExtFileImageData
 
@@ -167,3 +168,30 @@ def test_lazy_bitmap_metrics_and_edited_metrics_are_preserved(bitmap_glyph):
     assert not hasattr(glyph, "missing_attribute")
     assert glyph.metrics.width == 7
     assert glyph.compile(font) == data[:1] + b"\x07" + data[2:]
+
+
+@pytest.mark.parametrize(
+    "version, tags", [(2.0, ("EBLC", "EBDT")), (3.0, ("CBLC", "CBDT"))]
+)
+def test_round_trip_ttx_without_strikes(version, tags):
+    # e.g. what the subsetter leaves when no bitmap glyphs are kept
+    locData = struct.pack(">lL", int(version * 0x10000), 0)
+    bitmapData = struct.pack(">l", int(version * 0x10000))
+    font = TTFont()
+    font.setGlyphOrder([".notdef"])
+    for tag, data in zip(tags, (locData, bitmapData)):
+        font[tag] = newTable(tag)
+        font[tag].decompile(data, font)
+
+    buf = io.StringIO()
+    font.saveXML(buf, tables=tags)
+    font = TTFont()
+    font.setGlyphOrder([".notdef"])
+    font.importXML(io.StringIO(buf.getvalue()))
+
+    locTag, bitmapTag = tags
+    assert font[locTag].strikes == []
+    assert font[bitmapTag].strikeData == []
+    # the bitmap data table must be compiled first, it fills in the locations
+    assert font[bitmapTag].compile(font) == bitmapData
+    assert font[locTag].compile(font) == locData
