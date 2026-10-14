@@ -218,6 +218,8 @@ class WriteZipFS(TempFS):
         return f"<zipfs-write '{self._file}'>"
 
     def close(self):
+        if self.isclosed():
+            return
         base_name = os.path.splitext(self._file)[0]
         shutil.make_archive(base_name, format="zip", root_dir=self._temp_dir)
         if self._file != base_name + ".zip":
