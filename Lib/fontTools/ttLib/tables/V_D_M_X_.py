@@ -144,6 +144,8 @@ class table_V_D_M_X_(DefaultTable.DefaultTable):
             raise ttLib.TTLibError(
                 "unknown format for VDMX table: version %s" % self.version
             )
+        self.numRatios = len(self.ratRanges)
+        self.numRecs = len(self.groups)
         data = sstruct.pack(VDMX_HeaderFmt, self)
         for ratio in self.ratRanges:
             data += sstruct.pack(VDMX_RatRangeFmt, ratio)
@@ -181,8 +183,7 @@ class table_V_D_M_X_(DefaultTable.DefaultTable):
         writer.newline()
         writer.begintag("groups")
         writer.newline()
-        for groupIndex in range(self.numRecs):
-            group = self.groups[groupIndex]
+        for groupIndex, group in enumerate(self.groups):
             recs = len(group)
             startsz = min(group.keys())
             endsz = max(group.keys())
