@@ -680,8 +680,10 @@ class Classes(object):
             )
         for s, e in zip(oClasses[: self.numLinear], oClasses[1 : self.numLinear + 1]):
             self.linear.append(
-                ttFont.getGlyphName(x)
-                for x in struct.unpack((">%dH" % ((e - s) / 2)), data[s:e])
+                [
+                    ttFont.getGlyphName(x)
+                    for x in struct.unpack((">%dH" % ((e - s) / 2)), data[s:e])
+                ]
             )
         for s, e in zip(
             oClasses[self.numLinear : self.numClass],
@@ -797,7 +799,7 @@ class Pass(object):
         oRuleMap = struct.unpack_from((">%dH" % (self.numSuccess + 1)), data)
         data = data[2 + 2 * self.numSuccess :]
         rules = struct.unpack_from((">%dH" % oRuleMap[-1]), data)
-        self.rules = [rules[s:e] for (s, e) in zip(oRuleMap, oRuleMap[1:])]
+        self.rules = [list(rules[s:e]) for (s, e) in zip(oRuleMap, oRuleMap[1:])]
         data = data[2 * oRuleMap[-1] :]
         self.minRulePreContext, self.maxRulePreContext = struct.unpack("BB", data[:2])
         numStartStates = self.maxRulePreContext - self.minRulePreContext + 1
@@ -843,7 +845,8 @@ class Pass(object):
         ]
         data = data[oConstraints[-1] :]
         self.actions = [
-            (data[s:e] if (e - s > 1) else "") for (s, e) in zip(oActions, oActions[1:])
+            (data[s:e] if (e - s > 1) else b"")
+            for (s, e) in zip(oActions, oActions[1:])
         ]
         data = data[oActions[-1] :]
         # not using debug
