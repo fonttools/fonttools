@@ -1,3 +1,101 @@
+- [varLib] Support decreasing design-space axis mappings, via a new keyword-only
+  ``allow_decreasing`` argument to ``models.normalizeValue`` (#3970, #4217, #4243).
+- [designspaceLib] Allow partial DesignSpace v5 axis subsets: omitted range attributes
+  on an ``<axis-subset>`` are taken from the parent axis, as the spec says (#4205).
+- [designspaceLib] Fix ``DesignSpaceDocument.normalize()`` for mapped axes: axis
+  bounds and rule conditions are now normalized from their original values (#4218).
+- [designspaceLib] ``splitInterpolable`` and ``splitVariableFonts`` now warn when a
+  source or instance is dropped because it lies outside the document's own axes,
+  instead of silently discarding it (#4244).
+- [varLib.instancer] Add support for instancing variable COLRv1 fonts (#2699, #4279).
+- [varLib.instancer] Apply VVAR vertical-origin deltas to ``VORG``, and use OpenType
+  rounding for instanced advances and vertical origins (#4221).
+- [varLib.instancer] Keep a universal FeatureVariations record when pinning removes
+  its last condition but other axes remain (#4247).
+- [varLib.instancer] Preserve ppem ``Device`` corrections in GDEF, BASE, GPOS and JSTF
+  instead of asserting on them (#4290).
+- [varLib.instancer] Allow requesting an axis's original range on VARC fonts (#4280).
+- [varLib.instancer, subset] Fold, remove or remap MATH ``VariationIndex`` devices
+  when instancing, subsetting the GDEF store or optimizing it (#4288).
+- [varLib] Raise ``ValueError: Missing required table fvar`` from ``varLib.mutator``
+  and the instancer CLI on a static font, instead of a bare ``KeyError`` (#3751, #4300).
+- [featureVars] When adding ``rvrn``, also shift lookup indices inside existing
+  FeatureVariations (#4233). Handle null ``ConditionSet`` and
+  ``FeatureTableSubstitution`` offsets when building, subsetting and instancing
+  (#4234, #4235). Keep ``FeatureTableSubstitution`` records sorted after merging new
+  ones into an existing record (#4248).
+- [ttLib] Fix FeatureParams (``size``, ``ssXX``, ``cvXX``) in FeatureVariations
+  alternate feature tables, which failed to compile and round-trip (#3623, #4278).
+- [ttLib] Fully decode lazily loaded ligatures, ``SinglePos`` and ``PairPos`` arrays
+  during recursive decompilation, so ``reorderGlyphs()`` on a lazy font no longer
+  corrupts or asserts on them (#4231, #4232).
+- [VARC] Update the variation-store binary format to follow
+  harfbuzz/boring-expansion-spec#175: ``SparseVarRegionList.RegionCount`` is uint32,
+  sparse axes use Offset32 and ``MultiVarData`` items are stored in an INDEX. VARC
+  fonts built with earlier fontTools versions must be rebuilt (#4219).
+- [VARC] Several fixes: derive component conditions from ``conditionIndex`` (#4237),
+  set the implicit ``scaleY`` when importing XML (#4238), report the font's current
+  coordinates for components that reset unspecified axes (#4239), and keep inherited
+  coordinates when drawing CFF2 VARC components (#4236).
+- [varLib] ``buildMultiVarData`` accepts flattened per-region vector tuples (#4245).
+- [otConverters] Bounds-check CFF2 INDEX count and ``offSize`` on read, raising
+  ``TTLibError`` instead of allocating huge lazy lists (#4220).
+- [ttLib] Handle empty packed deltas when ``OPTIMIZE_FONT_SPEED`` is set (#4241).
+- [scaleUpem] Scale per-glyph ``VORG`` origins (#4222); fix VARC scaling for static
+  fonts and condition variations (#4223); don't mutate the shared default CFF
+  ``FontMatrix`` (#4251, #4252).
+- [cmap] Fix format 2 compilation when all codes are single-byte (#1524, #4211) or
+  all single-byte codes map to ``.notdef`` (#4215). Formats 2 and 4 now reject glyph
+  IDs above 65535 instead of wrapping them (#4226). Split format 14 default UVS
+  ranges longer than 256 codepoints (#4229). Empty format 12 and 13 subtables
+  round-trip (#4246).
+- [glyf] Use unsigned instruction lengths, so programs of 32768-65535 bytes compile
+  and decompile correctly (#4227). Keep instructions in zero-contour glyphs (#4228).
+- [pens] Fix cubic off-curve detection in ``TTGlyphPointPen`` across contour starts
+  (#4224). ``Glyph.drawPoints()`` now raises ``NotImplementedError`` for an
+  all-off-curve cubic contour, which the point pen protocol cannot express (#3191,
+  #4225). ``RoundingPen`` passes the all-off-curve ``None`` sentinel through
+  (#4311, #4312).
+- [CFF2] Preserve operands when a blend has zero regions (#4240).
+- [cffLib] Read CFF font names as Latin-1, matching how they are written (#4253).
+  Deleting a CFF dict attribute now actually removes it (#2725, #4264).
+- [CFF2ToCFF] Fix conversion of fonts with local subroutines (#4258). A CFF2 table
+  with a single FontDict is now converted to a name-keyed CFF font that keeps its
+  glyph names (#3890, #4265).
+- [subset] Handle a null GDEF variation store (#4230).
+- [merge] Support merging fonts that both have a MATH table (#3823, #4257).
+- [feaLib] Reject the same mark class used twice in one anchor list (#3628, #4255).
+  Don't crash on value records whose devices are all NULL (#2396, #4261). Pad a short
+  OS/2 ``Vendor`` with spaces (#4259).
+- [feaLib] Raise ``FeatureLibError`` with a location, instead of a bare Python error,
+  for: a BASE script list without a matching tag list (#4263), a ``UnicodeRange``
+  bit outside 0-127 (#4266), a name string that cannot be decoded (#4267), a STAT
+  axis ``location`` with no or too many values (#4268), and a non-ASCII OS/2
+  ``Vendor`` (#4269).
+- [name] Fix the BCP 47 tags of some Mac and Windows language IDs, e.g. ``es`` was
+  mapped to Mac Estonian (#3733, #4256). ``getDebugName`` prefers the Windows
+  English name over the Mac one (#3969, #4273).
+- [post] Don't crash on a format 2.0 table with ``numGlyphs`` set to 0 (#3060, #4274).
+- [VDMX] Recompute ``numRecs`` and ``numRatios`` when compiling (#4293).
+- [Silf] Fix compiling a ``Silf`` table that was decompiled from binary (#4294).
+- [woff2] Preserve ``minorVersion`` when copying flavor data (#4249, #4250).
+- [ttGlyphSet] Compute glyph width lazily for glyf variable fonts without HVAR, so
+  ``.width`` is correct before drawing (#3964, #4260).
+- [varLib.interpolatable] Respect designspace source layers (#3951, #4275); fix
+  ``--json`` output with SciPy (#3870, #4276).
+- [misc.psLib] Fix tokenizing of escaped parentheses in PostScript strings (#4207).
+- [svgLib] Raise ``ValueError`` instead of ``IndexError`` on a truncated path command
+  (#4254).
+- [misc.transform] Preserve the direction of the remaining axis when decomposing a
+  transform whose first column is zero (#4242).
+- [misc.textTools] ``Tag.__ne__`` returns ``NotImplemented`` for unsupported types
+  (#4305, #4306).
+- [misc.dictTools] ``hashdict`` rejects in-place union (``|=``) (#4313, #4314).
+- [misc.xmlReader] Close owned input streams when parsing fails (#4298).
+- [misc.filesystem] ``WriteZipFS.close()`` can be called more than once (#4309, #4310).
+- [EBDT] Keep EBDT/CBDT glyph metrics after probing a missing attribute (#3806,
+  #4216).
+
 4.66.1 (released 2026-09-29)
 ----------------------------
 
