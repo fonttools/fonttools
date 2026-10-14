@@ -1,3 +1,6 @@
+4.67.0 (released 2026-10-14)
+----------------------------
+
 - [varLib] Support decreasing design-space axis mappings, via a new keyword-only
   ``allow_decreasing`` argument to ``models.normalizeValue`` (#3970, #4217, #4243).
 - [designspaceLib] Allow partial DesignSpace v5 axis subsets: omitted range attributes
