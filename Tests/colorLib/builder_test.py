@@ -1724,6 +1724,20 @@ class BuildCOLRTest(object):
 
 
 class TrickyRadialGradientTest:
+    @pytest.mark.parametrize(
+        "c0, r0, c1, r1, tolerance, expected",
+        [
+            ((0, 0), 10.0005, (0, 0), 10, 0, False),
+            ((0, 0), 10.05, (0, 0), 10, 0.01, True),
+            ((3, 4), 5.0005, (0, 0), 10, 0, False),
+            ((3, 4), 5.05, (0, 0), 10, 0.01, True),
+            ((0, 0), 9, (0, 0), 10, 0, True),
+            ((0, 0), 10, (0, 0), 10, 0, True),
+        ],
+    )
+    def test_custom_circle_tolerance(self, c0, r0, c1, r1, tolerance, expected):
+        assert Circle(c0, r0).inside(Circle(c1, r1), tolerance=tolerance) is expected
+
     @staticmethod
     def circle_inside_circle(c0, r0, c1, r1, rounded=False):
         if rounded:

@@ -63,9 +63,10 @@ class Circle:
         return Circle(_round_point(self.centre), otRound(self.radius))
 
     def inside(self, outer_circle, tolerance=_CIRCLE_INSIDE_TOLERANCE):
+        """Return whether this circle fits inside another within relative tolerance."""
         dist = self.radius + hypot(*_vector_between(self.centre, outer_circle.centre))
         return (
-            isclose(outer_circle.radius, dist, rel_tol=_CIRCLE_INSIDE_TOLERANCE)
+            isclose(outer_circle.radius, dist, rel_tol=tolerance)
             or outer_circle.radius > dist
         )
 
