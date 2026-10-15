@@ -267,8 +267,8 @@ def encodeFloat(f):
     # For CFF only, used in cffLib
     if f == 0.0:  # 0.0 == +0.0 == -0.0
         return realZeroBytes
-    # Keep up to 14 significant digits, the limit supported by macOS CFF
-    # readers, without rounding common nine-digit CIDFontVersion values.
+    # Use the historical 14-digit macOS CFF compatibility limit, without
+    # rounding common nine-digit CIDFontVersion values to eight digits.
     s = "%.14G" % f
     if s[:2] == "0.":
         s = s[1:]
