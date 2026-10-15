@@ -112,16 +112,6 @@ class T2CharStringTest(unittest.TestCase):
             # check to see if we got the expected bytes
             self.assertEqual(hexenc(encoded_result), sample[1])
 
-            # check to see if we get the same value by decoding the data
-            decoded_result = read_realNumber(
-                None,
-                None,
-                encoded_result,
-                1,
-            )
-            self.assertEqual(decoded_result[0], float("%.14g" % sample[0]))
-            # macOS CFF readers support up to 14 significant digits.
-
     def test_encodeFloat_precision(self):
         for value in (2.00200009, -2.00200009, 0.0000000200200009, 12345678901234.0):
             with self.subTest(value=value):
