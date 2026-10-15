@@ -8,9 +8,14 @@ the TSI0 table.
 See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
+from typing import TYPE_CHECKING
+
 from fontTools import ttLib
 
-superclass = ttLib.getTableClass("TSI0")
+if TYPE_CHECKING:
+    from .T_S_I__0 import table_T_S_I__0 as superclass
+else:
+    superclass = ttLib.getTableClass("TSI0")
 
 
 class table_T_S_I__2(superclass):

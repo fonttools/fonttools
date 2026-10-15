@@ -1,6 +1,11 @@
+from typing import TYPE_CHECKING
+
 from fontTools import ttLib
 
-superclass = ttLib.getTableClass("fpgm")
+if TYPE_CHECKING:
+    from ._f_p_g_m import table__f_p_g_m as superclass
+else:
+    superclass = ttLib.getTableClass("fpgm")
 
 
 class table__p_r_e_p(superclass):
