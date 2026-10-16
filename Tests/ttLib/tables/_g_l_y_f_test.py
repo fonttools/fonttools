@@ -1476,6 +1476,26 @@ def test_composite_dag_under_point_limit():
     )
 
 
+@pytest.mark.parametrize("method", ["getCompositeMaxpValues", "recalcBounds"])
+def test_composite_dag_default_cache(method):
+    class BoundedGlyphSet(dict):
+        lookups = 0
+
+        def __getitem__(self, name):
+            self.lookups += 1
+            # Bound the work without relying on wall-clock timings.
+            assert self.lookups <= 1000, "excessive component traversal"
+            return super().__getitem__(name)
+
+    glyf = BoundedGlyphSet(build_composite_dag(12).glyphs)
+    glyph = glyf["g12"]
+    result = getattr(glyph, method)(glyf)
+    if method == "getCompositeMaxpValues":
+        assert result == (16384, 4096, 12)
+    else:
+        assert (glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax) == (0, 0, 10, 10)
+
+
 def test_composite_point_limit():
     glyf = newTable("glyf")
     big = Glyph()

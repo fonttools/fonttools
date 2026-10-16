@@ -860,6 +860,8 @@ class Glyph(object):
         that are used more than once.
         """
         assert self.isComposite()
+        if maxpValuesCache is None:
+            maxpValuesCache = {}
         nContours = 0
         nPoints = 0
         initialMaxComponentDepth = maxComponentDepth
@@ -873,17 +875,16 @@ class Glyph(object):
             else:
                 # cached depths are relative to the component's own depth
                 depthOffset = initialMaxComponentDepth + 1
-                if maxpValuesCache is not None and glyphName in maxpValuesCache:
+                if glyphName in maxpValuesCache:
                     nP, nC, componentDepth = maxpValuesCache[glyphName]
                     componentDepth += depthOffset
                 else:
                     nP, nC, componentDepth = baseGlyph.getCompositeMaxpValues(
                         glyfTable, depthOffset, maxpValuesCache=maxpValuesCache
                     )
-                    if maxpValuesCache is not None:
-                        maxpValuesCache[glyphName] = CompositeMaxpValues(
-                            nP, nC, componentDepth - depthOffset
-                        )
+                    maxpValuesCache[glyphName] = CompositeMaxpValues(
+                        nP, nC, componentDepth - depthOffset
+                    )
                 maxComponentDepth = max(maxComponentDepth, componentDepth)
             nPoints = nPoints + nP
             nContours = nContours + nC
@@ -1259,12 +1260,14 @@ class Glyph(object):
                 return False
 
         # All components are untransformed and have an integer x/y translate
+        if boundsDone is None:
+            boundsDone = set()
         bounds = None
         for compo in self.components:
             glyphName = compo.glyphName
             g = glyfTable[glyphName]
 
-            if boundsDone is None or glyphName not in boundsDone:
+            if glyphName not in boundsDone:
                 try:
                     g.recalcBounds(glyfTable, boundsDone=boundsDone)
                 except RecursionError:
@@ -1272,8 +1275,7 @@ class Glyph(object):
                         "glyph '%s' contains a recursive component reference"
                         % glyphName
                     )
-                if boundsDone is not None:
-                    boundsDone.add(glyphName)
+                boundsDone.add(glyphName)
             # empty components shouldn't update the bounds of the parent glyph
             if g.yMin == g.yMax and g.xMin == g.xMax:
                 continue
