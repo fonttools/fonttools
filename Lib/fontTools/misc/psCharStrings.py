@@ -496,6 +496,7 @@ class SimpleT2Decompiler(object):
 
     def op_blend(self, index):
         if self.numRegions is None:
+            self.vsIndex = getattr(self.private, "vsindex", 0)
             self.numRegions = self.private.getNumRegions()
         numBlends = self.pop()
         numOps = numBlends * (self.numRegions + 1)

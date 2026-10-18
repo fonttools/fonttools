@@ -126,6 +126,7 @@ from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
 from .featureVars import instantiateFeatureVariations
+from .colr import instantiateCOLR
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
 from fontTools.ttLib.tables.otTables import VarComponentFlags
@@ -2553,6 +2554,8 @@ def _instantiateVariationTables(varfont, limits, optimize, downgradeCFF2):
     if "VVAR" in varfont:
         instantiateVVAR(varfont, limits)
 
+    instantiateCOLR(varfont, limits)
+
     instantiateOTL(varfont, limits)
 
     instantiateFeatureVariations(varfont, limits)
@@ -3031,6 +3034,7 @@ def main(args=None):
         recalcTimestamp=options.recalc_timestamp,
         recalcBBoxes=options.recalc_bounds,
     )
+    sanityCheckVariableTables(varfont)
 
     isFullInstance = options.static or {
         axisTag

@@ -1752,6 +1752,15 @@ class NameRecord(Statement):
             plat += " "
         return 'nameid {} {}"{}";'.format(self.nameID, plat, escaped_string)
 
+    def _escape_quote_and_backslash(self):
+        """Return the string with ``"`` and ``\\`` escaped for a FEA string literal.
+
+        Other characters are written as they are, since the parser accepts them.
+        """
+        encoding = getEncoding(self.platformID, self.platEncID, self.langID)
+        pattern = r"\%04x" if encoding == "utf_16_be" else r"\%02x"
+        return "".join(pattern % ord(c) if c in '"\\' else c for c in self.string)
+
 
 class FeatureNameStatement(NameRecord):
     """Represents a ``sizemenuname`` or ``name`` statement."""
@@ -1769,7 +1778,7 @@ class FeatureNameStatement(NameRecord):
         plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
         if plat != "":
             plat += " "
-        return '{} {}"{}";'.format(tag, plat, self.string)
+        return '{} {}"{}";'.format(tag, plat, self._escape_quote_and_backslash())
 
 
 class STATNameStatement(NameRecord):
@@ -1779,7 +1788,7 @@ class STATNameStatement(NameRecord):
         plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
         if plat != "":
             plat += " "
-        return 'name {}"{}";'.format(plat, self.string)
+        return 'name {}"{}";'.format(plat, self._escape_quote_and_backslash())
 
 
 class SizeParameters(Statement):
@@ -1833,7 +1842,7 @@ class CVParametersNameStatement(NameRecord):
         plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
         if plat != "":
             plat += " "
-        return 'name {}"{}";'.format(plat, self.string)
+        return 'name {}"{}";'.format(plat, self._escape_quote_and_backslash())
 
 
 class CharacterStatement(Statement):
