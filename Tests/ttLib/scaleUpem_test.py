@@ -1,6 +1,7 @@
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.scaleUpem import scale_upem
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.otlLib.builder import buildMathTable
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
 from copy import deepcopy
@@ -182,6 +183,43 @@ def test_scale_upem_cff_default_font_matrix():
     assert font["head"].unitsPerEm == 2000
     assert "FontMatrix" in topDict.rawDict
     assert topDict.FontMatrix == [0.0005, 0, 0, 0.0005, 0, 0]
+
+
+def test_scale_upem_math():
+    font = TTFont(ScaleUpemTest.get_path("I.ttf"))
+    notdef, glyph = font.getGlyphOrder()
+    buildMathTable(
+        font,
+        constants={
+            "ScriptPercentScaleDown": 80,
+            "ScriptScriptPercentScaleDown": 60,
+            "DelimitedSubFormulaMinHeight": 1500,
+            "DisplayOperatorMinHeight": 1300,
+            "RadicalDegreeBottomRaisePercent": 55,
+        },
+        minConnectorOverlap=50,
+        vertGlyphVariants={glyph: [(glyph, 1000), (notdef, 1400)]},
+        vertGlyphAssembly={glyph: ([(notdef, 1, 20, 30, 400)], 0)},
+    )
+
+    font = scale_and_roundtrip(font)
+
+    math = font["MATH"].table
+    # Percentages and flags are not design units: they must stay as they are.
+    assert math.MathConstants.ScriptPercentScaleDown == 80
+    assert math.MathConstants.ScriptScriptPercentScaleDown == 60
+    assert math.MathConstants.RadicalDegreeBottomRaisePercent == 55
+    assert math.MathConstants.DelimitedSubFormulaMinHeight == 3000
+    assert math.MathConstants.DisplayOperatorMinHeight == 2600
+    assert math.MathVariants.MinConnectorOverlap == 100
+    (construction,) = math.MathVariants.VertGlyphConstruction
+    variants = construction.MathGlyphVariantRecord
+    assert [v.AdvanceMeasurement for v in variants] == [2000, 2800]
+    (part,) = construction.GlyphAssembly.PartRecords
+    assert part.StartConnectorLength == 40
+    assert part.EndConnectorLength == 60
+    assert part.FullAdvance == 800
+    assert part.PartFlags == 1
 
 
 class ScaleUpemTest(unittest.TestCase):
