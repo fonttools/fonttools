@@ -74,6 +74,8 @@ class hashdict(dict):
             "{0} does not support item assignment".format(self.__class__.__name__)
         )
 
+    __ior__ = update
+
     # update is not ok because it mutates the object
     # __add__ is ok because it creates a new object
     # while the new object is under construction, it's ok to mutate it
