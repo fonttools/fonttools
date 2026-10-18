@@ -47,7 +47,10 @@ class RoundingPen(FilterPen):
 
     def qCurveTo(self, *points):
         self._outPen.qCurveTo(
-            *((self.roundFunc(x), self.roundFunc(y)) for x, y in points)
+            *(
+                None if pt is None else (self.roundFunc(pt[0]), self.roundFunc(pt[1]))
+                for pt in points
+            )
         )
 
     def addComponent(self, glyphName, transformation):
