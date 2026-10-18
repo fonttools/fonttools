@@ -1,12 +1,37 @@
 from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.roundTools import noRound, otRound
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.roundingPen import RoundingPen, RoundingPointPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
 from functools import partial
+import pytest
 
 tt_scale_round = partial(floatToFixedToFloat, precisionBits=14)
 
 
 class RoundingPenTest(object):
+    @pytest.mark.parametrize(
+        "roundFunc, expected",
+        [
+            (otRound, ((0, 1), (11, 1), (11, 13), (0, 12))),
+            (round, ((0, 1), (11, 0), (11, 13), (0, 12))),
+            (noRound, ((0.4, 0.6), (10.6, 0.5), (11.4, 12.6), (0.4, 11.6))),
+        ],
+    )
+    def test_all_offcurve_glyph(self, roundFunc, expected):
+        glyphpen = TTGlyphPen(None)
+        glyphpen.qCurveTo((0.4, 0.6), (10.6, 0.5), (11.4, 12.6), (0.4, 11.6), None)
+        glyphpen.closePath()
+        glyph = glyphpen.glyph(round=noRound)
+        recpen = RecordingPen()
+
+        glyph.draw(RoundingPen(recpen, roundFunc=roundFunc), None)
+
+        assert recpen.value == [
+            ("qCurveTo", (*expected, None)),
+            ("closePath", ()),
+        ]
+
     def test_general(self):
         recpen = RecordingPen()
         roundpen = RoundingPen(recpen)

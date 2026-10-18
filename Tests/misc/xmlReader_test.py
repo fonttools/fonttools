@@ -182,3 +182,55 @@ if __name__ == "__main__":
     import sys
 
     sys.exit(unittest.main())
+
+
+def test_owned_file_closed_after_malformed_xml(tmp_path):
+    from xml.parsers.expat import ExpatError
+    import pytest
+
+    source = tmp_path / "malformed.ttx"
+    source.write_bytes(b"<ttFont>")
+    reader = XMLReader(source, TTFont())
+    with pytest.raises(ExpatError):
+        reader.read()
+    assert reader.file.closed
+
+
+def test_owned_file_closed_after_table_callback_error(tmp_path):
+    import pytest
+
+    source = tmp_path / "bad-table.ttx"
+    source.write_bytes(
+        b'<ttFont><ZZZZ raw="True"><hexdata>zz</hexdata></ZZZZ></ttFont>'
+    )
+    reader = XMLReader(source, TTFont())
+    with pytest.raises(ValueError):
+        reader.read()
+    assert reader.file.closed
+
+
+def test_owned_file_closed_after_progress_error(tmp_path):
+    from unittest.mock import Mock
+    import pytest
+
+    source = tmp_path / "valid.ttx"
+    source.write_bytes(b"<ttFont/>")
+    progress = Mock()
+    progress.set.side_effect = RuntimeError("progress failed")
+    reader = XMLReader(source, TTFont(), progress=progress)
+    with pytest.raises(RuntimeError, match="progress failed"):
+        reader.read()
+    assert reader.file.closed
+
+
+def test_borrowed_stream_kept_open_after_malformed_xml():
+    from xml.parsers.expat import ExpatError
+    import pytest
+
+    source = BytesIO(b"<ttFont>")
+    reader = XMLReader(source, TTFont())
+    with pytest.raises(ExpatError):
+        reader.read()
+    assert not source.closed
+    reader.close()
+    assert source.closed

@@ -3034,6 +3034,7 @@ def main(args=None):
         recalcTimestamp=options.recalc_timestamp,
         recalcBBoxes=options.recalc_bounds,
     )
+    sanityCheckVariableTables(varfont)
 
     isFullInstance = options.static or {
         axisTag
