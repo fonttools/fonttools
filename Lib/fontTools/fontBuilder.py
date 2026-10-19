@@ -724,8 +724,9 @@ class FontBuilder(object):
         This is usually not called explicitly by client code.
         """
         glyphTable = self.font["glyf"]
+        boundsDone = set()
         for glyph in glyphTable.glyphs.values():
-            glyph.recalcBounds(glyphTable)
+            glyph.recalcBounds(glyphTable, boundsDone=boundsDone)
 
     def setupHorizontalMetrics(self, metrics):
         """Create a new `hmtx` table, for horizontal metrics.
