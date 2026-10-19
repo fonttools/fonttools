@@ -88,6 +88,16 @@ class ScalerVisitor(TTVisitor):
         (otTables.CaretValue, ("Coordinate")),  # GDEF
         (otTables.BaseCoord, ("Coordinate")),  # BASE
         (otTables.MathValueRecord, ("Value")),  # MATH
+        (
+            otTables.MathConstants,
+            ("DelimitedSubFormulaMinHeight", "DisplayOperatorMinHeight"),
+        ),  # MATH
+        (otTables.MathVariants, ("MinConnectorOverlap")),  # MATH
+        (otTables.MathGlyphVariantRecord, ("AdvanceMeasurement")),  # MATH
+        (
+            otTables.GlyphPartRecord,
+            ("StartConnectorLength", "EndConnectorLength", "FullAdvance"),
+        ),  # MATH
         (otTables.ClipBox, ("xMin", "yMin", "xMax", "yMax")),  # COLR
     )
 )
