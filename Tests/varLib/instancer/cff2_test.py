@@ -1,9 +1,4 @@
-"""Rounding of CFF2 outlines in the instancer.
-
-Charstring operands are relative: rounding each of them on its own lets the
-errors add up along a contour, so a closed contour comes back open. The
-instancer rounds on absolute positions instead, as gvar does.
-"""
+"""CFF2 instancing rounds absolute positions, so contours stay closed."""
 
 from fontTools.cffLib.specializer import (
     commandsToProgram,
@@ -69,8 +64,7 @@ def makeMaster(radius, wobble, hinted):
         charString = pen.getCharString()
         width, *program = charString.program
         if hinted:
-            # One horizontal stem from the bottom to the top of the ring,
-            # switched on by a hintmask.
+            # Stem over the ring's full height, with a hintmask
             stem = [400 - radius, 2 * radius, "hstemhm"]
             program = stem + ["hintmask", b"\x80"] + program
         charString.program = [width] + program
@@ -92,8 +86,8 @@ def reload(font):
 
 
 def makeRingVF(masters, hinted=False, flex=False):
-    # A CFF2 variable font over wght 300-900 (default 300) and slnt -11-0,
-    # from {(wght, slnt): (radius, wobble)}.
+    # CFF2 VF over wght 300-900 (default 300) and slnt -11-0;
+    # masters {(wght, slnt): (radius, wobble)}
     doc = DesignSpaceDocument()
     for tag, name, (minimum, default, maximum) in (
         ("wght", "Weight", (300, 300, 900)),
@@ -111,8 +105,7 @@ def makeRingVF(masters, hinted=False, flex=False):
         doc.addSource(source)
     vf, _, _ = varLib.build(doc)
     if flex:
-        # varLib draws the masters through a pen, which does not keep flex;
-        # spell the first two curves of the variable outline as one.
+        # varLib's merge drops flex; turn the first two curves into one
         charString = vf["CFF2"].cff.topDictIndex[0].CharStrings["o"]
         charString.decompile()
         commands = generalizeCommands(
@@ -129,8 +122,7 @@ def makeRingVF(masters, hinted=False, flex=False):
 
 
 def makeVF(commands):
-    # The ring font, with the outline of "o" replaced by the given commands,
-    # whose blends have the one region of wght.
+    # The ring font with the given commands as "o" (one wght region)
     vf = makeRingVF(TWO_MASTERS)
     charString = vf["CFF2"].cff.topDictIndex[0].CharStrings["o"]
     charString.decompile()
@@ -238,8 +230,7 @@ class InstantiateCFF2RoundingTest:
             for slant in (0, -5.5, -11):
                 location = {"wght": weight, "slnt": slant}
                 assertClosed(rebased, location)
-                # Each region's deltas are rounded on their own, as in gvar;
-                # where several regions are active, their errors add up.
+                # Regions round separately, as in gvar
                 assertCloseTo(rebased, location, vf, location, 1)
 
     def test_pinned_axis_and_rebased_default(self):
@@ -258,8 +249,7 @@ class InstantiateCFF2RoundingTest:
             )
 
     def test_fractional_deltas(self):
-        # Masters off the axis ends leave fractional deltas in the CFF2; the
-        # contours must still close wherever the remaining axis is.
+        # Off-end masters leave fractional deltas
         vf = makeRingVF(OFF_END_MASTERS)
 
         italic = instancer.instantiateVariableFont(
@@ -284,8 +274,7 @@ class InstantiateCFF2RoundingTest:
         assertCloseTo(vf, {}, reference, {"wght": 600, "slnt": -11}, 0)
 
     def test_private_dict_vsindex(self):
-        # The charstring blends refer to VarData 1 through the Private DICT,
-        # and VarData 0 has a different number of regions.
+        # Blends use VarData 1 via the Private DICT; VarData 0 differs
         vf = makeRingVF(TWO_MASTERS)
         topDict = vf["CFF2"].cff.topDictIndex[0]
         varStore = topDict.VarStore.otVarStore
@@ -316,8 +305,7 @@ class InstantiateCFF2RoundingTest:
         assertCloseTo(rebased, {}, vf, {"wght": 400}, 0.5)
 
     def test_stem_edges_stay_on_the_outline(self):
-        # At wght 570, rounding the stem's bottom and height on their own
-        # would put its top a unit off the top of the ring.
+        # At wght 570 a relative stem would end a unit off the ring's top
         vf = makeRingVF(TWO_MASTERS, hinted=True)
 
         instance = reload(instancer.instantiateVariableFont(vf, {"wght": 570}))
@@ -329,8 +317,7 @@ class InstantiateCFF2RoundingTest:
         assert (bottom, bottom + height) == (min(ys), max(ys))
 
     def test_ghost_hint(self):
-        # A ghost hint's width of -21 is a flag, not a distance; its edges
-        # are at .5 after rebasing, and it must stay -21.
+        # Ghost hint edges at .5 after rebasing; the width must stay -21
         vf = makeVF(
             [
                 ("hstemhm", [[101, 3, 1], -21]),
@@ -349,8 +336,7 @@ class InstantiateCFF2RoundingTest:
         assert program[: program.index("hstemhm") + 1][-2:] == [-21, "hstemhm"]
 
     def test_rounding_keeps_distances(self):
-        # Two edges 51 units apart, both at .5 after rebasing: rounding half
-        # to even would make them 50 or 52 units apart.
+        # Edges 51 apart at .5: half-to-even would give 50 or 52
         vf = makeVF([("rmoveto", [[100, 3, 1], 100]), ("rlineto", [51, 0, 0, 50])])
 
         rebased = instancer.instantiateVariableFont(vf, {"wght": (300, 600, 900)})
@@ -388,15 +374,13 @@ class InstantiateCFF2RoundingTest:
         for weight in (300, 600, 900):
             assertClosed(rebased, {"wght": weight})
 
-    # The last point of this flex1 moves horizontally at the default, and
-    # vertically at wght 900.
+    # flex1 ends horizontally at wght 300, vertically at 900
     FLEX1_CHANGING_DIRECTION = [
         10, 10, 10, [-10, 20, 1], 10, 0, 10, 0, 10, [0, 40, 1], 0
     ]  # fmt: skip
 
     def test_flex1_changing_direction(self, caplog):
-        # With wght left variable, the flex1 cannot be spelled out as a flex,
-        # so the charstring is instanced the old way, on relative operands.
+        # Direction varies across the remaining wght range: fallback
         flex1 = self.FLEX1_CHANGING_DIRECTION
         vf = makeVF([("rmoveto", [100, 100]), ("flex1", flex1), ("rlineto", [-50, 0])])
 
@@ -410,8 +394,7 @@ class InstantiateCFF2RoundingTest:
         assertCloseTo(instance, {"wght": 900}, vf, {"wght": 900}, 0)
 
     def test_flex1_direction_at_pinned_location(self, caplog):
-        # Pinned at wght 900, the flex1 has one direction, so the charstring
-        # is rounded on absolute positions.
+        # Pinned, the direction is known
         flex1 = self.FLEX1_CHANGING_DIRECTION
         vf = makeVF([("rmoveto", [100, 100]), ("flex1", flex1), ("rlineto", [-50, 0])])
 
@@ -423,9 +406,7 @@ class InstantiateCFF2RoundingTest:
         assertCloseTo(instance, {}, vf, {"wght": 900}, 0)
 
     def test_flex1_direction_with_invalid_tent(self, caplog):
-        # The region's peak is past its end. The VarStore instancing zeroes
-        # such a tent; the flex1 direction is not taken from the pinned
-        # location, and the charstring is instanced the old way.
+        # Invalid tent: direction unknown, fallback
         flex1 = self.FLEX1_CHANGING_DIRECTION
         vf = makeVF([("rmoveto", [100, 100]), ("flex1", flex1), ("rlineto", [-50, 0])])
         varStore = vf["CFF2"].cff.topDictIndex[0].VarStore.otVarStore
@@ -440,8 +421,7 @@ class InstantiateCFF2RoundingTest:
         assert "flex1" in getProgram(instance)
 
     def test_vsindex_after_blend(self, caplog):
-        # CFF2 allows vsindex only before the first blend; such a charstring
-        # is instanced the old way rather than not at all.
+        # vsindex after a blend is invalid CFF2: fallback, not an error
         vf = makeVF(
             [
                 ("rmoveto", [100, [100, 50, 1]]),
@@ -524,8 +504,7 @@ class InstantiateCFF2RoundingTest:
         assert private.BlueScale[0] == pytest.approx(0.039625)
 
     def test_private_dict_vsindex_and_charstring_vsindex(self):
-        # The Private DICT points at VarData 1, which instancing empties; the
-        # charstring sets VarData 0, which stays.
+        # Private DICT VarData 1 is emptied; the charstring's VarData 0 stays
         vf = makeRingVF(TWO_MASTERS)
         topDict = vf["CFF2"].cff.topDictIndex[0]
         varStore = topDict.VarStore.otVarStore

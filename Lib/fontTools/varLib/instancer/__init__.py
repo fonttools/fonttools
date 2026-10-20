@@ -686,11 +686,8 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     return out
 
 
-# Charstring operators whose operands are coordinates along the outline, in
-# generalized form: x and y alternate, each relative to the point before. The
-# thirteenth operand of flex is its depth, not a coordinate.
+# Generalized operators with relative x, y coordinates (flex's 13th is fd)
 _CFF2_PATH_OPERATORS = {"rmoveto", "rlineto", "rrcurveto", "flex"}
-# Stem hints: edges along one axis, each relative to the edge before.
 _CFF2_STEM_OPERATORS = {"hstem", "hstemhm", "vstem", "vstemhm"}
 
 
@@ -698,8 +695,7 @@ def _isCFF2StemCommand(commands, i):
     op, args = commands[i]
     if op in _CFF2_STEM_OPERATORS:
         return True
-    # The vstems that a hintmask or cntrmask declares implicitly; the mask
-    # bytes that follow it are not numbers.
+    # Implicit vstems before hintmask/cntrmask
     return (
         op == ""
         and i + 1 < len(commands)
@@ -737,13 +733,8 @@ def _sumBlendArgs(args):
 
 
 def _isFlex1Horizontal(dx, dy, scalarRanges=None):
-    """Return whether the last point of a flex1, whose first five points move
-    by dx and dy, moves horizontally: True or False if it does or does not
-    for any region scalars in their ranges, None if that depends on them.
-
-    scalarRanges holds a (min, max) range of the scalar of each region; a
-    region whose axes are all pinned has a single scalar. Without it, each
-    scalar is anywhere between 0 and 1."""
+    """Whether a flex1 ends horizontally for all region scalars within
+    scalarRanges ((min, max) per region, default (0, 1)); None if it depends."""
 
     def bounds(arg):
         default, *deltas = _blendArgValues(arg, _numBlendArgValues(arg))
@@ -769,9 +760,7 @@ def _isFlex1Horizontal(dx, dy, scalarRanges=None):
 
 
 def _generalizeFlex(op, args, scalarRanges=None):
-    """Return the arguments of flex, hflex, hflex1 and flex1 spelled out as
-    those of flex, or None for a flex1 whose last point may move horizontally
-    at some locations and vertically at others (see _isFlex1Horizontal)."""
+    """Return the args as flex args, or None if a flex1's direction varies."""
     if op == "flex":
         return args
     if op == "hflex":
@@ -795,8 +784,7 @@ def _generalizeFlex(op, args, scalarRanges=None):
 
 
 def _specializeFlex(args):
-    """Return the shortest flex operator, and its arguments, for the
-    arguments of flex."""
+    """Return the shortest flex operator and args for flex args."""
     dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, dx6, dy6, fd = args
     if not _blendArgsEqual(fd, 50):
         return "flex", args
@@ -820,20 +808,9 @@ def _specializeFlex(args):
 
 
 def _absolutizeCFF2Commands(commands, vsindex, getNumRegions, getScalarRanges=None):
-    """Turn the coordinates in generalized charstring commands into absolute
-    positions, in place, and return None; or return why not, leaving the
-    commands alone: a flex1 that cannot be spelled out (see _generalizeFlex),
-    or a vsindex after a blend, which CFF2 does not allow.
-
-    A coordinate becomes the position of its point or stem edge, the default
-    and each delta summed along the outline, or along the stems of one
-    command: a blend arg [default, *deltas, 1], or a number if the deltas are
-    all zero. Rounding those, rather than the relative operands, keeps the
-    rounding errors from adding up. All flex operators become flex.
-
-    getScalarRanges, if given, returns the scalarRanges (see
-    _isFlex1Horizontal) of the regions of a vsindex.
-    """
+    """Make outline and stem coordinates (defaults and deltas) absolute, in
+    place, turning all flex operators into flex. Return None, or the reason
+    the commands were left alone."""
     newCommands = []
     seenBlend = False
     flexVsindex = vsindex
@@ -856,8 +833,7 @@ def _absolutizeCFF2Commands(commands, vsindex, getNumRegions, getScalarRanges=No
     outline = [[0] * numValues, [0] * numValues]
     for i, (op, args) in enumerate(commands):
         if op == "vsindex":
-            # Only before the first blend (checked above), so the positions
-            # so far have no deltas.
+            # Before any blend, so no deltas to carry over
             vsindex = args[0]
             numValues = getNumRegions(vsindex) + 1
             outline = [axis[:1] + [0] * (numValues - 1) for axis in outline]
@@ -879,8 +855,7 @@ def _absolutizeCFF2Commands(commands, vsindex, getNumRegions, getScalarRanges=No
 
 
 def _relativizeCFF2Commands(commands, round=otRound):
-    """Round the absolute positions left by _absolutizeCFF2Commands and turn
-    them back into differences of consecutive positions, in place."""
+    """Round absolute coordinates and make them relative again, in place."""
 
     def roundArg(arg):
         if isinstance(arg, list):
@@ -929,18 +904,12 @@ def instantiateCFF2(
     #
     # Then prune unused things and possibly drop the VarStore if it's empty.
     #
-    # The coordinates in a charstring are relative to the point (or stem
-    # edge) before; rounding each of them on its own would let the rounding
-    # errors add up along a contour and leave it open. So in a charstring with
-    # blends they are turned into absolute positions before going into the
-    # VarStore, and rounded and turned back into relative ones after, as gvar
-    # rounds its points. Such a charstring comes out generalized, or
-    # specialized if specialize is True; the generalize parameter applies to
-    # the charstrings without blends.
-    #
-    # The round parameter defaults to otRound, as gvar rounds; it rounds the
-    # blended Private DICT values too, and the charstrings left on relative
-    # coordinates (see _absolutizeCFF2Commands).
+    # Charstring coordinates are relative, so rounding them one by one lets
+    # the errors add up and leaves contours open. In charstrings with blends
+    # they are made absolute before instancing and relative again after, so
+    # they round like gvar points (with otRound by default). Those come out
+    # generalized, or specialized if specialize is True; generalize only
+    # applies to charstrings without blends.
     #
     # If the downgrade parameter is True, no actual downgrading is done, but
     # the function returns True if the VarStore was empty after instantiation,
@@ -968,10 +937,8 @@ def instantiateCFF2(
     def getNumRegions(vsindex):
         return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
 
-    # The scalar of a region at the instance: known where its axes are all
-    # pinned, at most that of its pinned axes otherwise. supportScalar ignores
-    # an invalid tent where the VarStore instancing zeroes it; such a region
-    # is left unknown.
+    # Range of each region's scalar at the instance, for flex1 directions.
+    # Invalid tents are left unknown: supportScalar ignores what instancing zeroes.
     pinnedLocation = axisLimits.pinnedLocation()
     regionScalarRanges = []
     for region in varStore.VarRegionList.Region:
