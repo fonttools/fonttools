@@ -74,6 +74,37 @@ class SubsetTest:
     # Tests
     # -----
 
+    @pytest.mark.parametrize("font_name", ["TestTTF-Regular", "TestHVVAR", "TestGVAR"])
+    @pytest.mark.parametrize("retain_gids", [False, True])
+    @pytest.mark.parametrize("recalc_bounds", [False, True])
+    def test_empty_subset(self, font_name, retain_gids, recalc_bounds):
+        fontpath = self.compile_font(self.getpath(font_name + ".ttx"), ".ttf")
+        with TTFont(fontpath) as source:
+            builder = FontBuilder(font=source)
+            builder.setupVerticalMetrics(
+                {name: (1000, 0) for name in source.getGlyphOrder()}
+            )
+            builder.setupVerticalHeader()
+            fontpath = self.temp_path(".ttf")
+            source.save(fontpath)
+        subsetpath = self.temp_path(".ttf")
+        args = [
+            fontpath,
+            "--unicodes=U+10FFFF",
+            "--no-notdef-glyph",
+            "--output-file=" + subsetpath,
+        ]
+        if retain_gids:
+            args.append("--retain-gids")
+        if recalc_bounds:
+            args.append("--recalc-bounds")
+        subset.main(args)
+        with TTFont(subsetpath) as font:
+            font.ensureDecompiled()
+            assert font.getGlyphOrder() == []
+            assert font["hmtx"].metrics == {}
+            assert font["vmtx"].metrics == {}
+
     def test_layout_scripts(self):
         fontpath = self.compile_font(self.getpath("layout_scripts.ttx"), ".otf")
         subsetpath = self.temp_path(".otf")

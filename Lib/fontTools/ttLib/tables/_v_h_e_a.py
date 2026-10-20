@@ -64,7 +64,9 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
             return
 
         vmtxTable = ttFont["vmtx"]
-        self.advanceHeightMax = max(adv for adv, _ in vmtxTable.metrics.values())
+        self.advanceHeightMax = max(
+            (adv for adv, _ in vmtxTable.metrics.values()), default=0
+        )
 
         boundsHeightDict = {}
         if "glyf" in ttFont:

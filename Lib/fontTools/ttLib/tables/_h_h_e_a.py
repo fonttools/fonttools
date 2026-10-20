@@ -81,7 +81,9 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
             return
 
         hmtxTable = ttFont["hmtx"]
-        self.advanceWidthMax = max(adv for adv, _ in hmtxTable.metrics.values())
+        self.advanceWidthMax = max(
+            (adv for adv, _ in hmtxTable.metrics.values()), default=0
+        )
 
         boundsWidthDict = {}
         if "glyf" in ttFont:
