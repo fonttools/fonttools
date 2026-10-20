@@ -36,7 +36,7 @@ def programToString(program):
     return " ".join(str(x) for x in program)
 
 
-def programToCommands(program, getNumRegions=None):
+def programToCommands(program, getNumRegions=None, vsIndex=0):
     """Takes a T2CharString program list and returns list of commands.
     Each command is a two-tuple of commandname,arg-list.  The commandname might
     be empty string if no commandname shall be emitted (used for glyph width,
@@ -45,6 +45,8 @@ def programToCommands(program, getNumRegions=None):
     'getNumRegions' may be None, or a callable object. It must return the
     number of regions. 'getNumRegions' takes a single argument, vsindex. It
     returns the numRegions for the vsindex.
+    'vsIndex' is the vsindex in effect until the program sets one: that of
+    the Private DICT the charstring uses.
     The Charstring may or may not start with a width value. If the first
     non-blend operator has an odd number of arguments, then the first argument is
     a width, and is popped off. This is complicated with blend operators, as
@@ -59,7 +61,6 @@ def programToCommands(program, getNumRegions=None):
     """
 
     seenWidthOp = False
-    vsIndex = 0
     lenBlendStack = 0
     lastBlendIndex = 0
     commands = []
