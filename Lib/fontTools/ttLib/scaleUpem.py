@@ -293,7 +293,9 @@ def visit(visitor, obj, attr, cff):
             privates.add(c.private)
 
             commands = cffSpecializer.programToCommands(
-                c.program, getNumRegions=getNumRegions
+                c.program,
+                getNumRegions=getNumRegions,
+                vsIndex=getattr(c.private, "vsindex", 0),
             )
             for op, args in commands:
                 if op == "vsindex":

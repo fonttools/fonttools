@@ -679,3 +679,27 @@ def test_nested_zero_region_blend(convert):
     program = [100, 200, 1, "blend", 2, "blend", "rmoveto"]
     result = convert(program, lambda vi: 0)
     assert generalizeProgram(result) == [100, 200, "rmoveto"]
+
+
+def test_programToCommands_vsIndex():
+    # VarData 1 has two regions; the Private DICT selects it.
+    program = [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]
+    numRegions = {0: 1, 1: 2}.get
+    commands = programToCommands(program, getNumRegions=numRegions, vsIndex=1)
+    assert commands == [("rmoveto", [[100, 200, 1, 2, 3, 4, 2]])]
+
+
+@pytest.mark.parametrize(
+    "convert, expected",
+    [
+        (
+            generalizeProgram,
+            [100, 1, 2, 1, "blend", 200, 3, 4, 1, "blend", "rmoveto"],
+        ),
+        (specializeProgram, [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]),
+    ],
+)
+def test_convertProgram_vsIndex(convert, expected):
+    program = [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]
+    numRegions = {0: 1, 1: 2}.get
+    assert convert(program, numRegions, vsIndex=1) == expected

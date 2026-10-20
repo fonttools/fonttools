@@ -737,7 +737,11 @@ def instantiateCFF2(
     allCommandPrivates = []
     for cs in charStrings:
         assert cs.private.vstore.otVarStore is varStore  # Or in many places!!
-        commands = programToCommands(cs.program, getNumRegions=getNumRegions)
+        commands = programToCommands(
+            cs.program,
+            getNumRegions=getNumRegions,
+            vsIndex=getattr(cs.private, "vsindex", 0),
+        )
         if generalize:
             commands = generalizeCommands(commands)
         if specialize:
