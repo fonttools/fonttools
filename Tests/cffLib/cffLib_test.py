@@ -6,7 +6,15 @@ libdir = os.path.join(
 )
 sys.path.insert(0, libdir)
 
-from fontTools.cffLib import TopDict, PrivateDict, CharStrings, CFFFontSet
+from fontTools.cffLib import (
+    TopDict,
+    PrivateDict,
+    CharStrings,
+    CFFFontSet,
+    parseEncoding0,
+    parseEncoding1,
+    packEncoding0,
+)
 from fontTools.misc.testTools import parseXML, DataFilesHandler
 from fontTools.ttLib import TTFont
 import copy
@@ -15,6 +23,27 @@ from io import BytesIO
 
 
 class CffLibTest(DataFilesHandler):
+    def test_encoding_format_0_preserves_code_zero(self):
+        charset = [".notdef", "zero", "space"]
+        encoding = parseEncoding0(charset, BytesIO(b"\x02\x00\x20"))
+        self.assertEqual(encoding[0], "zero")
+        self.assertEqual(encoding[32], "space")
+        self.assertEqual(encoding[1], ".notdef")
+
+    def test_encoding_formats_agree_on_code_zero(self):
+        charset = [".notdef", "zero", "space"]
+        simple = parseEncoding0(charset, BytesIO(b"\x02\x00\x20"))
+        ranges = parseEncoding1(charset, BytesIO(b"\x02\x00\x00\x20\x00"))
+        self.assertEqual(simple, ranges)
+
+    def test_encoding_format_0_round_trip_code_zero(self):
+        charset = [".notdef", "zero"]
+        encoding = [".notdef"] * 256
+        encoding[0] = "zero"
+        packed = packEncoding0(charset, encoding, None)
+        self.assertEqual(packed[0], 0)
+        self.assertEqual(parseEncoding0(charset, BytesIO(packed[1:])), encoding)
+
     def test_topDict_recalcFontBBox(self):
         topDict = TopDict()
         topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)
