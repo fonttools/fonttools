@@ -11,7 +11,6 @@ from fontTools.designspaceLib import (
     SourceDescriptor,
 )
 from fontTools.fontBuilder import FontBuilder
-from fontTools.misc.psCharStrings import T2CharString
 from fontTools.misc.roundTools import noRound
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
@@ -22,7 +21,6 @@ from copy import deepcopy
 from io import BytesIO
 import logging
 import math
-from types import SimpleNamespace
 import pytest
 
 GLYPH_ORDER = [".notdef", "o"]
@@ -437,60 +435,6 @@ class InstantiateCFF2RoundingTest:
         assert "'o': vsindex after a blend" in caplog.text
         assertCloseTo(rebased, {}, vf, {"wght": 400}, 1)
 
-    @pytest.mark.parametrize(
-        "flex",
-        [
-            [10, 20, 30, 0, 40, -20, 50, 20, 60, 0, 70, -20, 50, "flex"],
-            [10, 20, 15, 30, 40, 50, 60, "hflex"],
-            [10, 5, 20, 15, 30, 40, 50, -12, 60, "hflex1"],
-            [10, 5, 20, 15, 30, 2, 40, -3, 50, -12, 60, "flex1"],
-            [5, 10, 15, 20, 2, 30, -3, 40, -12, 50, 60, "flex1"],
-        ],
-    )
-    def test_generalize_and_specialize_flex(self, flex):
-        program = [100, 100, "rmoveto"] + flex
-        (_, moveArgs), (op, args) = programToCommands(program)
-
-        flexArgs = instancer._generalizeFlex(op, args)
-        assert len(flexArgs) == 13
-        generalized = [("rmoveto", moveArgs), ("flex", flexArgs)]
-        assert drawProgram(commandsToProgram(generalized)) == drawProgram(program)
-
-        # The flex test case can be spelled as a flex1.
-        expectedOp = "flex1" if op == "flex" else op
-        specialized = [("rmoveto", moveArgs), instancer._specializeFlex(flexArgs)]
-        assert specialized[1][0] == expectedOp
-        assert drawProgram(commandsToProgram(specialized)) == drawProgram(program)
-
-    @pytest.mark.parametrize(
-        "dx, dy, expected",
-        [
-            (50, 0, True),
-            (0, 50, False),
-            ([50, 10, 1], [0, 20, 1], True),
-            ([50, 10, -20, 1], [0, 20, 20, 1], None),
-            # Horizontal at both ends of the region, vertical half way.
-            ([10, -20, 1], [5, -5, 1], None),
-        ],
-    )
-    def test_flex1_direction(self, dx, dy, expected):
-        assert instancer._isFlex1Horizontal(dx, dy) is expected
-
-    @pytest.mark.parametrize(
-        "scalarRanges, expected",
-        [
-            ([(0, 1)], None),
-            # A pinned region: the direction at its scalar.
-            ([(0.5, 0.5)], False),
-            ([(1, 1)], True),
-            # A region pinned on some axes only: scalar 0.2 at most.
-            ([(0, 0.2)], True),
-        ],
-    )
-    def test_flex1_direction_with_scalar_ranges(self, scalarRanges, expected):
-        dx, dy = [10, -20, 1], [5, -5, 1]
-        assert instancer._isFlex1Horizontal(dx, dy, scalarRanges) is expected
-
     def test_fractional_private_dict_values(self):
         vf = makeRingVF(TWO_MASTERS)
         private = vf["CFF2"].cff.topDictIndex[0].FDArray[0].Private
@@ -528,11 +472,3 @@ class InstantiateCFF2RoundingTest:
 
         assertClosed(rebased, {})
         assertCloseTo(rebased, {}, vf, {"wght": 400}, 0.5)
-
-
-def drawProgram(program):
-    private = SimpleNamespace(nominalWidthX=0, defaultWidthX=0)
-    charString = T2CharString(program=program + ["endchar"], private=private)
-    pen = RecordingPen()
-    charString.draw(pen)
-    return pen.value

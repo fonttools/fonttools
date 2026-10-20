@@ -120,7 +120,6 @@ from fontTools import varLib
 from fontTools import subset  # noqa: F401
 from fontTools.cffLib import privateDictOperators2
 from fontTools.cffLib.specializer import (
-    _addArgs,
     programToCommands,
     commandsToProgram,
     specializeCommands,
@@ -139,7 +138,6 @@ from fontTools.varLib.instancer import solver
 from fontTools.ttLib.tables.otTables import VarComponentFlags
 import collections
 import dataclasses
-import functools
 from contextlib import contextmanager
 from copy import deepcopy
 from enum import IntEnum
@@ -717,117 +715,19 @@ def _numBlendArgValues(arg):
     return len(arg) - 1 if isinstance(arg, list) else 1
 
 
-def _blendArgsEqual(arg1, arg2):
-    numValues = max(_numBlendArgValues(arg1), _numBlendArgValues(arg2))
-    return _blendArgValues(arg1, numValues) == _blendArgValues(arg2, numValues)
-
-
-def _negateBlendArg(arg):
-    if isinstance(arg, list):
-        return [-v for v in arg[:-1]] + arg[-1:]
-    return -arg
-
-
-def _sumBlendArgs(args):
-    return functools.reduce(_addArgs, args)
-
-
-def _isFlex1Horizontal(dx, dy, scalarRanges=None):
-    """Whether a flex1 ends horizontally for all region scalars within
-    scalarRanges ((min, max) per region, default (0, 1)); None if it depends."""
-
-    def bounds(arg):
-        default, *deltas = _blendArgValues(arg, _numBlendArgValues(arg))
-        ranges = scalarRanges or [(0, 1)] * len(deltas)
-        lo = hi = default
-        for delta, (minScalar, maxScalar) in zip(deltas, ranges):
-            lo += min(minScalar * delta, maxScalar * delta)
-            hi += max(minScalar * delta, maxScalar * delta)
-        return lo, hi
-
-    def minAbs(lo, hi):
-        return 0 if lo <= 0 <= hi else min(abs(lo), abs(hi))
-
-    def maxAbs(lo, hi):
-        return max(abs(lo), abs(hi))
-
-    dxBounds, dyBounds = bounds(dx), bounds(dy)
-    if minAbs(*dxBounds) > maxAbs(*dyBounds):
-        return True
-    if maxAbs(*dxBounds) <= minAbs(*dyBounds):
-        return False
-    return None
-
-
-def _generalizeFlex(op, args, scalarRanges=None):
-    """Return the args as flex args, or None if a flex1's direction varies."""
-    if op == "flex":
-        return args
-    if op == "hflex":
-        dx1, dx2, dy2, dx3, dx4, dx5, dx6 = args
-        return [dx1, 0, dx2, dy2, dx3, 0, dx4, 0, dx5, _negateBlendArg(dy2), dx6, 0, 50]
-    if op == "hflex1":
-        dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6 = args
-        dy6 = _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))
-        return [dx1, dy1, dx2, dy2, dx3, 0, dx4, 0, dx5, dy5, dx6, dy6, 50]
-    assert op == "flex1"
-    dx = _sumBlendArgs(args[0:10:2])
-    dy = _sumBlendArgs(args[1:10:2])
-    horizontal = _isFlex1Horizontal(dx, dy, scalarRanges)
-    if horizontal is None:
-        return None
-    if horizontal:
-        last = [args[10], _negateBlendArg(dy)]
-    else:
-        last = [_negateBlendArg(dx), args[10]]
-    return args[0:10] + last + [50]
-
-
-def _specializeFlex(args):
-    """Return the shortest flex operator and args for flex args."""
-    dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, dx6, dy6, fd = args
-    if not _blendArgsEqual(fd, 50):
-        return "flex", args
-    if _blendArgsEqual(dy3, 0) and _blendArgsEqual(dy4, 0):
-        if (
-            _blendArgsEqual(dy1, 0)
-            and _blendArgsEqual(dy6, 0)
-            and _blendArgsEqual(dy5, _negateBlendArg(dy2))
-        ):
-            return "hflex", [dx1, dx2, dy2, dx3, dx4, dx5, dx6]
-        if _blendArgsEqual(dy6, _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))):
-            return "hflex1", [dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6]
-    dx = _sumBlendArgs(args[0:10:2])
-    dy = _sumBlendArgs(args[1:10:2])
-    horizontal = _isFlex1Horizontal(dx, dy)
-    if horizontal and _blendArgsEqual(dy6, _negateBlendArg(dy)):
-        return "flex1", args[0:10] + [dx6]
-    if horizontal is False and _blendArgsEqual(dx6, _negateBlendArg(dx)):
-        return "flex1", args[0:10] + [dy6]
-    return "flex", args
-
-
-def _absolutizeCFF2Commands(commands, vsindex, getNumRegions, getScalarRanges=None):
+def _absolutizeCFF2Commands(commands, vsindex, getNumRegions):
     """Make outline and stem coordinates (defaults and deltas) absolute, in
-    place, turning all flex operators into flex. Return None, or the reason
-    the commands were left alone."""
-    newCommands = []
+    place. The commands must already be generalized, including flex operators.
+    Return None, or the reason the commands were left alone."""
     seenBlend = False
-    flexVsindex = vsindex
     for op, args in commands:
         if op == "vsindex":
             if seenBlend:
                 return "vsindex after a blend"
-            flexVsindex = args[0]
-        elif op in {"flex", "hflex", "hflex1", "flex1"}:
-            scalarRanges = getScalarRanges(flexVsindex) if getScalarRanges else None
-            args = _generalizeFlex(op, args, scalarRanges)
-            if args is None:
-                return "flex1 changes direction across the design space"
-            op = "flex"
+        elif op == "flex1":
+            return "flex1 changes direction across the design space"
+        assert op not in {"hflex", "hflex1"}
         seenBlend = seenBlend or any(isinstance(arg, list) for arg in args)
-        newCommands.append((op, args))
-    commands[:] = newCommands
 
     numValues = getNumRegions(vsindex) + 1
     outline = [[0] * numValues, [0] * numValues]
@@ -983,10 +883,12 @@ def instantiateCFF2(
         )
         absolute = False
         if any(isinstance(arg, list) for _, args in commands for arg in args):
-            generalized = generalizeCommands(commands)
-            reason = _absolutizeCFF2Commands(
-                generalized, vsindex, getNumRegions, getScalarRanges
+            generalized = generalizeCommands(
+                commands,
+                getScalarRanges=getScalarRanges,
+                vsIndex=vsindex,
             )
+            reason = _absolutizeCFF2Commands(generalized, vsindex, getNumRegions)
             if reason is None:
                 commands = generalized
                 absolute = True
@@ -1123,10 +1025,7 @@ def instantiateCFF2(
         _relativizeCFF2Commands(commands, round)
         if specialize:
             commands[:] = specializeCommands(
-                [
-                    _specializeFlex(args) if op == "flex" else (op, args)
-                    for op, args in commands
-                ],
+                commands,
                 generalizeFirst=False,
             )
 
