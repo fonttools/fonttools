@@ -175,6 +175,29 @@ class InstantiateCFF2Test(object):
         # The store emptied; the dict's vsindex must be gone with it.
         assert not hasattr(private, "vsindex")
 
+    def test_charstring_inherits_private_dict_vsindex(self):
+        from fontTools.cffLib.specializer import commandsToProgram, programToCommands
+
+        varfont = ttLib.TTFont()
+        varfont.importXML(os.path.join(TESTDATA, "CFF2Instancer-VF-2.ttx"))
+        topDict = varfont["CFF2"].cff.topDictIndex[0]
+        charString = topDict.CharStrings["A"]
+        charString.decompile()
+
+        # VarData 1 has three regions, unlike VarData 0, and is selected by the
+        # Private DICT without an explicit vsindex operator in the charstring.
+        charString.private.vsindex = 1
+        charString.program = commandsToProgram([("rmoveto", [50, [100, 1, 2, 3, 1]])])
+
+        instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits({}))
+
+        commands = programToCommands(
+            charString.program,
+            getNumRegions=charString.private.getNumRegions,
+            vsIndex=charString.private.vsindex,
+        )
+        assert commands == [("rmoveto", [50, [100, 1, 2, 3, 1]])]
+
     def test_instance_of_saved_font(self):
         # Saving before instancing used to leave a compiled VarStore behind
         # that the second save then wrote out in place of the pruned one.
