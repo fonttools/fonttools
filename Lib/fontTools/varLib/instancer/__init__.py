@@ -97,6 +97,7 @@ L4
 Both TrueType-flavored (glyf+gvar) variable and CFF2 variable fonts are supported.
 """
 
+from fontTools.misc.roundTools import noRound
 from fontTools.misc.fixedTools import (
     floatToFixed,
     floatToFixedToFloat,
@@ -114,6 +115,7 @@ from fontTools import varLib
 from fontTools import subset  # noqa: F401
 from fontTools.cffLib import privateDictOperators2
 from fontTools.cffLib.specializer import (
+    _addArgs,
     programToCommands,
     commandsToProgram,
     specializeCommands,
@@ -132,6 +134,7 @@ from fontTools.varLib.instancer import solver
 from fontTools.ttLib.tables.otTables import VarComponentFlags
 import collections
 import dataclasses
+import functools
 from contextlib import contextmanager
 from copy import deepcopy
 from enum import IntEnum
@@ -678,11 +681,219 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     return out
 
 
+# Charstring operators whose operands are coordinates along the outline, in
+# generalized form: x and y alternate, each relative to the point before. The
+# thirteenth operand of flex is its depth, not a coordinate.
+_CFF2_PATH_OPERATORS = {"rmoveto", "rlineto", "rrcurveto", "flex"}
+# Stem hints: edges along one axis, each relative to the edge before.
+_CFF2_STEM_OPERATORS = {"hstem", "hstemhm", "vstem", "vstemhm"}
+
+
+def _isCFF2StemCommand(commands, i):
+    op, args = commands[i]
+    if op in _CFF2_STEM_OPERATORS:
+        return True
+    # The vstems that a hintmask or cntrmask declares implicitly; the mask
+    # bytes that follow it are not numbers.
+    return (
+        op == ""
+        and i + 1 < len(commands)
+        and commands[i + 1][0] in {"hintmask", "cntrmask"}
+        and not any(isinstance(arg, bytes) for arg in args)
+    )
+
+
+def _blendArgValues(arg, numValues):
+    # A generalized blend arg is [default, *deltas, 1]; a number has no deltas.
+    values = arg[:-1] if isinstance(arg, list) else [arg]
+    if any(isinstance(value, list) for value in values):
+        raise NotImplementedError("Nested blend lists not supported (yet)")
+    assert len(values) <= numValues
+    return values + [0] * (numValues - len(values))
+
+
+def _numBlendArgValues(arg):
+    return len(arg) - 1 if isinstance(arg, list) else 1
+
+
+def _blendArgsEqual(arg1, arg2):
+    numValues = max(_numBlendArgValues(arg1), _numBlendArgValues(arg2))
+    return _blendArgValues(arg1, numValues) == _blendArgValues(arg2, numValues)
+
+
+def _negateBlendArg(arg):
+    if isinstance(arg, list):
+        return [-v for v in arg[:-1]] + arg[-1:]
+    return -arg
+
+
+def _sumBlendArgs(args):
+    return functools.reduce(_addArgs, args)
+
+
+def _isFlex1Horizontal(dx, dy):
+    """Return whether the last point of a flex1, whose first five points move
+    by dx and dy, moves horizontally: True or False if it does or does not
+    for any region scalars between 0 and 1, None if that depends on them."""
+
+    def bounds(arg):
+        default, *deltas = _blendArgValues(arg, _numBlendArgValues(arg))
+        return (
+            default + sum(min(0, delta) for delta in deltas),
+            default + sum(max(0, delta) for delta in deltas),
+        )
+
+    def minAbs(lo, hi):
+        return 0 if lo <= 0 <= hi else min(abs(lo), abs(hi))
+
+    def maxAbs(lo, hi):
+        return max(abs(lo), abs(hi))
+
+    dxBounds, dyBounds = bounds(dx), bounds(dy)
+    if minAbs(*dxBounds) > maxAbs(*dyBounds):
+        return True
+    if maxAbs(*dxBounds) <= minAbs(*dyBounds):
+        return False
+    return None
+
+
+def _generalizeFlex(op, args):
+    """Return the arguments of flex, hflex, hflex1 and flex1 spelled out as
+    those of flex, or None for a flex1 whose last point may move horizontally
+    at some locations and vertically at others."""
+    if op == "flex":
+        return args
+    if op == "hflex":
+        dx1, dx2, dy2, dx3, dx4, dx5, dx6 = args
+        return [dx1, 0, dx2, dy2, dx3, 0, dx4, 0, dx5, _negateBlendArg(dy2), dx6, 0, 50]
+    if op == "hflex1":
+        dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6 = args
+        dy6 = _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))
+        return [dx1, dy1, dx2, dy2, dx3, 0, dx4, 0, dx5, dy5, dx6, dy6, 50]
+    assert op == "flex1"
+    dx = _sumBlendArgs(args[0:10:2])
+    dy = _sumBlendArgs(args[1:10:2])
+    horizontal = _isFlex1Horizontal(dx, dy)
+    if horizontal is None:
+        return None
+    if horizontal:
+        last = [args[10], _negateBlendArg(dy)]
+    else:
+        last = [_negateBlendArg(dx), args[10]]
+    return args[0:10] + last + [50]
+
+
+def _specializeFlex(args):
+    """Return the shortest flex operator, and its arguments, for the
+    arguments of flex."""
+    dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, dx6, dy6, fd = args
+    if not _blendArgsEqual(fd, 50):
+        return "flex", args
+    if _blendArgsEqual(dy3, 0) and _blendArgsEqual(dy4, 0):
+        if (
+            _blendArgsEqual(dy1, 0)
+            and _blendArgsEqual(dy6, 0)
+            and _blendArgsEqual(dy5, _negateBlendArg(dy2))
+        ):
+            return "hflex", [dx1, dx2, dy2, dx3, dx4, dx5, dx6]
+        if _blendArgsEqual(dy6, _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))):
+            return "hflex1", [dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6]
+    dx = _sumBlendArgs(args[0:10:2])
+    dy = _sumBlendArgs(args[1:10:2])
+    horizontal = _isFlex1Horizontal(dx, dy)
+    if horizontal and _blendArgsEqual(dy6, _negateBlendArg(dy)):
+        return "flex1", args[0:10] + [dx6]
+    if horizontal is False and _blendArgsEqual(dx6, _negateBlendArg(dx)):
+        return "flex1", args[0:10] + [dy6]
+    return "flex", args
+
+
+def _absolutizeCFF2Commands(commands, vsindex, getNumRegions):
+    """Turn the coordinates in generalized charstring commands into absolute
+    positions, in place, and return True; or return False, leaving the
+    commands alone, if a flex1 cannot be spelled out (see _generalizeFlex).
+
+    A coordinate becomes the position of its point or stem edge, the default
+    and each delta summed along the outline, or along the stems of one
+    command: a blend arg [default, *deltas, 1], or a number if the deltas are
+    all zero. Rounding those, rather than the relative operands, keeps the
+    rounding errors from adding up. All flex operators become flex.
+    """
+    newCommands = []
+    for op, args in commands:
+        if op in {"flex", "hflex", "hflex1", "flex1"}:
+            args = _generalizeFlex(op, args)
+            if args is None:
+                return False
+            op = "flex"
+        newCommands.append((op, args))
+    commands[:] = newCommands
+
+    numValues = getNumRegions(vsindex) + 1
+    outline = [[0] * numValues, [0] * numValues]
+    for i, (op, args) in enumerate(commands):
+        if op == "vsindex":
+            # Only allowed before the first blend, so the positions so far
+            # have no deltas.
+            if any(value for axis in outline for value in axis[1:]):
+                raise NotImplementedError("vsindex after a blend")
+            vsindex = args[0]
+            numValues = getNumRegions(vsindex) + 1
+            outline = [axis[:1] + [0] * (numValues - 1) for axis in outline]
+            continue
+        if op in _CFF2_PATH_OPERATORS:
+            positions = outline
+            numCoordinates = 12 if op == "flex" else len(args)
+        elif _isCFF2StemCommand(commands, i):
+            positions = [[0] * numValues]
+            numCoordinates = len(args)
+        else:
+            continue
+        for j in range(numCoordinates):
+            k = j % len(positions)
+            values = _blendArgValues(args[j], numValues)
+            position = positions[k] = [p + v for p, v in zip(positions[k], values)]
+            args[j] = position + [1] if any(position[1:]) else position[0]
+    return True
+
+
+def _relativizeCFF2Commands(commands, round=otRound):
+    """Round the absolute positions left by _absolutizeCFF2Commands and turn
+    them back into differences of consecutive positions, in place."""
+
+    def roundArg(arg):
+        if isinstance(arg, list):
+            return [round(arg[0])] + arg[1:]
+        return round(arg)
+
+    outline = [[0], [0]]
+    for i, (op, args) in enumerate(commands):
+        if op in _CFF2_PATH_OPERATORS:
+            positions = outline
+            numCoordinates = 12 if op == "flex" else len(args)
+        elif _isCFF2StemCommand(commands, i):
+            positions = [[0]]
+            numCoordinates = len(args)
+        else:
+            continue
+        for j in range(numCoordinates):
+            k = j % len(positions)
+            arg = roundArg(args[j])
+            numValues = max(len(positions[k]), _numBlendArgValues(arg))
+            values = _blendArgValues(arg, numValues)
+            previous = positions[k] + [0] * (numValues - len(positions[k]))
+            diff = [v - p for v, p in zip(values, previous)]
+            positions[k] = values
+            args[j] = diff + [1] if any(diff[1:]) else diff[0]
+        if op == "flex":
+            args[12] = roundArg(args[12])
+
+
 def instantiateCFF2(
     varfont,
     axisLimits,
     *,
-    round=round,
+    round=otRound,
     specialize=True,
     generalize=False,
     downgrade=False,
@@ -696,6 +907,15 @@ def instantiateCFF2(
     # the Private dicts.
     #
     # Then prune unused things and possibly drop the VarStore if it's empty.
+    #
+    # The coordinates in a charstring are relative to the point (or stem
+    # edge) before; rounding each of them on its own would let the rounding
+    # errors add up along a contour and leave it open. So in a charstring with
+    # blends they are turned into absolute positions before going into the
+    # VarStore, and rounded and turned back into relative ones after, as gvar
+    # rounds its points. Such a charstring comes out generalized, or
+    # specialized if specialize is True; the generalize parameter applies to
+    # the charstrings without blends.
     #
     # If the downgrade parameter is True, no actual downgrading is done, but
     # the function returns True if the VarStore was empty after instantiation,
@@ -723,7 +943,8 @@ def instantiateCFF2(
     def getNumRegions(vsindex):
         return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
 
-    charStrings = topDict.CharStrings.values()
+    glyphNames = topDict.CharStrings.keys()
+    charStrings = [topDict.CharStrings[glyphName] for glyphName in glyphNames]
 
     # Gather all unique private dicts
     uniquePrivateDicts = set()
@@ -735,19 +956,33 @@ def instantiateCFF2(
 
     allCommands = []
     allCommandPrivates = []
-    for cs in charStrings:
+    allCommandsAbsolute = []
+    for glyphName, cs in zip(glyphNames, charStrings):
         assert cs.private.vstore.otVarStore is varStore  # Or in many places!!
+        vsindex = getattr(cs.private, "vsindex", 0)
         commands = programToCommands(
-            cs.program,
-            getNumRegions=getNumRegions,
-            vsIndex=getattr(cs.private, "vsindex", 0),
+            cs.program, getNumRegions=getNumRegions, vsIndex=vsindex
         )
-        if generalize:
-            commands = generalizeCommands(commands)
-        if specialize:
-            commands = specializeCommands(commands, generalizeFirst=not generalize)
+        absolute = False
+        if any(isinstance(arg, list) for _, args in commands for arg in args):
+            generalized = generalizeCommands(commands)
+            absolute = _absolutizeCFF2Commands(generalized, vsindex, getNumRegions)
+            if absolute:
+                commands = generalized
+            else:
+                log.warning(
+                    "Glyph %r: flex1 changes direction across the design space; "
+                    "rounding its relative coordinates",
+                    glyphName,
+                )
+        if not absolute:
+            if generalize:
+                commands = generalizeCommands(commands)
+            if specialize:
+                commands = specializeCommands(commands, generalizeFirst=not generalize)
         allCommands.append(commands)
         allCommandPrivates.append(cs.private)
+        allCommandsAbsolute.append(absolute)
 
     def storeBlendsToVarStore(arg):
         if not isinstance(arg, list):
@@ -767,7 +1002,7 @@ def instantiateCFF2(
             varData.Item.append(deltas)
             varData.ItemCount += 1
 
-    def fetchBlendsFromVarStore(arg):
+    def fetchBlendsFromVarStore(arg, absolute=False):
         if not isinstance(arg, list):
             return [arg]
 
@@ -786,7 +1021,11 @@ def instantiateCFF2(
             minor = varDataCursor[major]
             varDataCursor[major] += 1
 
-            defaultValue += round(defaultDeltas[major][minor])
+            if absolute:
+                # Rounded by _relativizeCFF2Commands.
+                defaultValue += defaultDeltas[major][minor]
+            else:
+                defaultValue += round(defaultDeltas[major][minor])
             newDefaults.append(defaultValue)
 
             varData = varStore.VarData[major]
@@ -846,7 +1085,9 @@ def instantiateCFF2(
 
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
-    for commands, private in zip(allCommands, allCommandPrivates):
+    for commands, private, absolute in zip(
+        allCommands, allCommandPrivates, allCommandsAbsolute
+    ):
         vsindex = getattr(private, "vsindex", 0)
         for command in commands:
             if command[0] == "vsindex":
@@ -854,8 +1095,19 @@ def instantiateCFF2(
                 continue
             newArgs = []
             for arg in command[1]:
-                newArgs.extend(fetchBlendsFromVarStore(arg))
+                newArgs.extend(fetchBlendsFromVarStore(arg, absolute))
             command[1][:] = newArgs
+        if not absolute:
+            continue
+        _relativizeCFF2Commands(commands, round)
+        if specialize:
+            commands[:] = specializeCommands(
+                [
+                    _specializeFlex(args) if op == "flex" else (op, args)
+                    for op, args in commands
+                ],
+                generalizeFirst=False,
+            )
 
     # Read back new private blends from the instantiated VarStore
     for private in privateDicts:
@@ -2252,6 +2504,7 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
             instantiateCFF2(
                 varfont,
                 NormalizedAxisLimits({}),
+                round=noRound,
                 reachableRanges=reachableRanges,
             )
 
