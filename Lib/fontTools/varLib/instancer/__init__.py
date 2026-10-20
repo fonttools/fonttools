@@ -104,7 +104,12 @@ from fontTools.misc.fixedTools import (
     strToFixedToFloat,
     otRound,
 )
-from fontTools.varLib.models import normalizeValue, piecewiseLinearMap, VariationModel
+from fontTools.varLib.models import (
+    normalizeValue,
+    piecewiseLinearMap,
+    supportScalar,
+    VariationModel,
+)
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
@@ -731,17 +736,23 @@ def _sumBlendArgs(args):
     return functools.reduce(_addArgs, args)
 
 
-def _isFlex1Horizontal(dx, dy):
+def _isFlex1Horizontal(dx, dy, scalarRanges=None):
     """Return whether the last point of a flex1, whose first five points move
     by dx and dy, moves horizontally: True or False if it does or does not
-    for any region scalars between 0 and 1, None if that depends on them."""
+    for any region scalars in their ranges, None if that depends on them.
+
+    scalarRanges holds a (min, max) range of the scalar of each region; a
+    region whose axes are all pinned has a single scalar. Without it, each
+    scalar is anywhere between 0 and 1."""
 
     def bounds(arg):
         default, *deltas = _blendArgValues(arg, _numBlendArgValues(arg))
-        return (
-            default + sum(min(0, delta) for delta in deltas),
-            default + sum(max(0, delta) for delta in deltas),
-        )
+        ranges = scalarRanges or [(0, 1)] * len(deltas)
+        lo = hi = default
+        for delta, (minScalar, maxScalar) in zip(deltas, ranges):
+            lo += min(minScalar * delta, maxScalar * delta)
+            hi += max(minScalar * delta, maxScalar * delta)
+        return lo, hi
 
     def minAbs(lo, hi):
         return 0 if lo <= 0 <= hi else min(abs(lo), abs(hi))
@@ -757,10 +768,10 @@ def _isFlex1Horizontal(dx, dy):
     return None
 
 
-def _generalizeFlex(op, args):
+def _generalizeFlex(op, args, scalarRanges=None):
     """Return the arguments of flex, hflex, hflex1 and flex1 spelled out as
     those of flex, or None for a flex1 whose last point may move horizontally
-    at some locations and vertically at others."""
+    at some locations and vertically at others (see _isFlex1Horizontal)."""
     if op == "flex":
         return args
     if op == "hflex":
@@ -773,7 +784,7 @@ def _generalizeFlex(op, args):
     assert op == "flex1"
     dx = _sumBlendArgs(args[0:10:2])
     dy = _sumBlendArgs(args[1:10:2])
-    horizontal = _isFlex1Horizontal(dx, dy)
+    horizontal = _isFlex1Horizontal(dx, dy, scalarRanges)
     if horizontal is None:
         return None
     if horizontal:
@@ -808,24 +819,36 @@ def _specializeFlex(args):
     return "flex", args
 
 
-def _absolutizeCFF2Commands(commands, vsindex, getNumRegions):
+def _absolutizeCFF2Commands(commands, vsindex, getNumRegions, getScalarRanges=None):
     """Turn the coordinates in generalized charstring commands into absolute
-    positions, in place, and return True; or return False, leaving the
-    commands alone, if a flex1 cannot be spelled out (see _generalizeFlex).
+    positions, in place, and return None; or return why not, leaving the
+    commands alone: a flex1 that cannot be spelled out (see _generalizeFlex),
+    or a vsindex after a blend, which CFF2 does not allow.
 
     A coordinate becomes the position of its point or stem edge, the default
     and each delta summed along the outline, or along the stems of one
     command: a blend arg [default, *deltas, 1], or a number if the deltas are
     all zero. Rounding those, rather than the relative operands, keeps the
     rounding errors from adding up. All flex operators become flex.
+
+    getScalarRanges, if given, returns the scalarRanges (see
+    _isFlex1Horizontal) of the regions of a vsindex.
     """
     newCommands = []
+    seenBlend = False
+    flexVsindex = vsindex
     for op, args in commands:
-        if op in {"flex", "hflex", "hflex1", "flex1"}:
-            args = _generalizeFlex(op, args)
+        if op == "vsindex":
+            if seenBlend:
+                return "vsindex after a blend"
+            flexVsindex = args[0]
+        elif op in {"flex", "hflex", "hflex1", "flex1"}:
+            scalarRanges = getScalarRanges(flexVsindex) if getScalarRanges else None
+            args = _generalizeFlex(op, args, scalarRanges)
             if args is None:
-                return False
+                return "flex1 changes direction across the design space"
             op = "flex"
+        seenBlend = seenBlend or any(isinstance(arg, list) for arg in args)
         newCommands.append((op, args))
     commands[:] = newCommands
 
@@ -833,10 +856,8 @@ def _absolutizeCFF2Commands(commands, vsindex, getNumRegions):
     outline = [[0] * numValues, [0] * numValues]
     for i, (op, args) in enumerate(commands):
         if op == "vsindex":
-            # Only allowed before the first blend, so the positions so far
-            # have no deltas.
-            if any(value for axis in outline for value in axis[1:]):
-                raise NotImplementedError("vsindex after a blend")
+            # Only before the first blend (checked above), so the positions
+            # so far have no deltas.
             vsindex = args[0]
             numValues = getNumRegions(vsindex) + 1
             outline = [axis[:1] + [0] * (numValues - 1) for axis in outline]
@@ -854,7 +875,7 @@ def _absolutizeCFF2Commands(commands, vsindex, getNumRegions):
             values = _blendArgValues(args[j], numValues)
             position = positions[k] = [p + v for p, v in zip(positions[k], values)]
             args[j] = position + [1] if any(position[1:]) else position[0]
-    return True
+    return None
 
 
 def _relativizeCFF2Commands(commands, round=otRound):
@@ -917,6 +938,10 @@ def instantiateCFF2(
     # specialized if specialize is True; the generalize parameter applies to
     # the charstrings without blends.
     #
+    # The round parameter defaults to otRound, as gvar rounds; it rounds the
+    # blended Private DICT values too, and the charstrings left on relative
+    # coordinates (see _absolutizeCFF2Commands).
+    #
     # If the downgrade parameter is True, no actual downgrading is done, but
     # the function returns True if the VarStore was empty after instantiation,
     # and hence a downgrade to CFF is possible. In all other cases it returns
@@ -943,6 +968,32 @@ def instantiateCFF2(
     def getNumRegions(vsindex):
         return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
 
+    # The scalar of a region at the instance: known where its axes are all
+    # pinned, at most that of its pinned axes otherwise. supportScalar ignores
+    # an invalid tent where the VarStore instancing zeroes it; such a region
+    # is left unknown.
+    pinnedLocation = axisLimits.pinnedLocation()
+    regionScalarRanges = []
+    for region in varStore.VarRegionList.Region:
+        support = region.get_support(fvarAxes)
+        pinnedSupport = {
+            axis: triple for axis, triple in support.items() if axis in pinnedLocation
+        }
+        scalar = supportScalar(pinnedLocation, pinnedSupport)
+        if any(
+            lower > peak or peak > upper or lower < 0 < upper
+            for lower, peak, upper in pinnedSupport.values()
+        ):
+            regionScalarRanges.append((0, 1))
+        elif len(pinnedSupport) == len(support):
+            regionScalarRanges.append((scalar, scalar))
+        else:
+            regionScalarRanges.append((0, scalar))
+
+    def getScalarRanges(vsindex):
+        varData = varStore.VarData[vsindex if vsindex is not None else 0]
+        return [regionScalarRanges[i] for i in varData.VarRegionIndex]
+
     glyphNames = topDict.CharStrings.keys()
     charStrings = [topDict.CharStrings[glyphName] for glyphName in glyphNames]
 
@@ -966,14 +1017,17 @@ def instantiateCFF2(
         absolute = False
         if any(isinstance(arg, list) for _, args in commands for arg in args):
             generalized = generalizeCommands(commands)
-            absolute = _absolutizeCFF2Commands(generalized, vsindex, getNumRegions)
-            if absolute:
+            reason = _absolutizeCFF2Commands(
+                generalized, vsindex, getNumRegions, getScalarRanges
+            )
+            if reason is None:
                 commands = generalized
+                absolute = True
             else:
                 log.warning(
-                    "Glyph %r: flex1 changes direction across the design space; "
-                    "rounding its relative coordinates",
+                    "Glyph %r: %s; rounding its relative coordinates",
                     glyphName,
+                    reason,
                 )
         if not absolute:
             if generalize:

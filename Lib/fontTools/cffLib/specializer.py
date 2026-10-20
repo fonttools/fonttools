@@ -398,9 +398,11 @@ def generalizeCommands(commands, ignoreErrors=False):
     return result
 
 
-def generalizeProgram(program, getNumRegions=None, **kwargs):
+def generalizeProgram(program, getNumRegions=None, vsIndex=0, **kwargs):
     return commandsToProgram(
-        generalizeCommands(programToCommands(program, getNumRegions), **kwargs)
+        generalizeCommands(
+            programToCommands(program, getNumRegions, vsIndex=vsIndex), **kwargs
+        )
     )
 
 
@@ -837,9 +839,11 @@ def specializeCommands(
     return commands
 
 
-def specializeProgram(program, getNumRegions=None, **kwargs):
+def specializeProgram(program, getNumRegions=None, vsIndex=0, **kwargs):
     return commandsToProgram(
-        specializeCommands(programToCommands(program, getNumRegions), **kwargs)
+        specializeCommands(
+            programToCommands(program, getNumRegions, vsIndex=vsIndex), **kwargs
+        )
     )
 
 
@@ -915,7 +919,10 @@ if __name__ == "__main__":
             charstring.decompile()
             getNumRegions = charstring.private.getNumRegions
             charstring.program = specializeProgram(
-                charstring.program, getNumRegions, maxstack=maxStackLimit
+                charstring.program,
+                getNumRegions,
+                vsIndex=getattr(charstring.private, "vsindex", 0),
+                maxstack=maxStackLimit,
             )
 
         if options.output_file is None:

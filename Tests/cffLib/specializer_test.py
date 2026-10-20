@@ -687,3 +687,19 @@ def test_programToCommands_vsIndex():
     numRegions = {0: 1, 1: 2}.get
     commands = programToCommands(program, getNumRegions=numRegions, vsIndex=1)
     assert commands == [("rmoveto", [[100, 200, 1, 2, 3, 4, 2]])]
+
+
+@pytest.mark.parametrize(
+    "convert, expected",
+    [
+        (
+            generalizeProgram,
+            [100, 1, 2, 1, "blend", 200, 3, 4, 1, "blend", "rmoveto"],
+        ),
+        (specializeProgram, [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]),
+    ],
+)
+def test_convertProgram_vsIndex(convert, expected):
+    program = [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]
+    numRegions = {0: 1, 1: 2}.get
+    assert convert(program, numRegions, vsIndex=1) == expected
