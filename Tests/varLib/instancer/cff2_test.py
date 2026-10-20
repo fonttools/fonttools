@@ -388,12 +388,49 @@ class InstantiateCFF2RoundingTest:
         for weight in (300, 600, 900):
             assertClosed(rebased, {"wght": weight})
 
+    # The last point of this flex1 moves horizontally at the default, and
+    # vertically at wght 900.
+    FLEX1_CHANGING_DIRECTION = [
+        10, 10, 10, [-10, 20, 1], 10, 0, 10, 0, 10, [0, 40, 1], 0
+    ]  # fmt: skip
+
     def test_flex1_changing_direction(self, caplog):
-        # The last point of this flex1 moves horizontally at the default, and
-        # vertically at wght 900; it cannot be spelled out as a flex, so the
-        # charstring is instanced the old way, on relative operands.
-        flex1 = [10, 10, 10, [-10, 20, 1], 10, 0, 10, 0, 10, [0, 40, 1], 0]
+        # With wght left variable, the flex1 cannot be spelled out as a flex,
+        # so the charstring is instanced the old way, on relative operands.
+        flex1 = self.FLEX1_CHANGING_DIRECTION
         vf = makeVF([("rmoveto", [100, 100]), ("flex1", flex1), ("rlineto", [-50, 0])])
+
+        with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
+            instance = instancer.instantiateVariableFont(vf, {"wght": (300, 300, 900)})
+        instance = reload(instance)
+
+        assert "'o': flex1 changes direction" in caplog.text
+        assert "flex1" in getProgram(instance)
+        assertCloseTo(instance, {}, vf, {}, 0)
+        assertCloseTo(instance, {"wght": 900}, vf, {"wght": 900}, 0)
+
+    def test_flex1_direction_at_pinned_location(self, caplog):
+        # Pinned at wght 900, the flex1 has one direction, so the charstring
+        # is rounded on absolute positions.
+        flex1 = self.FLEX1_CHANGING_DIRECTION
+        vf = makeVF([("rmoveto", [100, 100]), ("flex1", flex1), ("rlineto", [-50, 0])])
+
+        with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
+            instance = instancer.instantiateVariableFont(vf, {"wght": 900})
+        instance = reload(instance)
+
+        assert "flex1 changes direction" not in caplog.text
+        assertCloseTo(instance, {}, vf, {"wght": 900}, 0)
+
+    def test_flex1_direction_with_invalid_tent(self, caplog):
+        # The region's peak is past its end. The VarStore instancing zeroes
+        # such a tent; the flex1 direction is not taken from the pinned
+        # location, and the charstring is instanced the old way.
+        flex1 = self.FLEX1_CHANGING_DIRECTION
+        vf = makeVF([("rmoveto", [100, 100]), ("flex1", flex1), ("rlineto", [-50, 0])])
+        varStore = vf["CFF2"].cff.topDictIndex[0].VarStore.otVarStore
+        varStore.VarRegionList.Region[0].VarRegionAxis[0].EndCoord = 0.5
+        vf = reload(vf)
 
         with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
             instance = instancer.instantiateVariableFont(vf, {"wght": 900})
@@ -401,7 +438,24 @@ class InstantiateCFF2RoundingTest:
 
         assert "'o': flex1 changes direction" in caplog.text
         assert "flex1" in getProgram(instance)
-        assertCloseTo(instance, {}, vf, {"wght": 900}, 0)
+
+    def test_vsindex_after_blend(self, caplog):
+        # CFF2 allows vsindex only before the first blend; such a charstring
+        # is instanced the old way rather than not at all.
+        vf = makeVF(
+            [
+                ("rmoveto", [100, [100, 50, 1]]),
+                ("vsindex", [0]),
+                ("rlineto", [[50, 10, 1], 0, 0, 50, -50, 0]),
+            ]
+        )
+
+        with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
+            rebased = instancer.instantiateVariableFont(vf, {"wght": (300, 400, 900)})
+        rebased = reload(rebased)
+
+        assert "'o': vsindex after a blend" in caplog.text
+        assertCloseTo(rebased, {}, vf, {"wght": 400}, 1)
 
     @pytest.mark.parametrize(
         "flex",
@@ -441,6 +495,21 @@ class InstantiateCFF2RoundingTest:
     )
     def test_flex1_direction(self, dx, dy, expected):
         assert instancer._isFlex1Horizontal(dx, dy) is expected
+
+    @pytest.mark.parametrize(
+        "scalarRanges, expected",
+        [
+            ([(0, 1)], None),
+            # A pinned region: the direction at its scalar.
+            ([(0.5, 0.5)], False),
+            ([(1, 1)], True),
+            # A region pinned on some axes only: scalar 0.2 at most.
+            ([(0, 0.2)], True),
+        ],
+    )
+    def test_flex1_direction_with_scalar_ranges(self, scalarRanges, expected):
+        dx, dy = [10, -20, 1], [5, -5, 1]
+        assert instancer._isFlex1Horizontal(dx, dy, scalarRanges) is expected
 
     def test_fractional_private_dict_values(self):
         vf = makeRingVF(TWO_MASTERS)
