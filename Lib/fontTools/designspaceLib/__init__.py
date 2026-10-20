@@ -12,7 +12,7 @@ import itertools
 import math
 import os
 import posixpath
-from io import BytesIO, StringIO
+from io import BytesIO
 from textwrap import indent
 from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union, cast
 
@@ -2813,19 +2813,17 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         return self
 
     def tostring(self, encoding=None):
-        """Returns the designspace as a string. Default encoding ``utf-8``."""
-        if encoding is str or (encoding is not None and encoding.lower() == "unicode"):
-            f = StringIO()
-            xml_declaration = False
-        elif encoding is None or encoding == "utf-8":
-            f = BytesIO()
-            encoding = "UTF-8"
-            xml_declaration = True
-        else:
+        """Return UTF-8 bytes, or text for ``encoding="unicode"`` (or ``str``)."""
+        is_unicode = encoding is str or (
+            encoding is not None and encoding.lower() == "unicode"
+        )
+        if not is_unicode and encoding not in (None, "utf-8"):
             raise ValueError("unsupported encoding: '%s'" % encoding)
+        f = BytesIO()
         writer = self.writerClass(f, self)
-        writer.write(encoding=encoding, xml_declaration=xml_declaration)
-        return f.getvalue()
+        writer.write(encoding="UTF-8", xml_declaration=not is_unicode)
+        data = f.getvalue()
+        return data.decode("utf-8") if is_unicode else data
 
     def read(self, path):
         """Read a designspace file from ``path`` and populates the fields of

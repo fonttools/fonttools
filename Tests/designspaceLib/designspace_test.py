@@ -59,6 +59,26 @@ def assert_equals_test_file(path, test_filename):
     assert actual == expected
 
 
+def test_tostring_unicode():
+    doc = DesignSpaceDocument()
+    axis = AxisDescriptor()
+    axis.name = "Wéíght & width"
+    axis.tag = "wght"
+    axis.minimum = 0
+    axis.default = 500
+    axis.maximum = 1000
+    axis.labelNames = {"fr": "Épaisseur & largeur"}
+    doc.addAxis(axis)
+
+    text = doc.tostring(encoding="unicode")
+    assert isinstance(text, str)
+    restored = DesignSpaceDocument.fromstring(text)
+    assert (restored.axes[0].name, restored.axes[0].labelNames) == (
+        axis.name,
+        axis.labelNames,
+    )
+
+
 def test_fill_document(tmpdir):
     tmpdir = str(tmpdir)
     testDocPath = os.path.join(tmpdir, "test_v4.designspace")
