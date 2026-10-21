@@ -703,3 +703,17 @@ def test_convertProgram_vsIndex(convert, expected):
     program = [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]
     numRegions = {0: 1, 1: 2}.get
     assert convert(program, numRegions, vsIndex=1) == expected
+
+
+def test_initial_separate_blends_are_not_width():
+    # Two separate blends before the first stem op must not make the
+    # operand count odd and turn the first stem edge into a width.
+    program = [
+        101.25, 3, 2, -1, 1, "blend", -21,
+        60.5, -2, 1, 3, 1, "blend", 31.75, "hstemhm",
+    ]  # fmt: skip
+    commands = programToCommands(program, lambda _: 3)
+    assert commands == [
+        ("hstemhm", [[101.25, 3, 2, -1, 1], -21, [60.5, -2, 1, 3, 1], 31.75])
+    ]
+    assert commandsToProgram(commands) == program

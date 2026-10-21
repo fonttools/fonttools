@@ -82,7 +82,7 @@ def programToCommands(program, getNumRegions=None, vsIndex=0):
             # replace first blend op by a list of the blend ops.
             stack[-numBlendArgs:] = [stack[-numBlendArgs:]]
             lenStack = len(stack)
-            lenBlendStack += numBlends + lenStack - 1
+            lenBlendStack += numBlends + lenStack - 1 - lastBlendIndex
             lastBlendIndex = lenStack
             # if a blend op exists, this is or will be a CFF2 charstring.
             continue
