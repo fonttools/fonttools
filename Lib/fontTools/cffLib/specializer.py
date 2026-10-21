@@ -696,7 +696,8 @@ def specializeCommands(
     #
     # 1. Combine successive rmoveto operations.
     #
-    # 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
+    # 2. Specialize rmoveto/rlineto/rrcurveto into horizontal/vertical variants,
+    #    and flex into hflex/hflex1/flex1.
     #    We specialize into some, made-up, variants as well, which simplifies following
     #    passes.
     #
@@ -739,7 +740,8 @@ def specializeCommands(
             )
             del commands[i]
 
-    # 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
+    # 2. Specialize rmoveto/rlineto/rrcurveto into horizontal/vertical variants,
+    #    and flex into hflex/hflex1/flex1.
     #
     # We, in fact, specialize into more, made-up, variants that special-case when both
     # X and Y components are zero.  This simplifies the following optimization passes.
@@ -797,6 +799,10 @@ def specializeCommands(
             c1, args1 = _categorizeVector(args[:2])
             c2, args2 = _categorizeVector(args[-2:])
             commands[i] = c1 + c2 + "curveto", args1 + args[2:4] + args2
+            continue
+
+        if op == "flex":
+            commands[i] = _specializeFlex(args)
             continue
 
     # 3. Merge or delete redundant operations, to the extent requested.
@@ -980,11 +986,8 @@ def specializeCommands(
     # 7. For any series of args which are blend lists, convert the series to a single blend arg.
     for i in range(len(commands)):
         op, args = commands[i]
-        if op == "flex":
-            op, args = _specializeFlex(args)
         if any(isinstance(arg, list) for arg in args):
-            args = _convertToBlendCmds(args)
-        commands[i] = op, args
+            commands[i] = op, _convertToBlendCmds(args)
 
     return commands
 
