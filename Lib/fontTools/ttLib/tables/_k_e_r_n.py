@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from fontTools.ttLib import getSearchRange
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
@@ -6,6 +10,9 @@ import struct
 import sys
 import array
 import logging
+
+if TYPE_CHECKING:
+    from fontTools.ttLib import TTFont
 
 log = logging.getLogger(__name__)
 
@@ -114,7 +121,7 @@ class KernTable_format_0(object):
     # 'version' is kept for backward compatibility
     version = format = 0
 
-    def __init__(self, apple=False):
+    def __init__(self, apple: bool = False) -> None:
         self.apple = apple
 
     def decompile(self, data, ttFont):
@@ -165,7 +172,7 @@ class KernTable_format_0(object):
                 "excess data in 'kern' subtable: %d bytes", len(data) - 6 * nPairs
             )
 
-    def compile(self, ttFont):
+    def compile(self, ttFont: TTFont) -> bytes:
         nPairs = min(len(self.kernTable), 0xFFFF)
         searchRange, entrySelector, rangeShift = getSearchRange(nPairs, 6)
         searchRange &= 0xFFFF

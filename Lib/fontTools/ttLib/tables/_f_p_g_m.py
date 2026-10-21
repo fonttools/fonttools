@@ -14,6 +14,8 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/fpgm
     """
 
+    program: ttProgram.Program
+
     def decompile(self, data, ttFont):
         program = ttProgram.Program()
         program.fromBytecode(data)

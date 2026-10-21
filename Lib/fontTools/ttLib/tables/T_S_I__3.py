@@ -6,9 +6,14 @@ TSI3 contains the text of the glyph programs in the form of 'VTTTalk' code.
 See also https://learn.microsoft.com/en-us/typography/tools/vtt/tsi-tables
 """
 
+from typing import TYPE_CHECKING
+
 from fontTools import ttLib
 
-superclass = ttLib.getTableClass("TSI1")
+if TYPE_CHECKING:
+    from .T_S_I__1 import table_T_S_I__1 as superclass
+else:
+    superclass = ttLib.getTableClass("TSI1")
 
 
 class table_T_S_I__3(superclass):
