@@ -801,14 +801,26 @@ def test_flex1_direction_with_scalar_ranges(scalarRanges, expected):
     assert (op == "flex") is (expected is not None)
 
 
-def test_generalize_flex_uses_active_vsindex():
+@pytest.mark.parametrize(
+    "vsIndex, vsindexCommands, expectedOp",
+    [
+        (0, [], "flex1"),
+        (1, [], "flex"),
+        (0, [("vsindex", [1])], "flex"),
+        (1, [("vsindex", [0])], "flex1"),
+    ],
+)
+def test_generalize_flex_uses_active_vsindex(vsIndex, vsindexCommands, expectedOp):
     dx, dy = [10, -20, 1], [5, -5, 1]
-    commands = [("vsindex", [1]), ("flex1", [dx, dy] + [0] * 9)]
+    commands = vsindexCommands + [("flex1", [dx, dy] + [0] * 9)]
     scalarRangesByVsIndex = {0: [(0, 1)], 1: [(1, 1)]}
 
-    result = generalizeCommands(commands, getScalarRanges=scalarRangesByVsIndex.get)
+    result = generalizeCommands(
+        commands, getScalarRanges=scalarRangesByVsIndex.get, vsIndex=vsIndex
+    )
 
-    assert result[1][0] == "flex"
+    assert result[:-1] == vsindexCommands
+    assert result[-1][0] == expectedOp
 
 
 def drawProgram(program):

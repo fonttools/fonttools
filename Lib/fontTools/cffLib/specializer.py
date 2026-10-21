@@ -165,6 +165,14 @@ def _everyN(el, n):
 
 
 class _GeneralizerDecombinerCommandsMap(object):
+    def __init__(self, getScalarRanges=None, vsIndex=0):
+        self.getScalarRanges = getScalarRanges
+        self.vsIndex = vsIndex
+
+    def vsindex(self, args):
+        self.vsIndex = args[0]
+        yield ("vsindex", args)
+
     @staticmethod
     def rmoveto(args):
         if len(args) != 2:
@@ -313,6 +321,51 @@ class _GeneralizerDecombinerCommandsMap(object):
             yield ("rlineto", args)
         yield ("rrcurveto", last_args)
 
+    @staticmethod
+    def hflex(args):
+        dx1, dx2, dy2, dx3, dx4, dx5, dx6 = args
+        yield (
+            "flex",
+            [
+                dx1,
+                0,
+                dx2,
+                dy2,
+                dx3,
+                0,
+                dx4,
+                0,
+                dx5,
+                _negateBlendArg(dy2),
+                dx6,
+                0,
+                50,
+            ],
+        )
+
+    @staticmethod
+    def hflex1(args):
+        dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6 = args
+        dy6 = _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))
+        yield ("flex", [dx1, dy1, dx2, dy2, dx3, 0, dx4, 0, dx5, dy5, dx6, dy6, 50])
+
+    def flex1(self, args):
+        scalarRanges = (
+            self.getScalarRanges(self.vsIndex) if self.getScalarRanges else None
+        )
+        dx = _sumBlendArgs(args[0:10:2])
+        dy = _sumBlendArgs(args[1:10:2])
+        horizontal = _isFlex1Horizontal(dx, dy, scalarRanges)
+        if horizontal is None:
+            # A flex1 whose direction changes cannot be represented as flex.
+            yield ("flex1", args)
+        else:
+            if horizontal:
+                last = [args[10], _negateBlendArg(dy)]
+            else:
+                last = [_negateBlendArg(dx), args[10]]
+            yield ("flex", args[0:10] + last + [50])
+
 
 def _convertBlendOpToArgs(blendList):
     # args is list of blend op args. Since we are supporting
@@ -361,7 +414,7 @@ def _convertBlendOpToArgs(blendList):
 
 def generalizeCommands(commands, ignoreErrors=False, getScalarRanges=None, vsIndex=0):
     result = []
-    mapping = _GeneralizerDecombinerCommandsMap
+    mapping = _GeneralizerDecombinerCommandsMap(getScalarRanges, vsIndex)
     for op, args in commands:
         # First, generalize any blend args in the arg list.
         if any([isinstance(arg, list) for arg in args]):
@@ -381,24 +434,6 @@ def generalizeCommands(commands, ignoreErrors=False, getScalarRanges=None, vsInd
                     result.append(("", [op]))
                 else:
                     raise
-
-        if op == "vsindex":
-            vsIndex = args[0]
-        elif op in {"flex", "hflex", "hflex1", "flex1"}:
-            scalarRanges = (
-                getScalarRanges(vsIndex) if op == "flex1" and getScalarRanges else None
-            )
-            try:
-                command = _generalizeFlex(op, args, scalarRanges)
-            except ValueError:
-                if ignoreErrors:
-                    result.append(("", args))
-                    result.append(("", [op]))
-                    continue
-                raise
-            # A flex1 whose direction changes cannot be represented as flex.
-            result.append(command if command is not None else (op, args))
-            continue
 
         func = getattr(mapping, op, None)
         if func is None:
@@ -603,51 +638,6 @@ def _isFlex1Horizontal(dx, dy, scalarRanges=None):
     if maxAbs(*dxBounds) <= minAbs(*dyBounds):
         return False
     return None
-
-
-def _generalizeFlex(op, args, scalarRanges=None):
-    """Convert a flex operator to ``flex``.
-
-    Return ``None`` if a variable ``flex1`` can change direction within the
-    supplied scalar ranges and therefore cannot be represented as one ``flex``.
-    """
-    if op == "flex":
-        return op, args
-    if op == "hflex":
-        dx1, dx2, dy2, dx3, dx4, dx5, dx6 = args
-        args = [
-            dx1,
-            0,
-            dx2,
-            dy2,
-            dx3,
-            0,
-            dx4,
-            0,
-            dx5,
-            _negateBlendArg(dy2),
-            dx6,
-            0,
-            50,
-        ]
-        return "flex", args
-    if op == "hflex1":
-        dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6 = args
-        dy6 = _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))
-        args = [dx1, dy1, dx2, dy2, dx3, 0, dx4, 0, dx5, dy5, dx6, dy6, 50]
-        return "flex", args
-    if op != "flex1":
-        raise ValueError(op)
-    dx = _sumBlendArgs(args[0:10:2])
-    dy = _sumBlendArgs(args[1:10:2])
-    horizontal = _isFlex1Horizontal(dx, dy, scalarRanges)
-    if horizontal is None:
-        return None
-    if horizontal:
-        last = [args[10], _negateBlendArg(dy)]
-    else:
-        last = [_negateBlendArg(dx), args[10]]
-    return "flex", args[0:10] + last + [50]
 
 
 def _specializeFlex(args):
