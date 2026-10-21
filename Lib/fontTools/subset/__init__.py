@@ -184,6 +184,7 @@ These options control how additional glyphs are added to the subset.
   fonts, as those require '.notdef'. For TrueType-flavored fonts,
   this works fine as long as no unsupported glyphs are requested
   from the font.
+  If no glyphs remain, an empty TrueType subset is written.
 
 --notdef-outline
   Keep the outline of '.notdef' glyph. The '.notdef' glyph outline is
@@ -2386,7 +2387,8 @@ def subset_glyphs(self, s):
     self.metrics = _dict_subset(self.metrics, s.glyphs)
     for g in s.glyphs_emptied:
         self.metrics[g] = (0, 0)
-    return bool(self.metrics)
+    # Keep the vhea/vmtx pair together when the whole font is empty.
+    return bool(self.metrics) or not s.glyphs
 
 
 @_add_method(ttLib.getTableClass("hmtx"))
@@ -2471,6 +2473,8 @@ def subset_glyphs(self, s):
 
 def _remap_index_map(s, varidx_map, table_map):
     map_ = {k: varidx_map[v] for k, v in table_map.mapping.items()}
+    if not s.reverseEmptiedGlyphMap:
+        return map_
     # Emptied glyphs are remapped to:
     # if GID <= last retained GID, 0/0: delta set for 0/0 is expected to exist & zeros compress well
     # if GID > last retained GID, major/minor of the last retained glyph: will be optimized out by table compiler
@@ -3759,8 +3763,12 @@ class Subsetter(object):
         order = font.getReverseGlyphMap()
         self.reverseOrigGlyphMap = {g: order[g] for g in self.glyphs_retained}
 
-        self.last_retained_order = max(self.reverseOrigGlyphMap.values())
-        self.last_retained_glyph = font.getGlyphOrder()[self.last_retained_order]
+        self.last_retained_order = max(self.reverseOrigGlyphMap.values(), default=-1)
+        self.last_retained_glyph = (
+            glyph_order[self.last_retained_order]
+            if self.last_retained_order >= 0
+            else None
+        )
 
         self.glyphs_emptied = frozenset()
         if self.options.retain_gids:

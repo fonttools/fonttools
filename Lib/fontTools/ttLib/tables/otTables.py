@@ -1120,7 +1120,8 @@ class VarIdxMap(BaseTable):
         assert (rawTable["EntryFormat"] & 0xFFC0) == 0
         glyphOrder = font.getGlyphOrder()
         mapList = rawTable["mapping"]
-        mapList.extend([mapList[-1]] * (len(glyphOrder) - len(mapList)))
+        if len(mapList) < len(glyphOrder):
+            mapList.extend([mapList[-1]] * (len(glyphOrder) - len(mapList)))
         self.mapping = dict(zip(glyphOrder, mapList))
 
     def preWrite(self, font):

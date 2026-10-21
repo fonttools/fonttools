@@ -73,10 +73,11 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
                     advanceWidth,
                 )
             self.metrics[glyphName] = (advanceWidth, lsb)
-        lastAdvance = metrics[-2]
-        for i in range(numberOfSideBearings):
-            glyphName = glyphOrder[i + numberOfMetrics]
-            self.metrics[glyphName] = (lastAdvance, sideBearings[i])
+        if numberOfSideBearings:
+            lastAdvance = metrics[-2]
+            for i in range(numberOfSideBearings):
+                glyphName = glyphOrder[i + numberOfMetrics]
+                self.metrics[glyphName] = (lastAdvance, sideBearings[i])
 
     def compile(self, ttFont):
         metrics = []
@@ -92,14 +93,11 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 
         headerTable = ttFont.get(self.headerTag)
         if headerTable is not None:
-            lastAdvance = metrics[-1][0]
             lastIndex = len(metrics)
-            while metrics[lastIndex - 2][0] == lastAdvance:
-                lastIndex -= 1
-                if lastIndex <= 1:
-                    # all advances are equal
-                    lastIndex = 1
-                    break
+            if metrics:
+                lastAdvance = metrics[-1][0]
+                while lastIndex > 1 and metrics[lastIndex - 2][0] == lastAdvance:
+                    lastIndex -= 1
             additionalMetrics = metrics[lastIndex:]
             additionalMetrics = [otRound(sb) for _, sb in additionalMetrics]
             metrics = metrics[:lastIndex]

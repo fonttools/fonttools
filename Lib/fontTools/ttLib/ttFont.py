@@ -1128,7 +1128,8 @@ class TTFont(object):
         # cmap.
         numGlyphs = int(self["maxp"].numGlyphs)
         glyphOrder = ["glyph%.5d" % i for i in range(numGlyphs)]
-        glyphOrder[0] = ".notdef"
+        if glyphOrder:
+            glyphOrder[0] = ".notdef"
         # Set the glyph order, so the cmap parser has something
         # to work with (so we don't get called recursively).
         self.glyphOrder = glyphOrder
