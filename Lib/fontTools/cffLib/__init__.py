@@ -1755,8 +1755,7 @@ def parseEncoding0(charset, file):
     encoding = [".notdef"] * 256
     for glyphID in range(1, nCodes + 1):
         code = readCard8(file)
-        if code != 0:
-            encoding[code] = charset[glyphID]
+        encoding[code] = charset[glyphID]
 
     return encoding
 
