@@ -750,6 +750,18 @@ def test_generalize_and_specialize_flex(flex):
     assert drawProgram(commandsToProgram(specialized)) == drawProgram(program)
 
 
+@pytest.mark.parametrize("convert", [generalizeCommands, specializeCommands])
+@pytest.mark.parametrize("numArgs", [0, 1, 10, 12])
+def test_malformed_flex1(convert, numArgs):
+    args = [10] * numArgs
+    commands = [("flex1", args)]
+
+    with pytest.raises(ValueError):
+        convert(commands)
+
+    assert convert(commands, ignoreErrors=True) == [("", args), ("", ["flex1"])]
+
+
 @pytest.mark.parametrize(
     "dx, dy, expected",
     [

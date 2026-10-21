@@ -350,6 +350,8 @@ class _GeneralizerDecombinerCommandsMap(object):
         yield ("flex", [dx1, dy1, dx2, dy2, dx3, 0, dx4, 0, dx5, dy5, dx6, dy6, 50])
 
     def flex1(self, args):
+        if len(args) != 11:
+            raise ValueError(args)
         scalarRanges = (
             self.getScalarRanges(self.vsIndex) if self.getScalarRanges else None
         )
