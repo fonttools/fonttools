@@ -4,6 +4,7 @@ import io
 import os
 import shutil
 import stat
+import tempfile
 import typing
 import zipfile
 from datetime import datetime
@@ -221,7 +222,15 @@ class WriteZipFS(TempFS):
         if self.isclosed():
             return
         base_name = os.path.splitext(self._file)[0]
-        shutil.make_archive(base_name, format="zip", root_dir=self._temp_dir)
-        if self._file != base_name + ".zip":
-            shutil.move(base_name + ".zip", self._file)
+        if self._file == base_name + ".zip":
+            shutil.make_archive(base_name, format="zip", root_dir=self._temp_dir)
+        else:
+            with tempfile.TemporaryDirectory() as archive_dir:
+                archive = shutil.make_archive(
+                    os.path.join(archive_dir, "archive"),
+                    format="zip",
+                    root_dir=self._temp_dir,
+                )
+                os.makedirs(os.path.dirname(os.path.abspath(self._file)), exist_ok=True)
+                shutil.move(archive, self._file)
         super().close()
