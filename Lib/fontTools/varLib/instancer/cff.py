@@ -48,6 +48,29 @@ def getRegionScalarRanges(varStore, fvarAxes, pinnedLocation):
     return regionScalarRanges
 
 
+def convertPrivateDictDeltas(values, numRegions, *, toAbsolute):
+    """Convert a Private DICT delta array's region deltas.
+
+    Defaults are already absolute; region deltas are relative to the preceding
+    value. Make those absolute before instancing, and relative again afterwards.
+    """
+    previous = [0] * numRegions
+    result = []
+    for value in values:
+        if isinstance(value, list):
+            default, *deltas = value
+        else:
+            default, deltas = value, [0] * numRegions
+        assert len(deltas) == numRegions
+        if toAbsolute:
+            deltas = [p + d for p, d in zip(previous, deltas)]
+            result.append([default] + deltas)
+        else:
+            result.append([default] + [d - p for d, p in zip(deltas, previous)])
+        previous = deltas
+    return result
+
+
 def convertToAbsoluteCoordinates(commands, vsIndex, getNumRegions):
     """Convert generalized CFF2 outline and stem coordinates in place.
 

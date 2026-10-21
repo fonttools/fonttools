@@ -164,10 +164,12 @@ class InstantiateCFF2Test(object):
         vsi = VarStoreInstancer(
             topDict.VarStore.otVarStore, varfont["fvar"].axes, pinned
         )
-        expected = [
-            v[0] + round(vsi.interpolateFromDeltas(1, v[1:]))
-            for v in private.BlueValues
-        ]
+        expected = []
+        delta = 0
+        for value in private.BlueValues:
+            # Defaults are absolute; the encoded region deltas are relative.
+            delta += vsi.interpolateFromDeltas(1, value[1:])
+            expected.append(value[0] + round(delta))
 
         instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits(pinned))
 
