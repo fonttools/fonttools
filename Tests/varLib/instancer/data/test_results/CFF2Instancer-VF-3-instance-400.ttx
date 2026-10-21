@@ -17,10 +17,10 @@
     <unitsPerEm value="1000"/>
     <created value="Thu Apr 29 17:39:47 2021"/>
     <modified value="Tue May 14 19:41:58 2024"/>
-    <xMin value="36"/>
+    <xMin value="37"/>
     <yMin value="-81"/>
-    <xMax value="966"/>
-    <yMax value="841"/>
+    <xMax value="967"/>
+    <yMax value="844"/>
     <macStyle value="00000000 00000000"/>
     <lowestRecPPEM value="3"/>
     <fontDirectionHint value="2"/>
@@ -205,33 +205,33 @@
         </CharString>
         <CharString name="uni6868" fdSelectIndex="1">
           63 284 rmoveto
-          -67 872 67 vlineto
-          -475 79 rmoveto
+          -67 871 67 vlineto
+          -474 79 rmoveto
           -444 76 444 vlineto
           -111 -111 rmoveto
-          -83 -103 -161 -95 -145 -44 16 -15 23 -29 11 -19 145 52 163 105 90 119 rrcurveto
-          86 25 rmoveto
+          -82 -103 -161 -95 -145 -43 16 -15 23 -29 11 -19 145 53 163 105 90 119 rrcurveto
+          87 25 rmoveto
           -61 -28 rlineto
-          91 -118 163 -103 152 -50 11 20 23 28 17 15 -152 41 -163 90 -82 104 rrcurveto
+          91 -119 163 -102 152 -50 11 20 23 28 16 15 -151 41 -163 91 -81 104 rrcurveto
           -498 508 rmoveto
-          38 -49 40 -67 15 -43 rrcurveto
-          62 35 -16 42 -42 64 -38 47 rlinecurve
+          37 -49 41 -67 14 -43 rrcurveto
+          62 35 -16 42 -42 65 -38 46 rlinecurve
           149 53 rmoveto
-          -492 71 492 vlineto
+          -491 72 491 vlineto
           -306 -367 rmoveto
-          32 -65 69 36 88 47 82 45 rlinecurve
-          -19 60 -93 -47 -95 -47 -63 -28 rlinecurve
+          32 -65 70 36 87 47 82 45 rlinecurve
+          -19 60 -94 -47 -95 -48 -63 -28 rlinecurve
           474 133 rmoveto
-          50 -43 58 -62 26 -41 rrcurveto
-          59 37 -28 41 -58 60 -49 41 rlinecurve
-          -17 116 rmoveto
-          -64 329 64 vlineto
-          -292 88 rmoveto
-          -35 -76 -83 -82 -88 -48 14 -12 20 -25 10 -15 95 54 89 92 48 92 rrcurveto
+          50 -43 58 -62 25 -41 rrcurveto
+          59 37 -28 41 -58 60 -50 41 rlinecurve
+          -16 116 rmoveto
+          -64 328 64 vlineto
+          -292 89 rmoveto
+          -35 -77 -83 -82 -88 -49 14 -12 20 -26 11 -14 95 54 89 92 48 91 rrcurveto
           203 -66 rmoveto
           -12 vlineto
-          -69 -199 -189 -87 -235 -35 13 -15 20 -31 8 -18 243 45 200 98 84 231 rrcurveto
-          -45 25 -14 -3 rlineto
+          -69 -199 -190 -87 -234 -35 13 -15 20 -30 8 -18 242 45 201 98 83 231 rrcurveto
+          -44 25 -14 -3 rlineto
         </CharString>
       </CharStrings>
     </CFFFont>
@@ -356,8 +356,8 @@
     <lineGap value="0"/>
     <advanceHeightMax value="1000"/>
     <minTopSideBearing value="47"/>
-    <minBottomSideBearing value="31"/>
-    <yMaxExtent value="969"/>
+    <minBottomSideBearing value="28"/>
+    <yMaxExtent value="972"/>
     <caretSlopeRise value="0"/>
     <caretSlopeRun value="1"/>
     <caretOffset value="0"/>

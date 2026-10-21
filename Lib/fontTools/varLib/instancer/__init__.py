@@ -97,6 +97,7 @@ L4
 Both TrueType-flavored (glyf+gvar) variable and CFF2 variable fonts are supported.
 """
 
+from fontTools.misc.roundTools import noRound
 from fontTools.misc.fixedTools import (
     floatToFixed,
     floatToFixedToFloat,
@@ -123,7 +124,7 @@ from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
-from fontTools.varLib.instancer import names
+from fontTools.varLib.instancer import cff, names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
 from .featureVars import instantiateFeatureVariations
 from .colr import instantiateCOLR
@@ -682,7 +683,7 @@ def instantiateCFF2(
     varfont,
     axisLimits,
     *,
-    round=round,
+    round=otRound,
     specialize=True,
     generalize=False,
     downgrade=False,
@@ -697,6 +698,13 @@ def instantiateCFF2(
     #
     # Then prune unused things and possibly drop the VarStore if it's empty.
     #
+    # Charstring coordinates are relative, so rounding them one by one lets
+    # the errors add up and leaves contours open. In charstrings with blends
+    # they are made absolute before instancing and relative again after, so
+    # they round like gvar points (with otRound by default). Those come out
+    # generalized, or specialized if specialize is True; generalize only
+    # applies to charstrings without blends.
+    #
     # If the downgrade parameter is True, no actual downgrading is done, but
     # the function returns True if the VarStore was empty after instantiation,
     # and hence a downgrade to CFF is possible. In all other cases it returns
@@ -706,8 +714,8 @@ def instantiateCFF2(
 
     fvarAxes = varfont["fvar"].axes
 
-    cff = varfont["CFF2"].cff
-    topDict = cff.topDictIndex[0]
+    cffTable = varfont["CFF2"].cff
+    topDict = cffTable.topDictIndex[0]
     varStore = getattr(topDict, "VarStore", None)
     if varStore is not None:
         varStore = varStore.otVarStore
@@ -718,12 +726,18 @@ def instantiateCFF2(
             convertCFF2ToCFF(varfont)
         return
 
-    cff.desubroutinize()
+    cffTable.desubroutinize()
 
     def getNumRegions(vsindex):
         return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
 
-    charStrings = topDict.CharStrings.values()
+    regionScalarRanges = cff.getRegionScalarRanges(
+        varStore, fvarAxes, axisLimits.pinnedLocation()
+    )
+
+    def getScalarRanges(vsindex):
+        varData = varStore.VarData[vsindex if vsindex is not None else 0]
+        return [regionScalarRanges[i] for i in varData.VarRegionIndex]
 
     # Gather all unique private dicts
     uniquePrivateDicts = set()
@@ -733,21 +747,39 @@ def instantiateCFF2(
             uniquePrivateDicts.add(fd.Private)
             privateDicts.append(fd.Private)
 
-    allCommands = []
-    allCommandPrivates = []
-    for cs in charStrings:
+    charStringData = []
+    for glyphName in topDict.CharStrings.keys():
+        cs = topDict.CharStrings[glyphName]
         assert cs.private.vstore.otVarStore is varStore  # Or in many places!!
+        vsindex = getattr(cs.private, "vsindex", 0)
         commands = programToCommands(
-            cs.program,
-            getNumRegions=getNumRegions,
-            vsIndex=getattr(cs.private, "vsindex", 0),
+            cs.program, getNumRegions=getNumRegions, vsIndex=vsindex
         )
-        if generalize:
-            commands = generalizeCommands(commands)
-        if specialize:
-            commands = specializeCommands(commands, generalizeFirst=not generalize)
-        allCommands.append(commands)
-        allCommandPrivates.append(cs.private)
+        absolute = False
+        if any(isinstance(arg, list) for _, args in commands for arg in args):
+            generalized = generalizeCommands(
+                commands,
+                getScalarRanges=getScalarRanges,
+                vsIndex=vsindex,
+            )
+            reason = cff.convertToAbsoluteCoordinates(
+                generalized, vsindex, getNumRegions
+            )
+            if reason is None:
+                commands = generalized
+                absolute = True
+            else:
+                log.warning(
+                    "Glyph %r: %s; rounding its relative coordinates",
+                    glyphName,
+                    reason,
+                )
+        if not absolute:
+            if generalize:
+                commands = generalizeCommands(commands)
+            if specialize:
+                commands = specializeCommands(commands, generalizeFirst=not generalize)
+        charStringData.append((cs, commands, absolute))
 
     def storeBlendsToVarStore(arg):
         if not isinstance(arg, list):
@@ -767,7 +799,7 @@ def instantiateCFF2(
             varData.Item.append(deltas)
             varData.ItemCount += 1
 
-    def fetchBlendsFromVarStore(arg):
+    def fetchBlendsFromVarStore(arg, round=round):
         if not isinstance(arg, list):
             return [arg]
 
@@ -805,8 +837,8 @@ def instantiateCFF2(
         assert varData.ItemCount == 0
 
     # Add charstring blend lists to VarStore so we can instantiate them
-    for commands, private in zip(allCommands, allCommandPrivates):
-        vsindex = getattr(private, "vsindex", 0)
+    for cs, commands, _ in charStringData:
+        vsindex = getattr(cs.private, "vsindex", 0)
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
@@ -846,16 +878,22 @@ def instantiateCFF2(
 
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
-    for commands, private in zip(allCommands, allCommandPrivates):
-        vsindex = getattr(private, "vsindex", 0)
+    for cs, commands, absolute in charStringData:
+        vsindex = getattr(cs.private, "vsindex", 0)
+        roundDefaultDelta = noRound if absolute else round
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
                 continue
             newArgs = []
             for arg in command[1]:
-                newArgs.extend(fetchBlendsFromVarStore(arg))
+                newArgs.extend(fetchBlendsFromVarStore(arg, round=roundDefaultDelta))
             command[1][:] = newArgs
+        if not absolute:
+            continue
+        cff.convertToRelativeCoordinates(commands, round=round)
+        if specialize:
+            commands[:] = specializeCommands(commands, generalizeFirst=False)
 
     # Read back new private blends from the instantiated VarStore
     for private in privateDicts:
@@ -899,7 +937,7 @@ def instantiateCFF2(
         i for i in range(len(varStore.VarData)) if varStore.VarData[i].VarRegionCount
     )
     # Remove vsindex commands that are no longer needed
-    for commands, private in zip(allCommands, allCommandPrivates):
+    for _, commands, _ in charStringData:
         if not any(isinstance(arg, list) for command in commands for arg in command[1]):
             commands[:] = [command for command in commands if command[0] != "vsindex"]
 
@@ -909,7 +947,7 @@ def instantiateCFF2(
         varData for i, varData in enumerate(varStore.VarData) if i in usedVsindex
     ]
     varStore.VarDataCount = len(varStore.VarData)
-    for commands in allCommands:
+    for _, commands, _ in charStringData:
         for command in commands:
             if command[0] == "vsindex":
                 command[1][0] = vsindexMapping[command[1][0]]
@@ -923,13 +961,13 @@ def instantiateCFF2(
                 del private.vsindex
 
     # Remove initial vsindex commands that are implied
-    for commands, private in zip(allCommands, allCommandPrivates):
-        vsindex = getattr(private, "vsindex", 0)
+    for cs, commands, _ in charStringData:
+        vsindex = getattr(cs.private, "vsindex", 0)
         if commands and commands[0] == ("vsindex", [vsindex]):
             commands.pop(0)
 
     # Ship the charstrings!
-    for cs, commands in zip(charStrings, allCommands):
+    for cs, commands, _ in charStringData:
         cs.program = commandsToProgram(commands)
 
     # Remove empty VarStore
@@ -2246,12 +2284,13 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
     # CFF2: cull via populate/cull/depopulate cycle (blend operators encode
     # region counts, so the VarStore can't be culled without updating them).
     if "CFF2" in varfont:
-        cff = varfont["CFF2"].cff
-        topDict = cff.topDictIndex[0]
+        cffTable = varfont["CFF2"].cff
+        topDict = cffTable.topDictIndex[0]
         if getattr(topDict, "VarStore", None) and topDict.VarStore.otVarStore:
             instantiateCFF2(
                 varfont,
                 NormalizedAxisLimits({}),
+                round=noRound,
                 reachableRanges=reachableRanges,
             )
 
