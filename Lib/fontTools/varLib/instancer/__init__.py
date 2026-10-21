@@ -129,7 +129,7 @@ from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
-from fontTools.varLib.instancer import names
+from fontTools.varLib.instancer import cff, names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
 from .featureVars import instantiateFeatureVariations
 from .colr import instantiateCOLR
@@ -684,107 +684,6 @@ def changeTupleVariationAxisLimit(var, axisTag, axisLimit):
     return out
 
 
-# Generalized operators with relative x, y coordinates (flex's 13th is fd)
-_CFF2_PATH_OPERATORS = {"rmoveto", "rlineto", "rrcurveto", "flex"}
-_CFF2_STEM_OPERATORS = {"hstem", "hstemhm", "vstem", "vstemhm"}
-
-
-def _isCFF2StemCommand(commands, i):
-    op, args = commands[i]
-    if op in _CFF2_STEM_OPERATORS:
-        return True
-    # Implicit vstems before hintmask/cntrmask
-    return (
-        op == ""
-        and i + 1 < len(commands)
-        and commands[i + 1][0] in {"hintmask", "cntrmask"}
-        and not any(isinstance(arg, bytes) for arg in args)
-    )
-
-
-def _blendArgValues(arg, numValues):
-    # A generalized blend arg is [default, *deltas, 1]; a number has no deltas.
-    values = arg[:-1] if isinstance(arg, list) else [arg]
-    if any(isinstance(value, list) for value in values):
-        raise NotImplementedError("Nested blend lists not supported (yet)")
-    assert len(values) <= numValues
-    return values + [0] * (numValues - len(values))
-
-
-def _numBlendArgValues(arg):
-    return len(arg) - 1 if isinstance(arg, list) else 1
-
-
-def _absolutizeCFF2Commands(commands, vsindex, getNumRegions):
-    """Make outline and stem coordinates (defaults and deltas) absolute, in
-    place. The commands must already be generalized, including flex operators.
-    Return None, or the reason the commands were left alone."""
-    seenBlend = False
-    for op, args in commands:
-        if op == "vsindex":
-            if seenBlend:
-                return "vsindex after a blend"
-        elif op == "flex1":
-            return "flex1 changes direction across the design space"
-        assert op not in {"hflex", "hflex1"}
-        seenBlend = seenBlend or any(isinstance(arg, list) for arg in args)
-
-    numValues = getNumRegions(vsindex) + 1
-    outline = [[0] * numValues, [0] * numValues]
-    for i, (op, args) in enumerate(commands):
-        if op == "vsindex":
-            # Before any blend, so no deltas to carry over
-            vsindex = args[0]
-            numValues = getNumRegions(vsindex) + 1
-            outline = [axis[:1] + [0] * (numValues - 1) for axis in outline]
-            continue
-        if op in _CFF2_PATH_OPERATORS:
-            positions = outline
-            numCoordinates = 12 if op == "flex" else len(args)
-        elif _isCFF2StemCommand(commands, i):
-            positions = [[0] * numValues]
-            numCoordinates = len(args)
-        else:
-            continue
-        for j in range(numCoordinates):
-            k = j % len(positions)
-            values = _blendArgValues(args[j], numValues)
-            position = positions[k] = [p + v for p, v in zip(positions[k], values)]
-            args[j] = position + [1] if any(position[1:]) else position[0]
-    return None
-
-
-def _relativizeCFF2Commands(commands, round=otRound):
-    """Round absolute coordinates and make them relative again, in place."""
-
-    def roundArg(arg):
-        if isinstance(arg, list):
-            return [round(arg[0])] + arg[1:]
-        return round(arg)
-
-    outline = [[0], [0]]
-    for i, (op, args) in enumerate(commands):
-        if op in _CFF2_PATH_OPERATORS:
-            positions = outline
-            numCoordinates = 12 if op == "flex" else len(args)
-        elif _isCFF2StemCommand(commands, i):
-            positions = [[0]]
-            numCoordinates = len(args)
-        else:
-            continue
-        for j in range(numCoordinates):
-            k = j % len(positions)
-            arg = roundArg(args[j])
-            numValues = max(len(positions[k]), _numBlendArgValues(arg))
-            values = _blendArgValues(arg, numValues)
-            previous = positions[k] + [0] * (numValues - len(positions[k]))
-            diff = [v - p for v, p in zip(values, previous)]
-            positions[k] = values
-            args[j] = diff + [1] if any(diff[1:]) else diff[0]
-        if op == "flex":
-            args[12] = roundArg(args[12])
-
-
 def instantiateCFF2(
     varfont,
     axisLimits,
@@ -820,8 +719,8 @@ def instantiateCFF2(
 
     fvarAxes = varfont["fvar"].axes
 
-    cff = varfont["CFF2"].cff
-    topDict = cff.topDictIndex[0]
+    cffTable = varfont["CFF2"].cff
+    topDict = cffTable.topDictIndex[0]
     varStore = getattr(topDict, "VarStore", None)
     if varStore is not None:
         varStore = varStore.otVarStore
@@ -832,7 +731,7 @@ def instantiateCFF2(
             convertCFF2ToCFF(varfont)
         return
 
-    cff.desubroutinize()
+    cffTable.desubroutinize()
 
     def getNumRegions(vsindex):
         return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
@@ -888,7 +787,9 @@ def instantiateCFF2(
                 getScalarRanges=getScalarRanges,
                 vsIndex=vsindex,
             )
-            reason = _absolutizeCFF2Commands(generalized, vsindex, getNumRegions)
+            reason = cff.convertToAbsoluteCoordinates(
+                generalized, vsindex, getNumRegions
+            )
             if reason is None:
                 commands = generalized
                 absolute = True
@@ -945,7 +846,7 @@ def instantiateCFF2(
             varDataCursor[major] += 1
 
             if absolute:
-                # Rounded by _relativizeCFF2Commands.
+                # Rounded by cff.convertToRelativeCoordinates.
                 defaultValue += defaultDeltas[major][minor]
             else:
                 defaultValue += round(defaultDeltas[major][minor])
@@ -1022,7 +923,7 @@ def instantiateCFF2(
             command[1][:] = newArgs
         if not absolute:
             continue
-        _relativizeCFF2Commands(commands, round)
+        cff.convertToRelativeCoordinates(commands, round)
         if specialize:
             commands[:] = specializeCommands(
                 commands,
@@ -2418,8 +2319,8 @@ def _cullVariationsForAvar2(varfont, reachableRanges):
     # CFF2: cull via populate/cull/depopulate cycle (blend operators encode
     # region counts, so the VarStore can't be culled without updating them).
     if "CFF2" in varfont:
-        cff = varfont["CFF2"].cff
-        topDict = cff.topDictIndex[0]
+        cffTable = varfont["CFF2"].cff
+        topDict = cffTable.topDictIndex[0]
         if getattr(topDict, "VarStore", None) and topDict.VarStore.otVarStore:
             instantiateCFF2(
                 varfont,
