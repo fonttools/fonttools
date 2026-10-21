@@ -581,8 +581,13 @@ def _addArgs(a, b):
     return a + b
 
 
-def _blendArgValues(arg, numValues):
-    """Return the default and deltas for one generalized blend argument."""
+def blendArgValues(arg, numValues):
+    """Return a generalized argument's default and deltas, padded with zeros.
+
+    ``arg`` is a number or a single-value blend list ``[default, *deltas, 1]``
+    as returned by :func:`generalizeCommands`. The result has ``numValues``
+    entries, including the default.
+    """
     values = arg[:-1] if isinstance(arg, list) else [arg]
     if any(isinstance(value, list) for value in values):
         raise NotImplementedError("Nested blend lists not supported (yet)")
@@ -590,13 +595,14 @@ def _blendArgValues(arg, numValues):
     return values + [0] * (numValues - len(values))
 
 
-def _numBlendArgValues(arg):
+def numBlendArgValues(arg):
+    """Return the number of default and delta values in a generalized argument."""
     return len(arg) - 1 if isinstance(arg, list) else 1
 
 
 def _blendArgsEqual(arg1, arg2):
-    numValues = max(_numBlendArgValues(arg1), _numBlendArgValues(arg2))
-    return _blendArgValues(arg1, numValues) == _blendArgValues(arg2, numValues)
+    numValues = max(numBlendArgValues(arg1), numBlendArgValues(arg2))
+    return blendArgValues(arg1, numValues) == blendArgValues(arg2, numValues)
 
 
 def _negateBlendArg(arg):
@@ -618,7 +624,7 @@ def _isFlex1Horizontal(dx, dy, scalarRanges=None):
     """
 
     def bounds(arg):
-        default, *deltas = _blendArgValues(arg, _numBlendArgValues(arg))
+        default, *deltas = blendArgValues(arg, numBlendArgValues(arg))
         ranges = scalarRanges or [(0, 1)] * len(deltas)
         lo = hi = default
         for delta, (minScalar, maxScalar) in zip(deltas, ranges):

@@ -104,12 +104,7 @@ from fontTools.misc.fixedTools import (
     strToFixedToFloat,
     otRound,
 )
-from fontTools.varLib.models import (
-    normalizeValue,
-    piecewiseLinearMap,
-    supportScalar,
-    VariationModel,
-)
+from fontTools.varLib.models import normalizeValue, piecewiseLinearMap, VariationModel
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
@@ -736,32 +731,13 @@ def instantiateCFF2(
     def getNumRegions(vsindex):
         return varStore.VarData[vsindex if vsindex is not None else 0].VarRegionCount
 
-    # Range of each region's scalar at the instance, for flex1 directions.
-    # Invalid tents are left unknown: supportScalar ignores what instancing zeroes.
-    pinnedLocation = axisLimits.pinnedLocation()
-    regionScalarRanges = []
-    for region in varStore.VarRegionList.Region:
-        support = region.get_support(fvarAxes)
-        pinnedSupport = {
-            axis: triple for axis, triple in support.items() if axis in pinnedLocation
-        }
-        scalar = supportScalar(pinnedLocation, pinnedSupport)
-        if any(
-            lower > peak or peak > upper or lower < 0 < upper
-            for lower, peak, upper in pinnedSupport.values()
-        ):
-            regionScalarRanges.append((0, 1))
-        elif len(pinnedSupport) == len(support):
-            regionScalarRanges.append((scalar, scalar))
-        else:
-            regionScalarRanges.append((0, scalar))
+    regionScalarRanges = cff.getRegionScalarRanges(
+        varStore, fvarAxes, axisLimits.pinnedLocation()
+    )
 
     def getScalarRanges(vsindex):
         varData = varStore.VarData[vsindex if vsindex is not None else 0]
         return [regionScalarRanges[i] for i in varData.VarRegionIndex]
-
-    glyphNames = topDict.CharStrings.keys()
-    charStrings = [topDict.CharStrings[glyphName] for glyphName in glyphNames]
 
     # Gather all unique private dicts
     uniquePrivateDicts = set()
@@ -771,10 +747,9 @@ def instantiateCFF2(
             uniquePrivateDicts.add(fd.Private)
             privateDicts.append(fd.Private)
 
-    allCommands = []
-    allCommandPrivates = []
-    allCommandsAbsolute = []
-    for glyphName, cs in zip(glyphNames, charStrings):
+    charStringData = []
+    for glyphName in topDict.CharStrings.keys():
+        cs = topDict.CharStrings[glyphName]
         assert cs.private.vstore.otVarStore is varStore  # Or in many places!!
         vsindex = getattr(cs.private, "vsindex", 0)
         commands = programToCommands(
@@ -804,9 +779,7 @@ def instantiateCFF2(
                 commands = generalizeCommands(commands)
             if specialize:
                 commands = specializeCommands(commands, generalizeFirst=not generalize)
-        allCommands.append(commands)
-        allCommandPrivates.append(cs.private)
-        allCommandsAbsolute.append(absolute)
+        charStringData.append((cs, commands, absolute))
 
     def storeBlendsToVarStore(arg):
         if not isinstance(arg, list):
@@ -826,7 +799,7 @@ def instantiateCFF2(
             varData.Item.append(deltas)
             varData.ItemCount += 1
 
-    def fetchBlendsFromVarStore(arg, absolute=False):
+    def fetchBlendsFromVarStore(arg, round=round):
         if not isinstance(arg, list):
             return [arg]
 
@@ -845,11 +818,7 @@ def instantiateCFF2(
             minor = varDataCursor[major]
             varDataCursor[major] += 1
 
-            if absolute:
-                # Rounded by cff.convertToRelativeCoordinates.
-                defaultValue += defaultDeltas[major][minor]
-            else:
-                defaultValue += round(defaultDeltas[major][minor])
+            defaultValue += round(defaultDeltas[major][minor])
             newDefaults.append(defaultValue)
 
             varData = varStore.VarData[major]
@@ -868,8 +837,8 @@ def instantiateCFF2(
         assert varData.ItemCount == 0
 
     # Add charstring blend lists to VarStore so we can instantiate them
-    for commands, private in zip(allCommands, allCommandPrivates):
-        vsindex = getattr(private, "vsindex", 0)
+    for cs, commands, _ in charStringData:
+        vsindex = getattr(cs.private, "vsindex", 0)
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
@@ -909,26 +878,22 @@ def instantiateCFF2(
 
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
-    for commands, private, absolute in zip(
-        allCommands, allCommandPrivates, allCommandsAbsolute
-    ):
-        vsindex = getattr(private, "vsindex", 0)
+    for cs, commands, absolute in charStringData:
+        vsindex = getattr(cs.private, "vsindex", 0)
+        roundDefaultDelta = noRound if absolute else round
         for command in commands:
             if command[0] == "vsindex":
                 vsindex = command[1][0]
                 continue
             newArgs = []
             for arg in command[1]:
-                newArgs.extend(fetchBlendsFromVarStore(arg, absolute))
+                newArgs.extend(fetchBlendsFromVarStore(arg, round=roundDefaultDelta))
             command[1][:] = newArgs
         if not absolute:
             continue
-        cff.convertToRelativeCoordinates(commands, round)
+        cff.convertToRelativeCoordinates(commands, round=round)
         if specialize:
-            commands[:] = specializeCommands(
-                commands,
-                generalizeFirst=False,
-            )
+            commands[:] = specializeCommands(commands, generalizeFirst=False)
 
     # Read back new private blends from the instantiated VarStore
     for private in privateDicts:
@@ -972,7 +937,7 @@ def instantiateCFF2(
         i for i in range(len(varStore.VarData)) if varStore.VarData[i].VarRegionCount
     )
     # Remove vsindex commands that are no longer needed
-    for commands, private in zip(allCommands, allCommandPrivates):
+    for _, commands, _ in charStringData:
         if not any(isinstance(arg, list) for command in commands for arg in command[1]):
             commands[:] = [command for command in commands if command[0] != "vsindex"]
 
@@ -982,7 +947,7 @@ def instantiateCFF2(
         varData for i, varData in enumerate(varStore.VarData) if i in usedVsindex
     ]
     varStore.VarDataCount = len(varStore.VarData)
-    for commands in allCommands:
+    for _, commands, _ in charStringData:
         for command in commands:
             if command[0] == "vsindex":
                 command[1][0] = vsindexMapping[command[1][0]]
@@ -996,13 +961,13 @@ def instantiateCFF2(
                 del private.vsindex
 
     # Remove initial vsindex commands that are implied
-    for commands, private in zip(allCommands, allCommandPrivates):
-        vsindex = getattr(private, "vsindex", 0)
+    for cs, commands, _ in charStringData:
+        vsindex = getattr(cs.private, "vsindex", 0)
         if commands and commands[0] == ("vsindex", [vsindex]):
             commands.pop(0)
 
     # Ship the charstrings!
-    for cs, commands in zip(charStrings, allCommands):
+    for cs, commands, _ in charStringData:
         cs.program = commandsToProgram(commands)
 
     # Remove empty VarStore

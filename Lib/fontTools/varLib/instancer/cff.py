@@ -1,6 +1,8 @@
 """Helpers for instancing CFF2 charstrings."""
 
+from fontTools.cffLib.specializer import blendArgValues, numBlendArgValues
 from fontTools.misc.roundTools import otRound
+from fontTools.varLib.models import supportScalar
 
 # Generalized operators with relative x, y coordinates (flex's 13th is fd).
 _PATH_OPERATORS = {"rmoveto", "rlineto", "rrcurveto", "flex"}
@@ -20,17 +22,30 @@ def _isStemCommand(commands, i):
     )
 
 
-def _blendArgValues(arg, numValues):
-    # A generalized blend arg is [default, *deltas, 1]; a number has no deltas.
-    values = arg[:-1] if isinstance(arg, list) else [arg]
-    if any(isinstance(value, list) for value in values):
-        raise NotImplementedError("Nested blend lists not supported (yet)")
-    assert len(values) <= numValues
-    return values + [0] * (numValues - len(values))
+def getRegionScalarRanges(varStore, fvarAxes, pinnedLocation):
+    """Return each region's scalar range after pinning the given axes.
 
-
-def _numBlendArgValues(arg):
-    return len(arg) - 1 if isinstance(arg, list) else 1
+    These ranges let flex1 generalization determine whether its direction is
+    fixed throughout the remaining design space.
+    """
+    regionScalarRanges = []
+    for region in varStore.VarRegionList.Region:
+        support = region.get_support(fvarAxes)
+        pinnedSupport = {
+            axis: triple for axis, triple in support.items() if axis in pinnedLocation
+        }
+        scalar = supportScalar(pinnedLocation, pinnedSupport)
+        # Invalid tents are left unknown: supportScalar ignores what instancing zeroes.
+        if any(
+            lower > peak or peak > upper or lower < 0 < upper
+            for lower, peak, upper in pinnedSupport.values()
+        ):
+            regionScalarRanges.append((0, 1))
+        elif len(pinnedSupport) == len(support):
+            regionScalarRanges.append((scalar, scalar))
+        else:
+            regionScalarRanges.append((0, scalar))
+    return regionScalarRanges
 
 
 def convertToAbsoluteCoordinates(commands, vsIndex, getNumRegions):
@@ -69,7 +84,7 @@ def convertToAbsoluteCoordinates(commands, vsIndex, getNumRegions):
             continue
         for j in range(numCoordinates):
             k = j % len(positions)
-            values = _blendArgValues(args[j], numValues)
+            values = blendArgValues(args[j], numValues)
             position = positions[k] = [p + v for p, v in zip(positions[k], values)]
             args[j] = position + [1] if any(position[1:]) else position[0]
     return None
@@ -96,8 +111,8 @@ def convertToRelativeCoordinates(commands, round=otRound):
         for j in range(numCoordinates):
             k = j % len(positions)
             arg = roundArg(args[j])
-            numValues = max(len(positions[k]), _numBlendArgValues(arg))
-            values = _blendArgValues(arg, numValues)
+            numValues = max(len(positions[k]), numBlendArgValues(arg))
+            values = blendArgValues(arg, numValues)
             previous = positions[k] + [0] * (numValues - len(positions[k]))
             diff = [v - p for v, p in zip(values, previous)]
             positions[k] = values
