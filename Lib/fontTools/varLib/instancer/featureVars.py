@@ -127,12 +127,9 @@ def _instantiateFeatureVariationRecord(
             elif axisIndexMap:
                 shouldKeep = True
         else:
-            log.warning(
-                "Condition table {0} of FeatureVariationRecord {1} has "
-                "unsupported format ({2}); ignored".format(i, recIdx, condition.Format)
+            raise NotImplementedError(
+                f"FeatureVariations condition format {condition.Format} is not supported"
             )
-            applies = False
-            newConditions.append(condition)
 
     # Satisfied pinned conditions can leave a universal first-match record.
     universal = newConditions is not None and not newConditions
@@ -448,7 +445,29 @@ def _instantiateFeatureVariations(
         table.Version = 0x00010000
 
 
+def _checkFeatureVariationConditions(varfont):
+    # Check both tables before any instancing changes their stores or features.
+    for tableTag in ("GPOS", "GSUB"):
+        if tableTag not in varfont:
+            continue
+        variations = getattr(varfont[tableTag].table, "FeatureVariations", None)
+        if variations is None:
+            continue
+        for record in variations.FeatureVariationRecord:
+            if record.ConditionSet is None:
+                continue
+            for condition in record.ConditionSet.ConditionTable:
+                if condition is None:
+                    continue
+                if condition.Format not in (1, 2, 3, 4, 5):
+                    raise NotImplementedError(
+                        f"{tableTag} FeatureVariations condition format "
+                        f"{condition.Format} is not supported"
+                    )
+
+
 def instantiateFeatureVariations(varfont, axisLimits):
+    _checkFeatureVariationConditions(varfont)
     with _compact_layout_tables(varfont):
         _instantiateFeatureVariationsInFont(varfont, axisLimits)
 

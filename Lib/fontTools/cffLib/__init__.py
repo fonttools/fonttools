@@ -2276,7 +2276,7 @@ class DictCompiler(object):
                 data.append(encodeNumber(num))
         return bytesjoin(data)
 
-    def arg_delta_blend(self, value):
+    def arg_delta_blend(self, value, prevVal=0, stackDepth=0):
         """A delta list with blend lists has to be *all* blend lists.
 
         The value is a list is arranged as follows::
@@ -2307,26 +2307,29 @@ class DictCompiler(object):
         """
         numMasters = len(value[0])
         numBlends = len(value)
-        numStack = (numBlends * numMasters) + 1
+        numStack = stackDepth + (numBlends * numMasters) + 1
         if numStack > self.maxBlendStack:
             # Figure out the max number of value we can blend
             # and divide this list up into chunks of that size.
 
-            numBlendValues = int((self.maxBlendStack - 1) / numMasters)
             out = []
             while True:
-                numVal = min(len(value), numBlendValues)
-                if numVal == 0:
+                if not value:
                     break
-                valList = value[0:numVal]
-                out1 = self.arg_delta_blend(valList)
+                numBlendValues = (self.maxBlendStack - stackDepth - 1) // numMasters
+                if numBlendValues <= 0:
+                    raise ValueError("CFF2 blend does not fit the operand stack")
+                numVal = min(len(value), numBlendValues)
+                valList = value[:numVal]
+                out1 = self.arg_delta_blend(valList, prevVal, stackDepth)
                 out.extend(out1)
+                prevVal = valList[-1][0]
+                stackDepth += numVal
                 value = value[numVal:]
         else:
             firstList = [0] * numBlends
             deltaList = [None] * numBlends
             i = 0
-            prevVal = 0
             while i < numBlends:
                 # For PrivateDict BlueValues, the default font
                 # values are absolute, not relative.

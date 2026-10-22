@@ -130,6 +130,7 @@ from .featureVars import (
     instantiateFeatureVariations,
     instantiateLookupVariationConditionValues,
     _iterLookupVariationConditions,
+    _checkFeatureVariationConditions,
 )
 from .colr import instantiateCOLR
 from fontTools.misc.cliTools import makeOutputFileName
@@ -579,7 +580,7 @@ def instantiateVARC(varfont, axisLimits):
 
 
 def instantiateTupleVariationStore(
-    variations, axisLimits, origCoords=None, endPts=None, *, round=True
+    variations, axisLimits, origCoords=None, endPts=None, *, roundDeltas=True
 ):
     """Instantiate TupleVariation list at the given location, or limit axes' min/max.
 
@@ -608,7 +609,8 @@ def instantiateTupleVariationStore(
         origCoords: GlyphCoordinates: default instance's coordinates for computing 'gvar'
             inferred points (cf. table__g_l_y_f._getCoordinatesAndControls).
         endPts: List[int]: indices of contour end points, for inferring 'gvar' deltas.
-        round: whether to round the surviving deltas to integers.
+        roundDeltas: bool: round surviving deltas to integers. Disable for CFF2
+            data whose operands can retain fractional values.
 
     Returns:
         List[float]: the overall delta adjustment after applicable deltas were summed.
@@ -633,7 +635,7 @@ def instantiateTupleVariationStore(
     # its deltas will be added to the default instance's coordinates
     defaultVar = mergedVariations.pop(frozenset(), None)
 
-    if round:
+    if roundDeltas:
         for var in mergedVariations.values():
             var.roundDeltas()
     variations[:] = list(mergedVariations.values())
@@ -808,7 +810,7 @@ def instantiateCFF2(
             varData.Item.append(deltas)
             varData.ItemCount += 1
 
-    def fetchBlendsFromVarStore(arg, round=round):
+    def fetchBlendsFromVarStore(arg, *, round=round, roundDeltas=otRound):
         if not isinstance(arg, list):
             return [arg]
 
@@ -833,7 +835,7 @@ def instantiateCFF2(
             varData = varStore.VarData[major]
             deltas = varData.Item[minor]
             assert len(deltas) == numRegions
-            newDeltas.extend(deltas)
+            newDeltas.extend(roundDeltas(delta) for delta in deltas)
 
         if not numRegions:
             return newDefaults  # No deltas, just return the defaults
@@ -867,6 +869,11 @@ def instantiateCFF2(
             values = getattr(private, name)
             if arg_type == "number":
                 values = [values]
+            elif arg_type == "delta" and any(isinstance(v, list) for v in values):
+                values = cff.convertPrivateDictDeltas(
+                    values, getNumRegions(vsindex), toAbsolute=True
+                )
+                setattr(private, name, values)
 
             for value in values:
                 if not isinstance(value, list):
@@ -878,12 +885,14 @@ def instantiateCFF2(
 
     # Instantiate VarStore
     defaultDeltas = instantiateItemVariationStore(
-        varStore, fvarAxes, axisLimits, hierarchical=True
+        varStore, fvarAxes, axisLimits, hierarchical=True, roundDeltas=False
     )
 
     # Optionally cull dead regions (for avar2 partial instancing)
     if reachableRanges:
-        _cullItemVariationStore(varStore, fvarAxes, reachableRanges)
+        _cullItemVariationStore(
+            varStore, fvarAxes, reachableRanges, calculateNumShorts=False
+        )
 
     # Read back new charstring blends from the instantiated VarStore
     varDataCursor = [0] * len(varStore.VarData)
@@ -917,6 +926,18 @@ def instantiateCFF2(
             if arg_type == "number":
                 values = [values]
 
+            privateRound = round
+            privateRoundDeltas = otRound
+            if name in {
+                "BlueScale",
+                "ExpansionFactor",
+                "StdHW",
+                "StdVW",
+                "StemSnapH",
+                "StemSnapV",
+            }:
+                privateRound = privateRoundDeltas = noRound
+
             newValues = []
             for value in values:
                 if not isinstance(value, list):
@@ -924,11 +945,17 @@ def instantiateCFF2(
                     continue
 
                 value.append(1)
-                value = fetchBlendsFromVarStore(value)
+                value = fetchBlendsFromVarStore(
+                    value, round=privateRound, roundDeltas=privateRoundDeltas
+                )
                 newValues.extend(v[:-1] if isinstance(v, list) else v for v in value)
 
             if arg_type == "number":
                 newValues = newValues[0]
+            elif arg_type == "delta" and any(isinstance(v, list) for v in newValues):
+                newValues = cff.convertPrivateDictDeltas(
+                    newValues, getNumRegions(vsindex), toAbsolute=False
+                )
 
             setattr(private, name, newValues)
 
@@ -1343,11 +1370,11 @@ class _TupleVarStoreAdapter(object):
             newRegions.extend(dict(region) for region in uniqueRegions)
         self.regions = newRegions
 
-    def instantiate(self, axisLimits, *, round=True):
+    def instantiate(self, axisLimits, *, roundDeltas=True):
         defaultDeltaArray = []
         for variations, itemCount in zip(self.tupleVarData, self.itemCounts):
             defaultDeltas = instantiateTupleVariationStore(
-                variations, axisLimits, round=round
+                variations, axisLimits, roundDeltas=roundDeltas
             )
             if not defaultDeltas:
                 defaultDeltas = [0] * itemCount
@@ -1363,7 +1390,7 @@ class _TupleVarStoreAdapter(object):
 
         return defaultDeltaArray
 
-    def asItemVarStore(self):
+    def asItemVarStore(self, *, calculateNumShorts=True):
         regionOrder = [frozenset(axes.items()) for axes in self.regions]
         varDatas = []
         for variations, itemCount in zip(self.tupleVarData, self.itemCounts):
@@ -1372,10 +1399,14 @@ class _TupleVarStoreAdapter(object):
                 varRegionIndices = [
                     regionOrder.index(frozenset(var.axes.items())) for var in variations
                 ]
-                varDataItems = list(zip(*(var.coordinates for var in variations)))
-                varDatas.append(
-                    builder.buildVarData(varRegionIndices, varDataItems, optimize=False)
-                )
+                varData = builder.buildVarData(varRegionIndices, None, optimize=False)
+                varData.Item = [
+                    list(item) for item in zip(*(var.coordinates for var in variations))
+                ]
+                varData.ItemCount = itemCount
+                if calculateNumShorts:
+                    varData.calculateNumShorts(optimize=False)
+                varDatas.append(varData)
             else:
                 varDatas.append(
                     builder.buildVarData([], [[] for _ in range(itemCount)])
@@ -1438,7 +1469,13 @@ def _instantiateConditionValueRows(tupleVarStore, defaultDeltaArray, conditions)
 
 
 def instantiateItemVariationStore(
-    itemVarStore, fvarAxes, axisLimits, hierarchical=False, *, conditionValues=()
+    itemVarStore,
+    fvarAxes,
+    axisLimits,
+    hierarchical=False,
+    *,
+    conditionValues=(),
+    roundDeltas=True,
 ):
     """Compute deltas at partial location, and update varStore in-place.
 
@@ -1458,13 +1495,18 @@ def instantiateItemVariationStore(
             min/default/max axis coordinates. May not specify coordinates/ranges for
             all the fvar axes.
         conditionValues: format-2 layout conditions needing private rescaled rows.
+        roundDeltas: bool: round surviving deltas to integers. False is intended
+            for temporary CFF2 items, whose deltas are stored in CharStrings and
+            Private DICTs. Fractional items must be removed before serialization.
 
     Returns:
         defaultDeltas: to be added to the default instance, of type dict of floats
             keyed by VariationIndex compound values: i.e. (outer << 16) + inner.
     """
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(itemVarStore, fvarAxes)
-    defaultDeltaArray = tupleVarStore.instantiate(axisLimits, round=not conditionValues)
+    defaultDeltaArray = tupleVarStore.instantiate(
+        axisLimits, roundDeltas=roundDeltas and not conditionValues
+    )
     if conditionValues:
         _instantiateConditionValueRows(
             tupleVarStore, defaultDeltaArray, conditionValues
@@ -1473,7 +1515,9 @@ def instantiateItemVariationStore(
             for var in variations:
                 var.roundDeltas()
         tupleVarStore.rebuildRegions()
-    newItemVarStore = tupleVarStore.asItemVarStore()
+    newItemVarStore = tupleVarStore.asItemVarStore(
+        calculateNumShorts=roundDeltas or bool(conditionValues)
+    )
 
     itemVarStore.VarRegionList = newItemVarStore.VarRegionList
     if not hasattr(itemVarStore, "VarDataCount"):  # Happens fromXML
@@ -2291,7 +2335,9 @@ def _isTupleVariationDead(tv, reachableRanges):
     return False
 
 
-def _cullItemVariationStore(varStore, fvarAxes, reachableRanges):
+def _cullItemVariationStore(
+    varStore, fvarAxes, reachableRanges, *, calculateNumShorts=True
+):
     """Remove dead regions from an ItemVariationStore via TupleVariation culling.
 
     Converts to TupleVariations, removes dead ones, converts back.
@@ -2307,7 +2353,9 @@ def _cullItemVariationStore(varStore, fvarAxes, reachableRanges):
         totalCulled += before - len(tvList)
     if totalCulled:
         tupleVarStore.rebuildRegions()
-        newVarStore = tupleVarStore.asItemVarStore()
+        newVarStore = tupleVarStore.asItemVarStore(
+            calculateNumShorts=calculateNumShorts
+        )
         varStore.VarRegionList = newVarStore.VarRegionList
         varStore.VarData = newVarStore.VarData
     return totalCulled
@@ -2793,6 +2841,7 @@ def instantiateVariableFont(
     overlap = OverlapMode(int(overlap))
 
     sanityCheckVariableTables(varfont)
+    _checkFeatureVariationConditions(varfont)
 
     if static:
         unspecified = []

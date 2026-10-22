@@ -164,10 +164,12 @@ class InstantiateCFF2Test(object):
         vsi = VarStoreInstancer(
             topDict.VarStore.otVarStore, varfont["fvar"].axes, pinned
         )
-        expected = [
-            v[0] + round(vsi.interpolateFromDeltas(1, v[1:]))
-            for v in private.BlueValues
-        ]
+        expected = []
+        delta = 0
+        for value in private.BlueValues:
+            # Defaults are absolute; the encoded region deltas are relative.
+            delta += vsi.interpolateFromDeltas(1, value[1:])
+            expected.append(value[0] + round(delta))
 
         instancer.instantiateCFF2(varfont, instancer.NormalizedAxisLimits(pinned))
 
@@ -4230,36 +4232,47 @@ class InstantiateFeatureVariationsTest(object):
         indices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
         assert _getSubstitutions(gsub, indices) == expected
 
-    def test_unsupported_condition_format(self, caplog):
-        font = makeFeatureVarsFont(
-            [
-                (
-                    [{"wdth": (-1.0, -0.5), "wght": (0.5, 1.0)}],
-                    {"dollar": "dollar.nostroke"},
-                )
-            ]
+    @pytest.mark.parametrize("full_font", [False, True])
+    @pytest.mark.parametrize("partial", [False, True])
+    def test_unsupported_condition_format(self, full_font, partial):
+        fb = FontBuilder(1000)
+        order = [".notdef", "dollar", "dollar.nostroke"]
+        fb.setupGlyphOrder(order)
+        fb.setupCharacterMap({0x24: "dollar"})
+        fb.setupGlyf({name: TTGlyphPen(None).glyph() for name in order})
+        fb.setupHorizontalMetrics({name: (500, 0) for name in order})
+        fb.setupHorizontalHeader()
+        fb.setupNameTable({"familyName": "Conditions", "styleName": "Regular"})
+        fb.setupOS2()
+        fb.setupPost()
+        fb.setupFvar(
+            [("wght", 100, 400, 900, "Weight"), ("wdth", 50, 100, 200, "Width")],
+            [],
         )
-        featureVariations = font["GSUB"].table.FeatureVariations
-        rec1 = featureVariations.FeatureVariationRecord[0]
-        assert len(rec1.ConditionSet.ConditionTable) == 2
-        rec1.ConditionSet.ConditionTable[0].Format = 99
+        font = fb.font
+        featureVars.addFeatureVariations(
+            font, [([{"wght": (0.5, 1.0)}], {"dollar": "dollar.nostroke"})]
+        )
+        record = font["GSUB"].table.FeatureVariations.FeatureVariationRecord[0]
+        condition = record.ConditionSet.ConditionTable[0]
+        condition.Format = 99
 
-        with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
-            instancer.instantiateFeatureVariations(
-                font, instancer.NormalizedAxisLimits(wdth=0)
-            )
+        with pytest.raises(
+            NotImplementedError, match="GSUB FeatureVariations condition format 99"
+        ):
+            if full_font:
+                location = {"wght": 900} if partial else {"wght": 900, "wdth": 70}
+                instancer.instantiateVariableFont(font, location, inplace=True)
+            else:
+                location = {"wght": 1} if partial else {"wght": 1, "wdth": -1}
+                instancer.instantiateFeatureVariations(
+                    font, instancer.NormalizedAxisLimits(location)
+                )
 
-        assert (
-            "Condition table 0 of FeatureVariationRecord 0 "
-            "has unsupported format (99); ignored"
-        ) in caplog.text
-
-        # check that record with unsupported condition format (but whose other
-        # conditions do not reference pinned axes) is kept as is
-        featureVariations = font["GSUB"].table.FeatureVariations
-        assert featureVariations.FeatureVariationRecord[0] is rec1
-        assert len(rec1.ConditionSet.ConditionTable) == 2
-        assert rec1.ConditionSet.ConditionTable[0].Format == 99
+        # Rejection happens before either entry point starts mutating the font.
+        assert font["GSUB"].table.FeatureVariations.FeatureVariationRecord[0] is record
+        assert record.ConditionSet.ConditionTable == [condition]
+        assert condition.Format == 99
 
     def test_GSUB_FeatureVariations_is_None(self, varfont2):
         varfont2["GSUB"].table.Version = 0x00010001

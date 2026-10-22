@@ -444,8 +444,8 @@ class InstantiateCFF2RoundingTest:
         rebased = instancer.instantiateVariableFont(vf, {"wght": (300, 600, 900)})
 
         private = rebased["CFF2"].cff.topDictIndex[0].FDArray[0].Private
-        # Not rounded to a whole value; its delta is, as before.
-        assert private.BlueScale[0] == pytest.approx(0.039625)
+        # Both the default and its folded delta retain their fractional parts.
+        assert private.BlueScale[0] == pytest.approx(0.049625)
 
     def test_private_dict_vsindex_and_charstring_vsindex(self):
         # Private DICT VarData 1 is emptied; the charstring's VarData 0 stays
