@@ -1452,6 +1452,8 @@ class Parser(object):
         ranges = ("UnicodeRange", "CodePageRange")
         while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is None:
+                raise FeatureLibError("Expected '}'", self.cur_token_location_)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(
                     self.ast.Comment(self.cur_token_, location=self.cur_token_location_)
