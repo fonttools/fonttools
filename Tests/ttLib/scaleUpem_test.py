@@ -17,7 +17,7 @@ import pytest
 
 
 class OutlinePen(RecordingPen):
-    def addVarComponent(self, *args):
+    def addVarComponent(self, *args, **kwargs):
         raise AttributeError
 
 

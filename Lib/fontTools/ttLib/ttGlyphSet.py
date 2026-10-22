@@ -46,7 +46,6 @@ class _TTGlyphSet(Mapping):
         self.recalcBounds = recalcBounds
         self.font = font
         self.axes = _getVariationAxes(font)
-        self.defaultLocationNormalized = {axis.axisTag: 0 for axis in self.axes}
         self.location = location if location is not None else {}
         self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
@@ -73,8 +72,7 @@ class _TTGlyphSet(Mapping):
         self.rawLocationStack.append(self.rawLocation)
         if reset:
             self.location = self.originalLocation.copy()
-            self.rawLocation = self.defaultLocationNormalized.copy()
-            self.rawLocation.update(self.originalLocation)
+            self.rawLocation = {}
         else:
             self.location = self.location.copy()
             self.rawLocation = {}
@@ -418,8 +416,12 @@ class _TTGlyphVARC(_TTGlyph):
 
                     if not shouldDecompose:
                         try:
+                            kwargs = {"resetUnspecifiedAxes": True} if reset else {}
                             pen.addVarComponent(
-                                comp.glyphName, transform, self.glyphSet.rawLocation
+                                comp.glyphName,
+                                transform,
+                                self.glyphSet.rawLocation,
+                                **kwargs,
                             )
                         except AttributeError:
                             shouldDecompose = True
