@@ -189,6 +189,11 @@ def splitVariableFonts(
             makeInstanceFilename=makeInstanceFilename,
         )
         vfDoc.lib = {**vfDoc.lib, **vf.lib}
+        if "public.fontInfo" in doc.lib and "public.fontInfo" in vf.lib:
+            vfDoc.lib["public.fontInfo"] = {
+                **doc.lib["public.fontInfo"],
+                **vf.lib["public.fontInfo"],
+            }
         yield vf.name, vfDoc
 
 
