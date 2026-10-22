@@ -221,16 +221,13 @@ class WriteZipFS(TempFS):
     def close(self):
         if self.isclosed():
             return
-        base_name = os.path.splitext(self._file)[0]
-        if self._file == base_name + ".zip":
-            shutil.make_archive(base_name, format="zip", root_dir=self._temp_dir)
-        else:
-            with tempfile.TemporaryDirectory() as archive_dir:
-                archive = shutil.make_archive(
-                    os.path.join(archive_dir, "archive"),
-                    format="zip",
-                    root_dir=self._temp_dir,
-                )
-                os.makedirs(os.path.dirname(os.path.abspath(self._file)), exist_ok=True)
-                shutil.move(archive, self._file)
+        output_dir = os.path.dirname(os.path.abspath(self._file))
+        os.makedirs(output_dir, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=output_dir) as staging:
+            archive = shutil.make_archive(
+                os.path.join(staging, "archive"),
+                format="zip",
+                root_dir=self._temp_dir,
+            )
+            os.replace(archive, self._file)
         super().close()
