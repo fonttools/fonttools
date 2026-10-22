@@ -1,4 +1,5 @@
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.varLib.hvar import add_HVAR
 from io import StringIO
 import os
@@ -23,3 +24,22 @@ def test_roundtrip():
     font.saveXML(HVAR2, tables=["HVAR"])
 
     assert HVAR1.getvalue() == HVAR2.getvalue()
+
+
+def test_roundtrip_beyond64k_gvar():
+    CWD = os.path.abspath(os.path.dirname(__file__))
+    DATADIR = os.path.join(CWD, "data")
+    ttx_path = os.path.join(DATADIR, "MutatorSans_All_Variable.ttx")
+    font = TTFont()
+    font.importXML(ttx_path)
+
+    upper_tables(font)
+    del font["HVAR"]
+    add_HVAR(font)
+
+    assert "GVAR" in font
+    assert "gvar" not in font
+
+    HVAR = StringIO()
+    font.saveXML(HVAR, tables=["HVAR"])
+    assert "<HVAR>" in HVAR.getvalue()

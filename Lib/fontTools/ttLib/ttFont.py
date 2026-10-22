@@ -36,21 +36,27 @@ if TYPE_CHECKING:
         C_F_F__2,
         C_O_L_R_,
         C_P_A_L_,
+        D_M_A_P_,
         D_S_I_G_,
         E_B_D_T_,
         E_B_L_C_,
         E_B_S_C_,
         F_F_T_M_,
         G_D_E_F_,
+        G_L_Y_F_,
         G_P_O_S_,
         G_S_U_B_,
         G_V_A_R_,
+        H_H_E_A_,
+        H_M_T_X_,
         H_V_A_R_,
         I_F_T_,
         I_F_T_X_,
         J_S_T_F_,
         L_T_S_H_,
+        L_O_C_A_,
         M_A_T_H_,
+        M_A_X_P_,
         M_V_A_R_,
         S_T_A_T_,
         S_V_G_,
@@ -69,6 +75,8 @@ if TYPE_CHECKING:
         T_T_F_A_,
         V_A_R_C_,
         V_D_M_X_,
+        V_H_E_A_,
+        V_M_T_X_,
         V_O_R_G_,
         V_V_A_R_,
         D__e_b_g,
@@ -248,6 +256,7 @@ class TTFont(object):
         quiet: bool | None = None,  # Deprecated
         _tableCache: MutableMapping[tuple[Tag, bytes], DefaultTable] | None = None,
         cfg: Mapping[str, Any] | AbstractConfig = {},
+        _useLegacyTTC: bool = False,
     ) -> None:
         # Set deprecated attributes
         for name in ("verbose", "quiet"):
@@ -320,7 +329,12 @@ class TTFont(object):
         elif not seekable:
             raise TTLibError("Input file must be seekable when lazy=True")
         self._tableCache = _tableCache
-        self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
+        readerOptions = {}
+        if _useLegacyTTC:
+            readerOptions["_useLegacyTTC"] = True
+        self.reader = SFNTReader(
+            file, checkChecksums, fontNumber=fontNumber, **readerOptions
+        )
         self.sfntVersion = self.reader.sfntVersion
         self.flavor = self.reader.flavor
         self.flavorData = self.reader.flavorData
@@ -549,7 +563,7 @@ class TTFont(object):
             attrs["raw"] = True
         writer.begintag(xmlTag, **attrs)
         writer.newline()
-        if tag == "glyf":
+        if tag in ("glyf", "GLYF"):
             table.toXML(writer, self, splitGlyphs=splitGlyphs)
         else:
             table.toXML(writer, self)
@@ -566,7 +580,7 @@ class TTFont(object):
         if quiet is not None:
             deprecateArgument("quiet", "configure logging instead")
 
-        if "maxp" in self and "post" in self:
+        if ("MAXP" in self or "maxp" in self) and "post" in self:
             # Make sure the glyph order is loaded, as it otherwise gets
             # lost if the XML doesn't contain the glyph order, yet does
             # contain the table which was originally used to extract the
@@ -640,6 +654,8 @@ class TTFont(object):
     @overload
     def __getitem__(self, tag: Literal["CPAL"]) -> C_P_A_L_.table_C_P_A_L_: ...
     @overload
+    def __getitem__(self, tag: Literal["DMAP"]) -> D_M_A_P_.table_D_M_A_P_: ...
+    @overload
     def __getitem__(self, tag: Literal["DSIG"]) -> D_S_I_G_.table_D_S_I_G_: ...
     @overload
     def __getitem__(self, tag: Literal["EBDT"]) -> E_B_D_T_.table_E_B_D_T_: ...
@@ -652,11 +668,17 @@ class TTFont(object):
     @overload
     def __getitem__(self, tag: Literal["GDEF"]) -> G_D_E_F_.table_G_D_E_F_: ...
     @overload
+    def __getitem__(self, tag: Literal["GLYF"]) -> G_L_Y_F_.table_G_L_Y_F_: ...
+    @overload
     def __getitem__(self, tag: Literal["GPOS"]) -> G_P_O_S_.table_G_P_O_S_: ...
     @overload
     def __getitem__(self, tag: Literal["GSUB"]) -> G_S_U_B_.table_G_S_U_B_: ...
     @overload
     def __getitem__(self, tag: Literal["GVAR"]) -> G_V_A_R_.table_G_V_A_R_: ...
+    @overload
+    def __getitem__(self, tag: Literal["HHEA"]) -> H_H_E_A_.table_H_H_E_A_: ...
+    @overload
+    def __getitem__(self, tag: Literal["HMTX"]) -> H_M_T_X_.table_H_M_T_X_: ...
     @overload
     def __getitem__(self, tag: Literal["HVAR"]) -> H_V_A_R_.table_H_V_A_R_: ...
     @overload
@@ -668,7 +690,11 @@ class TTFont(object):
     @overload
     def __getitem__(self, tag: Literal["LTSH"]) -> L_T_S_H_.table_L_T_S_H_: ...
     @overload
+    def __getitem__(self, tag: Literal["LOCA"]) -> L_O_C_A_.table_L_O_C_A_: ...
+    @overload
     def __getitem__(self, tag: Literal["MATH"]) -> M_A_T_H_.table_M_A_T_H_: ...
+    @overload
+    def __getitem__(self, tag: Literal["MAXP"]) -> M_A_X_P_.table_M_A_X_P_: ...
     @overload
     def __getitem__(self, tag: Literal["MVAR"]) -> M_V_A_R_.table_M_V_A_R_: ...
     @overload
@@ -705,6 +731,10 @@ class TTFont(object):
     def __getitem__(self, tag: Literal["VARC"]) -> V_A_R_C_.table_V_A_R_C_: ...
     @overload
     def __getitem__(self, tag: Literal["VDMX"]) -> V_D_M_X_.table_V_D_M_X_: ...
+    @overload
+    def __getitem__(self, tag: Literal["VHEA"]) -> V_H_E_A_.table_V_H_E_A_: ...
+    @overload
+    def __getitem__(self, tag: Literal["VMTX"]) -> V_M_T_X_.table_V_M_T_X_: ...
     @overload
     def __getitem__(self, tag: Literal["VORG"]) -> V_O_R_G_.table_V_O_R_G_: ...
     @overload
@@ -878,6 +908,8 @@ class TTFont(object):
     @overload
     def get(self, tag: Literal["CPAL"]) -> C_P_A_L_.table_C_P_A_L_ | None: ...
     @overload
+    def get(self, tag: Literal["DMAP"]) -> D_M_A_P_.table_D_M_A_P_ | None: ...
+    @overload
     def get(self, tag: Literal["DSIG"]) -> D_S_I_G_.table_D_S_I_G_ | None: ...
     @overload
     def get(self, tag: Literal["EBDT"]) -> E_B_D_T_.table_E_B_D_T_ | None: ...
@@ -890,11 +922,17 @@ class TTFont(object):
     @overload
     def get(self, tag: Literal["GDEF"]) -> G_D_E_F_.table_G_D_E_F_ | None: ...
     @overload
+    def get(self, tag: Literal["GLYF"]) -> G_L_Y_F_.table_G_L_Y_F_ | None: ...
+    @overload
     def get(self, tag: Literal["GPOS"]) -> G_P_O_S_.table_G_P_O_S_ | None: ...
     @overload
     def get(self, tag: Literal["GSUB"]) -> G_S_U_B_.table_G_S_U_B_ | None: ...
     @overload
     def get(self, tag: Literal["GVAR"]) -> G_V_A_R_.table_G_V_A_R_ | None: ...
+    @overload
+    def get(self, tag: Literal["HHEA"]) -> H_H_E_A_.table_H_H_E_A_ | None: ...
+    @overload
+    def get(self, tag: Literal["HMTX"]) -> H_M_T_X_.table_H_M_T_X_ | None: ...
     @overload
     def get(self, tag: Literal["HVAR"]) -> H_V_A_R_.table_H_V_A_R_ | None: ...
     @overload
@@ -906,7 +944,11 @@ class TTFont(object):
     @overload
     def get(self, tag: Literal["LTSH"]) -> L_T_S_H_.table_L_T_S_H_ | None: ...
     @overload
+    def get(self, tag: Literal["LOCA"]) -> L_O_C_A_.table_L_O_C_A_ | None: ...
+    @overload
     def get(self, tag: Literal["MATH"]) -> M_A_T_H_.table_M_A_T_H_ | None: ...
+    @overload
+    def get(self, tag: Literal["MAXP"]) -> M_A_X_P_.table_M_A_X_P_ | None: ...
     @overload
     def get(self, tag: Literal["MVAR"]) -> M_V_A_R_.table_M_V_A_R_ | None: ...
     @overload
@@ -943,6 +985,10 @@ class TTFont(object):
     def get(self, tag: Literal["VARC"]) -> V_A_R_C_.table_V_A_R_C_ | None: ...
     @overload
     def get(self, tag: Literal["VDMX"]) -> V_D_M_X_.table_V_D_M_X_ | None: ...
+    @overload
+    def get(self, tag: Literal["VHEA"]) -> V_H_E_A_.table_V_H_E_A_ | None: ...
+    @overload
+    def get(self, tag: Literal["VMTX"]) -> V_M_T_X_.table_V_M_T_X_ | None: ...
     @overload
     def get(self, tag: Literal["VORG"]) -> V_O_R_G_.table_V_O_R_G_ | None: ...
     @overload
@@ -1060,8 +1106,9 @@ class TTFont(object):
         self.glyphOrder = glyphOrder
         if hasattr(self, "_reverseGlyphOrderDict"):
             del self._reverseGlyphOrderDict
-        if self.isLoaded("glyf"):
-            self["glyf"].setGlyphOrder(glyphOrder)
+        for tag in ("GLYF", "glyf"):
+            if self.isLoaded(tag):
+                self[tag].setGlyphOrder(glyphOrder)
 
     def getGlyphOrder(self) -> list[str]:
         """Returns a list of glyph names ordered by their position in the font."""
@@ -1082,7 +1129,7 @@ class TTFont(object):
                 # in combination with the Adobe Glyph List (AGL).
                 #
                 self._getGlyphNamesFromCmap()
-            elif len(glyphOrder) < self["maxp"].numGlyphs:
+            elif len(glyphOrder) < self.getGlyphCount():
                 #
                 # Not enough names found in the 'post' table.
                 # Can happen when 'post' format 1 is improperly used on a font that
@@ -1098,6 +1145,15 @@ class TTFont(object):
             self._getGlyphNamesFromCmap()
         return self.glyphOrder
 
+    def hasExtendedGlyphIDs(self) -> bool:
+        """Returns whether the font has glyph IDs that do not fit in 16 bits."""
+        return len(self.getGlyphOrder()) > 0x10000
+
+    def getGlyphCount(self) -> int:
+        """Returns the number of glyphs in the font."""
+        maxpTag = "MAXP" if "MAXP" in self else "maxp"
+        return int(self[maxpTag].numGlyphs)
+
     def _getGlyphNamesFromCmap(self) -> None:
         #
         # This is rather convoluted, but then again, it's an interesting problem:
@@ -1111,36 +1167,44 @@ class TTFont(object):
         # - extract the unicode values, build the "real" glyph names
         # - unload the temporary cmap table
         #
-        if self.isLoaded("cmap"):
-            # Bootstrapping: we're getting called by the cmap parser
-            # itself. This means self.tables['cmap'] contains a partially
-            # loaded cmap, making it impossible to get at a unicode
-            # subtable here. We remove the partially loaded cmap and
-            # restore it later.
-            # This only happens if the cmap table is loaded before any
-            # other table that does f.getGlyphOrder()  or f.getGlyphName().
-            cmapLoading = self.tables["cmap"]
-            del self.tables["cmap"]
-        else:
-            cmapLoading = None
+        loadingTables = {}
+        for tag in ("cmap", "DMAP"):
+            if self.isLoaded(tag):
+                # Bootstrapping: we're getting called by a character-map
+                # parser itself. Its partially loaded table cannot be used to
+                # derive names, so remove it and restore it later.
+                loadingTables[tag] = self.tables.pop(tag)
         # Make up glyph names based on glyphID, which will be used by the
         # temporary cmap and by the real cmap in case we don't find a unicode
         # cmap.
-        numGlyphs = int(self["maxp"].numGlyphs)
+        numGlyphs = self.getGlyphCount()
         glyphOrder = ["glyph%.5d" % i for i in range(numGlyphs)]
         glyphOrder[0] = ".notdef"
         # Set the glyph order, so the cmap parser has something
         # to work with (so we don't get called recursively).
         self.glyphOrder = glyphOrder
 
-        # Make up glyph names based on the reversed cmap table. Because some
-        # glyphs (eg. ligatures or alternates) may not be reachable via cmap,
-        # this naming table will usually not cover all glyphs in the font.
-        # If the font has no Unicode cmap table, reversecmap will be empty.
-        if "cmap" in self:
-            reversecmap = self["cmap"].buildReversedMin()
-        else:
-            reversecmap = {}
+        # Make up glyph names based on the effective character map. DMAP
+        # mappings override cmap mappings for the same Unicode codepoint.
+        reversecmap = {}
+        dmapCodepoints = set()
+        if "DMAP" in self:
+            for table in self["DMAP"].tables:
+                if table.isUnicode():
+                    dmapCodepoints.update(table.cmap)
+        for tag in ("cmap", "DMAP"):
+            if tag not in self:
+                continue
+            for table in self[tag].tables:
+                if not table.isUnicode():
+                    continue
+                for codepoint, name in table.cmap.items():
+                    if tag == "cmap" and codepoint in dmapCodepoints:
+                        continue
+                    if name in reversecmap:
+                        reversecmap[name] = min(reversecmap[name], codepoint)
+                    else:
+                        reversecmap[name] = codepoint
         useCount = {}
         for i, tempName in enumerate(glyphOrder):
             if tempName in reversecmap:
@@ -1153,15 +1217,13 @@ class TTFont(object):
                     glyphName = "%s.alt%d" % (glyphName, numUses - 1)
                 glyphOrder[i] = glyphName
 
-        if "cmap" in self:
-            # Delete the temporary cmap table from the cache, so it can
-            # be parsed again with the right names.
-            del self.tables["cmap"]
-            self.glyphOrder = glyphOrder
-            if cmapLoading:
-                # restore partially loaded cmap, so it can continue loading
-                # using the proper names.
-                self.tables["cmap"] = cmapLoading
+        # Delete temporary character-map tables from the cache, so they can be
+        # parsed again with the right names. Restore any partially loaded table
+        # so it can continue loading using the proper names.
+        for tag in ("cmap", "DMAP"):
+            self.tables.pop(tag, None)
+        self.glyphOrder = glyphOrder
+        self.tables.update(loadingTables)
 
     @staticmethod
     def _makeGlyphName(codepoint: int) -> str:
@@ -1300,12 +1362,13 @@ class TTFont(object):
 
         If the font is CFF-based, the outlines will be taken from the ``CFF ``
         or ``CFF2`` tables. Otherwise the outlines will be taken from the
-        ``glyf`` table.
+        ``GLYF`` or ``glyf`` table.
 
-        If the font contains both a ``CFF ``/``CFF2`` and a ``glyf`` table, you
-        can use the ``preferCFF`` argument to specify which one should be taken.
-        If the font contains both a ``CFF `` and a ``CFF2`` table, the latter is
-        taken.
+        If the font contains both a ``CFF ``/``CFF2`` and a ``GLYF``/``glyf``
+        table, you can use the ``preferCFF`` argument to specify which one
+        should be taken. If the font contains both a ``CFF `` and a ``CFF2``
+        table, the latter is taken. If the font contains both a ``GLYF`` and a
+        ``glyf`` table, the former is taken.
 
         If the ``location`` parameter is set, it should be a dictionary mapping
         four-letter variation tags to their float values, and the returned
@@ -1321,10 +1384,14 @@ class TTFont(object):
         if location and not normalized:
             location = self.normalizeLocation(location)
         glyphSet = None
-        if ("CFF " in self or "CFF2" in self) and (preferCFF or "glyf" not in self):
+        glyfTag = "GLYF" if "GLYF" in self else "glyf"
+        hasGlyf = glyfTag in self
+        if ("CFF " in self or "CFF2" in self) and (preferCFF or not hasGlyf):
             glyphSet = _TTGlyphSetCFF(self, location)
-        elif "glyf" in self:
-            glyphSet = _TTGlyphSetGlyf(self, location, recalcBounds=recalcBounds)
+        elif hasGlyf:
+            glyphSet = _TTGlyphSetGlyf(
+                self, location, glyfTag, recalcBounds=recalcBounds
+            )
         else:
             raise TTLibError("Font contains no outlines")
         if "VARC" in self:
@@ -1365,8 +1432,8 @@ class TTFont(object):
             (0, 0),
         ),
     ) -> dict[int, str] | None:
-        """Returns the 'best' Unicode cmap dictionary available in the font
-        or ``None``, if no Unicode cmap subtable is available.
+        """Returns the effective 'best' Unicode character map for the font,
+        or ``None`` if neither cmap nor DMAP has a Unicode subtable.
 
         By default it will search for the following (platformID, platEncID)
         pairs in order::
@@ -1387,7 +1454,25 @@ class TTFont(object):
 
         This order can be customized via the ``cmapPreferences`` argument.
         """
-        return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
+        cmap = (
+            self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
+            if "cmap" in self
+            else None
+        )
+        dmap = (
+            self["DMAP"].getBestCmap(cmapPreferences=cmapPreferences)
+            if "DMAP" in self
+            else None
+        )
+        if dmap is None:
+            return cmap
+        if dmap:
+            # Glyph zero is a miss and must allow cmap fallback.
+            glyph_zero = self.getGlyphOrder()[0]
+            dmap = {u: g for u, g in dmap.items() if g != glyph_zero}
+        if cmap is None:
+            return dmap
+        return {**cmap, **dmap}
 
     def reorderGlyphs(self, new_glyph_order: list[str]) -> None:
         from .reorderGlyphs import reorderGlyphs
@@ -1621,6 +1706,7 @@ TTFTableOrder = [
     "LTSH",
     "VDMX",
     "hdmx",
+    "DMAP",
     "cmap",
     "fpgm",
     "prep",
@@ -1634,7 +1720,17 @@ TTFTableOrder = [
     "PCLT",
 ]
 
-OTFTableOrder = ["head", "hhea", "maxp", "OS/2", "name", "cmap", "post", "CFF "]
+OTFTableOrder = [
+    "head",
+    "hhea",
+    "maxp",
+    "OS/2",
+    "name",
+    "DMAP",
+    "cmap",
+    "post",
+    "CFF ",
+]
 
 
 def sortedTagList(

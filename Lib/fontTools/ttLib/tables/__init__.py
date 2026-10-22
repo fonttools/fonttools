@@ -12,6 +12,7 @@ def _moduleFinderHint():
     from . import C_F_F__2
     from . import C_O_L_R_
     from . import C_P_A_L_
+    from . import D_M_A_P_
     from . import D_S_I_G_
     from . import D__e_b_g
     from . import E_B_D_T_
@@ -20,17 +21,22 @@ def _moduleFinderHint():
     from . import F_F_T_M_
     from . import F__e_a_t
     from . import G_D_E_F_
+    from . import G_L_Y_F_
     from . import G_P_O_S_
     from . import G_S_U_B_
     from . import G_V_A_R_
     from . import G__l_a_t
     from . import G__l_o_c
+    from . import H_H_E_A_
+    from . import H_M_T_X_
     from . import H_V_A_R_
     from . import I_F_T_
     from . import I_F_T_X_
     from . import J_S_T_F_
+    from . import L_O_C_A_
     from . import L_T_S_H_
     from . import M_A_T_H_
+    from . import M_A_X_P_
     from . import M_V_A_R_
     from . import O_S_2f_2
     from . import S_T_A_T_
@@ -52,6 +58,8 @@ def _moduleFinderHint():
     from . import T_T_F_A_
     from . import V_A_R_C_
     from . import V_D_M_X_
+    from . import V_H_E_A_
+    from . import V_M_T_X_
     from . import V_O_R_G_
     from . import V_V_A_R_
     from . import _a_n_k_r

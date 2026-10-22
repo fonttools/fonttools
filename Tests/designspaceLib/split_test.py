@@ -1,6 +1,7 @@
 import logging
 import math
 import shutil
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -190,6 +191,44 @@ def test_optional_min_max(unbounded_condition):
 
     assert len(list(splitInterpolable(doc))) == 1
     assert len(list(splitVariableFonts(doc))) == 1
+
+
+@pytest.mark.parametrize(
+    "root_info,vf_info,expected_info",
+    [
+        (None, None, None),
+        ({"versionMajor": 5}, None, {"versionMajor": 5}),
+        (None, {"styleName": "Regular"}, {"styleName": "Regular"}),
+        ({"versionMajor": 5}, {}, {"versionMajor": 5}),
+        (
+            {"versionMajor": 5, "versionMinor": 55, "styleName": "Root"},
+            {"versionMinor": 56, "styleName": "Regular"},
+            {"versionMajor": 5, "versionMinor": 56, "styleName": "Regular"},
+        ),
+    ],
+)
+def test_split_variable_font_font_info(root_info, vf_info, expected_info):
+    doc = DesignSpaceDocument()
+    doc.addAxisDescriptor(
+        name="Weight", tag="wght", minimum=400, default=400, maximum=700
+    )
+    doc.lib = {"shared": True, "custom": {"root": True}}
+    vf = doc.addVariableFontDescriptor(name="TestVF", lib={"custom": {"vf": True}})
+    vf.axisSubsets = [RangeAxisSubsetDescriptor(name="Weight")]
+    if root_info is not None:
+        doc.lib["public.fontInfo"] = root_info
+    if vf_info is not None:
+        vf.lib["public.fontInfo"] = vf_info
+    original_root_lib, original_vf_lib = deepcopy((doc.lib, vf.lib))
+
+    _, vf_doc = next(splitVariableFonts(doc))
+
+    expected_lib = {"shared": True, "custom": {"vf": True}}
+    if expected_info is not None:
+        expected_lib["public.fontInfo"] = expected_info
+    assert vf_doc.lib == expected_lib
+    assert doc.lib == original_root_lib
+    assert vf.lib == original_vf_lib
 
 
 def test_split_variable_font_preserves_zero_axis_default():

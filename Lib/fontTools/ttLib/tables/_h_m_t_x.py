@@ -21,13 +21,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
     """
 
     headerTag = "hhea"
+    maxpTag = "maxp"
     advanceName = "width"
     sideBearingName = "lsb"
     numberOfMetricsName = "numberOfHMetrics"
     longMetricFormat = "Hh"
 
     def decompile(self, data, ttFont):
-        numGlyphs = ttFont["maxp"].numGlyphs
+        numGlyphs = ttFont[self.maxpTag].numGlyphs
         headerTable = ttFont.get(self.headerTag)
         if headerTable is not None:
             numberOfMetrics = int(getattr(headerTable, self.numberOfMetricsName))
@@ -107,7 +108,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
             setattr(headerTable, self.numberOfMetricsName, numberOfMetrics)
         else:
             # no hhea/vhea, can't store numberOfMetrics; assume == numGlyphs
-            numberOfMetrics = ttFont["maxp"].numGlyphs
+            numberOfMetrics = ttFont[self.maxpTag].numGlyphs
             additionalMetrics = []
 
         allMetrics = []

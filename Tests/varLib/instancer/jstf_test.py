@@ -28,8 +28,8 @@ def roundtrip(font):
 
 def table(typ, **fields):
     obj = getattr(ot, typ)()
-    obj.populateDefaults()
     obj.__dict__.update(fields)
+    obj.populateDefaults()
     return obj
 
 

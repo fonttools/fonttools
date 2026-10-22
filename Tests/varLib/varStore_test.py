@@ -15,6 +15,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 from fontTools.ttLib.tables.otTables import VarStore
+from fontTools.ttLib.tables import otTables as ot
 
 
 @pytest.mark.parametrize(
@@ -113,6 +114,73 @@ def test_VarStoreInstancer_out_of_range_index_returns_zero():
     assert instancer[0] == 0
     assert instancer[1] == 0  # inner index beyond the single item
     assert instancer[1 << 16] == 0  # outer index beyond the single VarData
+
+
+@pytest.mark.parametrize("tableClass", [ot.GSUB, ot.GPOS])
+@pytest.mark.parametrize("lookupVariations", [False, True])
+def test_condition_varidxes_collected_and_remapped(tableClass, lookupVariations):
+    value = ot.ConditionTable()
+    value.Format = 2
+    value.DefaultValue = -1
+    value.VarIdx = 3
+    constant = ot.ConditionTable()
+    constant.Format = 2
+    constant.DefaultValue = 1
+    constant.VarIdx = ot.NO_VARIATION_INDEX
+    negate = ot.ConditionTable()
+    negate.Format = 5
+    negate.ConditionTable = value
+    disjunction = ot.ConditionTable()
+    disjunction.Format = 4
+    disjunction.ConditionTable = [negate, constant]
+    disjunction.ConditionCount = 2
+    conjunction = ot.ConditionTable()
+    conjunction.Format = 3
+    conjunction.ConditionTable = [None, value, disjunction]
+    conjunction.ConditionCount = 3
+
+    variations = ot.FeatureVariations()
+    variations.Version = 0x00010001
+    variations.FeatureVariationRecord = []
+    variations.FeatureVariationCount = 0
+    variations.LookupVariationRecord = []
+    variations.LookupVariationCount = 0
+    if lookupVariations:
+        conditionRecord = ot.LookupConditionRecord()
+        conditionRecord.ConditionTable = conjunction
+        conditionRecord.LookupIndexList = None
+        featureLookups = ot.FeatureLookupsTable()
+        featureLookups.Version = 0x00010000
+        featureLookups.Flags = 0
+        featureLookups.LookupConditionRecord = [conditionRecord]
+        featureLookups.LookupConditionCount = 1
+        record = ot.LookupVariationRecord()
+        record.FeatureIndex = 0
+        record.FeatureLookupsTable = featureLookups
+        variations.LookupVariationRecord = [record]
+        variations.LookupVariationCount = 1
+    else:
+        record = ot.FeatureVariationRecord()
+        record.ConditionSet = ot.ConditionSet()
+        record.ConditionSet.ConditionTable = [conjunction]
+        record.ConditionSet.ConditionCount = 1
+        record.FeatureTableSubstitution = None
+        variations.FeatureVariationRecord = [record]
+        variations.FeatureVariationCount = 1
+    table = tableClass()
+    table.Version = 0x00010001
+    table.ScriptList = table.FeatureList = table.LookupList = None
+    table.FeatureVariations = variations
+
+    used = set()
+    table.collect_device_varidxes(used)
+    assert used == {3, ot.NO_VARIATION_INDEX}
+    # The same value condition occurs twice. It must be remapped only once.
+    table.remap_device_varidxes(
+        {3: 1, 1: 0, ot.NO_VARIATION_INDEX: ot.NO_VARIATION_INDEX}
+    )
+    assert value.VarIdx == 1
+    assert constant.VarIdx == ot.NO_VARIATION_INDEX
 
 
 @pytest.mark.parametrize(

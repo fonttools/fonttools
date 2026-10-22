@@ -10,6 +10,105 @@ from fontTools.varLib.featureVars import (
 import pytest
 
 
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("extended_formats", [False, True])
+@pytest.mark.parametrize("existing_variation", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+@pytest.mark.parametrize("feature_tag", ["rvrn", "rclt"])
+def test_addFeatureVariations_extended_layout(
+    varfont, extended_header, extended_formats, existing_variation, lazy, feature_tag
+):
+    from copy import deepcopy
+    from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+    from fontTools.misc.testTools import getXML
+    from fontTools.otlLib import builder
+    from fontTools.ttLib.beyond64k import (
+        _convert_layout_formats,
+        lower_tables,
+        upper_tables,
+    )
+
+    addOpenTypeFeaturesFromString(varfont, "feature calt { sub B A' by A.alt; } calt;")
+    lookup_builder = builder.ChainContextSubstBuilder(varfont, None)
+    referenced_lookup = builder.SingleSubstBuilder(varfont, None)
+    referenced_lookup.lookup_index = 1
+    rule = builder.ChainContextualRule(
+        [], [["A", "B"], ["A", "B"]], [], [[referenced_lookup], None]
+    )
+    ruleset = builder.ChainContextualRuleset()
+    ruleset.addRule(rule)
+    varfont["GSUB"].table.LookupList.Lookup[0] = builder.buildLookup(
+        [lookup_builder.buildFormat1Subtable(ruleset, False)]
+    )
+    if existing_variation:
+        addFeatureVariations(
+            varfont, [([{"wght": (-1.0, 0.0)}], {"B": "B.alt"})], featureTag="ccmp"
+        )
+    reference = deepcopy(varfont)
+    if extended_header:
+        upper_tables(varfont, tables=["GSUB"])
+    _convert_layout_formats(varfont["GSUB"].table, extended_formats)
+
+    def roundtrip(font, lazy=False):
+        data = font["GSUB"].compile(font)
+        font.lazy = lazy
+        table = newTable("GSUB")
+        table.decompile(data, font)
+        font["GSUB"] = table
+
+    roundtrip(varfont, lazy=lazy)
+    substitutions = [([{"wght": (0.5, 1.0)}], {"A": "A.alt"})]
+    addFeatureVariations(reference, substitutions, featureTag=feature_tag)
+    addFeatureVariations(varfont, substitutions, featureTag=feature_tag)
+    assert varfont["GSUB"].table.Version == (
+        0x00010002 if extended_header else 0x00010001
+    )
+    roundtrip(varfont)
+    roundtrip(reference)
+    lower_tables(varfont, tables=["GSUB"])
+    assert getXML(varfont["GSUB"].toXML, varfont) == getXML(
+        reference["GSUB"].toXML, reference
+    )
+
+
+@pytest.mark.parametrize("tag", ["GSUB", "GPOS"])
+@pytest.mark.parametrize("extended_header", [False, True])
+@pytest.mark.parametrize("lazy", [False, True])
+def test_addFeatureVariationsRaw_extended_layout(varfont, tag, extended_header, lazy):
+    from copy import deepcopy
+    from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+    from fontTools.misc.testTools import getXML
+    from fontTools.ttLib.beyond64k import lower_tables, upper_tables
+    from fontTools.varLib.featureVars import addFeatureVariationsRaw
+
+    features = (
+        "feature calt { sub A by A.alt; } calt;"
+        if tag == "GSUB"
+        else "feature kern { pos A -20; } kern;"
+    )
+    addOpenTypeFeaturesFromString(varfont, features)
+    reference = deepcopy(varfont)
+    if extended_header:
+        upper_tables(varfont, tables=[tag])
+
+    def roundtrip(font, lazy=False):
+        data = font[tag].compile(font)
+        font.lazy = lazy
+        table = newTable(tag)
+        table.decompile(data, font)
+        font[tag] = table
+
+    roundtrip(varfont, lazy=lazy)
+    for font in (reference, varfont):
+        addFeatureVariationsRaw(font, font[tag].table, [({"wght": (0.5, 1.0)}, [0])])
+        roundtrip(font)
+    assert varfont[tag].table.Version == (0x00010002 if extended_header else 0x00010001)
+    lower_tables(varfont, tables=[tag])
+    assert getXML(varfont[tag].toXML, varfont) == getXML(
+        reference[tag].toXML, reference
+    )
+
+
 def makeVariableFont(glyphOrder, axes):
     font = TTFont()
     font.setGlyphOrder(glyphOrder)

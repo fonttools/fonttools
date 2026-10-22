@@ -5,6 +5,7 @@ from fontTools.designspaceLib import (
     SourceDescriptor,
 )
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ufoLib import UFOWriter, UFOLibError
 from fontTools.varLib.interpolatable import main as interpolatable_main
 from types import SimpleNamespace
@@ -93,6 +94,17 @@ class InterpolatableTest(unittest.TestCase):
 
         ttf_paths = self.get_file_list(self.tempdir, suffix)
         self.assertIsNone(interpolatable_main(ttf_paths))
+
+    def test_interpolatable_beyond64k_variable_ttf(self):
+        suffix = ".ttf"
+        ttx_path = self.get_test_input("MutatorSans_All_Variable.ttx")
+
+        self.temp_dir()
+        font, font_path = self.compile_font(ttx_path, suffix, self.tempdir)
+        upper_tables(font)
+        font.save(font_path, reorderTables=None)
+
+        self.assertIsNone(interpolatable_main([font_path]))
 
     def test_interpolatable_otf(self):
         suffix = ".otf"

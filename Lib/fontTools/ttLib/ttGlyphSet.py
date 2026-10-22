@@ -24,7 +24,7 @@ def _getVariationAxes(font):
     # VARC permits static fonts to retain gvar or CFF2 variation data for
     # component-internal coordinates without exposing axes through fvar.
     axisCount = 0
-    gvar = font.get("gvar")
+    gvar = font.get("GVAR" if "GVAR" in font else "gvar")
     if gvar is not None:
         axisCount = gvar.axisCount
     if "CFF2" in font:
@@ -42,11 +42,19 @@ class _TTGlyphSet(Mapping):
     glyph shape from TrueType or CFF.
     """
 
-    def __init__(self, font, location, glyphsMapping, *, recalcBounds=True):
+    def __init__(
+        self,
+        font,
+        location,
+        glyphsMapping,
+        *,
+        hMetricsTag="hmtx",
+        vMetricsTag="vmtx",
+        recalcBounds=True,
+    ):
         self.recalcBounds = recalcBounds
         self.font = font
         self.axes = _getVariationAxes(font)
-        self.defaultLocationNormalized = {axis.axisTag: 0 for axis in self.axes}
         self.location = location if location is not None else {}
         self.rawLocation = {}  # VarComponent-only location
         self.originalLocation = location if location is not None else {}
@@ -54,9 +62,12 @@ class _TTGlyphSet(Mapping):
         self.locationStack = []
         self.rawLocationStack = []
         self.glyphsMapping = glyphsMapping
-        self.hMetrics = font["hmtx"].metrics
-        self.vMetrics = getattr(font.get("vmtx"), "metrics", None)
+        self._hMetricsTag = hMetricsTag
+        self._vMetricsTag = vMetricsTag
+        self.hMetrics = font[hMetricsTag].metrics
+        self.vMetrics = getattr(font.get(vMetricsTag), "metrics", None)
         self.hvarTable = None
+        self.vvarTable = None
         if location:
             from fontTools.varLib.varStore import VarStoreInstancer
 
@@ -65,7 +76,12 @@ class _TTGlyphSet(Mapping):
                 self.hvarInstancer = VarStoreInstancer(
                     self.hvarTable.VarStore, self.axes, location
                 )
-            # TODO VVAR, VORG
+            self.vvarTable = getattr(font.get("VVAR"), "table", None)
+            if self.vvarTable is not None:
+                self.vvarInstancer = VarStoreInstancer(
+                    self.vvarTable.VarStore, self.axes, location
+                )
+            # TODO VORG
 
     @contextmanager
     def pushLocation(self, location, reset: bool):
@@ -73,8 +89,7 @@ class _TTGlyphSet(Mapping):
         self.rawLocationStack.append(self.rawLocation)
         if reset:
             self.location = self.originalLocation.copy()
-            self.rawLocation = self.defaultLocationNormalized.copy()
-            self.rawLocation.update(self.originalLocation)
+            self.rawLocation = {}
         else:
             self.location = self.location.copy()
             self.rawLocation = {}
@@ -113,10 +128,17 @@ class _TTGlyphSet(Mapping):
 
 
 class _TTGlyphSetGlyf(_TTGlyphSet):
-    def __init__(self, font, location, recalcBounds=True):
-        self.glyfTable = font["glyf"]
-        super().__init__(font, location, self.glyfTable, recalcBounds=recalcBounds)
-        self.gvarTable = font.get("gvar")
+    def __init__(self, font, location, glyfTag, recalcBounds=True):
+        self.glyfTable = font[glyfTag]
+        super().__init__(
+            font,
+            location,
+            self.glyfTable,
+            hMetricsTag=self.glyfTable.hmtxTag,
+            vMetricsTag=self.glyfTable.vmtxTag,
+            recalcBounds=recalcBounds,
+        )
+        self.gvarTable = font.get(self.glyfTable.gvarTag)
 
     def __getitem__(self, glyphName):
         return _TTGlyphGlyf(self, glyphName, recalcBounds=self.recalcBounds)
@@ -126,7 +148,13 @@ class _TTGlyphSetCFF(_TTGlyphSet):
     def __init__(self, font, location):
         tableTag = "CFF2" if "CFF2" in font else "CFF "
         self.charStrings = list(font[tableTag].cff.values())[0].CharStrings
-        super().__init__(font, location, self.charStrings)
+        super().__init__(
+            font,
+            location,
+            self.charStrings,
+            hMetricsTag="HMTX" if "HMTX" in font else "hmtx",
+            vMetricsTag="VMTX" if "VMTX" in font else "vmtx",
+        )
         self.setLocation(location)
 
     def __getitem__(self, glyphName):
@@ -160,7 +188,13 @@ class _TTGlyphSetCFF(_TTGlyphSet):
 class _TTGlyphSetVARC(_TTGlyphSet):
     def __init__(self, font, location, glyphSet):
         self.glyphSet = glyphSet
-        super().__init__(font, location, glyphSet)
+        super().__init__(
+            font,
+            location,
+            dict.fromkeys(font.getGlyphOrder()),
+            hMetricsTag=glyphSet._hMetricsTag,
+            vMetricsTag=glyphSet._vMetricsTag,
+        )
         self.varcTable = font["VARC"].table
 
     def __getitem__(self, glyphName):
@@ -195,8 +229,19 @@ class _TTGlyph(ABC):
                 if glyphSet.hvarTable.AdvWidthMap is None
                 else glyphSet.hvarTable.AdvWidthMap.mapping[glyphName]
             )
-            self.width += glyphSet.hvarInstancer[varidx]
-        # TODO: VVAR/VORG
+            # An implicit mapping always uses outer index zero. Oversized
+            # glyph IDs must not be interpreted as packed variation indices.
+            if glyphSet.hvarTable.AdvWidthMap is not None or varidx <= 0xFFFF:
+                self.width += glyphSet.hvarInstancer[varidx]
+        if self.height is not None and glyphSet.vvarTable is not None:
+            varidx = (
+                glyphSet.font.getGlyphID(glyphName)
+                if glyphSet.vvarTable.AdvHeightMap is None
+                else glyphSet.vvarTable.AdvHeightMap.mapping[glyphName]
+            )
+            if glyphSet.vvarTable.AdvHeightMap is not None or varidx <= 0xFFFF:
+                self.height += glyphSet.vvarInstancer[varidx]
+        # TODO: VORG
 
     @abstractmethod
     def draw(self, pen):
@@ -313,6 +358,7 @@ class _TTGlyphGlyf(_TTGlyph):
         if glyphSet.hvarTable is None:
             # no HVAR: let's set metrics from the phantom points
             self.width = width
+        if glyphSet.vvarTable is None:
             self.height = height
         return glyph
 
@@ -326,6 +372,10 @@ class _TTGlyphCFF(_TTGlyph):
 
 
 def _evaluateCondition(condition, axes, location, instancer):
+    if condition is None:
+        # A null condition offset denotes True.
+        return True
+
     if condition.Format == 1:
         # ConditionAxisRange
         axisIndex = condition.AxisIndex
@@ -336,10 +386,13 @@ def _evaluateCondition(condition, axes, location, instancer):
         return minValue <= axisValue <= maxValue
     elif condition.Format == 2:
         # ConditionValue
+        from fontTools.ttLib.tables.otTables import NO_VARIATION_INDEX
+
         value = condition.DefaultValue
-        deltas = instancer[condition.VarIdx]
-        if deltas:
-            value += deltas[0]
+        if condition.VarIdx != NO_VARIATION_INDEX:
+            deltas = instancer[condition.VarIdx]
+            if deltas:
+                value += deltas[0]
         return value > 0
     elif condition.Format == 3:
         # ConditionAnd
@@ -418,8 +471,12 @@ class _TTGlyphVARC(_TTGlyph):
 
                     if not shouldDecompose:
                         try:
+                            kwargs = {"resetUnspecifiedAxes": True} if reset else {}
                             pen.addVarComponent(
-                                comp.glyphName, transform, self.glyphSet.rawLocation
+                                comp.glyphName,
+                                transform,
+                                self.glyphSet.rawLocation,
+                                **kwargs,
                             )
                         except AttributeError:
                             shouldDecompose = True

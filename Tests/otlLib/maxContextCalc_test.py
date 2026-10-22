@@ -66,11 +66,17 @@ def test_max_ctx_calc_features():
         ("gpos_91", 1),
     ],
 )
-def test_max_ctx_calc_features_ttx(file_name, max_context):
+@pytest.mark.parametrize("extended_header", [False, True])
+def test_max_ctx_calc_features_ttx(file_name, max_context, extended_header):
     ttx_path = os.path.join(
         os.path.dirname(__file__), "data", "{}.ttx".format(file_name)
     )
     font = TTFont()
     font.importXML(ttx_path)
+
+    if extended_header:
+        from fontTools.ttLib.beyond64k import upper_tables
+
+        upper_tables(font, tables=[tag for tag in ("GSUB", "GPOS") if tag in font])
 
     assert maxCtxFont(font) == max_context

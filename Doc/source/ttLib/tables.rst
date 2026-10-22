@@ -146,6 +146,7 @@ Tables currently supported
    tables/_c_m_a_p
    tables/C_O_L_R_
    tables/C_P_A_L_
+   tables/D_M_A_P_
    tables/_c_v_a_r
    tables/_c_v_t
    tables/D__e_b_g
@@ -163,6 +164,7 @@ Tables currently supported
    tables/G_D_E_F_
    tables/G__l_a_t
    tables/G__l_o_c
+   tables/G_L_Y_F_
    tables/_g_l_y_f
    tables/G_P_O_S_
    tables/G_S_U_B_
@@ -170,7 +172,9 @@ Tables currently supported
    tables/_g_v_a_r
    tables/_h_d_m_x
    tables/_h_e_a_d
+   tables/H_H_E_A_
    tables/_h_h_e_a
+   tables/H_M_T_X_
    tables/_h_m_t_x
    tables/H_V_A_R_
    tables/I_F_T_
@@ -178,10 +182,12 @@ Tables currently supported
    tables/J_S_T_F_
    tables/_k_e_r_n
    tables/_l_c_a_r
+   tables/L_O_C_A_
    tables/_l_o_c_a
    tables/_l_t_a_g
    tables/L_T_S_H_
    tables/M_A_T_H_
+   tables/M_A_X_P_
    tables/_m_a_x_p
    tables/_m_e_t_a
    tables/_m_o_r_t
@@ -202,7 +208,9 @@ Tables currently supported
    tables/T_T_F_A_
    tables/V_A_R_C_
    tables/V_D_M_X_
+   tables/V_H_E_A_
    tables/_v_h_e_a
+   tables/V_M_T_X_
    tables/_v_m_t_x
    tables/V_O_R_G_
    tables/VTT_related
@@ -211,5 +219,4 @@ Tables currently supported
 .. automodule:: fontTools.ttLib.tables
    :members:
    :undoc-members:
-
 

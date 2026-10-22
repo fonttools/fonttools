@@ -1,3 +1,4 @@
+from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import getXML, parseXML
@@ -6,6 +7,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.tables._g_l_y_f import (
     Glyph,
     GlyphCoordinates,
@@ -1051,11 +1053,67 @@ class GlyphCubicTest:
             with pytest.raises(NotImplementedError, match="All-off-curve cubic"):
                 glyph.drawPoints(pen, None)
             assert pen.value == []
+            glyph.draw(RecordingPen(), None)
         else:
             glyph.drawPoints(pen, None)
             assert [
                 args[0] for op, args, kwargs in pen.value if op == "addPoint"
             ] == list(glyph.coordinates)
+
+    @pytest.mark.parametrize("table_tag", ["glyf", "GLYF"])
+    @pytest.mark.parametrize("optimize_size", [False, True])
+    def test_cubic_requires_extended_serialization(self, table_tag, optimize_size):
+        glyph = Glyph()
+        glyph.numberOfContours = 1
+        glyph.coordinates = GlyphCoordinates([(0, 0), (0, 100), (100, 100), (100, 0)])
+        glyph.flags = bytearray([flagOnCurve, flagCubic, flagCubic, flagOnCurve])
+        glyph.endPtsOfContours = [3]
+        glyph.program = ttProgram.Program()
+        table = newTable(table_tag)
+
+        # Drawing an in-memory outline must keep the actual segment type.
+        pen = RecordingPen()
+        glyph.draw(pen, table)
+        assert ("curveTo", ((0, 100), (100, 100), (100, 0))) in pen.value
+        point_pen = RecordingPointPen()
+        glyph.drawPoints(point_pen, table)
+        assert [
+            args[1] for op, args, kwargs in point_pen.value if op == "addPoint"
+        ] == ["line", None, None, "curve"]
+
+        if table_tag == "glyf":
+            with pytest.raises(TTLibError, match="extended GLYF"):
+                glyph.compile(table, optimizeSize=optimize_size)
+            with pytest.raises(TTLibError, match="extended GLYF"):
+                getXML(lambda writer, font: glyph.toXML(writer, font, extended=False))
+        else:
+            data = glyph.compile(table, optimizeSize=optimize_size)
+            reloaded = Glyph(data)
+            reloaded.expand(table)
+            assert reloaded.flags == glyph.flags
+            after = RecordingPen()
+            reloaded.draw(after, table)
+            assert after.value == pen.value
+
+    @pytest.mark.parametrize("table_tag", ["glyf", "GLYF"])
+    def test_import_cubic_flags(self, table_tag):
+        font = TTFont()
+        font.setGlyphOrder(["a"])
+        font[table_tag] = newTable(table_tag)
+        xml = """<TTGlyph name="a"><contour>
+            <pt x="0" y="0" on="1"/>
+            <pt x="0" y="100" on="0" cubic="1"/>
+            <pt x="100" y="100" on="0" cubic="1"/>
+            <pt x="100" y="0" on="1"/>
+        </contour><instructions/></TTGlyph>"""
+        if table_tag == "glyf":
+            with pytest.raises(TTLibError, match="extended GLYF"):
+                for name, attrs, content in parseXML(xml):
+                    font[table_tag].fromXML(name, attrs, content, font)
+        else:
+            for name, attrs, content in parseXML(xml):
+                font[table_tag].fromXML(name, attrs, content, font)
+            assert list(font[table_tag]["a"].flags) == [1, flagCubic, flagCubic, 1]
 
     def test_drawPoints_rejects_later_cubic_contour_atomically(self):
         glyph = Glyph()
@@ -1073,6 +1131,10 @@ class GlyphCubicTest:
     def test_roundtrip(self):
         font_path = os.path.join(DATA_DIR, "NotoSans-VF-cubic.subset.ttf")
         font = TTFont(font_path)
+        upper_tables(
+            font,
+            tables={"glyf", "loca", "maxp", "hhea", "hmtx", "gvar"},
+        )
         tables = [table_tag for table_tag in font.keys() if table_tag not in {"head"}]
         xml = StringIO()
         font.saveXML(xml)
@@ -1212,6 +1274,64 @@ def build_interpolatable_glyphs(contours, *transforms):
         glyph.coordinates.translate(t[4:6])
         result.append(glyph)
     return result
+
+
+@pytest.mark.parametrize("extended", [False, True])
+@pytest.mark.parametrize("wide_gid", [False, True])
+@pytest.mark.parametrize("word_args", [False, True])
+@pytest.mark.parametrize(
+    "transform",
+    [
+        (0, ()),
+        (WE_HAVE_A_SCALE, (0x2000,)),
+        (WE_HAVE_AN_X_AND_Y_SCALE, (0x2000, 0x4000)),
+        (WE_HAVE_A_TWO_BY_TWO, (0x2000, 0x1000, 0x1000, 0x4000)),
+    ],
+)
+@pytest.mark.parametrize("remove_hinting", [False, True])
+def test_trim_compact_composite(
+    extended, wide_gid, word_args, transform, remove_hinting
+):
+    transform_flag, transform_values = transform
+    header = bytes.fromhex("ffff 0000 0000 0064 0064")
+    records = []
+    for index, gid in enumerate((2, 1)):
+        flags = ARGS_ARE_XY_VALUES | transform_flag
+        if index == 0:
+            flags |= 0x0020  # MORE_COMPONENTS
+            if wide_gid:
+                flags |= 0x2000  # GID_IS_24_BIT, reserved in lowercase glyf
+        else:
+            flags |= 0x0100  # WE_HAVE_INSTRUCTIONS
+        if word_args:
+            flags |= 0x0001  # ARG_1_AND_2_ARE_WORDS
+        gid_size = 3 if extended and flags & 0x2000 else 2
+        records.append(
+            struct.pack(">H", flags)
+            + gid.to_bytes(gid_size, "big")
+            + struct.pack(">hh" if word_args else ">bb", 123, -42)
+            + struct.pack(">" + "h" * len(transform_values), *transform_values)
+        )
+    program = bytes.fromhex("0003 b00121")
+    data = header + b"".join(records) + program
+    glyph = Glyph(data + b"\0\0\0")
+    glyf = newTable("GLYF" if extended else "glyf")
+    glyf.glyphOrder = [".notdef", "a", "b"]
+    glyf.glyphs = {"composite": glyph}
+
+    if remove_hinting:
+        glyf.removeHinting()
+        records[-1] = bytes([records[-1][0] & ~1]) + records[-1][1:]
+        expected = header + b"".join(records)
+    else:
+        glyph.trim(extended=extended)
+        expected = data
+
+    assert glyph.data == expected
+    glyph.expand(glyf)
+    assert [comp.glyphName for comp in glyph.components] == ["b", "a"]
+    assert [(comp.x, comp.y) for comp in glyph.components] == [(123, -42)] * 2
+    assert hasattr(glyph, "program") == (not remove_hinting)
 
 
 def test_dropImpliedOnCurvePoints_all_quad_off_curves():
@@ -1430,6 +1550,202 @@ def test_unsigned_instruction_length(length, composite):
     assert reloaded.program.getBytecode() == glyph.program.getBytecode()
     assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
     assert reloaded.compile(glyf) == data
+
+
+def build_composite_dag(n):
+    """Return a glyf table where composite 'g{k}' uses 'g{k-1}' twice, for k
+    from 1 to n, and 'g0' is a square: 'g{k}' flattens to 4 * 2**k points.
+    """
+
+    def square():
+        pen = TTGlyphPen(None)
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((10, 10))
+        pen.lineTo((10, 0))
+        pen.closePath()
+        return pen.glyph()
+
+    glyf = newTable("glyf")
+    glyf.glyphOrder = [".notdef"] + [f"g{k}" for k in range(n + 1)]
+    glyf.glyphs = {".notdef": square(), "g0": square()}
+    for k in range(1, n + 1):
+        pen = TTGlyphPen(glyf)
+        pen.addComponent(f"g{k-1}", (1, 0, 0, 1, 0, 0))
+        pen.addComponent(f"g{k-1}", (1, 0, 0, 1, 0, 0))
+        glyf.glyphs[f"g{k}"] = pen.glyph()
+    return glyf
+
+
+def test_composite_dag_under_point_limit():
+    glyf = build_composite_dag(13)
+    glyph = glyf["g13"]
+
+    coords, endPts, flags = glyph.getCoordinates(glyf)
+    assert len(coords) == len(flags) == 32768
+    assert endPts == list(range(3, 32768, 4))
+    assert list(coords[:4]) == [(0, 0), (0, 10), (10, 10), (10, 0)]
+    assert set(coords) == {(0, 0), (0, 10), (10, 10), (10, 0)}
+
+    assert glyph.getCompositeMaxpValues(glyf) == (32768, 8192, 13)
+    assert glyph.getCompositeMaxpValues(glyf, maxpValuesCache={}) == (
+        32768,
+        8192,
+        13,
+    )
+
+
+@pytest.mark.parametrize("method", ["getCompositeMaxpValues", "recalcBounds"])
+def test_composite_dag_default_cache(method):
+    class BoundedGlyphSet(dict):
+        lookups = 0
+
+        def __getitem__(self, name):
+            self.lookups += 1
+            # Bound the work without relying on wall-clock timings.
+            assert self.lookups <= 1000, "excessive component traversal"
+            return super().__getitem__(name)
+
+    glyf = BoundedGlyphSet(build_composite_dag(12).glyphs)
+    glyph = glyf["g12"]
+    result = getattr(glyph, method)(glyf)
+    if method == "getCompositeMaxpValues":
+        assert result == (16384, 4096, 12)
+    else:
+        assert (glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax) == (0, 0, 10, 10)
+
+
+def test_composite_point_limit():
+    glyf = newTable("glyf")
+    big = Glyph()
+    big.numberOfContours = 1
+    big.coordinates = GlyphCoordinates([(i % 100, i // 100) for i in range(0xFFFF)])
+    big.endPtsOfContours = [0xFFFF - 1]
+    big.flags = array.array("B", [flagOnCurve] * 0xFFFF)
+    dot = Glyph()
+    dot.numberOfContours = 1
+    dot.coordinates = GlyphCoordinates([(0, 0)])
+    dot.endPtsOfContours = [0]
+    dot.flags = array.array("B", [flagOnCurve])
+    glyf.glyphs = {"big": big, "dot": dot}
+    for name, components in [("atLimit", ["big"]), ("overLimit", ["big", "dot"])]:
+        pen = TTGlyphPen(glyf)
+        for component in components:
+            pen.addComponent(component, (1, 0, 0, 1, 0, 0))
+        glyf.glyphs[name] = pen.glyph()
+    glyf.glyphOrder = list(glyf.glyphs)
+
+    coords, endPts, flags = glyf["atLimit"].getCoordinates(glyf)
+    assert len(coords) == len(flags) == 0xFFFF
+    assert endPts == [0xFFFF - 1]
+
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["overLimit"].getCoordinates(glyf)
+
+
+def test_composite_dag_over_point_limit():
+    glyf = build_composite_dag(20)
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["g20"].getCoordinates(glyf)
+    # 4 * 2**14 points is one more than the limit
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["g14"].getCoordinates(glyf)
+
+
+def test_composite_dag_empty_leaf():
+    glyf = build_composite_dag(22)
+    glyf.glyphs["g0"] = Glyph()
+    assert glyf["g22"].getCoordinates(glyf) == (GlyphCoordinates(), [], bytearray())
+
+
+@pytest.mark.parametrize("round", [noRound, otRound])
+def test_getCoordinates_reused_component(round):
+    glyf = build_composite_dag(1)
+    transforms = [
+        (0.5, 0, 0, 1.5, 3, 7),
+        (1, 0, 0, 1, -20, 5),
+        (0.3, 0.2, -0.1, 0.7, 11.5, 0),
+    ]
+    for i, transform in enumerate(transforms):
+        pen = TTGlyphPen(glyf)
+        pen.addComponent("g1", transform)
+        glyf.glyphs[f"single{i}"] = pen.glyph()
+    pen = TTGlyphPen(glyf)
+    for transform in transforms + transforms[::-1]:
+        pen.addComponent("g1", transform)
+    glyf.glyphs["multi"] = pen.glyph()
+
+    coords, endPts, flags = glyf["multi"].getCoordinates(glyf, round=round)
+    expected = GlyphCoordinates()
+    for i in list(range(len(transforms))) + list(reversed(range(len(transforms)))):
+        expected.extend(glyf[f"single{i}"].getCoordinates(glyf, round=round)[0])
+    assert coords == expected
+    assert endPts == list(range(3, len(expected), 4))
+    assert flags == bytearray([flagOnCurve]) * len(expected)
+
+
+def test_maxp_recalc_composite_dag():
+    n = 20
+    glyf = build_composite_dag(n)
+    fb = FontBuilder(unitsPerEm=1000, isTTF=True)
+    fb.setupGlyphOrder(glyf.glyphOrder)
+    fb.setupGlyf(glyf.glyphs)
+    fb.setupHorizontalMetrics({name: (10, 0) for name in glyf.glyphOrder})
+    font = fb.font
+
+    # bounds of composites with integer offsets don't need flattening
+    font["glyf"].compile(font)
+
+    maxp = font["maxp"]
+    maxp.recalc(font)
+    assert maxp.maxPoints == 4
+    assert maxp.maxContours == 1
+    assert maxp.maxCompositePoints == 4 * 2**n
+    assert maxp.maxCompositeContours == 2**n
+    assert maxp.maxComponentElements == 2
+    assert maxp.maxComponentDepth == n
+    head = font["head"]
+    assert (head.xMin, head.yMin, head.xMax, head.yMax) == (0, 0, 10, 10)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "ttx/data/TestTTF.ttf",
+        "qu2cu/data/NotoSansArabic-Regular.quadratic.subset.ttf",
+        "subset/data/BungeeColor-Regular.ttx",
+        "varLib/data/MutatorSans_All_Variable.ttx",
+        "varLib/instancer/data/PartialInstancerTest3-VF.ttx",
+        None,
+    ],
+)
+def test_getCompositeMaxpValues_cache(path):
+    if path is None:
+        glyf = build_composite_dag(12)
+    else:
+        path = Path(__file__).parent.parent.parent / path
+        if path.suffix == ".ttx":
+            font = TTFont()
+            font.importXML(path)
+        else:
+            font = TTFont(path)
+        glyf = font["glyf"]
+    composites = [name for name in glyf.glyphOrder if glyf[name].isComposite()]
+    assert composites
+
+    for depth in (1, 3):
+        expected = {
+            name: glyf[name].getCompositeMaxpValues(glyf, depth) for name in composites
+        }
+        for glyphNames in (composites, composites[::-1]):
+            cache = {}
+            for name in glyphNames:
+                assert (
+                    glyf[name].getCompositeMaxpValues(
+                        glyf, depth, maxpValuesCache=cache
+                    )
+                    == expected[name]
+                )
 
 
 if __name__ == "__main__":

@@ -19,6 +19,32 @@ import pytest
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 
+@pytest.mark.parametrize("glyph_zero", [".notdef", "zero"])
+@pytest.mark.parametrize("dmap_format", [4, 12, 13])
+def test_getBestCmap_DMAP_zero_fallback(glyph_zero, dmap_format):
+    font = TTFont()
+    font.setGlyphOrder([glyph_zero, "baseA", "baseB", "dmapB"])
+    for tag, format, mapping in (
+        ("cmap", 4, {0x41: "baseA", 0x42: "baseB"}),
+        ("DMAP", dmap_format, {0x41: glyph_zero, 0x42: "dmapB"}),
+    ):
+        table = CmapSubtable.newSubtable(format)
+        table.platformID = 3
+        table.platEncID = 1 if format == 4 else 10
+        table.language = 0
+        table.cmap = mapping
+        font[tag] = newTable(tag)
+        font[tag].tableVersion = 0
+        font[tag].tables = [table]
+
+    assert font.getBestCmap() == {0x41: "baseA", 0x42: "dmapB"}
+    assert font["DMAP"].getBestCmap() == {0x41: glyph_zero, 0x42: "dmapB"}
+    del font["cmap"]
+    assert font.getBestCmap() == {0x42: "dmapB"}
+    font["DMAP"].tables[0].cmap = {0x41: glyph_zero}
+    assert font.getBestCmap() == {}
+
+
 class CustomTableClass(DefaultTable):
     def decompile(self, data, ttFont):
         self.numbers = list(data)
@@ -149,6 +175,67 @@ def test_setGlyphOrder_also_updates_glyf_glyphOrder():
     assert font["glyf"].glyphOrder == new_order
 
 
+def test_setGlyphOrder_also_updates_GLYF_glyphOrder():
+    font = TTFont()
+    font["GLYF"] = newTable("GLYF")
+    font["GLYF"].glyphs = {}
+
+    font.setGlyphOrder([".notdef", "a"])
+
+    assert font["GLYF"].glyphOrder == [".notdef", "a"]
+
+
+def test_getGlyphOrder_prefers_MAXP():
+    font = TTFont()
+    font["maxp"] = newTable("maxp")
+    font["maxp"].numGlyphs = 1
+    font["MAXP"] = newTable("MAXP")
+    font["MAXP"].numGlyphs = 2
+
+    assert font.getGlyphOrder() == [".notdef", "glyph00001"]
+
+
+def test_getGlyphOrder_from_post_uses_MAXP():
+    font = TTFont()
+    font["MAXP"] = newTable("MAXP")
+    font["MAXP"].numGlyphs = 2
+    font["post"] = newTable("post")
+    font["post"].decode_format_1_0(b"", font)
+
+    assert font.getGlyphOrder() == standardGlyphOrder[:2]
+
+
+def test_getGlyphSet_prefers_locked_uppercase_tables():
+    font = TTFont()
+    font.setGlyphOrder([".notdef"])
+    font["GLYF"] = newTable("GLYF")
+    font["GLYF"].glyphs = {".notdef": object()}
+    font["GLYF"].glyphOrder = font.getGlyphOrder()
+    font["glyf"] = newTable("glyf")
+    font["HMTX"] = newTable("HMTX")
+    font["HMTX"].metrics = {".notdef": (500, 0)}
+    font["GVAR"] = newTable("GVAR")
+
+    glyphSet = font.getGlyphSet()
+
+    assert glyphSet.glyfTable is font["GLYF"]
+    assert glyphSet.hMetrics is font["HMTX"].metrics
+    assert glyphSet.gvarTable is font["GVAR"]
+
+
+def test_saveXML_splitGlyphs_for_GLYF(tmp_path):
+    font = TTFont()
+    font["GLYF"] = newTable("GLYF")
+    received = []
+    font["GLYF"].toXML = lambda writer, ttFont, splitGlyphs=False: received.append(
+        splitGlyphs
+    )
+
+    font.saveXML(tmp_path / "font.ttx", tables=["GLYF"], splitGlyphs=True)
+
+    assert received == [True]
+
+
 def test_getGlyphOrder_not_true_post_format_1(caplog):
     # https://github.com/fonttools/fonttools/issues/2736
     caplog.set_level("WARNING")
@@ -274,6 +361,14 @@ def test_getGlyphID():
         font.getGlyphID("non_existent")
     with pytest.raises(KeyError):
         font.getGlyphID("glyph_prefix_but_invalid_id")
+
+
+def test_hasExtendedGlyphIDs():
+    font = TTFont()
+    font.setGlyphOrder(["glyph"] * 0x10000)
+    assert not font.hasExtendedGlyphIDs()
+    font.setGlyphOrder(["glyph"] * 0x10001)
+    assert font.hasExtendedGlyphIDs()
 
 
 def test_spooled_tempfile_may_not_have_attribute_seekable():

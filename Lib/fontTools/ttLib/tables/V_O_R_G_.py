@@ -26,18 +26,23 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
             self.majorVersion,
             self.minorVersion,
             self.defaultVertOriginY,
-            self.numVertOriginYMetrics,
-        ) = struct.unpack(">HHhH", data[:8])
-        assert (
-            self.majorVersion <= 1
-        ), "Major version of VORG table is higher than I know how to handle"
-        data = data[8:]
+        ) = struct.unpack(">HHh", data[:6])
+        assert self.majorVersion in (
+            1,
+            2,
+        ), "Unsupported major version of VORG table"
+        glyphIDSize = 2 if self.majorVersion == 1 else 3
+        self.numVertOriginYMetrics = int.from_bytes(data[6 : 6 + glyphIDSize], "big")
+        data = data[6 + glyphIDSize :]
         vids = []
         gids = []
         pos = 0
         for i in range(self.numVertOriginYMetrics):
-            gid, vOrigin = struct.unpack(">Hh", data[pos : pos + 4])
-            pos += 4
+            gid = int.from_bytes(data[pos : pos + glyphIDSize], "big")
+            (vOrigin,) = struct.unpack(
+                ">h", data[pos + glyphIDSize : pos + glyphIDSize + 2]
+            )
+            pos += glyphIDSize + 2
             gids.append(gid)
             vids.append(vOrigin)
 
@@ -64,14 +69,18 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
         vOriginTable = list(zip(gids, vorgs))
         self.numVertOriginYMetrics = len(vorgs)
         vOriginTable.sort()  # must be in ascending GID order
-        dataList = [struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]
+        assert self.majorVersion in (1, 2), "Unsupported major version of VORG table"
+        glyphIDSize = 2 if self.majorVersion == 1 else 3
+        dataList = [
+            gid.to_bytes(glyphIDSize, "big") + struct.pack(">h", vOrigin)
+            for gid, vOrigin in vOriginTable
+        ]
         header = struct.pack(
-            ">HHhH",
+            ">HHh",
             self.majorVersion,
             self.minorVersion,
             self.defaultVertOriginY,
-            self.numVertOriginYMetrics,
-        )
+        ) + self.numVertOriginYMetrics.to_bytes(glyphIDSize, "big")
         dataList.insert(0, header)
         data = bytesjoin(dataList)
         return data

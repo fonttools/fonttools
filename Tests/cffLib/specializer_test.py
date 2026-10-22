@@ -9,10 +9,13 @@ from fontTools.cffLib.specializer import (
     generalizeCommands,
     specializeCommands,
 )
+from fontTools.misc.psCharStrings import T2CharString
+from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont
 import os
 import pytest
 from fontTools.misc.testTools import parseXML, DataFilesHandler
+from types import SimpleNamespace
 
 
 def charstr_generalize(charstr, **kwargs):
@@ -679,3 +682,162 @@ def test_nested_zero_region_blend(convert):
     program = [100, 200, 1, "blend", 2, "blend", "rmoveto"]
     result = convert(program, lambda vi: 0)
     assert generalizeProgram(result) == [100, 200, "rmoveto"]
+
+
+def test_programToCommands_vsIndex():
+    # VarData 1 has two regions; the Private DICT selects it.
+    program = [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]
+    numRegions = {0: 1, 1: 2}.get
+    commands = programToCommands(program, getNumRegions=numRegions, vsIndex=1)
+    assert commands == [("rmoveto", [[100, 200, 1, 2, 3, 4, 2]])]
+
+
+@pytest.mark.parametrize(
+    "convert, expected",
+    [
+        (
+            generalizeProgram,
+            [100, 1, 2, 1, "blend", 200, 3, 4, 1, "blend", "rmoveto"],
+        ),
+        (specializeProgram, [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]),
+    ],
+)
+def test_convertProgram_vsIndex(convert, expected):
+    program = [100, 200, 1, 2, 3, 4, 2, "blend", "rmoveto"]
+    numRegions = {0: 1, 1: 2}.get
+    assert convert(program, numRegions, vsIndex=1) == expected
+
+
+def test_initial_separate_blends_are_not_width():
+    # Two separate blends before the first stem op must not make the
+    # operand count odd and turn the first stem edge into a width.
+    program = [
+        101.25, 3, 2, -1, 1, "blend", -21,
+        60.5, -2, 1, 3, 1, "blend", 31.75, "hstemhm",
+    ]  # fmt: skip
+    commands = programToCommands(program, lambda _: 3)
+    assert commands == [
+        ("hstemhm", [[101.25, 3, 2, -1, 1], -21, [60.5, -2, 1, 3, 1], 31.75])
+    ]
+    assert commandsToProgram(commands) == program
+
+
+@pytest.mark.parametrize(
+    "flex",
+    [
+        [10, 20, 30, 0, 40, -20, 50, 20, 60, 0, 70, -20, 50, "flex"],
+        [10, 20, 15, 30, 40, 50, 60, "hflex"],
+        [10, 5, 20, 15, 30, 40, 50, -12, 60, "hflex1"],
+        [10, 5, 20, 15, 30, 2, 40, -3, 50, -12, 60, "flex1"],
+        [5, 10, 15, 20, 2, 30, -3, 40, -12, 50, 60, "flex1"],
+    ],
+)
+def test_generalize_and_specialize_flex(flex):
+    program = [100, 100, "rmoveto"] + flex
+    commands = programToCommands(program)
+    op = commands[1][0]
+
+    generalized = generalizeCommands(commands)
+    flexOp, flexArgs = generalized[1]
+    assert flexOp == "flex"
+    assert len(flexArgs) == 13
+    assert drawProgram(commandsToProgram(generalized)) == drawProgram(program)
+
+    # The flex test case can be spelled as a flex1.
+    expectedOp = "flex1" if op == "flex" else op
+    specialized = specializeCommands(generalized, generalizeFirst=False)
+    assert specialized[1][0] == expectedOp
+    assert drawProgram(commandsToProgram(specialized)) == drawProgram(program)
+
+
+@pytest.mark.parametrize("convert", [generalizeCommands, specializeCommands])
+@pytest.mark.parametrize("numArgs", [0, 1, 10, 12])
+def test_malformed_flex1(convert, numArgs):
+    args = [10] * numArgs
+    commands = [("flex1", args)]
+
+    with pytest.raises(ValueError):
+        convert(commands)
+
+    assert convert(commands, ignoreErrors=True) == [("", args), ("", ["flex1"])]
+
+
+@pytest.mark.parametrize(
+    "dx, dy, expected",
+    [
+        (50, 0, True),
+        (0, 50, False),
+        ([50, 10, 1], [0, 20, 1], True),
+        ([50, 10, -20, 1], [0, 20, 20, 1], None),
+        # Horizontal at both ends of the region, vertical half way.
+        ([10, -20, 1], [5, -5, 1], None),
+    ],
+)
+def test_flex1_direction(dx, dy, expected):
+    blended = [arg for arg in (dx, dy) if isinstance(arg, list)]
+    numRegions = max((len(arg) - 2 for arg in blended), default=0)
+    program = commandsToProgram([("flex1", [dx, dy, 0, 0, 0, 0, 0, 0, 0, 0, 0])])
+    commands = programToCommands(program, lambda _: numRegions)
+    [(op, args)] = generalizeCommands(commands)
+    if expected is None:
+        assert op == "flex1"
+    else:
+
+        def negate(arg):
+            return (
+                [-value for value in arg[:-1]] + [arg[-1]]
+                if isinstance(arg, list)
+                else -arg
+            )
+
+        assert op == "flex"
+        assert args[10:12] == ([0, negate(dy)] if expected else [negate(dx), 0])
+
+
+@pytest.mark.parametrize(
+    "scalarRanges, expected",
+    [
+        ([(0, 1)], None),
+        # A pinned region: the direction at its scalar.
+        ([(0.5, 0.5)], False),
+        ([(1, 1)], True),
+        # A region pinned on some axes only: scalar 0.2 at most.
+        ([(0, 0.2)], True),
+    ],
+)
+def test_flex1_direction_with_scalar_ranges(scalarRanges, expected):
+    dx, dy = [10, -20, 1], [5, -5, 1]
+    program = commandsToProgram([("flex1", [dx, dy, 0, 0, 0, 0, 0, 0, 0, 0, 0])])
+    commands = programToCommands(program, lambda _: 1)
+    [(op, _)] = generalizeCommands(commands, getScalarRanges=lambda _: scalarRanges)
+    assert (op == "flex") is (expected is not None)
+
+
+@pytest.mark.parametrize(
+    "vsIndex, vsindexCommands, expectedOp",
+    [
+        (0, [], "flex1"),
+        (1, [], "flex"),
+        (0, [("vsindex", [1])], "flex"),
+        (1, [("vsindex", [0])], "flex1"),
+    ],
+)
+def test_generalize_flex_uses_active_vsindex(vsIndex, vsindexCommands, expectedOp):
+    dx, dy = [10, -20, 1], [5, -5, 1]
+    commands = vsindexCommands + [("flex1", [dx, dy] + [0] * 9)]
+    scalarRangesByVsIndex = {0: [(0, 1)], 1: [(1, 1)]}
+
+    result = generalizeCommands(
+        commands, getScalarRanges=scalarRangesByVsIndex.get, vsIndex=vsIndex
+    )
+
+    assert result[:-1] == vsindexCommands
+    assert result[-1][0] == expectedOp
+
+
+def drawProgram(program):
+    private = SimpleNamespace(nominalWidthX=0, defaultWidthX=0)
+    charString = T2CharString(program=program + ["endchar"], private=private)
+    pen = RecordingPen()
+    charString.draw(pen)
+    return pen.value

@@ -8,9 +8,11 @@ from fontTools.merge.cmap import (
     computeMegaGlyphOrder,
     computeMegaCmap,
     renameCFFCharStrings,
+    _flattenDmap,
 )
 from fontTools.merge.layout import layoutPreMerge, layoutPostMerge
 from fontTools.merge.options import Options
+from fontTools.ttLib.beyond64k import upper_tables, _compact_layout_tables
 import fontTools.merge.tables
 from fontTools.misc.loggingTools import Timer
 from functools import reduce
@@ -19,6 +21,30 @@ import logging
 
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__ + ".timer"), level=logging.INFO)
+
+
+_UPPER_TABLES = {"GLYF", "GVAR", "HHEA", "HMTX", "LOCA", "MAXP", "VHEA", "VMTX"}
+_COMPANION_TABLES = {
+    "glyf",
+    "gvar",
+    "hhea",
+    "hmtx",
+    "loca",
+    "maxp",
+    "vhea",
+    "vmtx",
+}
+
+
+def _fontHasUpperTables(font):
+    return bool(_UPPER_TABLES.intersection(font.keys())) or any(
+        tag in font and font[tag].table.Version >= version
+        for tag, version in (
+            ("GDEF", 0x00010004),
+            ("GSUB", 0x00010002),
+            ("GPOS", 0x00010002),
+        )
+    )
 
 
 class Merger(object):
@@ -71,6 +97,8 @@ class Merger(object):
         Returns:
                 A :class:`fontTools.ttLib.TTFont` object. Call the ``save`` method on
                 this to write it out to an OTF file.
+
+        DMAP overrides are folded into the merged cmap table.
         """
         #
         # Settle on a mega glyph order.
@@ -78,6 +106,10 @@ class Merger(object):
         fonts = self._openFonts(fontfiles)
         glyphOrders = [list(font.getGlyphOrder()) for font in fonts]
         computeMegaGlyphOrder(self, glyphOrders)
+        # maxp.numGlyphs is uint16: needs upper tables above 0xFFFF, not 0x10000.
+        self.beyond64k = len(self.glyphOrder) > 0xFFFF or any(
+            _fontHasUpperTables(font) for font in fonts
+        )
 
         # Take first input file sfntVersion
         sfntVersion = fonts[0].sfntVersion
@@ -88,6 +120,10 @@ class Merger(object):
             font.setGlyphOrder(glyphOrder)
             if "CFF " in font:
                 renameCFFCharStrings(self, glyphOrder, font["CFF "])
+            if self.beyond64k:
+                upper_tables(font, tables=_COMPANION_TABLES)
+            if "DMAP" in font and "DMAP" not in self.options.drop_tables:
+                _flattenDmap(font)
 
         cmaps = [font["cmap"] for font in fonts]
         self.duplicateGlyphsPerFont = [{} for _ in fonts]
@@ -97,7 +133,10 @@ class Merger(object):
         mega.setGlyphOrder(self.glyphOrder)
 
         for font in fonts:
-            self._preMerge(font)
+            # Inputs are owned by the merger; normalize without restoring them.
+            # The output is upgraded before serialization when needed.
+            with _compact_layout_tables(font, restore=False):
+                self._preMerge(font)
 
         self.fonts = fonts
 
@@ -126,6 +165,8 @@ class Merger(object):
         del self.fonts
 
         self._postMerge(mega)
+        if self.beyond64k:
+            upper_tables(mega)
 
         return mega
 
@@ -162,11 +203,21 @@ class Merger(object):
 
     def _postMerge(self, font):
         layoutPostMerge(font)
+        self._dropPostGlyphNamesIfNeeded(font)
 
         if "OS/2" in font:
             # https://github.com/fonttools/fonttools/issues/2538
             # TODO: Add an option to disable this?
             font["OS/2"].recalcAvgCharWidth(font)
+
+    def _dropPostGlyphNamesIfNeeded(self, font):
+        if "post" not in font or len(font.getGlyphOrder()) <= 0xFFFF:
+            return
+        post = font["post"]
+        if post.formatType == 2.0:
+            post.formatType = 3.0
+            post.extraNames = []
+            post.mapping = {}
 
 
 __all__ = ["Options", "Merger", "main"]

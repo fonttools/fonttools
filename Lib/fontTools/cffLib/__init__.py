@@ -194,7 +194,17 @@ class CFFFontSet(object):
         writer.add(self.GlobalSubrs.getCompiler(strings, self, isCFF2=isCFF2))
 
         for topDict in self.topDictIndex:
-            if not hasattr(topDict, "charset") or topDict.charset is None:
+            if isCFF2:
+                glyphOrder = otFont.getGlyphOrder()
+                count = len(topDict.CharStrings)
+                if count > len(glyphOrder) or (
+                    count != len(glyphOrder) and "VARC" not in otFont
+                ):
+                    raise ValueError("CFF2 CharStrings count does not match the font")
+                topDict.charset = glyphOrder[:count]
+                if set(topDict.charset) != set(topDict.CharStrings.keys()):
+                    raise ValueError("CFF2 CharStrings must form a glyph-order prefix")
+            elif not hasattr(topDict, "charset") or topDict.charset is None:
                 charset = otFont.getGlyphOrder()
                 topDict.charset = charset
         children = topCompiler.getChildren(strings)
@@ -913,7 +923,7 @@ class VarStoreData(object):
 
 
 class FDSelect(object):
-    def __init__(self, file=None, numGlyphs=None, format=None):
+    def __init__(self, file=None, numGlyphs=None, format=None, maxGlyphs=None):
         if file:
             # read data in from file
             self.format = readCard8(file)
@@ -921,39 +931,29 @@ class FDSelect(object):
                 from array import array
 
                 self.gidArray = array("B", file.read(numGlyphs)).tolist()
-            elif self.format == 3:
-                gidArray = [None] * numGlyphs
-                nRanges = readCard16(file)
+            elif self.format in (3, 4):
+                readGlyph = readCard16 if self.format == 3 else readCard32
+                readFD = readCard8 if self.format == 3 else readCard16
+                nRanges = readGlyph(file)
+                gidArray = []
                 fd = None
-                prev = None
+                prev = 0
+                maximum = numGlyphs if maxGlyphs is None else maxGlyphs
                 for i in range(nRanges):
-                    first = readCard16(file)
-                    if prev is not None:
-                        for glyphID in range(prev, first):
-                            gidArray[glyphID] = fd
+                    first = readGlyph(file)
+                    if (i == 0 and first != 0) or first < prev or first > maximum:
+                        raise ValueError("Invalid FDSelect range")
+                    gidArray.extend([fd] * (first - prev))
                     prev = first
-                    fd = readCard8(file)
-                if prev is not None:
-                    first = readCard16(file)
-                    for glyphID in range(prev, first):
-                        gidArray[glyphID] = fd
-                self.gidArray = gidArray
-            elif self.format == 4:
-                gidArray = [None] * numGlyphs
-                nRanges = readCard32(file)
-                fd = None
-                prev = None
-                for i in range(nRanges):
-                    first = readCard32(file)
-                    if prev is not None:
-                        for glyphID in range(prev, first):
-                            gidArray[glyphID] = fd
-                    prev = first
-                    fd = readCard16(file)
-                if prev is not None:
-                    first = readCard32(file)
-                    for glyphID in range(prev, first):
-                        gidArray[glyphID] = fd
+                    fd = readFD(file)
+                sentinel = readGlyph(file)
+                if (
+                    not nRanges
+                    or not numGlyphs <= sentinel <= maximum
+                    or sentinel <= prev
+                ):
+                    raise ValueError("Invalid FDSelect sentinel")
+                gidArray.extend([fd] * (sentinel - prev))
                 self.gidArray = gidArray
             else:
                 assert False, "unsupported FDSelect format: %s" % format
@@ -1869,7 +1869,10 @@ class FDSelectConverter(SimpleConverter):
     def _read(self, parent, value):
         file = parent.file
         file.seek(value)
-        fdSelect = FDSelect(file, parent.numGlyphs)
+        maximum = (
+            len(parent.cff2GetGlyphOrder()) if parent._isCFF2 else parent.numGlyphs
+        )
+        fdSelect = FDSelect(file, parent.numGlyphs, maxGlyphs=maximum)
         return fdSelect
 
     def write(self, parent, value):
@@ -1878,7 +1881,11 @@ class FDSelectConverter(SimpleConverter):
     # The FDSelect glyph data is written out to XML in the charstring keys,
     # so we write out only the format selector
     def xmlWrite(self, xmlWriter, name, value):
-        xmlWriter.simpletag(name, [("format", value.format)])
+        attrs = [("format", value.format)]
+        if len(value.gidArray) > getattr(value, "_numCharStrings", len(value.gidArray)):
+            # VARC-only glyphs have no CharString on which to store their FD.
+            attrs.append(("gidArray", " ".join(str(fd) for fd in value.gidArray)))
+        xmlWriter.simpletag(name, attrs)
         xmlWriter.newline()
 
     def xmlRead(self, name, attrs, content, parent):
@@ -1886,6 +1893,8 @@ class FDSelectConverter(SimpleConverter):
         file = None
         numGlyphs = None
         fdSelect = FDSelect(file, numGlyphs, fmt)
+        if "gidArray" in attrs:
+            fdSelect.gidArray = [int(fd) for fd in attrs["gidArray"].split()]
         return fdSelect
 
 
@@ -2267,7 +2276,7 @@ class DictCompiler(object):
                 data.append(encodeNumber(num))
         return bytesjoin(data)
 
-    def arg_delta_blend(self, value):
+    def arg_delta_blend(self, value, prevVal=0, stackDepth=0):
         """A delta list with blend lists has to be *all* blend lists.
 
         The value is a list is arranged as follows::
@@ -2298,26 +2307,29 @@ class DictCompiler(object):
         """
         numMasters = len(value[0])
         numBlends = len(value)
-        numStack = (numBlends * numMasters) + 1
+        numStack = stackDepth + (numBlends * numMasters) + 1
         if numStack > self.maxBlendStack:
             # Figure out the max number of value we can blend
             # and divide this list up into chunks of that size.
 
-            numBlendValues = int((self.maxBlendStack - 1) / numMasters)
             out = []
             while True:
-                numVal = min(len(value), numBlendValues)
-                if numVal == 0:
+                if not value:
                     break
-                valList = value[0:numVal]
-                out1 = self.arg_delta_blend(valList)
+                numBlendValues = (self.maxBlendStack - stackDepth - 1) // numMasters
+                if numBlendValues <= 0:
+                    raise ValueError("CFF2 blend does not fit the operand stack")
+                numVal = min(len(value), numBlendValues)
+                valList = value[:numVal]
+                out1 = self.arg_delta_blend(valList, prevVal, stackDepth)
                 out.extend(out1)
+                prevVal = valList[-1][0]
+                stackDepth += numVal
                 value = value[numVal:]
         else:
             firstList = [0] * numBlends
             deltaList = [None] * numBlends
             i = 0
-            prevVal = 0
             while i < numBlends:
                 # For PrivateDict BlueValues, the default font
                 # values are absolute, not relative.
@@ -2383,6 +2395,15 @@ class TopDictCompiler(DictCompiler):
                 charStrings = self.dictObj.CharStrings
                 for name in self.dictObj.charset:
                     fdSelect.append(charStrings[name].fdSelectIndex)
+            if isCFF2 and len(fdSelect) > len(self.dictObj.CharStrings):
+                # Format 0 has exactly one entry per CharString; only range
+                # formats can preserve FDs for a tail of VARC-only glyphs.
+                if fdSelect.format not in (3, 4):
+                    fdSelect.format = (
+                        4
+                        if len(fdSelect) > 0xFFFF or max(fdSelect.gidArray) > 0xFF
+                        else 3
+                    )
             fdSelectComp = FDSelectCompiler(fdSelect, self)
             children.append(fdSelectComp)
         if hasattr(self.dictObj, "CharStrings"):
@@ -2613,12 +2634,18 @@ class TopDict(BaseDict):
         self.file.seek(offset)
         if self._isCFF2:
             self.numGlyphs = readCard32(self.file)
+            if self.numGlyphs > len(self.charset):
+                raise ValueError("CFF2 CharStrings count exceeds the font glyph count")
+            # The INDEX can omit a tail of glyphs supplied entirely by VARC.
+            self.charset = self.charset[: self.numGlyphs]
         else:
             self.numGlyphs = readCard16(self.file)
 
     def toXML(self, xmlWriter):
         if hasattr(self, "CharStrings"):
             self.decompileAllCharStrings()
+            if hasattr(self, "FDSelect"):
+                self.FDSelect._numCharStrings = len(self.CharStrings)
         if hasattr(self, "ROS"):
             self.skipNames = ["Encoding"]
         if not hasattr(self, "ROS") or not hasattr(self, "CharStrings"):

@@ -213,11 +213,14 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
         hMetrics = varfont["hmtx"].metrics
         vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
         # get list of glyph names in gvar sorted by component depth
+        maxpValuesCache = {}
         glyphnames = sorted(
             gvar.variations.keys(),
             key=lambda name: (
                 (
-                    glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+                    glyf[name]
+                    .getCompositeMaxpValues(glyf, maxpValuesCache=maxpValuesCache)
+                    .maxComponentDepth
                     if glyf[name].isComposite()
                     else 0
                 ),
@@ -313,6 +316,8 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
                 else []
             )
             for condition in conditions:
+                if condition is None:
+                    continue
                 if condition.Format == 1:
                     axisIdx = condition.AxisIndex
                     axisTag = fvar.axes[axisIdx].axisTag

@@ -29,6 +29,15 @@ class RecordingPenTest(object):
         pen.addComponent("a", (2, 0, 0, 3, -10, 5))
         assert pen.value == [("addComponent", ("a", (2, 0, 0, 3, -10, 5)))]
 
+    def test_replay_var_component_kwargs(self):
+        pen = RecordingPen()
+        pen.addVarComponent("a", None, {"wght": 0.5}, resetUnspecifiedAxes=True)
+
+        replayed = RecordingPen()
+        pen.replay(replayed)
+
+        assert replayed.value == pen.value
+
 
 class DecomposingRecordingPenTest(object):
     def test_addComponent_decomposed(self):

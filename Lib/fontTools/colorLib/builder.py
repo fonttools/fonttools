@@ -546,13 +546,14 @@ class LayerListBuilder:
             )
         ] = self._beforeBuildPaintColrLayers
         # When a glyphMap is available, sanity check that glyphs referenced by
-        # PaintGlyph and PaintColrGlyph actually exist, so a missing glyph raises
-        # a legible error here instead of failing obscurely later (e.g. a
-        # struct.error at compile time).
+        # PaintGlyph, PaintGlyph2 and PaintColrGlyph actually exist, so a
+        # missing glyph raises a legible error here instead of failing
+        # obscurely later (e.g. a struct.error at compile time).
         # https://github.com/fonttools/fonttools/issues/2629
         if glyphMap is not None:
             for paintFormat in (
                 ot.PaintFormat.PaintGlyph,
+                ot.PaintFormat.PaintGlyph2,
                 ot.PaintFormat.PaintColrGlyph,
             ):
                 callbacks[(BuildCallback.AFTER_BUILD, ot.Paint, paintFormat)] = (
@@ -566,6 +567,11 @@ class LayerListBuilder:
             raise ColorLibError(
                 f"{paintName}: glyph not found in glyphMap: {paint.Glyph!r}"
             )
+        if (
+            paint.Format == ot.PaintFormat.PaintGlyph
+            and self.glyphMap[paint.Glyph] > 0xFFFF
+        ):
+            paint.Format = ot.PaintFormat.PaintGlyph2
         return paint
 
     # COLR layers is unusual in that it modifies shared state

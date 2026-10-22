@@ -63,6 +63,10 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
     # Note: Keep in sync with table__v_h_e_a
 
     dependencies = ["hmtx", "glyf", "CFF ", "CFF2"]
+    tableFormat = hheaFormat
+    glyphTableTag = "glyf"
+    metricsTableTag = "hmtx"
+    outlineTags = ("glyf", "CFF ", "CFF2")
 
     # OpenType spec renamed these, add aliases for compatibility
     @property
@@ -82,28 +86,37 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
         self.descent = value
 
     def decompile(self, data, ttFont):
-        sstruct.unpack(hheaFormat, data, self)
+        sstruct.unpack(self.tableFormat, data, self)
 
     def compile(self, ttFont):
         if ttFont.recalcBBoxes and (
-            ttFont.isLoaded("glyf")
-            or ttFont.isLoaded("CFF ")
-            or ttFont.isLoaded("CFF2")
+            any(ttFont.isLoaded(tag) for tag in self.outlineTags)
         ):
             self.recalc(ttFont)
         self.tableVersion = fi2ve(self.tableVersion)
-        return sstruct.pack(hheaFormat, self)
+        return sstruct.pack(self.tableFormat, self)
 
     def recalc(self, ttFont):
-        if "hmtx" not in ttFont:
+        if self.metricsTableTag not in ttFont:
             return
 
-        hmtxTable = ttFont["hmtx"]
+        hmtxTable = ttFont[self.metricsTableTag]
         self.advanceWidthMax = max(adv for adv, _ in hmtxTable.metrics.values())
 
         boundsWidthDict = {}
-        if "glyf" in ttFont:
-            glyfTable = ttFont["glyf"]
+        if "VARC" in ttFont:
+            from fontTools.pens.boundsPen import BoundsPen
+
+            glyphSet = ttFont.getGlyphSet()
+            for name in ttFont.getGlyphOrder():
+                pen = BoundsPen(glyphSet)
+                glyphSet[name].draw(pen)
+                if pen.bounds is not None:
+                    boundsWidthDict[name] = int(
+                        math.ceil(pen.bounds[2]) - math.floor(pen.bounds[0])
+                    )
+        elif self.glyphTableTag in ttFont:
+            glyfTable = ttFont[self.glyphTableTag]
             for name in ttFont.getGlyphOrder():
                 g = glyfTable[name]
                 if g.numberOfContours == 0:
@@ -148,7 +161,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
             self.xMaxExtent = 0
 
     def toXML(self, writer, ttFont):
-        formatstring, names, fixes = sstruct.getformat(hheaFormat)
+        formatstring, names, fixes = sstruct.getformat(self.tableFormat)
         for name in names:
             value = getattr(self, name)
             if name == "tableVersion":
