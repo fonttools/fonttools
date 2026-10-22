@@ -75,20 +75,16 @@ class TTGlyphSetTest(object):
             getattr(glyphset[".notdef"], draw)(recording)
             assert len(recording.value) == 1
             operator, operands = recording.value[0][:2]
+            kwargs = recording.value[0][2] if len(recording.value[0]) == 3 else {}
             assert operator == "addVarComponent"
             name, transform, location = operands
-            expected_location = {"wdth": 0.25}
-            if reset:
-                expected_location = {
-                    **glyphset.defaultLocationNormalized,
-                    **initial,
-                    **expected_location,
-                }
-            assert location == expected_location
+            assert location == {"wdth": 0.25}
+            assert kwargs == ({"resetUnspecifiedAxes": True} if reset else {})
 
             actual = decomposing_pen_type(glyphset)
-            with glyphset.glyphSet.pushLocation(location, False):
-                with glyphset.pushLocation(location, False):
+            reset = kwargs.get("resetUnspecifiedAxes", False)
+            with glyphset.glyphSet.pushLocation(location, reset):
+                with glyphset.pushLocation(location, reset):
                     getattr(glyphset[name], draw)(
                         transform_pen_type(actual, transform.toTransform())
                     )
