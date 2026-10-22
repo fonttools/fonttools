@@ -1502,8 +1502,18 @@ class DictDecompiler(object):
         valueList = self.popall()
         out = []
         if valueList and isinstance(valueList[0], list):
-            # arg_blendList() has already converted these to absolute values.
-            out = valueList
+            # arg_blendList() has already converted blended groups (and any
+            # constant prefix) to absolute values. Promote any trailing
+            # unblended values as well.
+            numDeltas = len(valueList[0]) - 1
+            prevVal = 0
+            for v in valueList:
+                if isinstance(v, list):
+                    prevVal = v[0]
+                    out.append(v)
+                else:
+                    prevVal += v
+                    out.append([prevVal] + [0] * numDeltas)
         else:
             current = 0
             for v in valueList:

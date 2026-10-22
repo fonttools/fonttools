@@ -56,6 +56,20 @@ def test_private_dict_blend_preserves_constant_prefix():
     assert private.BlueValues == [[10, 0], [15, 2]]
 
 
+def test_private_dict_blend_preserves_constant_suffix():
+    from fontTools.cffLib import encodeNumber
+
+    prefix = b"".join(encodeNumber(n) for n in [10, 1, 1]) + bytes([23])
+    for zero_blend in [False, True]:
+        private = _blend_private_dict(1)
+        data = prefix + encodeNumber(5)
+        if zero_blend:
+            data += encodeNumber(0) + bytes([23])
+        data += bytes([6])
+        private.decompile(data)
+        assert private.BlueValues == [[10, 1], [15, 0]]
+
+
 def test_private_dict_unencodable_blend_rejected():
     import pytest
 
