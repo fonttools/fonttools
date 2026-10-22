@@ -88,6 +88,16 @@ class ScalerVisitor(TTVisitor):
         (otTables.CaretValue, ("Coordinate")),  # GDEF
         (otTables.BaseCoord, ("Coordinate")),  # BASE
         (otTables.MathValueRecord, ("Value")),  # MATH
+        (
+            otTables.MathConstants,
+            ("DelimitedSubFormulaMinHeight", "DisplayOperatorMinHeight"),
+        ),  # MATH
+        (otTables.MathVariants, ("MinConnectorOverlap")),  # MATH
+        (otTables.MathGlyphVariantRecord, ("AdvanceMeasurement")),  # MATH
+        (
+            otTables.GlyphPartRecord,
+            ("StartConnectorLength", "EndConnectorLength", "FullAdvance"),
+        ),  # MATH
         (otTables.ClipBox, ("xMin", "yMin", "xMax", "yMax")),  # COLR
     )
 )
@@ -293,7 +303,9 @@ def visit(visitor, obj, attr, cff):
             privates.add(c.private)
 
             commands = cffSpecializer.programToCommands(
-                c.program, getNumRegions=getNumRegions
+                c.program,
+                getNumRegions=getNumRegions,
+                vsIndex=getattr(c.private, "vsindex", 0),
             )
             for op, args in commands:
                 if op == "vsindex":
@@ -317,8 +329,9 @@ def visit(visitor, obj, attr, cff):
             else:
                 setattr(topDict, attr, visitor.scale(value))
 
-        for i in range(6):
-            topDict.FontMatrix[i] /= visitor.scaleFactor
+        # Assign a new list: a Top DICT without an explicit FontMatrix returns the
+        # shared class-level default, which must not be modified in place.
+        topDict.FontMatrix = [v / visitor.scaleFactor for v in topDict.FontMatrix]
 
         for private in privates:
             for attr in (

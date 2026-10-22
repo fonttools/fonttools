@@ -1,7 +1,18 @@
-from fontTools.designspaceLib import DesignSpaceDocument
+from fontTools.designspaceLib import (
+    AxisDescriptor,
+    DesignSpaceDocument,
+    DiscreteAxisDescriptor,
+    SourceDescriptor,
+)
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.beyond64k import upper_tables
+from fontTools.ufoLib import UFOWriter, UFOLibError
 from fontTools.varLib.interpolatable import main as interpolatable_main
+from types import SimpleNamespace
+from fontTools.varLib.interpolatableHelpers import find_parents_and_order
+from contextlib import redirect_stdout
+from io import StringIO
+import json
 import os
 import shutil
 import sys
@@ -138,6 +149,21 @@ class InterpolatableTest(unittest.TestCase):
         ttx_dir = self.get_test_input("master_ufo")
         ufo_paths = self.get_file_list(ttx_dir, ".ufo", "TestFamily2-")
         self.assertIsNone(interpolatable_main(ufo_paths))
+
+    def test_interpolatable_cff2_json(self):
+        pytest.importorskip("scipy.sparse.csgraph")
+        ttx_path = self.get_test_input(
+            "variable_ttx_interpolatable_cff2", "interpolatable-test.ttx"
+        )
+        self.temp_dir()
+        _, otf_path = self.compile_font(ttx_path, ".otf", self.tempdir)
+        output = StringIO()
+        with redirect_stdout(output):
+            problems = interpolatable_main(["--json", otf_path])
+
+        self.assertEqual(json.loads(output.getvalue()), problems)
+        self.assertEqual(problems["uni0408"][0]["master_1_idx"], 2)
+        self.assertEqual(problems["uni0408"][0]["master_2_idx"], 3)
 
     def test_designspace(self):
         designspace_path = self.get_test_input("InterpolateLayout.designspace")
@@ -356,6 +382,175 @@ class InterpolatableTest(unittest.TestCase):
         )
         # Just make sure the code runs.
         interpolatable_main((input_path,))
+
+
+@pytest.fixture
+def layered_designspace(tmp_path):
+    def draw_contours(count):
+        def draw(pen):
+            for i in range(count):
+                y = i * 300
+                pen.beginPath()
+                for point in [(0, y), (200, y), (200, y + 200), (0, y + 200)]:
+                    pen.addPoint(point, segmentType="line")
+                pen.endPath()
+
+        return draw
+
+    paths = [tmp_path / "Regular.ufo", tmp_path / "Bold.ufo"]
+    for path in paths:
+        with UFOWriter(path, formatVersion=3) as writer:
+            writer.writeInfo(SimpleNamespace(unitsPerEm=1000))
+            layers = [(None, 1, ["A", "B"])]
+            if path == paths[0]:
+                layers.append(("intermediate", 2, ["A"]))
+            for layer, contours, glyphs in layers:
+                glyphset = writer.getGlyphSet(
+                    layerName=layer, defaultLayer=layer is None
+                )
+                for glyph in glyphs:
+                    glyphset.writeGlyph(
+                        glyph, SimpleNamespace(width=500), draw_contours(contours)
+                    )
+                glyphset.writeContents()
+            writer.writeLayerContents()
+
+    document = DesignSpaceDocument()
+    axis = AxisDescriptor()
+    axis.name, axis.tag = "Weight", "wght"
+    axis.minimum, axis.default, axis.maximum = 100, 100, 900
+    document.addAxis(axis)
+    for path, location, layer in [
+        (paths[0], 100, None),
+        (paths[0], 400, "intermediate"),
+        (paths[1], 900, None),
+    ]:
+        source = SourceDescriptor()
+        source.path = str(path)
+        source.location = {"Weight": location}
+        source.layerName = layer
+        document.addSource(source)
+    document.write(tmp_path / "Layered.designspace")
+    return document
+
+
+@pytest.mark.parametrize("axes", ["continuous", "decreasing", "discrete"])
+def test_designspace_named_layer(layered_designspace, axes):
+    if axes == "decreasing":
+        layered_designspace.axes[0].map = [(100, 900), (900, 100)]
+        for source in layered_designspace.sources:
+            source.location["Weight"] = 1000 - source.location["Weight"]
+    elif axes == "discrete":
+        axis = DiscreteAxisDescriptor()
+        axis.name, axis.tag, axis.values, axis.default = "Style", "STYL", [0, 1], 0
+        layered_designspace.addAxis(axis)
+        for i, source in enumerate(layered_designspace.sources):
+            source.location["Style"] = int(i == 2)
+        # Each discrete subspace needs its own default master.
+        source = SourceDescriptor()
+        source.path = layered_designspace.sources[0].path
+        source.location = {"Weight": 100, "Style": 1}
+        layered_designspace.addSource(source)
+    layered_designspace.write(layered_designspace.path)
+    problems = interpolatable_main(
+        ["--quiet", "--glyphs", "A", layered_designspace.path]
+    )
+    assert problems["A"][0] == {
+        "type": "path_count",
+        "master_1": "Regular",
+        "master_2": "Regular (intermediate)",
+        "master_1_idx": 0,
+        "master_2_idx": 1,
+        "value_1": 1,
+        "value_2": 2,
+    }
+
+
+@pytest.mark.parametrize("layer", [None, "public.default"])
+def test_designspace_default_layer(layered_designspace, layer):
+    layered_designspace.sources[1].layerName = layer
+    layered_designspace.write(layered_designspace.path)
+    assert interpolatable_main(["--quiet", layered_designspace.path]) is None
+
+
+def test_designspace_sparse_layer(layered_designspace):
+    args = ["--quiet", "--glyphs", "B", layered_designspace.path]
+    assert interpolatable_main(args)["B"] == [
+        {"type": "missing", "master": "Regular (intermediate)", "master_idx": 1}
+    ]
+    assert interpolatable_main(["--ignore-missing"] + args) is None
+
+
+def test_designspace_missing_layer(layered_designspace):
+    layered_designspace.sources[1].layerName = "nonexistent"
+    layered_designspace.write(layered_designspace.path)
+    with pytest.raises(UFOLibError, match="nonexistent"):
+        interpolatable_main(["--quiet", layered_designspace.path])
+
+
+def test_designspace_layer_name_filter(layered_designspace):
+    assert (
+        interpolatable_main(
+            ["--quiet", "--name", "Regular", "--name", "Bold", layered_designspace.path]
+        )
+        is None
+    )
+    problems = interpolatable_main(
+        [
+            "--quiet",
+            "--glyphs",
+            "A",
+            "--name",
+            "Regular",
+            "--name",
+            "Regular (intermediate)",
+            layered_designspace.path,
+        ]
+    )
+    assert problems["A"][0]["type"] == "path_count"
+    assert problems["A"][0]["master_2"] == "Regular (intermediate)"
+
+
+@pytest.mark.parametrize(
+    "locations, discrete_axes, parents, order",
+    [
+        ([{}, {"wght": 0.5}, {"wght": 1}], set(), [None, 0, 1], [0, 1, 2]),
+        ([{"wght": 1}, {}, {"wght": 0.5}], set(), [2, None, 1], [1, 2, 0]),
+        (
+            [{}, {"wght": 1}, {"wdth": 2}, {"wght": 1, "wdth": 2}],
+            set(),
+            [None, 0, 0, 2],
+            [0, 1, 2, 3],
+        ),
+        (
+            [
+                {"ital": 0},
+                {"ital": 0, "wght": 0.5},
+                {"ital": 1},
+                {"ital": 1, "wght": 0.5},
+            ],
+            {"ital"},
+            [None, 0, None, 2],
+            [0, 2, 1, 3],
+        ),
+    ],
+)
+def test_find_parents_and_order_scipy(locations, discrete_axes, parents, order):
+    pytest.importorskip("scipy.sparse.csgraph")
+    actual_parents, actual_order = find_parents_and_order(
+        [None] * len(locations), locations, discrete_axes=discrete_axes
+    )
+    assert actual_parents == parents
+    assert actual_order == order
+    assert all(type(i) is int for i in actual_order)
+    assert all(i is None or type(i) is int for i in actual_parents)
+    assert json.loads(json.dumps([actual_parents, actual_order])) == [parents, order]
+
+
+def test_find_parents_and_order_without_locations():
+    parents, order = find_parents_and_order([None] * 3, None)
+    assert (parents, order) == ([None, 0, 1], [0, 1, 2])
+    assert json.loads(json.dumps([parents, order])) == [[None, 0, 1], [0, 1, 2]]
 
 
 if __name__ == "__main__":

@@ -264,10 +264,11 @@ Acknowledgments
 In alphabetical order:
 
 aschmitz, Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
-Jelle Bosma, Sascha Brawer, Tom Byrer, Antonio Cavedoni, Frédéric Coiffier,
+Jelle Bosma, Sascha Brawer, Tom Byrer, CAOShurong, Antonio Cavedoni, ChipLab, Frédéric Coiffier,
 Vincent Connare, David Corbett, Simon Cozens, Dave Crossland,
 Zihan Dai, Simon Daniels,
-Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes Famira, Sam Fishman,
+Peter Dekkers, Behdad Esfahbod, Behnam Esfahbod, Hannes Famira,
+Luis Figueroa, Sam Fishman,
 Matt Fontaine, Takaaki Fuji, Rob Hagemans, Yannis Haralambous, Greg Hitchcock,
 Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack Jansen,
 Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming,
@@ -275,7 +276,7 @@ Jushuanghui Li, Liang Hai, Peter Lofting, Cosimo Lupo, Olli Meier, Masaya Nakamu
 Dave Opstad, Laurence Penney,
 Roozbeh Pournader, Garret Rieger, Read Roberts, Colin Rofls, Guido van Rossum,
 Just van Rossum, SAY-5, Andreas Seidel, Georg Seifert, Chris Simpkins, Miguel Sousa,
-Adam Twardoch, Adrien Tétar, Vitaly Volkov, Paul Wise.
+spicysharkco, Adam Twardoch, Adrien Tétar, Vitaly Volkov, Paul Wise, Xie Huanyi.
 
 Copyrights
 ~~~~~~~~~~

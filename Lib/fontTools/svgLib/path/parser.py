@@ -137,6 +137,18 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
 
     have_arcTo = hasattr(pen, "arcTo")
 
+    def pop_coord():
+        # A drawto command consumes a fixed number of coordinate tokens. A
+        # malformed path (a command with too few numbers) can run the token
+        # list dry; turn the resulting IndexError into a clear ValueError, like
+        # the parser's other errors, instead of a bare "pop from empty list".
+        try:
+            return elements.pop()
+        except IndexError:
+            raise ValueError(
+                "Not enough coordinates for command %r in path: %r" % (command, pathdef)
+            ) from None
+
     while elements:
         if elements[-1] in COMMANDS:
             # New command.
@@ -164,8 +176,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
 
         if command == "M":
             # Moveto command.
-            x = elements.pop()
-            y = elements.pop()
+            x = pop_coord()
+            y = pop_coord()
             pos = float(x) + float(y) * 1j
             if absolute:
                 current_pos = pos
@@ -205,8 +217,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             command = None  # You can't have implicit commands after closing.
 
         elif command == "L":
-            x = elements.pop()
-            y = elements.pop()
+            x = pop_coord()
+            y = pop_coord()
             pos = float(x) + float(y) * 1j
             if not absolute:
                 pos += current_pos
@@ -214,7 +226,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             current_pos = pos
 
         elif command == "H":
-            x = elements.pop()
+            x = pop_coord()
             pos = float(x) + current_pos.imag * 1j
             if not absolute:
                 pos += current_pos.real
@@ -222,7 +234,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             current_pos = pos
 
         elif command == "V":
-            y = elements.pop()
+            y = pop_coord()
             pos = current_pos.real + float(y) * 1j
             if not absolute:
                 pos += current_pos.imag * 1j
@@ -230,9 +242,9 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             current_pos = pos
 
         elif command == "C":
-            control1 = float(elements.pop()) + float(elements.pop()) * 1j
-            control2 = float(elements.pop()) + float(elements.pop()) * 1j
-            end = float(elements.pop()) + float(elements.pop()) * 1j
+            control1 = float(pop_coord()) + float(pop_coord()) * 1j
+            control2 = float(pop_coord()) + float(pop_coord()) * 1j
+            end = float(pop_coord()) + float(pop_coord()) * 1j
 
             if not absolute:
                 control1 += current_pos
@@ -263,8 +275,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
                 # to the current point.
                 control1 = current_pos + current_pos - last_control
 
-            control2 = float(elements.pop()) + float(elements.pop()) * 1j
-            end = float(elements.pop()) + float(elements.pop()) * 1j
+            control2 = float(pop_coord()) + float(pop_coord()) * 1j
+            end = float(pop_coord()) + float(pop_coord()) * 1j
 
             if not absolute:
                 control2 += current_pos
@@ -279,8 +291,8 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
             last_control = control2
 
         elif command == "Q":
-            control = float(elements.pop()) + float(elements.pop()) * 1j
-            end = float(elements.pop()) + float(elements.pop()) * 1j
+            control = float(pop_coord()) + float(pop_coord()) * 1j
+            end = float(pop_coord()) + float(pop_coord()) * 1j
 
             if not absolute:
                 control += current_pos
@@ -306,7 +318,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0), arc_class=EllipticalArc):
                 # to the current point.
                 control = current_pos + current_pos - last_control
 
-            end = float(elements.pop()) + float(elements.pop()) * 1j
+            end = float(pop_coord()) + float(pop_coord()) * 1j
 
             if not absolute:
                 end += current_pos

@@ -134,8 +134,7 @@ def _instantiateFeatureVariationRecord(
             applies = False
             newConditions.append(condition)
 
-    # A satisfied condition set can become universal after pinning all of
-    # its axes. It still terminates first-match processing even if dropped.
+    # Satisfied pinned conditions can leave a universal first-match record.
     universal = newConditions is not None and not newConditions
     if newConditions is not None and (shouldKeep or universal):
         record.ConditionSet.ConditionTable = newConditions

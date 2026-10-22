@@ -13,6 +13,8 @@ and specific forms of the operation.
 
 """
 
+import functools
+
 from fontTools.cffLib import maxStackLimit
 
 
@@ -36,7 +38,7 @@ def programToString(program):
     return " ".join(str(x) for x in program)
 
 
-def programToCommands(program, getNumRegions=None):
+def programToCommands(program, getNumRegions=None, vsIndex=0):
     """Takes a T2CharString program list and returns list of commands.
     Each command is a two-tuple of commandname,arg-list.  The commandname might
     be empty string if no commandname shall be emitted (used for glyph width,
@@ -45,6 +47,8 @@ def programToCommands(program, getNumRegions=None):
     'getNumRegions' may be None, or a callable object. It must return the
     number of regions. 'getNumRegions' takes a single argument, vsindex. It
     returns the numRegions for the vsindex.
+    'vsIndex' is the vsindex in effect until the program sets one: that of
+    the Private DICT the charstring uses.
     The Charstring may or may not start with a width value. If the first
     non-blend operator has an odd number of arguments, then the first argument is
     a width, and is popped off. This is complicated with blend operators, as
@@ -59,7 +63,6 @@ def programToCommands(program, getNumRegions=None):
     """
 
     seenWidthOp = False
-    vsIndex = 0
     lenBlendStack = 0
     lastBlendIndex = 0
     commands = []
@@ -81,7 +84,7 @@ def programToCommands(program, getNumRegions=None):
             # replace first blend op by a list of the blend ops.
             stack[-numBlendArgs:] = [stack[-numBlendArgs:]]
             lenStack = len(stack)
-            lenBlendStack += numBlends + lenStack - 1
+            lenBlendStack += numBlends + lenStack - 1 - lastBlendIndex
             lastBlendIndex = lenStack
             # if a blend op exists, this is or will be a CFF2 charstring.
             continue
@@ -162,6 +165,14 @@ def _everyN(el, n):
 
 
 class _GeneralizerDecombinerCommandsMap(object):
+    def __init__(self, getScalarRanges=None, vsIndex=0):
+        self.getScalarRanges = getScalarRanges
+        self.vsIndex = vsIndex
+
+    def vsindex(self, args):
+        self.vsIndex = args[0]
+        yield ("vsindex", args)
+
     @staticmethod
     def rmoveto(args):
         if len(args) != 2:
@@ -310,6 +321,53 @@ class _GeneralizerDecombinerCommandsMap(object):
             yield ("rlineto", args)
         yield ("rrcurveto", last_args)
 
+    @staticmethod
+    def hflex(args):
+        dx1, dx2, dy2, dx3, dx4, dx5, dx6 = args
+        yield (
+            "flex",
+            [
+                dx1,
+                0,
+                dx2,
+                dy2,
+                dx3,
+                0,
+                dx4,
+                0,
+                dx5,
+                _negateBlendArg(dy2),
+                dx6,
+                0,
+                50,
+            ],
+        )
+
+    @staticmethod
+    def hflex1(args):
+        dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6 = args
+        dy6 = _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))
+        yield ("flex", [dx1, dy1, dx2, dy2, dx3, 0, dx4, 0, dx5, dy5, dx6, dy6, 50])
+
+    def flex1(self, args):
+        if len(args) != 11:
+            raise ValueError(args)
+        scalarRanges = (
+            self.getScalarRanges(self.vsIndex) if self.getScalarRanges else None
+        )
+        dx = _sumBlendArgs(args[0:10:2])
+        dy = _sumBlendArgs(args[1:10:2])
+        horizontal = _isFlex1Horizontal(dx, dy, scalarRanges)
+        if horizontal is None:
+            # A flex1 whose direction changes cannot be represented as flex.
+            yield ("flex1", args)
+        else:
+            if horizontal:
+                last = [args[10], _negateBlendArg(dy)]
+            else:
+                last = [_negateBlendArg(dx), args[10]]
+            yield ("flex", args[0:10] + last + [50])
+
 
 def _convertBlendOpToArgs(blendList):
     # args is list of blend op args. Since we are supporting
@@ -356,9 +414,9 @@ def _convertBlendOpToArgs(blendList):
     return blend_args
 
 
-def generalizeCommands(commands, ignoreErrors=False):
+def generalizeCommands(commands, ignoreErrors=False, getScalarRanges=None, vsIndex=0):
     result = []
-    mapping = _GeneralizerDecombinerCommandsMap
+    mapping = _GeneralizerDecombinerCommandsMap(getScalarRanges, vsIndex)
     for op, args in commands:
         # First, generalize any blend args in the arg list.
         if any([isinstance(arg, list) for arg in args]):
@@ -397,9 +455,13 @@ def generalizeCommands(commands, ignoreErrors=False):
     return result
 
 
-def generalizeProgram(program, getNumRegions=None, **kwargs):
+def generalizeProgram(program, getNumRegions=None, vsIndex=0, **kwargs):
     return commandsToProgram(
-        generalizeCommands(programToCommands(program, getNumRegions), **kwargs)
+        generalizeCommands(
+            programToCommands(program, getNumRegions, vsIndex=vsIndex),
+            vsIndex=vsIndex,
+            **kwargs,
+        )
     )
 
 
@@ -521,6 +583,95 @@ def _addArgs(a, b):
     return a + b
 
 
+def blendArgValues(arg, numValues):
+    """Return a generalized argument's default and deltas, padded with zeros.
+
+    ``arg`` is a number or a single-value blend list ``[default, *deltas, 1]``
+    as returned by :func:`generalizeCommands`. The result has ``numValues``
+    entries, including the default.
+    """
+    values = arg[:-1] if isinstance(arg, list) else [arg]
+    if any(isinstance(value, list) for value in values):
+        raise NotImplementedError("Nested blend lists not supported (yet)")
+    assert len(values) <= numValues
+    return values + [0] * (numValues - len(values))
+
+
+def numBlendArgValues(arg):
+    """Return the number of default and delta values in a generalized argument."""
+    return len(arg) - 1 if isinstance(arg, list) else 1
+
+
+def _blendArgsEqual(arg1, arg2):
+    numValues = max(numBlendArgValues(arg1), numBlendArgValues(arg2))
+    return blendArgValues(arg1, numValues) == blendArgValues(arg2, numValues)
+
+
+def _negateBlendArg(arg):
+    if isinstance(arg, list):
+        return [-v for v in arg[:-1]] + arg[-1:]
+    return -arg
+
+
+def _sumBlendArgs(args):
+    return functools.reduce(_addArgs, args)
+
+
+def _isFlex1Horizontal(dx, dy, scalarRanges=None):
+    """Whether a flex1 ends horizontally throughout the scalar ranges.
+
+    ``scalarRanges`` contains a ``(minimum, maximum)`` pair per variation
+    region and defaults to ``(0, 1)`` for each region. Return ``None`` when
+    the direction may change.
+    """
+
+    def bounds(arg):
+        default, *deltas = blendArgValues(arg, numBlendArgValues(arg))
+        ranges = scalarRanges or [(0, 1)] * len(deltas)
+        lo = hi = default
+        for delta, (minScalar, maxScalar) in zip(deltas, ranges):
+            lo += min(minScalar * delta, maxScalar * delta)
+            hi += max(minScalar * delta, maxScalar * delta)
+        return lo, hi
+
+    def minAbs(lo, hi):
+        return 0 if lo <= 0 <= hi else min(abs(lo), abs(hi))
+
+    def maxAbs(lo, hi):
+        return max(abs(lo), abs(hi))
+
+    dxBounds, dyBounds = bounds(dx), bounds(dy)
+    if minAbs(*dxBounds) > maxAbs(*dyBounds):
+        return True
+    if maxAbs(*dxBounds) <= minAbs(*dyBounds):
+        return False
+    return None
+
+
+def _specializeFlex(args):
+    """Return the shortest flex operator and arguments for ``flex`` args."""
+    dx1, dy1, dx2, dy2, dx3, dy3, dx4, dy4, dx5, dy5, dx6, dy6, fd = args
+    if not _blendArgsEqual(fd, 50):
+        return "flex", args
+    if _blendArgsEqual(dy3, 0) and _blendArgsEqual(dy4, 0):
+        if (
+            _blendArgsEqual(dy1, 0)
+            and _blendArgsEqual(dy6, 0)
+            and _blendArgsEqual(dy5, _negateBlendArg(dy2))
+        ):
+            return "hflex", [dx1, dx2, dy2, dx3, dx4, dx5, dx6]
+        if _blendArgsEqual(dy6, _negateBlendArg(_sumBlendArgs([dy1, dy2, dy5]))):
+            return "hflex1", [dx1, dy1, dx2, dy2, dx3, dx4, dx5, dy5, dx6]
+    dx = _sumBlendArgs(args[0:10:2])
+    dy = _sumBlendArgs(args[1:10:2])
+    horizontal = _isFlex1Horizontal(dx, dy)
+    if horizontal and _blendArgsEqual(dy6, _negateBlendArg(dy)):
+        return "flex1", args[0:10] + [dx6]
+    if horizontal is False and _blendArgsEqual(dx6, _negateBlendArg(dx)):
+        return "flex1", args[0:10] + [dy6]
+    return "flex", args
+
+
 def _argsStackUse(args):
     stackLen = 0
     maxLen = 0
@@ -540,6 +691,8 @@ def specializeCommands(
     generalizeFirst=True,
     preserveTopology=False,
     maxstack=48,
+    getScalarRanges=None,
+    vsIndex=0,
 ):
     # We perform several rounds of optimizations.  They are carefully ordered and are:
     #
@@ -551,7 +704,8 @@ def specializeCommands(
     #
     # 1. Combine successive rmoveto operations.
     #
-    # 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
+    # 2. Specialize rmoveto/rlineto/rrcurveto into horizontal/vertical variants,
+    #    and flex into hflex/hflex1/flex1.
     #    We specialize into some, made-up, variants as well, which simplifies following
     #    passes.
     #
@@ -575,7 +729,12 @@ def specializeCommands(
 
     # 0. Generalize commands.
     if generalizeFirst:
-        commands = generalizeCommands(commands, ignoreErrors=ignoreErrors)
+        commands = generalizeCommands(
+            commands,
+            ignoreErrors=ignoreErrors,
+            getScalarRanges=getScalarRanges,
+            vsIndex=vsIndex,
+        )
     else:
         commands = list(commands)  # Make copy since we modify in-place later.
 
@@ -589,7 +748,8 @@ def specializeCommands(
             )
             del commands[i]
 
-    # 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
+    # 2. Specialize rmoveto/rlineto/rrcurveto into horizontal/vertical variants,
+    #    and flex into hflex/hflex1/flex1.
     #
     # We, in fact, specialize into more, made-up, variants that special-case when both
     # X and Y components are zero.  This simplifies the following optimization passes.
@@ -647,6 +807,10 @@ def specializeCommands(
             c1, args1 = _categorizeVector(args[:2])
             c2, args2 = _categorizeVector(args[-2:])
             commands[i] = c1 + c2 + "curveto", args1 + args[2:4] + args2
+            continue
+
+        if op == "flex":
+            commands[i] = _specializeFlex(args)
             continue
 
     # 3. Merge or delete redundant operations, to the extent requested.
@@ -836,9 +1000,13 @@ def specializeCommands(
     return commands
 
 
-def specializeProgram(program, getNumRegions=None, **kwargs):
+def specializeProgram(program, getNumRegions=None, vsIndex=0, **kwargs):
     return commandsToProgram(
-        specializeCommands(programToCommands(program, getNumRegions), **kwargs)
+        specializeCommands(
+            programToCommands(program, getNumRegions, vsIndex=vsIndex),
+            vsIndex=vsIndex,
+            **kwargs,
+        )
     )
 
 
@@ -914,7 +1082,10 @@ if __name__ == "__main__":
             charstring.decompile()
             getNumRegions = charstring.private.getNumRegions
             charstring.program = specializeProgram(
-                charstring.program, getNumRegions, maxstack=maxStackLimit
+                charstring.program,
+                getNumRegions,
+                vsIndex=getattr(charstring.private, "vsindex", 0),
+                maxstack=maxStackLimit,
             )
 
         if options.output_file is None:

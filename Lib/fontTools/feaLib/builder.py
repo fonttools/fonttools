@@ -501,7 +501,9 @@ class Builder(object):
         if "windescent" in self.os2_:
             table.usWinDescent = self.os2_["windescent"]
         if "vendor" in self.os2_:
-            table.achVendID = safeEval("'''" + self.os2_["vendor"] + "'''")
+            # A Tag is padded with trailing spaces, not NULs (see #3280)
+            vendor = safeEval("'''" + self.os2_["vendor"] + "'''")
+            table.achVendID = vendor.ljust(4)
         if "weightclass" in self.os2_:
             table.usWeightClass = self.os2_["weightclass"]
         if "widthclass" in self.os2_:
@@ -1692,6 +1694,15 @@ class Builder(object):
 
     def add_marks_(self, location, lookupBuilder, marks):
         """Helper for add_mark_{base,liga,mark}_pos."""
+        seenMarkClasses = set()
+        for _, markClass in marks:
+            if markClass.name in seenMarkClasses:
+                raise FeatureLibError(
+                    "Mark class @%s used more than once in the same anchor list"
+                    % markClass.name,
+                    location,
+                )
+            seenMarkClasses.add(markClass.name)
         for _, markClass in marks:
             for markClassDef in markClass.definitions:
                 for mark in markClassDef.glyphs.glyphSet():

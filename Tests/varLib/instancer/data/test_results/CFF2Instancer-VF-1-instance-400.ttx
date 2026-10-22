@@ -19,7 +19,7 @@
     <modified value="Tue May 14 20:02:30 2024"/>
     <xMin value="46"/>
     <yMin value="245"/>
-    <xMax value="302"/>
+    <xMax value="303"/>
     <yMax value="315"/>
     <macStyle value="00000000 00000000"/>
     <lowestRecPPEM value="3"/>
@@ -35,8 +35,8 @@
     <lineGap value="0"/>
     <advanceWidthMax value="1000"/>
     <minLeftSideBearing value="44"/>
-    <minRightSideBearing value="47"/>
-    <xMaxExtent value="300"/>
+    <minRightSideBearing value="46"/>
+    <xMaxExtent value="301"/>
     <caretSlopeRise value="1"/>
     <caretSlopeRun value="0"/>
     <caretOffset value="0"/>
@@ -205,7 +205,7 @@
         </CharString>
         <CharString name="hyphen" fdSelectIndex="1">
           46 245 rmoveto
-          256 70 -256 hlineto
+          257 70 -257 hlineto
         </CharString>
       </CharStrings>
     </CFFFont>

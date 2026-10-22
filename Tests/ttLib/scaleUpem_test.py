@@ -4,6 +4,7 @@ from fontTools.ttLib.scaleUpem import ScalerVisitor, scale_upem
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.scaleUpem import scale_upem
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.otlLib.builder import buildMathTable
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.varLib.multiVarStore import MultiVarStoreInstancer
 from copy import deepcopy
@@ -140,6 +141,90 @@ def test_scale_upem_preserves_condition_variations(wrapper_format, delta):
         ]
         assert (deltas[0] if deltas else 0) == (value[0] if value else 0)
         assert_scaled_outlines(expected, record_varc_outlines(font, loc))
+
+
+def _build_cff_font_without_font_matrix():
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.pens.t2CharStringPen import T2CharStringPen
+
+    fb = FontBuilder(1000, isTTF=False)
+    fb.setupGlyphOrder([".notdef", "A"])
+    fb.setupCharacterMap({0x41: "A"})
+    pen = T2CharStringPen(600, None)
+    pen.moveTo((100, 0))
+    pen.lineTo((500, 0))
+    pen.lineTo((300, 700))
+    pen.closePath()
+    charString = pen.getCharString()
+    fb.setupCFF("Test-Regular", {}, {".notdef": charString, "A": charString}, {})
+    fb.setupHorizontalMetrics({".notdef": (600, 100), "A": (600, 100)})
+    fb.setupHorizontalHeader(ascent=800, descent=-200)
+    fb.setupNameTable({"familyName": "Test", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    data = BytesIO()
+    fb.save(data)
+    return TTFont(BytesIO(data.getvalue()))
+
+
+def test_scale_upem_cff_default_font_matrix():
+    # https://github.com/fonttools/fonttools/issues/4251
+    from fontTools.cffLib import TopDict
+
+    default = list(TopDict.defaults["FontMatrix"])
+    font = _build_cff_font_without_font_matrix()
+    topDict = font["CFF "].cff.topDictIndex[0]
+    assert "FontMatrix" not in topDict.rawDict
+
+    try:
+        font = scale_and_roundtrip(font)
+        # The shared class-level default is left alone...
+        assert TopDict.defaults["FontMatrix"] == default
+    finally:
+        # ...and restored even if not, so a regression cannot leak into other tests.
+        TopDict.defaults["FontMatrix"][:] = default
+    # ...and the scaled matrix is written explicitly.
+    topDict = font["CFF "].cff.topDictIndex[0]
+    assert font["head"].unitsPerEm == 2000
+    assert "FontMatrix" in topDict.rawDict
+    assert topDict.FontMatrix == [0.0005, 0, 0, 0.0005, 0, 0]
+
+
+def test_scale_upem_math():
+    font = TTFont(ScaleUpemTest.get_path("I.ttf"))
+    notdef, glyph = font.getGlyphOrder()
+    buildMathTable(
+        font,
+        constants={
+            "ScriptPercentScaleDown": 80,
+            "ScriptScriptPercentScaleDown": 60,
+            "DelimitedSubFormulaMinHeight": 1500,
+            "DisplayOperatorMinHeight": 1300,
+            "RadicalDegreeBottomRaisePercent": 55,
+        },
+        minConnectorOverlap=50,
+        vertGlyphVariants={glyph: [(glyph, 1000), (notdef, 1400)]},
+        vertGlyphAssembly={glyph: ([(notdef, 1, 20, 30, 400)], 0)},
+    )
+
+    font = scale_and_roundtrip(font)
+
+    math = font["MATH"].table
+    # Percentages and flags are not design units: they must stay as they are.
+    assert math.MathConstants.ScriptPercentScaleDown == 80
+    assert math.MathConstants.ScriptScriptPercentScaleDown == 60
+    assert math.MathConstants.RadicalDegreeBottomRaisePercent == 55
+    assert math.MathConstants.DelimitedSubFormulaMinHeight == 3000
+    assert math.MathConstants.DisplayOperatorMinHeight == 2600
+    assert math.MathVariants.MinConnectorOverlap == 100
+    (construction,) = math.MathVariants.VertGlyphConstruction
+    variants = construction.MathGlyphVariantRecord
+    assert [v.AdvanceMeasurement for v in variants] == [2000, 2800]
+    (part,) = construction.GlyphAssembly.PartRecords
+    assert part.StartConnectorLength == 40
+    assert part.EndConnectorLength == 60
+    assert part.FullAdvance == 800
+    assert part.PartFlags == 1
 
 
 class ScaleUpemTest(unittest.TestCase):

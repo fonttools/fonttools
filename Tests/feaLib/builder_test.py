@@ -955,6 +955,10 @@ class BuilderTest(unittest.TestCase):
             "} STAT;",
         )
 
+    def test_OS2_vendor_padded_with_spaces(self):
+        font = self.build('table OS/2 { Vendor "AB"; } OS/2;')
+        self.assertEqual(font["OS/2"].achVendID, "AB  ")
+
     def test_STAT_design_axis_name(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -1209,6 +1213,51 @@ class BuilderTest(unittest.TestCase):
             "} mark;",
         )
 
+    def test_mark_base_pos_same_mark_class_twice(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Mark class @TOP used more than once",
+            self.build,
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mark {"
+            "    pos base a <anchor 91 -316> mark @TOP <anchor 91 -226> mark @TOP;"
+            "} mark;",
+        )
+
+    def test_mark_lig_pos_same_mark_class_twice(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Mark class @TOP used more than once",
+            self.build,
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mark {"
+            "    pos ligature f_i <anchor 281 -309> mark @TOP"
+            "        <anchor 281 -219> mark @TOP"
+            "        ligComponent <anchor NULL>;"
+            "} mark;",
+        )
+
+    def test_mark_mark_pos_same_mark_class_twice(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Mark class @TOP used more than once",
+            self.build,
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mkmk {"
+            "    pos mark grave <anchor 1 2> mark @TOP <anchor 3 4> mark @TOP;"
+            "} mkmk;",
+        )
+
+    def test_mark_lig_pos_same_mark_class_in_different_components(self):
+        font = self.build(
+            "markClass [acute] <anchor 350 0> @TOP;"
+            "feature mark {"
+            "    pos ligature f_i <anchor 100 500> mark @TOP"
+            "        ligComponent <anchor 300 500> mark @TOP;"
+            "} mark;"
+        )
+        assert "GPOS" in font
+
     def test_build_specific_tables(self):
         features = "feature liga {sub f i by f_i;} liga;"
         font = self.build(features)
@@ -1380,6 +1429,46 @@ class BuilderTest(unittest.TestCase):
 
         fvr = table.FeatureVariations.FeatureVariationRecord[0]
         assert fvr.FeatureTableSubstitution.SubstitutionCount == 2
+
+    def test_conditionset_multiple_features_sorted(self):
+        """Test that FeatureTableSubstitution records are sorted by FeatureIndex
+        when several `variation` blocks sharing a `conditionset` are not in
+        feature tag order."""
+
+        features = """
+            languagesystem DFLT dflt;
+
+            conditionset heavy {
+                wght 600 1000;
+            } heavy;
+
+            variation calt heavy { sub a by b; } calt;
+            variation rlig heavy { sub b by c; } rlig;
+            variation liga heavy { sub c by d; } liga;
+            variation ss01 heavy { sub d by e; } ss01;
+            variation ss02 heavy { sub e by f; } ss02;
+            variation ss03 heavy { sub f by g; } ss03;
+        """
+
+        font = makeTTFont()
+        font["name"] = newTable("name")
+        addFvar(font, [("wght", 0, 0, 1000, "Weight")], [])
+        del font["name"]
+        addOpenTypeFeaturesFromString(font, features)
+
+        table = font["GSUB"].table
+        assert [r.FeatureTag for r in table.FeatureList.FeatureRecord] == [
+            "calt",
+            "liga",
+            "rlig",
+            "ss01",
+            "ss02",
+            "ss03",
+        ]
+        assert table.FeatureVariations.FeatureVariationCount == 1
+        fts = table.FeatureVariations.FeatureVariationRecord[0].FeatureTableSubstitution
+        assert fts.SubstitutionCount == 6
+        assert [r.FeatureIndex for r in fts.SubstitutionRecord] == [0, 1, 2, 3, 4, 5]
 
     def test_condition_set_avar(self):
         """Test that the `avar` table is consulted when normalizing user-space

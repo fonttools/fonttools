@@ -1370,6 +1370,30 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(mc.glyphSet(), ("acute", "grave"))
         self.assertEqual((mc.anchor.x, mc.anchor.y), (350, 3))
 
+    def test_nameid_windows_unpaired_surrogate(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Name string is not valid utf_16_be",
+            self.parse,
+            r'table name { nameid 9 "Joachim \d800"; } name;',
+        )
+
+    def test_nameid_mac_unencodable_character(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Name string is not valid mac_roman",
+            self.parse,
+            'table name { nameid 9 1 "A\U0001f600"; } name;',
+        )
+
+    def test_stat_name_unpaired_surrogate(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Name string is not valid utf_16_be",
+            self.parse,
+            r'table STAT { ElidedFallbackName { name "\dc00"; }; } STAT;',
+        )
+
     def test_nameid_windows_utf16(self):
         doc = self.parse(r'table name { nameid 9 "M\00fcller-Lanc\00e9"; } name;')
         name = doc.statements[0].statements[0]
@@ -1609,6 +1633,28 @@ class ParserTest(unittest.TestCase):
             "table STAT { DesignAxis opsz 0 "
             '{name "Optical Size";}; '
             'AxisValue {location opsz 5 6 10; name "Caption";}; } '
+            "STAT;",
+        )
+
+    def test_stat_axis_value_too_many_values(self):  # STAT AxisValue
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected 1, 2 or 3 values for axis opsz, but 4 were found.",
+            self.parse,
+            "table STAT { DesignAxis opsz 0 "
+            '{name "Optical Size";}; '
+            'AxisValue {location opsz 8 6 10 12; name "Caption";}; } '
+            "STAT;",
+        )
+
+    def test_stat_axis_value_no_values(self):  # STAT AxisValue
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Expected 1, 2 or 3 values for axis opsz, but 0 were found.",
+            self.parse,
+            "table STAT { DesignAxis opsz 0 "
+            '{name "Optical Size";}; '
+            'AxisValue {location opsz; name "Caption";}; } '
             "STAT;",
         )
 
@@ -1929,6 +1975,56 @@ class ParserTest(unittest.TestCase):
         s = doc.statements[0].statements[0]
         self.assertIsInstance(s, ast.SubtableStatement)
 
+    def test_table_BASE_script_list_without_tag_list(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "BaseScriptList must be preceded by BaseTagList",
+            self.parse,
+            "table BASE { HorizAxis.BaseScriptList latn romn 0; } BASE;",
+        )
+
+    def test_table_BASE_default_baseline_not_in_tag_list(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Default baseline "ideo" is not in BaseTagList',
+            self.parse,
+            "table BASE {"
+            "    VertAxis.BaseTagList romn;"
+            "    VertAxis.BaseScriptList latn ideo 0;"
+            "} BASE;",
+        )
+
+    def test_table_unclosed(self):
+        for table, statement in {
+            "OS/2": "WeightClass 400;",
+            "BASE": "HorizAxis.BaseTagList romn;",
+            "STAT": "ElidedFallbackNameID 2;",
+        }.items():
+            for text in ("", statement, statement + " # comment"):
+                with self.subTest(table=table, text=text):
+                    self.assertRaisesRegex(
+                        FeatureLibError,
+                        "Expected '}'",
+                        self.parse,
+                        "table %s { %s" % (table, text),
+                    )
+
+    def test_table_OS_2_vendor_not_ascii(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Vendor ID must be ASCII",
+            self.parse,
+            'table OS/2 { Vendor "\u00e9\u00e9"; } OS/2;',
+        )
+
+    def test_table_OS_2_unicode_range_bit_out_of_range(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "UnicodeRange bits must be between 0 and 127",
+            self.parse,
+            "table OS/2 { UnicodeRange 0 200; } OS/2;",
+        )
+
     def test_table_badEnd(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -2078,6 +2174,24 @@ class ParserTest(unittest.TestCase):
             "<1 2 3 4 <device 8 88> <device 11 111, 12 112>"
             " <device NULL> <device 33 -113, 44 -114, 55 115>>",
         )
+
+    def test_valuerecord_format_c_all_devices_null(self):
+        doc = self.parse(
+            "feature test {"
+            "    valueRecordDef <-80 0 -160 0"
+            "        <device NULL> <device NULL> <device NULL> <device NULL>> foo;"
+            "} test;"
+        )
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, -80)
+        self.assertEqual(value.yPlacement, 0)
+        self.assertEqual(value.xAdvance, -160)
+        self.assertEqual(value.yAdvance, 0)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.asFea(), "<-80 0 -160 0>")
 
     def test_valuerecord_format_d(self):
         doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")

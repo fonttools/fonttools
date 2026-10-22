@@ -2386,7 +2386,7 @@ def _pruneGDEF(font):
 
     # Collect.
     table.collect_device_varidxes(usedVarIdxes)
-    for tag in ("GSUB", "GPOS"):
+    for tag in ("GSUB", "GPOS", "MATH", "JSTF"):
         if tag in font:
             font[tag].table.collect_device_varidxes(usedVarIdxes)
 
@@ -2403,7 +2403,7 @@ def _pruneGDEF(font):
     # Map.
     done = set()
     table.remap_device_varidxes(varidx_map, done=done)
-    for tag in ("GSUB", "GPOS"):
+    for tag in ("GSUB", "GPOS", "MATH", "JSTF"):
         if tag in font:
             font[tag].table.remap_device_varidxes(varidx_map, done=done)
 

@@ -187,21 +187,22 @@
           hmoveto
           122 31 1 blend
           hlineto
-          119 738 312 0 2 blend
-          rlineto
+          119 311 1 blend
+          738 rlineto
           -108 -23 1 blend
           hlineto
           -54 -590 -205 38 2 blend
           rmoveto
-          332 101 -332 379 0 -379 3 blend
+          333 379 1 blend
+          101 -333 -379 1 blend
           hlineto
-          266 -249 482 -37 2 blend
+          266 -249 482 -38 2 blend
           rmoveto
           155 54 1 blend
           hlineto
-          -134 738 -318 0 2 blend
-          rlineto
-          -144 -54 1 blend
+          -134 -318 1 blend
+          738 rlineto
+          -145 -55 1 blend
           hlineto
           -44 -122 17 2 2 blend
           rmoveto

@@ -53,6 +53,11 @@ version = ".".join(version.split(".")[:2])
 #
 SCALE_COMPONENT_OFFSET_DEFAULT = 0  # 0 == MS, 1 == Apple
 
+# Upper bound on the number of points a composite glyph can be flattened to.
+# maxp.maxCompositePoints is uint16, so a composite with more points cannot be
+# described in a valid font; OTS also rejects composites past 0xFFFF points.
+MAX_COMPOSITE_POINTS = 0xFFFF
+
 
 class table__g_l_y_f(DefaultTable.DefaultTable):
     """Glyph Data table
@@ -868,21 +873,42 @@ class Glyph(object):
                 name, attrs, content = element
                 self.program.fromXML(name, attrs, content, ttFont)
 
-    def getCompositeMaxpValues(self, glyfTable, maxComponentDepth=1):
+    def getCompositeMaxpValues(
+        self, glyfTable, maxComponentDepth=1, *, maxpValuesCache=None
+    ):
+        """Return the number of points and contours of the flattened composite
+        glyph, and its maximum component depth.
+
+        ``maxpValuesCache`` is an optional dict that can be shared across calls
+        for the same glyf table to avoid recomputing the values of components
+        that are used more than once.
+        """
         assert self.isComposite()
+        if maxpValuesCache is None:
+            maxpValuesCache = {}
         nContours = 0
         nPoints = 0
         initialMaxComponentDepth = maxComponentDepth
         for compo in self.components:
-            baseGlyph = glyfTable[compo.glyphName]
+            glyphName = compo.glyphName
+            baseGlyph = glyfTable[glyphName]
             if baseGlyph.numberOfContours == 0:
                 continue
             elif baseGlyph.numberOfContours > 0:
                 nP, nC = baseGlyph.getMaxpValues()
             else:
-                nP, nC, componentDepth = baseGlyph.getCompositeMaxpValues(
-                    glyfTable, initialMaxComponentDepth + 1
-                )
+                # cached depths are relative to the component's own depth
+                depthOffset = initialMaxComponentDepth + 1
+                if glyphName in maxpValuesCache:
+                    nP, nC, componentDepth = maxpValuesCache[glyphName]
+                    componentDepth += depthOffset
+                else:
+                    nP, nC, componentDepth = baseGlyph.getCompositeMaxpValues(
+                        glyfTable, depthOffset, maxpValuesCache=maxpValuesCache
+                    )
+                    maxpValuesCache[glyphName] = CompositeMaxpValues(
+                        nP, nC, componentDepth - depthOffset
+                    )
                 maxComponentDepth = max(maxComponentDepth, componentDepth)
             nPoints = nPoints + nP
             nContours = nContours + nC
@@ -1263,12 +1289,14 @@ class Glyph(object):
                 return False
 
         # All components are untransformed and have an integer x/y translate
+        if boundsDone is None:
+            boundsDone = set()
         bounds = None
         for compo in self.components:
             glyphName = compo.glyphName
             g = glyfTable[glyphName]
 
-            if boundsDone is None or glyphName not in boundsDone:
+            if glyphName not in boundsDone:
                 try:
                     g.recalcBounds(glyfTable, boundsDone=boundsDone)
                 except RecursionError:
@@ -1276,8 +1304,7 @@ class Glyph(object):
                         "glyph '%s' contains a recursive component reference"
                         % glyphName
                     )
-                if boundsDone is not None:
-                    boundsDone.add(glyphName)
+                boundsDone.add(glyphName)
             # empty components shouldn't update the bounds of the parent glyph
             if g.yMin == g.yMax and g.xMin == g.xMax:
                 continue
@@ -1312,8 +1339,16 @@ class Glyph(object):
 
         To interpret the flags for each point, see the "Simple Glyph Flags"
         section of the `glyf table specification <https://docs.microsoft.com/en-us/typography/opentype/spec/glyf#simple-glyph-description>`.
-        """
 
+        Raises ``TTLibError`` if a composite glyph flattens to more than
+        ``MAX_COMPOSITE_POINTS`` points.
+        """
+        return self._getCoordinates(glyfTable, round, {})
+
+    def _getCoordinates(self, glyfTable, round, cache):
+        # 'cache' maps the names of the components flattened so far during the
+        # current getCoordinates call to their (coordinates, endPts, flags), so
+        # that components used more than once are only flattened once.
         if self.numberOfContours > 0:
             return self.coordinates, self.endPtsOfContours, self.flags
         elif self.isComposite():
@@ -1322,16 +1357,23 @@ class Glyph(object):
             allFlags = bytearray()
             allEndPts = []
             for compo in self.components:
-                g = glyfTable[compo.glyphName]
-                try:
-                    coordinates, endPts, flags = g.getCoordinates(
-                        glyfTable, round=round
-                    )
-                except RecursionError:
-                    raise ttLib.TTLibError(
-                        "glyph '%s' contains a recursive component reference"
-                        % compo.glyphName
-                    )
+                glyphName = compo.glyphName
+                g = glyfTable[glyphName]
+                if glyphName in cache:
+                    coordinates, endPts, flags = cache[glyphName]
+                else:
+                    try:
+                        coordinates, endPts, flags = g._getCoordinates(
+                            glyfTable, round, cache
+                        )
+                    except RecursionError:
+                        raise ttLib.TTLibError(
+                            "glyph '%s' contains a recursive component reference"
+                            % glyphName
+                        )
+                    cache[glyphName] = coordinates, endPts, flags
+                # the component's coordinates are copied before being transformed,
+                # as they may be shared with the glyph itself or with the cache
                 coordinates = GlyphCoordinates(coordinates)
                 # if asked to round e.g. while computing bboxes, it's important we
                 # do it immediately before a component transform is applied to a
@@ -1377,6 +1419,11 @@ class Glyph(object):
                 allEndPts.extend(e + offset for e in endPts)
                 allCoords.extend(coordinates)
                 allFlags.extend(flags)
+                if len(allCoords) > MAX_COMPOSITE_POINTS:
+                    raise ttLib.TTLibError(
+                        "composite glyph with component '%s' has more than %d points"
+                        % (compo.glyphName, MAX_COMPOSITE_POINTS)
+                    )
             return allCoords, allEndPts, allFlags
         else:
             return GlyphCoordinates(), [], bytearray()

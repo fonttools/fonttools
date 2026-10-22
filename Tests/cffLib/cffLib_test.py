@@ -153,7 +153,7 @@ class CffLibTest(DataFilesHandler):
         font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
         font.importXML(ttx_path)
 
-        topDict = font["CFF "].cff.topDictIndex[0]
+        topDict = font["CFF "].cff[0]
         encoding = [".notdef"] * 256
         encoding[0x20] = "space"
         topDict.Encoding = encoding
@@ -165,6 +165,40 @@ class CffLibTest(DataFilesHandler):
         font2 = TTFont(save_path)
         topDict2 = font2["CFF "].cff.topDictIndex[0]
         self.assertEqual(topDict2.Encoding[32], "space")
+
+    def test_topDict_delattr(self):
+        font = TTFont(
+            self.getpath("LinLibertine_RBI.otf"),
+            recalcBBoxes=False,
+            recalcTimestamp=False,
+        )
+        topDict = font["CFF "].cff.topDictIndex[0]
+
+        # not loaded from rawDict yet
+        del topDict.Notice
+        self.assertFalse(hasattr(topDict, "Notice"))
+
+        # already loaded from rawDict
+        self.assertEqual(topDict.FullName, "Linux Libertine O Bold Italic")
+        del topDict.FullName
+        self.assertFalse(hasattr(topDict, "FullName"))
+
+        with self.assertRaises(AttributeError):
+            del topDict.Notice
+
+        private = topDict.Private
+        del topDict.Private
+        self.assertFalse(hasattr(topDict, "Private"))
+        topDict.Private = private
+
+        data = BytesIO()
+        font.save(data)
+        data.seek(0)
+        topDict2 = TTFont(data)["CFF "].cff.topDictIndex[0]
+        self.assertFalse(hasattr(topDict2, "Notice"))
+        self.assertFalse(hasattr(topDict2, "FullName"))
+        self.assertTrue(hasattr(topDict2, "FamilyName"))
+        self.assertIsInstance(topDict2.Private, PrivateDict)
 
     def test_CFF_deepcopy(self):
         """Test that deepcopying a TTFont with a CFF table does not recurse
@@ -240,8 +274,50 @@ class CffLibTest(DataFilesHandler):
             self.assertEqual(topDict.Encoding[9], "space")
             self.assertEqual(topDict.Encoding[32], "space")
 
+    def test_non_ascii_font_name_round_trip(self):
+        font = TTFont(self.getpath("LinLibertine_RBI.otf"))
+        font["CFF "].cff.fontNames = ["Caf\u00e9Sans"]
+
+        data = BytesIO()
+        font.save(data)
+        data.seek(0)
+
+        self.assertEqual(TTFont(data)["CFF "].cff.fontNames, ["Caf\u00e9Sans"])
+
 
 class CFFToCFF2Test(DataFilesHandler):
+    def test_roundtrip_with_local_subrs(self):
+        from fontTools.cffLib.CFFToCFF2 import convertCFFToCFF2
+        from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
+        from fontTools.pens.recordingPen import RecordingPen
+
+        def drawGlyphs(font):
+            glyphSet = font.getGlyphSet()
+            result = []
+            for glyphName in font.getGlyphOrder():
+                pen = RecordingPen()
+                glyphSet[glyphName].draw(pen)
+                result.append((glyphSet[glyphName].width, pen.value))
+            return result
+
+        font = TTFont(self.getpath("CFFToCFF2-1.otf"))
+        expected = drawGlyphs(font)
+        convertCFFToCFF2(font)
+        buf = BytesIO()
+        font.save(buf)
+        buf.seek(0)
+
+        # Load the CFF2 font without touching the charstrings, so that the
+        # local Subrs are still undecompiled when converting back to CFF.
+        font = TTFont(buf, recalcBBoxes=False)
+        convertCFF2ToCFF(font)
+        buf = BytesIO()
+        font.save(buf)
+        buf.seek(0)
+
+        font = TTFont(buf)
+        self.assertEqual(drawGlyphs(font), expected)
+
     def test_conversion(self):
         font_path = self.getpath("CFFToCFF2-1.otf")
         font = TTFont(font_path)
@@ -250,6 +326,95 @@ class CFFToCFF2Test(DataFilesHandler):
         convertCFFToCFF2(font)
         f = BytesIO()
         font.save(f)
+
+
+def _makeCFF2Font(glyphOrder, fdSelect=None):
+    from fontTools.fontBuilder import FontBuilder
+    from fontTools.cffLib import FDSelect
+    from fontTools.pens.t2CharStringPen import T2CharStringPen
+
+    fb = FontBuilder(1000, isTTF=False)
+    fb.setupGlyphOrder(glyphOrder)
+    fb.setupCharacterMap({})
+    charStrings = {}
+    for i, glyphName in enumerate(glyphOrder):
+        pen = T2CharStringPen(None, None, CFF2=True)
+        pen.moveTo((0, 0))
+        pen.lineTo((100 + i * 10, 0))
+        pen.lineTo((0, 100))
+        pen.closePath()
+        charStrings[glyphName] = pen.getCharString()
+    fdArrayList = None
+    if fdSelect is not None:
+        fdArrayList = [{} for _ in range(max(fdSelect) + 1)]
+    fb.setupCFF2(charStrings, fdArrayList=fdArrayList)
+    if fdSelect is not None:
+        topDict = fb.font["CFF2"].cff[0]
+        topDict.FDSelect = FDSelect()
+        topDict.FDSelect.format = 0
+        topDict.FDSelect.gidArray = fdSelect
+    fb.setupHorizontalMetrics(
+        {glyphName: (500 + i, 0) for i, glyphName in enumerate(glyphOrder)}
+    )
+    fb.setupHorizontalHeader()
+    fb.setupNameTable({"familyName": "TestCFF2", "styleName": "Regular"})
+    fb.setupOS2()
+    fb.setupPost()
+    buf = BytesIO()
+    fb.font.save(buf)
+    buf.seek(0)
+    return TTFont(buf, recalcBBoxes=False)
+
+
+def _drawGlyphs(font):
+    from fontTools.pens.recordingPen import RecordingPen
+
+    glyphSet = font.getGlyphSet()
+    result = []
+    for glyphName in font.getGlyphOrder():
+        pen = RecordingPen()
+        glyphSet[glyphName].draw(pen)
+        result.append((glyphSet[glyphName].width, pen.value))
+    return result
+
+
+def _convertAndReload(font):
+    from fontTools.cffLib.CFF2ToCFF import convertCFF2ToCFF
+
+    convertCFF2ToCFF(font)
+    buf = BytesIO()
+    font.save(buf)
+    buf.seek(0)
+    return TTFont(buf)
+
+
+class CFF2ToCFFTest(unittest.TestCase):
+    def test_single_fontdict_converts_to_name_keyed(self):
+        glyphOrder = [".notdef", "A", "B"]
+        font = _makeCFF2Font(glyphOrder)
+        expected = _drawGlyphs(font)
+
+        font = _convertAndReload(font)
+
+        topDict = font["CFF "].cff[0]
+        self.assertFalse(hasattr(topDict, "ROS"))
+        self.assertFalse(hasattr(topDict, "FDArray"))
+        self.assertFalse(hasattr(topDict, "FDSelect"))
+        self.assertTrue(hasattr(topDict, "Private"))
+        self.assertEqual(font.getGlyphOrder(), glyphOrder)
+        self.assertEqual(_drawGlyphs(font), expected)
+
+    def test_multiple_fontdicts_converts_to_cid_keyed(self):
+        font = _makeCFF2Font([".notdef", "A", "B"], fdSelect=[0, 1, 1])
+        expected = _drawGlyphs(font)
+
+        font = _convertAndReload(font)
+
+        topDict = font["CFF "].cff[0]
+        self.assertEqual(topDict.ROS, ("Adobe", "Identity", 0))
+        self.assertEqual(len(topDict.FDArray), 2)
+        self.assertEqual(font.getGlyphOrder(), [".notdef", "cid00001", "cid00002"])
+        self.assertEqual(_drawGlyphs(font), expected)
 
 
 if __name__ == "__main__":

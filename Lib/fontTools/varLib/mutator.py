@@ -185,6 +185,9 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
     OVERLAP_SIMPLE and OVERLAP_COMPOUND bits are set to 1.  See
     https://docs.microsoft.com/en-us/typography/opentype/spec/glyf
     """
+    if "fvar" not in varfont:
+        raise ValueError("Missing required table fvar")
+
     if not inplace:
         # make a copy to leave input varfont unmodified
         stream = BytesIO()
@@ -210,11 +213,14 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
         hMetrics = varfont["hmtx"].metrics
         vMetrics = getattr(varfont.get("vmtx"), "metrics", None)
         # get list of glyph names in gvar sorted by component depth
+        maxpValuesCache = {}
         glyphnames = sorted(
             gvar.variations.keys(),
             key=lambda name: (
                 (
-                    glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+                    glyf[name]
+                    .getCompositeMaxpValues(glyf, maxpValuesCache=maxpValuesCache)
+                    .maxComponentDepth
                     if glyf[name].isComposite()
                     else 0
                 ),

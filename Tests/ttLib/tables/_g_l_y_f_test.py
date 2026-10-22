@@ -1,3 +1,4 @@
+from fontTools.fontBuilder import FontBuilder
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.roundTools import noRound
 from fontTools.misc.testTools import getXML, parseXML
@@ -1549,6 +1550,202 @@ def test_unsigned_instruction_length(length, composite):
     assert reloaded.program.getBytecode() == glyph.program.getBytecode()
     assert reloaded.getCoordinates(glyf) == glyph.getCoordinates(glyf)
     assert reloaded.compile(glyf) == data
+
+
+def build_composite_dag(n):
+    """Return a glyf table where composite 'g{k}' uses 'g{k-1}' twice, for k
+    from 1 to n, and 'g0' is a square: 'g{k}' flattens to 4 * 2**k points.
+    """
+
+    def square():
+        pen = TTGlyphPen(None)
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 10))
+        pen.lineTo((10, 10))
+        pen.lineTo((10, 0))
+        pen.closePath()
+        return pen.glyph()
+
+    glyf = newTable("glyf")
+    glyf.glyphOrder = [".notdef"] + [f"g{k}" for k in range(n + 1)]
+    glyf.glyphs = {".notdef": square(), "g0": square()}
+    for k in range(1, n + 1):
+        pen = TTGlyphPen(glyf)
+        pen.addComponent(f"g{k-1}", (1, 0, 0, 1, 0, 0))
+        pen.addComponent(f"g{k-1}", (1, 0, 0, 1, 0, 0))
+        glyf.glyphs[f"g{k}"] = pen.glyph()
+    return glyf
+
+
+def test_composite_dag_under_point_limit():
+    glyf = build_composite_dag(13)
+    glyph = glyf["g13"]
+
+    coords, endPts, flags = glyph.getCoordinates(glyf)
+    assert len(coords) == len(flags) == 32768
+    assert endPts == list(range(3, 32768, 4))
+    assert list(coords[:4]) == [(0, 0), (0, 10), (10, 10), (10, 0)]
+    assert set(coords) == {(0, 0), (0, 10), (10, 10), (10, 0)}
+
+    assert glyph.getCompositeMaxpValues(glyf) == (32768, 8192, 13)
+    assert glyph.getCompositeMaxpValues(glyf, maxpValuesCache={}) == (
+        32768,
+        8192,
+        13,
+    )
+
+
+@pytest.mark.parametrize("method", ["getCompositeMaxpValues", "recalcBounds"])
+def test_composite_dag_default_cache(method):
+    class BoundedGlyphSet(dict):
+        lookups = 0
+
+        def __getitem__(self, name):
+            self.lookups += 1
+            # Bound the work without relying on wall-clock timings.
+            assert self.lookups <= 1000, "excessive component traversal"
+            return super().__getitem__(name)
+
+    glyf = BoundedGlyphSet(build_composite_dag(12).glyphs)
+    glyph = glyf["g12"]
+    result = getattr(glyph, method)(glyf)
+    if method == "getCompositeMaxpValues":
+        assert result == (16384, 4096, 12)
+    else:
+        assert (glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax) == (0, 0, 10, 10)
+
+
+def test_composite_point_limit():
+    glyf = newTable("glyf")
+    big = Glyph()
+    big.numberOfContours = 1
+    big.coordinates = GlyphCoordinates([(i % 100, i // 100) for i in range(0xFFFF)])
+    big.endPtsOfContours = [0xFFFF - 1]
+    big.flags = array.array("B", [flagOnCurve] * 0xFFFF)
+    dot = Glyph()
+    dot.numberOfContours = 1
+    dot.coordinates = GlyphCoordinates([(0, 0)])
+    dot.endPtsOfContours = [0]
+    dot.flags = array.array("B", [flagOnCurve])
+    glyf.glyphs = {"big": big, "dot": dot}
+    for name, components in [("atLimit", ["big"]), ("overLimit", ["big", "dot"])]:
+        pen = TTGlyphPen(glyf)
+        for component in components:
+            pen.addComponent(component, (1, 0, 0, 1, 0, 0))
+        glyf.glyphs[name] = pen.glyph()
+    glyf.glyphOrder = list(glyf.glyphs)
+
+    coords, endPts, flags = glyf["atLimit"].getCoordinates(glyf)
+    assert len(coords) == len(flags) == 0xFFFF
+    assert endPts == [0xFFFF - 1]
+
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["overLimit"].getCoordinates(glyf)
+
+
+def test_composite_dag_over_point_limit():
+    glyf = build_composite_dag(20)
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["g20"].getCoordinates(glyf)
+    # 4 * 2**14 points is one more than the limit
+    with pytest.raises(TTLibError, match="has more than 65535 points"):
+        glyf["g14"].getCoordinates(glyf)
+
+
+def test_composite_dag_empty_leaf():
+    glyf = build_composite_dag(22)
+    glyf.glyphs["g0"] = Glyph()
+    assert glyf["g22"].getCoordinates(glyf) == (GlyphCoordinates(), [], bytearray())
+
+
+@pytest.mark.parametrize("round", [noRound, otRound])
+def test_getCoordinates_reused_component(round):
+    glyf = build_composite_dag(1)
+    transforms = [
+        (0.5, 0, 0, 1.5, 3, 7),
+        (1, 0, 0, 1, -20, 5),
+        (0.3, 0.2, -0.1, 0.7, 11.5, 0),
+    ]
+    for i, transform in enumerate(transforms):
+        pen = TTGlyphPen(glyf)
+        pen.addComponent("g1", transform)
+        glyf.glyphs[f"single{i}"] = pen.glyph()
+    pen = TTGlyphPen(glyf)
+    for transform in transforms + transforms[::-1]:
+        pen.addComponent("g1", transform)
+    glyf.glyphs["multi"] = pen.glyph()
+
+    coords, endPts, flags = glyf["multi"].getCoordinates(glyf, round=round)
+    expected = GlyphCoordinates()
+    for i in list(range(len(transforms))) + list(reversed(range(len(transforms)))):
+        expected.extend(glyf[f"single{i}"].getCoordinates(glyf, round=round)[0])
+    assert coords == expected
+    assert endPts == list(range(3, len(expected), 4))
+    assert flags == bytearray([flagOnCurve]) * len(expected)
+
+
+def test_maxp_recalc_composite_dag():
+    n = 20
+    glyf = build_composite_dag(n)
+    fb = FontBuilder(unitsPerEm=1000, isTTF=True)
+    fb.setupGlyphOrder(glyf.glyphOrder)
+    fb.setupGlyf(glyf.glyphs)
+    fb.setupHorizontalMetrics({name: (10, 0) for name in glyf.glyphOrder})
+    font = fb.font
+
+    # bounds of composites with integer offsets don't need flattening
+    font["glyf"].compile(font)
+
+    maxp = font["maxp"]
+    maxp.recalc(font)
+    assert maxp.maxPoints == 4
+    assert maxp.maxContours == 1
+    assert maxp.maxCompositePoints == 4 * 2**n
+    assert maxp.maxCompositeContours == 2**n
+    assert maxp.maxComponentElements == 2
+    assert maxp.maxComponentDepth == n
+    head = font["head"]
+    assert (head.xMin, head.yMin, head.xMax, head.yMax) == (0, 0, 10, 10)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "ttx/data/TestTTF.ttf",
+        "qu2cu/data/NotoSansArabic-Regular.quadratic.subset.ttf",
+        "subset/data/BungeeColor-Regular.ttx",
+        "varLib/data/MutatorSans_All_Variable.ttx",
+        "varLib/instancer/data/PartialInstancerTest3-VF.ttx",
+        None,
+    ],
+)
+def test_getCompositeMaxpValues_cache(path):
+    if path is None:
+        glyf = build_composite_dag(12)
+    else:
+        path = Path(__file__).parent.parent.parent / path
+        if path.suffix == ".ttx":
+            font = TTFont()
+            font.importXML(path)
+        else:
+            font = TTFont(path)
+        glyf = font["glyf"]
+    composites = [name for name in glyf.glyphOrder if glyf[name].isComposite()]
+    assert composites
+
+    for depth in (1, 3):
+        expected = {
+            name: glyf[name].getCompositeMaxpValues(glyf, depth) for name in composites
+        }
+        for glyphNames in (composites, composites[::-1]):
+            cache = {}
+            for name in glyphNames:
+                assert (
+                    glyf[name].getCompositeMaxpValues(
+                        glyf, depth, maxpValuesCache=cache
+                    )
+                    == expected[name]
+                )
 
 
 if __name__ == "__main__":

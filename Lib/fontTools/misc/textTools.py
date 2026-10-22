@@ -20,7 +20,8 @@ class Tag(str):
         return str.__new__(self, self.transcode(content))
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        result = self.__eq__(other)
+        return result if result is NotImplemented else not result
 
     def __eq__(self, other):
         return str.__eq__(self, self.transcode(other))

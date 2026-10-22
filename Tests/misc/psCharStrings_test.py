@@ -284,6 +284,50 @@ def test_cff2_vsindex_zero_regions(use_blender, bytecode):
     ]
 
 
+@pytest.mark.parametrize("private_vsindex", [None, 0, 1])
+@pytest.mark.parametrize("charstring_vsindex", [None, 0, 1])
+@pytest.mark.parametrize("location", [0, 0.5, 1])
+@pytest.mark.parametrize("bytecode", [False, True])
+def test_cff2_inherited_vsindex(
+    private_vsindex, charstring_vsindex, location, bytecode
+):
+    from fontTools.cffLib import VarStoreData
+    from fontTools.ttLib.tables._f_v_a_r import Axis
+    from fontTools.varLib.builder import buildVarData, buildVarRegionList, buildVarStore
+    from fontTools.varLib.varStore import VarStoreInstancer
+
+    store = buildVarStore(
+        buildVarRegionList([{"TEST": (-1, -1, 0)}, {"TEST": (0, 1, 1)}], ["TEST"]),
+        [buildVarData([0], [], optimize=False), buildVarData([1], [], optimize=False)],
+    )
+    private = PrivateDict(vstore=VarStoreData(otVarStore=store))
+    private._isCFF2 = True
+    private.nominalWidthX = private.defaultWidthX = None
+    if private_vsindex is not None:
+        private.vsindex = private_vsindex
+    program = [100, 100, "rmoveto", 100, 80, 1, "blend", "hlineto"]
+    if charstring_vsindex is not None:
+        program = [charstring_vsindex, "vsindex"] + program
+    charstring = T2CharString(program=program, private=private)
+    if bytecode:
+        charstring.compile(isCFF2=True)
+        charstring = T2CharString(bytecode=charstring.bytecode, private=private)
+    axis = Axis()
+    axis.axisTag = "TEST"
+    instancer = VarStoreInstancer(store, [axis], {"TEST": location})
+    pen = RecordingPen()
+    charstring.draw(pen, blender=instancer.interpolateFromDeltas)
+    vsindex = private_vsindex or 0
+    if charstring_vsindex is not None:
+        vsindex = charstring_vsindex
+    delta = 80 * location if vsindex == 1 else 0
+    assert pen.value == [
+        ("moveTo", ((100, 100),)),
+        ("lineTo", ((200 + delta, 100),)),
+        ("closePath", ()),
+    ]
+
+
 if __name__ == "__main__":
     import sys
 

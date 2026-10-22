@@ -44,6 +44,20 @@ class NameTableTest(unittest.TestCase):
         self.assertEqual("Sem Fracções", table.getDebugName(292))
         self.assertEqual(None, table.getDebugName(999))
 
+    def test_getDebugName_prefers_windows_english(self):
+        table = table__n_a_m_e()
+        table.names = [
+            makeName("Mac Bold", 258, 1, 0, 0),  # Mac, MacRoman, English
+            makeName("Mac Gras", 258, 1, 0, 1),  # Mac, MacRoman, French
+            makeName("Windows Gras", 258, 3, 1, 0x40C),  # Windows, French
+            makeName("Windows Bold", 258, 3, 1, 0x409),  # Windows, English
+            makeName("Mac Regular", 259, 1, 0, 0),  # Mac, MacRoman, English
+            makeName("Windows Normal", 259, 3, 1, 0x40C),  # Windows, French
+        ]
+        self.assertEqual("Windows Bold", table.getDebugName(258))
+        # falls back to the Mac English name if there's no Windows English one
+        self.assertEqual("Mac Regular", table.getDebugName(259))
+
     def test_setName(self):
         table = table__n_a_m_e()
         table.setName("Regular", 2, 1, 0, 0)
@@ -319,6 +333,41 @@ class NameTableTest(unittest.TestCase):
         self.assertEqual(names(nameTable), [(256, 0, 4, 0, "آذربايجان ديلی")])
         self.assertIn("ltag", font.tables)
         self.assertEqual(font["ltag"].tags, ["az-Arab"])
+
+    def test_addMultilingualName_macLanguageCodes(self):
+        # https://github.com/fonttools/fonttools/issues/3733
+        # Spanish must not end up as Macintosh langEstonian (27), and
+        # Irish must use langIrishGaelic (35), not langIrishGaelicScript.
+        font = FakeFont(glyphs=[".notdef", "A"])
+        nameTable = font.tables["name"] = newTable("name")
+        nameTable.addMultilingualName(
+            {"es": "Ancho", "et": "Laius", "ga": "Leithead", "ga-Latg": "Leithead"},
+            ttFont=font,
+            windows=False,
+        )
+        self.assertEqual(
+            names(nameTable),
+            [
+                (256, 1, 0, 6, "Ancho"),
+                (256, 1, 0, 35, "Leithead"),
+                (256, 1, 0, 146, "Leithead"),
+                (256, 1, 29, 27, "Laius"),
+            ],
+        )
+        self.assertNotIn("ltag", font.tables)
+
+    def test_addMultilingualName_windowsSamiLanguageCodes(self):
+        # https://github.com/fonttools/fonttools/issues/3733
+        # 0x1C3B is Southern Sami (Sweden), not Skolt Sami.
+        nameTable = newTable("name")
+        nameTable.addMultilingualName({"sms": "Skolt", "sma": "Southern"}, mac=False)
+        self.assertEqual(
+            names(nameTable),
+            [
+                (256, 3, 1, 0x1C3B, "Southern"),
+                (256, 3, 1, 0x203B, "Skolt"),
+            ],
+        )
 
     def test_addMultilingualName_noTTFont(self):
         # If the ttFont argument is not passed, the implementation

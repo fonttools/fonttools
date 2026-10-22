@@ -1260,12 +1260,13 @@ class Parser(object):
             langID = langID or 0x0409  # English
 
         string = self.expect_string_()
+        string_location = self.cur_token_location_
         self.expect_symbol_(";")
 
         encoding = getEncoding(platformID, platEncID, langID)
         if encoding is None:
             raise FeatureLibError("Unsupported encoding", location)
-        unescaped = self.unescape_string_(string, encoding)
+        unescaped = self.unescape_string_(string, encoding, string_location)
         return platformID, platEncID, langID, unescaped
 
     def parse_stat_name_(self):
@@ -1291,10 +1292,11 @@ class Parser(object):
             langID = langID or 0x0409  # English
 
         string = self.expect_string_()
+        string_location = self.cur_token_location_
         encoding = getEncoding(platformID, platEncID, langID)
         if encoding is None:
             raise FeatureLibError("Unsupported encoding", location)
-        unescaped = self.unescape_string_(string, encoding)
+        unescaped = self.unescape_string_(string, encoding, string_location)
         return platformID, platEncID, langID, unescaped
 
     def parse_nameid_(self):
@@ -1309,7 +1311,17 @@ class Parser(object):
             nameID, platformID, platEncID, langID, string, location=location
         )
 
-    def unescape_string_(self, string, encoding):
+    def unescape_string_(self, string, encoding, location=None):
+        try:
+            return self._unescape_string(string, encoding)
+        except UnicodeError as e:
+            # e.g. an unpaired surrogate such as "\d800" in a Windows name, or a
+            # character that a Macintosh encoding cannot represent
+            raise FeatureLibError(
+                f"Name string is not valid {encoding}: {e.reason}", location
+            ) from e
+
+    def _unescape_string(self, string, encoding):
         if encoding == "utf_16_be":
             s = re.sub(r"\\[0-9a-fA-F]{4}", self.unescape_unichr_, string)
         else:
@@ -1351,8 +1363,11 @@ class Parser(object):
 
     def parse_table_BASE_(self, table):
         statements = table.statements
+        horiz_bases = vert_bases = None
         while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is None:
+                raise FeatureLibError("Expected '}'", self.cur_token_location_)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(
                     self.ast.Comment(self.cur_token_, location=self.cur_token_location_)
@@ -1360,7 +1375,12 @@ class Parser(object):
             elif self.is_cur_keyword_("HorizAxis.BaseTagList"):
                 horiz_bases = self.parse_base_tag_list_()
             elif self.is_cur_keyword_("HorizAxis.BaseScriptList"):
-                horiz_scripts = self.parse_base_script_list_(len(horiz_bases))
+                if horiz_bases is None:
+                    raise FeatureLibError(
+                        "BaseScriptList must be preceded by BaseTagList",
+                        self.cur_token_location_,
+                    )
+                horiz_scripts = self.parse_base_script_list_(horiz_bases)
                 statements.append(
                     self.ast.BaseAxis(
                         horiz_bases,
@@ -1385,7 +1405,12 @@ class Parser(object):
             elif self.is_cur_keyword_("VertAxis.BaseTagList"):
                 vert_bases = self.parse_base_tag_list_()
             elif self.is_cur_keyword_("VertAxis.BaseScriptList"):
-                vert_scripts = self.parse_base_script_list_(len(vert_bases))
+                if vert_bases is None:
+                    raise FeatureLibError(
+                        "BaseScriptList must be preceded by BaseTagList",
+                        self.cur_token_location_,
+                    )
+                vert_scripts = self.parse_base_script_list_(vert_bases)
                 statements.append(
                     self.ast.BaseAxis(
                         vert_bases,
@@ -1429,6 +1454,8 @@ class Parser(object):
         ranges = ("UnicodeRange", "CodePageRange")
         while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is None:
+                raise FeatureLibError("Expected '}'", self.cur_token_location_)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(
                     self.ast.Comment(self.cur_token_, location=self.cur_token_location_)
@@ -1445,9 +1472,19 @@ class Parser(object):
                 elif self.cur_token_ in ranges:
                     value = []
                     while self.next_token_ != ";":
-                        value.append(self.expect_number_())
+                        number = self.expect_number_()
+                        if key == "unicoderange" and not 0 <= number <= 127:
+                            raise FeatureLibError(
+                                "UnicodeRange bits must be between 0 and 127",
+                                self.cur_token_location_,
+                            )
+                        value.append(number)
                 elif self.is_cur_keyword_("Vendor"):
                     value = self.expect_string_()
+                    if not value.isascii():
+                        raise FeatureLibError(
+                            "Vendor ID must be ASCII", self.cur_token_location_
+                        )
                 statements.append(
                     self.ast.OS2Field(key, value, location=self.cur_token_location_)
                 )
@@ -1594,6 +1631,12 @@ class Parser(object):
                     "Expected integer or float.",
                     self.next_token_location_,
                 )
+        if not 1 <= len(values) <= 3:
+            raise FeatureLibError(
+                f"Expected 1, 2 or 3 values for axis {tag.strip()}, "
+                f"but {len(values)} were found.",
+                self.next_token_location_,
+            )
         if len(values) == 3:
             nominal, min_val, max_val = values
             if nominal < min_val or nominal > max_val:
@@ -1610,6 +1653,8 @@ class Parser(object):
         design_axes = []
         while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is None:
+                raise FeatureLibError("Expected '}'", self.cur_token_location_)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(
                     self.ast.Comment(self.cur_token_, location=self.cur_token_location_)
@@ -1658,22 +1703,27 @@ class Parser(object):
         self.expect_symbol_(";")
         return bases
 
-    def parse_base_script_list_(self, count):
+    def parse_base_script_list_(self, bases):
         assert self.cur_token_ in (
             "HorizAxis.BaseScriptList",
             "VertAxis.BaseScriptList",
         ), self.cur_token_
-        scripts = [self.parse_base_script_record_(count)]
+        scripts = [self.parse_base_script_record_(bases)]
         while self.next_token_ == ",":
             self.expect_symbol_(",")
-            scripts.append(self.parse_base_script_record_(count))
+            scripts.append(self.parse_base_script_record_(bases))
         self.expect_symbol_(";")
         return scripts
 
-    def parse_base_script_record_(self, count):
+    def parse_base_script_record_(self, bases):
         script_tag = self.expect_script_tag_()
         base_tag = self.expect_script_tag_()
-        coords = [self.expect_number_() for i in range(count)]
+        if base_tag not in bases:
+            raise FeatureLibError(
+                'Default baseline "%s" is not in BaseTagList' % base_tag.strip(),
+                self.cur_token_location_,
+            )
+        coords = [self.expect_number_() for i in range(len(bases))]
         return script_tag, base_tag, coords
 
     def parse_base_minmax_(self):
@@ -1773,7 +1823,7 @@ class Parser(object):
                     + (yAdvDevice if yAdvDevice else ())
                 ]
             )
-            if allDeltas[0] < -128 or allDeltas[-1] > 127:
+            if allDeltas and (allDeltas[0] < -128 or allDeltas[-1] > 127):
                 raise FeatureLibError(
                     "Device value out of valid range (-128..127)",
                     self.cur_token_location_,

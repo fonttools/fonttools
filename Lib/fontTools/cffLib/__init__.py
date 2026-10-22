@@ -95,7 +95,9 @@ class CFFFontSet(object):
         if not isCFF2:
             self.offSize = struct.unpack("B", file.read(1))[0]
             file.seek(self.hdrSize)
-            self.fontNames = list(tostr(s) for s in Index(file, isCFF2=isCFF2))
+            self.fontNames = list(
+                tostr(s, encoding="latin1") for s in Index(file, isCFF2=isCFF2)
+            )
             self.topDictIndex = TopDictIndex(file, isCFF2=isCFF2)
             self.strings = IndexedStrings(file)
         else:  # isCFF2
@@ -2526,6 +2528,13 @@ class BaseDict(object):
         value = conv.read(self, value)
         setattr(self, name, value)
         return value
+
+    def __delattr__(self, name):
+        # Also drop the raw value, if any, otherwise __getattr__ would just
+        # load the attribute again from rawDict.
+        inRawDict = self.rawDict.pop(name, None) is not None
+        if name in self.__dict__ or not inRawDict:
+            super().__delattr__(name)
 
     def toXML(self, xmlWriter):
         for name in self.order:

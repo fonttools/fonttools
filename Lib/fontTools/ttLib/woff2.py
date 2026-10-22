@@ -1327,7 +1327,7 @@ class WOFF2FlavorData(WOFFFlavorData):
             ]
         elif data:
             self.majorVersion = data.majorVersion
-            self.majorVersion = data.minorVersion
+            self.minorVersion = data.minorVersion
             self.metaData = data.metaData
             self.privData = data.privData
             if transformedTables is None and hasattr(data, "transformedTables"):

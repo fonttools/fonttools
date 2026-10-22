@@ -407,6 +407,8 @@ def Object_collect_device_varidxes(self, varidxes):
 ot.GDEF.collect_device_varidxes = Object_collect_device_varidxes
 ot.GPOS.collect_device_varidxes = Object_collect_device_varidxes
 ot.GSUB.collect_device_varidxes = Object_collect_device_varidxes
+ot.MATH.collect_device_varidxes = Object_collect_device_varidxes
+ot.JSTF.collect_device_varidxes = Object_collect_device_varidxes
 
 
 def _Device_mapVarIdx(self, mapping, done):
@@ -433,6 +435,8 @@ ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
 ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
 ot.GSUB.remap_device_varidxes = Object_remap_device_varidxes
 ot.BASE.remap_device_varidxes = Object_remap_device_varidxes
+ot.MATH.remap_device_varidxes = Object_remap_device_varidxes
+ot.JSTF.remap_device_varidxes = Object_remap_device_varidxes
 
 
 class _Encoding(object):
@@ -924,7 +928,7 @@ def main(args=None):
     if outfile is not None:
         done = set()
         gdef.table.remap_device_varidxes(varidx_map, done=done)
-        for tag in ("GSUB", "GPOS"):
+        for tag in ("GSUB", "GPOS", "MATH", "JSTF"):
             if tag in font:
                 font[tag].table.remap_device_varidxes(varidx_map, done=done)
 
