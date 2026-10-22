@@ -126,7 +126,7 @@ from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.instancer import cff, names
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
-from .featureVars import instantiateFeatureVariations
+from .featureVars import instantiateFeatureVariations, _checkFeatureVariationConditions
 from .colr import instantiateCOLR
 from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.varLib.instancer import solver
@@ -2677,6 +2677,7 @@ def instantiateVariableFont(
     overlap = OverlapMode(int(overlap))
 
     sanityCheckVariableTables(varfont)
+    _checkFeatureVariationConditions(varfont)
 
     if static:
         unspecified = []
