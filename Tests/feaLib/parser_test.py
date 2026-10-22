@@ -1994,15 +1994,20 @@ class ParserTest(unittest.TestCase):
             "} BASE;",
         )
 
-    def test_table_OS_2_unclosed(self):
-        for text in ("", "WeightClass 400;", "WeightClass 400; # comment"):
-            with self.subTest(text=text):
-                self.assertRaisesRegex(
-                    FeatureLibError,
-                    "Expected '}'",
-                    self.parse,
-                    "table OS/2 { " + text,
-                )
+    def test_table_unclosed(self):
+        for table, statement in {
+            "OS/2": "WeightClass 400;",
+            "BASE": "HorizAxis.BaseTagList romn;",
+            "STAT": "ElidedFallbackNameID 2;",
+        }.items():
+            for text in ("", statement, statement + " # comment"):
+                with self.subTest(table=table, text=text):
+                    self.assertRaisesRegex(
+                        FeatureLibError,
+                        "Expected '}'",
+                        self.parse,
+                        "table %s { %s" % (table, text),
+                    )
 
     def test_table_OS_2_vendor_not_ascii(self):
         self.assertRaisesRegex(
