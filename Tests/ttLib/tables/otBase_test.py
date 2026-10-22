@@ -1,5 +1,6 @@
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.lazyTools import LazyList
+from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import unittest

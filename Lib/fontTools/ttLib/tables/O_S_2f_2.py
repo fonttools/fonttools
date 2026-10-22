@@ -395,7 +395,7 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
         Set it to 0 if the unlikely event 'hmtx' table is not found.
         """
         avg_width = 0
-        hmtx = ttFont.get("hmtx")
+        hmtx = ttFont.get("HMTX") or ttFont.get("hmtx")
         if hmtx is not None:
             widths = [width for width, _ in hmtx.metrics.values() if width > 0]
             if widths:

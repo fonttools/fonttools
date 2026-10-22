@@ -60,7 +60,11 @@ def compact(font: TTFont, level: int) -> TTFont:
     if gpos is None:
         return font
 
-    for lookup in gpos.table.LookupList.Lookup:
+    lookup_list = otTables._getLookupList(gpos.table)
+    if lookup_list is None:
+        return font
+
+    for lookup in lookup_list.Lookup:
         if lookup.LookupType == 2:
             compact_lookup(font, level, lookup)
         elif lookup.LookupType == 9 and lookup.SubTable[0].ExtensionLookupType == 2:
@@ -94,11 +98,14 @@ def compact_pair_pos(
 ) -> Sequence[otTables.PairPos]:
     new_subtables = []
     for subtable in subtables:
-        if subtable.Format == 1:
-            # Not doing anything to Format 1 (yet?)
+        if subtable.Format in (1, 3):
+            # Not doing anything to glyph-pair formats (yet?)
             new_subtables.append(subtable)
-        elif subtable.Format == 2:
-            new_subtables.extend(compact_class_pairs(font, level, subtable))
+        elif subtable.Format in (2, 4):
+            class_subtables = compact_class_pairs(font, level, subtable)
+            for class_subtable in class_subtables:
+                class_subtable.Format = subtable.Format
+            new_subtables.extend(class_subtables)
     return new_subtables
 
 

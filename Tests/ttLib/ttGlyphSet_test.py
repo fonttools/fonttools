@@ -1,7 +1,12 @@
 from fontTools.ttLib import TTFont
 from fontTools.ttLib import ttGlyphSet
+from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
-from fontTools.ttLib.tables.otTables import ConditionTable, VarComponentFlags
+from fontTools.ttLib.tables.otTables import (
+    ConditionTable,
+    NO_VARIATION_INDEX,
+    VarComponentFlags,
+)
 from fontTools.pens.recordingPen import (
     RecordingPen,
     RecordingPointPen,
@@ -445,8 +450,275 @@ class TTGlyphSetTest(object):
         glyph.draw(pen)
         assert len(pen.value) == 3
 
+    @pytest.mark.parametrize("location", [None, {"wght": 800}])
+    def test_glyphset_varComposite_uppercase_metrics(self, location):
+        from fontTools.fontBuilder import FontBuilder
+
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        builder = FontBuilder(font=font)
+        builder.setupVerticalMetrics(
+            {name: (1024, 30) for name in font.getGlyphOrder()}
+        )
+        builder.setupVerticalHeader()
+        glyphset = font.getGlyphSet(location=location)
+        pen = DecomposingRecordingPen(glyphset)
+        glyphset["uniAC01"].draw(pen)
+        expected = pen.value
+        expected_metrics = (
+            glyphset["uniAC01"].width,
+            glyphset["uniAC01"].lsb,
+            glyphset["uniAC01"].height,
+            glyphset["uniAC01"].tsb,
+        )
+
+        upper_tables(font)
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        glyphset = font.getGlyphSet(location=location)
+        pen = DecomposingRecordingPen(glyphset)
+        glyphset["uniAC01"].draw(pen)
+        assert pen.value == expected
+        assert (
+            glyphset["uniAC01"].width,
+            glyphset["uniAC01"].lsb,
+            glyphset["uniAC01"].height,
+            glyphset["uniAC01"].tsb,
+        ) == expected_metrics
+        assert glyphset.hMetrics is font["HMTX"].metrics
+        assert glyphset.vMetrics is font["VMTX"].metrics
+
+    @pytest.mark.parametrize("draw_points", [False, True])
+    def test_glyphset_varComposite_uppercase_static_axes(self, draw_points):
+        from fontTools.pens.recordingPen import DecomposingRecordingPointPen
+
+        font = TTFont(self.getpath("varc-static-gvar.ttf"))
+        glyph_name = font["VARC"].table.Coverage.glyphs[0]
+        pen_type = (
+            DecomposingRecordingPointPen if draw_points else DecomposingRecordingPen
+        )
+        draw = "drawPoints" if draw_points else "draw"
+        glyphset = font.getGlyphSet()
+        pen = pen_type(glyphset)
+        getattr(glyphset[glyph_name], draw)(pen)
+        expected = pen.value
+
+        upper_tables(font)
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        assert "fvar" not in font
+        assert "gvar" not in font
+        glyphset = font.getGlyphSet()
+        assert len(glyphset.axes) == font["GVAR"].axisCount == 1
+        pen = pen_type(glyphset)
+        getattr(glyphset[glyph_name], draw)(pen)
+        assert pen.value == expected
+
+    @pytest.mark.parametrize(
+        "fontfile", ["I.otf", "../../cffLib/data/varc-short-cff2.otf"]
+    )
+    @pytest.mark.parametrize("vertical", [False, True])
+    def test_glyphset_cff2_uppercase_metrics(self, fontfile, vertical):
+        from fontTools.fontBuilder import FontBuilder
+
+        font = TTFont(self.getpath(fontfile))
+        if vertical:
+            builder = FontBuilder(font=font)
+            builder.setupVerticalMetrics(
+                {name: (1024, 30) for name in font.getGlyphOrder()}
+            )
+            builder.setupVerticalHeader()
+        else:
+            for tag in ("vhea", "vmtx"):
+                if tag in font:
+                    del font[tag]
+
+        def outlines_and_metrics(font):
+            glyphset = font.getGlyphSet()
+            result = {}
+            for name in font.getGlyphOrder():
+                glyph = glyphset[name]
+                pen = DecomposingRecordingPen(glyphset)
+                glyph.draw(pen)
+                result[name] = (
+                    pen.value,
+                    glyph.width,
+                    glyph.lsb,
+                    glyph.height,
+                    glyph.tsb,
+                )
+            return result
+
+        expected = outlines_and_metrics(font)
+        upper_tables(font)
+        assert outlines_and_metrics(font) == expected
+        stream = BytesIO()
+        font.save(stream)
+        reloaded = TTFont(BytesIO(stream.getvalue()))
+        assert outlines_and_metrics(reloaded) == expected
+
+    @pytest.mark.parametrize(
+        "fontfile",
+        [
+            "I.ttf",
+            "I.otf",
+            "varc-ac01-conditional.ttf",
+            "../../cffLib/data/varc-short-cff2.otf",
+        ],
+    )
+    @pytest.mark.parametrize("uppercase", [False, True])
+    @pytest.mark.parametrize("mapped", [False, True])
+    @pytest.mark.parametrize("hvar", [False, True])
+    def test_glyphset_vvar_height(self, fontfile, uppercase, mapped, hvar):
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables as ot
+        from fontTools.varLib.builder import (
+            buildVarData,
+            buildVarIdxMap,
+            buildVarRegionList,
+            buildVarStore,
+        )
+
+        font = TTFont(self.getpath(fontfile))
+        builder = FontBuilder(font=font)
+        if "fvar" not in font:
+            builder.setupFvar([("TEST", 0, 0, 1, "Test")], [])
+        order = font.getGlyphOrder()
+        builder.setupVerticalMetrics({name: (1000, 20) for name in order})
+        builder.setupVerticalHeader()
+        axes = [axis.axisTag for axis in font["fvar"].axes]
+        deltas = [100 + gid * 20 for gid in range(len(order))]
+        regions = buildVarRegionList([{axes[0]: (0, 1, 1)}], axes)
+        font["VVAR"] = newTable("VVAR")
+        vvar = font["VVAR"].table = ot.VVAR()
+        vvar.Version = 0x00010000
+        vvar.VarStore = buildVarStore(
+            regions, [buildVarData([0], [[d] for d in deltas])]
+        )
+        indices = (
+            list(reversed(range(len(order)))) if mapped else list(range(len(order)))
+        )
+        vvar.AdvHeightMap = buildVarIdxMap(indices, order) if mapped else None
+        vvar.TsbMap = vvar.BsbMap = vvar.VOrgMap = None
+        if hvar and "HVAR" not in font:
+            font["HVAR"] = newTable("HVAR")
+            table = font["HVAR"].table = ot.HVAR()
+            table.Version = 0x00010000
+            table.VarStore = buildVarStore(
+                regions, [buildVarData([0], [[0]] * len(order))]
+            )
+            table.AdvWidthMap = table.LsbMap = table.RsbMap = None
+        elif not hvar and "HVAR" in font:
+            del font["HVAR"]
+        if uppercase:
+            upper_tables(font)
+        stream = BytesIO()
+        font.save(stream)
+        font = TTFont(BytesIO(stream.getvalue()))
+        glyphset = font.getGlyphSet(location={axes[0]: 0.5}, normalized=True)
+        for gid, name in enumerate(order):
+            glyph = glyphset[name]
+            expected = 1000 + deltas[indices[gid]] / 2
+            assert glyph.height == expected
+            glyph.draw(DecomposingRecordingPen(glyphset))
+            assert glyph.height == expected
+
+    @pytest.mark.parametrize("gid", [0, 0xFFFF, 0x10000, 0x10001])
+    @pytest.mark.parametrize("mapped", [False, True])
+    @pytest.mark.parametrize("uppercase", [False, True])
+    def test_advance_mapping_high_glyph_id(self, gid, mapped, uppercase, monkeypatch):
+        from fontTools.fontBuilder import FontBuilder
+        from fontTools.ttLib import newTable
+        from fontTools.ttLib.tables import otTables as ot
+        from fontTools.varLib.builder import (
+            buildVarData,
+            buildVarIdxMap,
+            buildVarRegionList,
+            buildVarStore,
+        )
+
+        font = TTFont(self.getpath("I.otf"))
+        builder = FontBuilder(font=font)
+        order = font.getGlyphOrder()
+        builder.setupVerticalMetrics({name: (800, 20) for name in order})
+        builder.setupVerticalHeader()
+        axes = [axis.axisTag for axis in font["fvar"].axes]
+        regions = buildVarRegionList([{axes[0]: (0, 1, 1)}], axes)
+        store = buildVarStore(
+            regions, [buildVarData([0], [[10]]), buildVarData([0], [[100], [200]])]
+        )
+        for tag, map_name in [("HVAR", "AdvWidthMap"), ("VVAR", "AdvHeightMap")]:
+            font[tag] = newTable(tag)
+            table = font[tag].table = getattr(ot, tag)()
+            table.Version = 0x00010000
+            table.VarStore = store
+            mapping = buildVarIdxMap([0x10000] * len(order), order) if mapped else None
+            setattr(table, map_name, mapping)
+        if uppercase:
+            upper_tables(font)
+        # Simulate a high glyph ID without constructing a 65K-glyph fixture.
+        monkeypatch.setattr(font, "getGlyphID", lambda name: gid)
+        glyphset = font.getGlyphSet(location={axes[0]: 0.5}, normalized=True)
+        glyph = glyphset[order[0]]
+        delta = 50 if mapped else 5 if gid == 0 else 0
+        assert glyph.width == glyphset.hMetrics[order[0]][0] + delta
+        assert glyph.height == 800 + delta
+
+    @pytest.mark.parametrize(
+        "format, expected_components", [(None, 3), (3, 3), (4, 3), (5, 2)]
+    )
+    def test_glyphset_varComposite_null_condition(self, format, expected_components):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        condition = None
+        if format is not None:
+            condition = ConditionTable()
+            condition.Format = format
+            condition.ConditionTable = None if format == 5 else [None]
+        font["VARC"].table.ConditionList.ConditionTable[0] = condition
+
+        stream = BytesIO()
+        font.save(stream)
+        stream.seek(0)
+        font = TTFont(stream)
+        pen = RecordingPen()
+        font.getGlyphSet()["uniAC01"].draw(pen)
+        assert len(pen.value) == expected_components
+
+    @pytest.mark.parametrize(
+        "default_value, expected_components", [(-1, 2), (0, 2), (1, 3)]
+    )
+    @pytest.mark.parametrize("with_store", [False, True])
+    def test_glyphset_varComposite_static_value_condition(
+        self, default_value, expected_components, with_store
+    ):
+        font = TTFont(self.getpath("varc-ac01-conditional.ttf"))
+        varc = font["VARC"].table
+        condition = ConditionTable()
+        condition.Format = 2
+        condition.DefaultValue = default_value
+        condition.VarIdx = NO_VARIATION_INDEX
+        varc.ConditionList.ConditionTable[0] = condition
+        if not with_store:
+            varc.MultiVarStore = None
+            for glyph in varc.VarCompositeGlyphs.VarCompositeGlyph:
+                for component in glyph.components:
+                    component.axisValuesVarIndex = NO_VARIATION_INDEX
+                    component.transformVarIndex = NO_VARIATION_INDEX
+
+        stream = BytesIO()
+        font.save(stream)
+        stream.seek(0)
+        font = TTFont(stream)
+        pen = RecordingPen()
+        font.getGlyphSet()["uniAC01"].draw(pen)
+        assert len(pen.value) == expected_components
+
     @pytest.mark.parametrize("scale", [-0.5, 0.5])
     def test_varc_xml_implicit_scale_y(self, scale):
+        from fontTools.ttLib.tables.otTables import VarComponentFlags
+
         font = TTFont(self.getpath("varc-ac00-ac01.ttf"))
         component = (
             font["VARC"].table.VarCompositeGlyphs.VarCompositeGlyph[0].components[0]
@@ -786,6 +1058,7 @@ class TTGlyphSetTest(object):
 
     def test_cubic_glyf(self):
         font = TTFont(self.getpath("dot-cubic.ttf"))
+        upper_tables(font, tables={"glyf", "loca", "maxp", "hhea", "hmtx"})
         glyphset = font.getGlyphSet()
 
         expected = [

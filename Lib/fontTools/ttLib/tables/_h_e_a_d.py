@@ -43,7 +43,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
     See also https://learn.microsoft.com/en-us/typography/opentype/spec/head
     """
 
-    dependencies = ["maxp", "loca", "CFF ", "CFF2"]
+    dependencies = ["maxp", "MAXP", "loca", "LOCA", "CFF ", "CFF2"]
 
     def decompile(self, data, ttFont):
         dummy, rest = sstruct.unpack2(headFormat, data, self)
@@ -73,7 +73,16 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
     def compile(self, ttFont):
         if ttFont.recalcBBoxes:
             # For TT-flavored fonts, xMin, yMin, xMax and yMax are set in table__m_a_x_p.recalc().
-            if "CFF " in ttFont:
+            if "VARC" in ttFont:
+                from fontTools.pens.boundsPen import BoundsPen
+
+                glyphSet = ttFont.getGlyphSet()
+                pen = BoundsPen(glyphSet)
+                for glyph in glyphSet.values():
+                    glyph.draw(pen)
+                if pen.bounds is not None:
+                    self.xMin, self.yMin, self.xMax, self.yMax = intRect(pen.bounds)
+            elif "CFF " in ttFont:
                 topDict = ttFont["CFF "].cff.topDictIndex[0]
                 self.xMin, self.yMin, self.xMax, self.yMax = intRect(topDict.FontBBox)
             elif "CFF2" in ttFont:
