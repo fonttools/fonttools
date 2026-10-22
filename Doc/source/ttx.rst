@@ -28,6 +28,16 @@ When using TTX from the command line there are a bunch of extra options. These a
 * splitting tables to separate .ttx files
 * disabling TrueType instruction disassembly
 
+The ``-z extfile`` option exports images from ``EBDT``, ``CBDT`` and ``sbix``
+as separate files referenced by ``<extfileimagedata value="..."/>``.
+For ``sbix``, files are grouped by pixel size under ``bitmaps/sbix/strike<ppem>``.
+Raw hexadecimal output remains the default; ``dupe`` and ``flip`` glyphs keep
+their ``<ref>`` records.
+
+Handwritten ``sbix`` XML can also use ``<extfileimagedata value="image.png"/>``.
+Relative image paths are resolved from the working directory, as for ``EBDT``
+and ``CBDT``.
+
 The TTX file format
 ^^^^^^^^^^^^^^^^^^^
 

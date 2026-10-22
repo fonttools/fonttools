@@ -1,5 +1,10 @@
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import readHex, safeEval
+from fontTools.ttLib.tables.E_B_D_T_ import (
+    _extFileName,
+    _readExtFileImageData,
+    _writeExtFileImageData,
+)
 import struct
 
 sbixGlyphHeaderFormat = """
@@ -57,6 +62,10 @@ class Glyph(object):
         """Returns True if this glyph is a reference to another glyph's image data."""
         return self.graphicType == "dupe" or self.graphicType == "flip"
 
+    @property
+    def fileExtension(self):
+        return "." + _extFileName(self.graphicType.strip())
+
     def decompile(self, ttFont):
         self.glyphName = ttFont.getGlyphName(self.gid)
         if self.rawdata is None:
@@ -104,7 +113,8 @@ class Glyph(object):
                 rawdata += self.imageData
         self.rawdata = rawdata
 
-    def toXML(self, xmlWriter, ttFont):
+    def toXML(self, xmlWriter, ttFont, strikeIndex=0):
+        """Write raw or external image data, keeping each strike's files separate."""
         if self.graphicType is None:
             # TODO: ignore empty glyphs?
             # a glyph data entry is required for each glyph,
@@ -123,6 +133,10 @@ class Glyph(object):
         if self.is_reference_type():
             # this glyph is a reference to another glyph id.
             xmlWriter.simpletag("ref", glyphname=self.referenceGlyphName)
+        elif getattr(ttFont, "bitmapGlyphDataFormat", "raw") == "extfile":
+            _writeExtFileImageData(
+                strikeIndex, self.glyphName, self, xmlWriter, ttFont, tableTag="sbix"
+            )
         else:
             xmlWriter.begintag("hexdata")
             xmlWriter.newline()
@@ -142,6 +156,8 @@ class Glyph(object):
             self.referenceGlyphName = glyphname
         elif name == "hexdata":
             self.imageData = readHex(content)
+        elif name == "extfileimagedata":
+            _readExtFileImageData(self, name, attrs, content, ttFont)
         else:
             from fontTools import ttLib
 
