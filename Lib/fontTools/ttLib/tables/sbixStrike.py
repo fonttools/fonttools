@@ -130,7 +130,7 @@ class Strike(object):
         glyphOrder = ttFont.getGlyphOrder()
         for glyphName in glyphOrder:
             if glyphName in self.glyphs:
-                self.glyphs[glyphName].toXML(xmlWriter, ttFont)
+                self.glyphs[glyphName].toXML(xmlWriter, ttFont, strikeIndex=self.ppem)
                 # TODO: what if there are more glyph data records than (glyf table) glyphs?
         xmlWriter.endtag("strike")
         xmlWriter.newline()
