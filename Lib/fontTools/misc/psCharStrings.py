@@ -1470,14 +1470,25 @@ class DictDecompiler(object):
             self.parent.getNumRegions(vsindex) + 1
         )  # only a PrivateDict has blended ops.
         numBlends = self.pop()
-        args = self.popall()
-        numArgs = len(args)
-        # The spec says that there should be no non-blended Blue Values,.
-        assert numArgs == numMasters * numBlends
+        assert numBlends >= 0
+        if numBlends == 0:
+            return []
+        start = len(self.stack) - numMasters * numBlends
+        assert start >= 0
+        args = self.stack[start:]
+        del self.stack[start:]
         value = [None] * numBlends
         numDeltas = numMasters - 1
-        i = 0
+        # Earlier groups remain live. Keep the delta-encoded default values
+        # continuous across groups, and promote any constant prefix values.
         prevVal = 0
+        for i, previous in enumerate(self.stack):
+            if isinstance(previous, list):
+                prevVal = previous[0]
+            else:
+                prevVal += previous
+                self.stack[i] = [prevVal] + [0] * numDeltas
+        i = 0
         while i < numBlends:
             newVal = args[i] + prevVal
             prevVal = newVal
