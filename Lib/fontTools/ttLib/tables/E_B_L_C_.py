@@ -249,11 +249,11 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
             curStrike.toXML(curIndex, writer, ttFont)
 
     def fromXML(self, name, attrs, content, ttFont):
+        if not hasattr(self, "strikes"):
+            self.strikes = []
         if name == "header":
             self.version = safeEval(attrs["version"])
         elif name == "strike":
-            if not hasattr(self, "strikes"):
-                self.strikes = []
             strikeIndex = safeEval(attrs["index"])
             curStrike = Strike()
             curStrike.fromXML(name, attrs, content, ttFont, self)

@@ -176,11 +176,11 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
             writer.newline()
 
     def fromXML(self, name, attrs, content, ttFont):
+        if not hasattr(self, "strikeData"):
+            self.strikeData = []
         if name == "header":
             self.version = safeEval(attrs["version"])
         elif name == "strikedata":
-            if not hasattr(self, "strikeData"):
-                self.strikeData = []
             strikeIndex = safeEval(attrs["index"])
 
             bitmapGlyphDict = {}
