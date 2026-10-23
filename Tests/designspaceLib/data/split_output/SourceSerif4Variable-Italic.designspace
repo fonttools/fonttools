@@ -67,6 +67,28 @@
       </location>
     </source>
   </sources>
+  <variable-fonts>
+    <variable-font name="SourceSerif4Variable-Italic">
+      <axis-subsets>
+        <axis-subset name="weight"/>
+        <axis-subset name="optical"/>
+      </axis-subsets>
+      <lib>
+        <dict>
+          <key>public.skipExportGlyphs</key>
+          <array>
+            <string>caron.alt</string>
+            <string>commabelowcmb.alt</string>
+            <string>f.liga</string>
+            <string>f.ligalong</string>
+            <string>tonos.cap</string>
+            <string>dieresiscmb.tight</string>
+            <string>turkicdsccmb</string>
+          </array>
+        </dict>
+      </lib>
+    </variable-font>
+  </variable-fonts>
   <instances>
     <instance name="Source Serif 4 Caption ExtraLight Italic" familyname="Source Serif 4" stylename="Caption ExtraLight Italic" filename="Source Serif 4-Caption ExtraLight Italic.ttf" postscriptfontname="SourceSerif4Italic-CaptionExtraLight" stylemapfamilyname="Source Serif 4 Caption ExtraLight Italic" stylemapstylename="regular">
       <location>

@@ -86,6 +86,14 @@
       </location>
     </source>
   </sources>
+  <variable-fonts>
+    <variable-font name="AktivGroteskVF_WghtWdth">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+        <axis-subset name="Width"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
   <instances>
     <instance name="Aktiv Grotesk Cd Hair" familyname="Aktiv Grotesk" stylename="Cd Hair" filename="../instances/AktivGroteskCd_Hair.ufo" postscriptfontname="AktivGrotesk-CdHair" stylemapfamilyname="Aktiv Grotesk Cd Hair" stylemapstylename="regular">
       <location>

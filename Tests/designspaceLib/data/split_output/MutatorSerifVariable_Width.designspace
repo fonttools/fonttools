@@ -19,6 +19,13 @@
       </location>
     </source>
   </sources>
+  <variable-fonts>
+    <variable-font name="MutatorSerifVariable_Width">
+      <axis-subsets>
+        <axis-subset name="width"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
   <instances>
     <instance name="MutatorMathTest Serif Light Condensed" familyname="MutatorMathTest" stylename="Serif Light Condensed" filename="MutatorMathTest-Serif Light Condensed.ttf" postscriptfontname="MutatorMathTest-SerifLightCondensed" stylemapfamilyname="MutatorMathTest Serif Light Condensed" stylemapstylename="regular">
       <location>
