@@ -140,9 +140,6 @@ def _winding_font(outline_tag):
     else:
         fb.setupCFF("Winding", {}, glyphs, {})
     fb.setupHorizontalMetrics({".notdef": (800, 0), "A": (800, 100)})
-    if not is_ttf:
-        table = fb.font[outline_tag]
-        table.decompile(table.compile(fb.font), fb.font)
     return fb.font
 
 
