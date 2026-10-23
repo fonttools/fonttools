@@ -1,9 +1,15 @@
-from typing import Callable
+from functools import partial
+from typing import Callable, Optional
 from fontTools.pens.basePen import BasePen
 
 
 def pointToString(pt, ntos=str):
     return " ".join(ntos(i) for i in pt)
+
+
+def _numberToString(precision, value):
+    value = round(value, precision)
+    return "0" if value == 0 else str(value).removesuffix(".0")
 
 
 class SVGPathPen(BasePen):
@@ -13,7 +19,11 @@ class SVGPathPen(BasePen):
         glyphSet: a dictionary of drawable glyph objects keyed by name
             used to resolve component references in composite glyphs.
         ntos: a callable that takes a number and returns a string, to
-            customize how numbers are formatted (default: str).
+            customize how numbers are formatted (default: str). A custom
+            formatter takes precedence over precision.
+        precision: an optional number of decimal places for coordinates.
+            The default, None, leaves numbers unrounded. With precision set,
+            integer values are written without a decimal suffix.
 
     :Example:
         .. code-block::
@@ -40,13 +50,21 @@ class SVGPathPen(BasePen):
             print(tpen.getCommands())
     """
 
-    def __init__(self, glyphSet, ntos: Callable[[float], str] = str):
+    def __init__(
+        self,
+        glyphSet,
+        ntos: Callable[[float], str] = str,
+        *,
+        precision: Optional[int] = None,
+    ):
         BasePen.__init__(self, glyphSet)
         self._commands = []
         self._lastCommand = None
         self._lastX = None
         self._lastY = None
         self._ntos = ntos
+        if precision is not None and ntos is str:
+            self._ntos = partial(_numberToString, precision)
 
     def _handleAnchor(self):
         """
@@ -243,6 +261,13 @@ def main(args=None):
         "the name of a variation axis, followed by '=' and a number. E.g.: "
         "wght=700 wdth=80. The default is the location of the base master.",
     )
+    parser.add_argument(
+        "--precision",
+        metavar="N",
+        type=int,
+        default=2,
+        help="Number of decimal places in path coordinates (default: 2).",
+    )
 
     options = parser.parse_args(args)
 
@@ -278,7 +303,7 @@ def main(args=None):
     for g in glyphs:
         glyph = glyphset[g]
 
-        pen = SVGPathPen(glyphset)
+        pen = SVGPathPen(glyphset, precision=options.precision)
         glyph.draw(pen)
         commands = pen.getCommands()
 
