@@ -88,7 +88,7 @@ class T2CharStringTest(unittest.TestCase):
             (1.0, "1e 1f"),  # 1
             (-1.0, "1e e1 ff"),  # -1
             (98765.37e2, "1e 98 76 53 7f"),  # 9876537
-            (1234567890.0, "1e 12 34 56 79 b2 ff"),  # 12345679E2
+            (1234567890.0, "1e 12 34 56 78 90 ff"),  # 1234567890
             (9.876537e-4, "1e 98 76 53 7c 10 ff"),  # 9876537E-10
             (9.876537e4, "1e 98 76 5a 37 ff"),  # 98765.37
             (1000.0, "1e 1b 3f"),  # 1E3
@@ -112,16 +112,13 @@ class T2CharStringTest(unittest.TestCase):
             # check to see if we got the expected bytes
             self.assertEqual(hexenc(encoded_result), sample[1])
 
-            # check to see if we get the same value by decoding the data
-            decoded_result = read_realNumber(
-                None,
-                None,
-                encoded_result,
-                1,
-            )
-            self.assertEqual(decoded_result[0], float("%.8g" % sample[0]))
-            # We limit to 8 digits of precision to match the implementation
-            # of encodeFloat.
+    def test_encodeFloat_precision(self):
+        for value in (2.00200009, -2.00200009, 0.0000000200200009, 12345678901234.0):
+            with self.subTest(value=value):
+                encoded = encodeFloat(value)
+                decoded, end = read_realNumber(None, None, encoded, 1)
+                self.assertEqual(decoded, value)
+                self.assertEqual(end, len(encoded))
 
     def test_encode_decode_fixed(self):
         testNums = [
