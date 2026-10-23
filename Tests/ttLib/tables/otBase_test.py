@@ -127,3 +127,57 @@ if __name__ == "__main__":
     import sys
 
     sys.exit(unittest.main())
+
+
+def _run_with_fake_uharfbuzz(tmp_path, error, code):
+    """Run `code` in a fresh interpreter where importing uharfbuzz raises `error`."""
+    import os
+    import subprocess
+    import sys
+
+    fake = tmp_path / "uharfbuzz"
+    fake.mkdir()
+    (fake / "__init__.py").write_text(f"raise {error}\n")
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join([str(tmp_path)] + [p for p in sys.path if p])
+    return subprocess.run(
+        [sys.executable, "-c", code], env=env, capture_output=True, text=True
+    )
+
+
+def test_broken_uharfbuzz_build_does_not_break_import(tmp_path):
+    # An installed uharfbuzz that fails with something other than ImportError
+    # (e.g. a Cython ABI mismatch) used to make otBase, and with it
+    # fontTools.subset, unimportable.
+    result = _run_with_fake_uharfbuzz(
+        tmp_path,
+        "TypeError('Shared Cython type has the wrong size')",
+        "import fontTools.subset; from fontTools.ttLib.tables import otBase; "
+        "print(otBase.have_uharfbuzz)",
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "False"
+    assert "uharfbuzz is installed but failed to import" in result.stderr
+
+
+def test_forced_repacker_reports_why_uharfbuzz_is_unusable(tmp_path):
+    result = _run_with_fake_uharfbuzz(
+        tmp_path,
+        "TypeError('wrong size')",
+        "from fontTools.ttLib import TTFont\n"
+        "from fontTools.ttLib.tables import otBase\n"
+        "from fontTools.fontBuilder import FontBuilder\n"
+        "fb = FontBuilder(1000, isTTF=True)\n"
+        "fb.setupGlyphOrder(['.notdef', 'A', 'B'])\n"
+        "fb.setupCharacterMap({65: 'A', 66: 'B'})\n"
+        "fb.addOpenTypeFeatures('feature kern { pos A B -10; } kern;')\n"
+        "font = fb.font\n"
+        "font.cfg[otBase.USE_HARFBUZZ_REPACKER] = True\n"
+        "try:\n"
+        "    font['GPOS'].compile(font)\n"
+        "except ImportError as e:\n"
+        "    print('ImportError:', e)\n",
+    )
+    assert "ImportError: uharfbuzz failed to import: wrong size" in result.stdout, (
+        result.stdout + result.stderr
+    )

@@ -13,12 +13,24 @@ from typing import Iterator, NamedTuple, Optional, Tuple
 log = logging.getLogger(__name__)
 
 have_uharfbuzz = False
+uharfbuzz_import_error = None
 try:
     import uharfbuzz as hb
 
     have_uharfbuzz = True
-except ImportError:
-    pass
+except ImportError as e:
+    uharfbuzz_import_error = e
+except Exception as e:
+    # An installed but broken build (e.g. an ABI mismatch) raises something other
+    # than ImportError; treat it like a missing module instead of making every
+    # importer of otBase fail.
+    uharfbuzz_import_error = e
+    log.warning(
+        "uharfbuzz is installed but failed to import (%s: %s); "
+        "using the pure-python serializer",
+        type(e).__name__,
+        e,
+    )
 
 USE_HARFBUZZ_REPACKER = OPTIONS[f"{__name__}:USE_HARFBUZZ_REPACKER"]
 
@@ -132,7 +144,12 @@ class BaseTTXConverter(DefaultTable):
                 )
             elif not have_uharfbuzz:
                 if use_hb_repack is True:
-                    raise ImportError("No module named 'uharfbuzz'")
+                    raise ImportError(
+                        "No module named 'uharfbuzz'"
+                        if uharfbuzz_import_error is None
+                        or isinstance(uharfbuzz_import_error, ImportError)
+                        else f"uharfbuzz failed to import: {uharfbuzz_import_error}"
+                    ) from uharfbuzz_import_error
                 else:
                     assert use_hb_repack is None
                     log.debug(
