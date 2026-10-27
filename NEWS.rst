@@ -1,3 +1,6 @@
+4.68.0 (released 2026-10-27)
+----------------------------
+
 - [feaLib] Escape ``"`` and ``\`` when writing names back out with ``asFea()`` in
   ``FeatureNameStatement``, ``STATNameStatement`` and ``CVParametersNameStatement``
   (#4321).
