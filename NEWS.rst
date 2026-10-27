@@ -1,3 +1,44 @@
+- [feaLib] Escape ``"`` and ``\`` when writing names back out with ``asFea()`` in
+  ``FeatureNameStatement``, ``STATNameStatement`` and ``CVParametersNameStatement``
+  (#4321).
+- [scaleUpem] Also scale the ``MATH`` lengths that are not ``MathValueRecord``\ s
+  (``DelimitedSubFormulaMinHeight``, ``DisplayOperatorMinHeight``,
+  ``MinConnectorOverlap``, etc.) (#4327).
+- [cffLib] Inherit the initial CFF2 ``vsindex`` from the Private DICT when decompiling,
+  specializing and instancing charstrings, and fix ``programToCommands`` miscounting
+  operands when several ``blend`` operators precede the first stem or moveto (#4337,
+  #4339).
+- [instancer] Round CFF2 outlines and stem hints on absolute positions rather than
+  per relative operand, and keep CFF2 Private DICT blend values at full precision
+  until they are written back (#4338, #4341).
+- [cffLib] Preserve CFF2 Private DICT arrays that use more than one ``blend`` group
+  (#4346).
+- [feaLib] Raise ``FeatureLibError`` instead of looping forever on an unclosed
+  ``OS/2``, ``BASE`` or ``STAT`` table block (#4347).
+- [designspaceLib] When a variable font overrides some ``public.fontInfo`` keys,
+  merge them with the root-level font info instead of replacing it (#4336, #4340).
+- [instancer] Raise an error for ``FeatureVariations`` conditions of a format other
+  than the supported axis-range one, instead of silently dropping them (#4348).
+- [filesystem] Don't overwrite an unrelated sibling ``.zip`` when writing a ``.ufoz``
+  or other non-``.zip`` archive (#4342).
+- [glyf] Fix exponential running time on composite glyphs that reuse the same
+  component at several nesting levels; ``getCoordinates`` now raises ``TTLibError``
+  past 65535 composite points (#4325).
+- [ttLib] Add support for the beyond-64k tables of the final ISO Open Font Format
+  5th edition: uppercase companion tables (``GLYF``, ``GVAR``, ``HMTX``, GSUB/GPOS
+  extended layout, ``FeatureVariations`` 1.1, TTC 1.1/2.1, ``DMAP``), a
+  ``ttLib.beyond64k`` module and CLI, and support in ``FontBuilder``, ``merge``,
+  ``subset``, ``instancer``, ``qu2cu``, ``removeOverlaps`` and ``scaleUpem`` (#4097,
+  #2678).
+- [VARC] Keep ``addVarComponent()`` locations sparse, passing ``RESET_UNSPECIFIED_AXES``
+  via a new keyword-only ``resetUnspecifiedAxes`` pen argument (#4349).
+- [woff] Require ``brotli`` >= 1.2.1 and ``brotlicffi`` >= 1.2.1.0, which fix
+  GHSA-9v8h-qqgm-4m35 (#4365, #4370).
+- Build Windows ARM64 wheels (#4366).
+- [instancer] Fix ``AttributeError: ElidedFallbackNameID`` when updating font names of
+  a font with a version 1.0 ``STAT`` table; fall back to the subfamily name (#2933,
+  #4371).
+
 4.67.0 (released 2026-10-14)
 ----------------------------
 
