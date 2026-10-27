@@ -148,6 +148,23 @@ def test_updateNameTable_with_registered_axes_ribbi(
     _test_name_records(varfont, expected, isNonRIBBI)
 
 
+def test_updateNameTable_stat_version_1_0(varfont):
+    stat = varfont["STAT"]
+    stat.table.Version = 0x00010000
+    stat.decompile(stat.compile(varfont), varfont)
+
+    instancer.names.updateNameTable(varfont, {"wght": 100})
+
+    expected = {
+        (1, 3, 1, 0x409): "Test Variable Font Thin",
+        (2, 3, 1, 0x409): "Regular",
+        (6, 3, 1, 0x409): "TestVariableFont-Thin",
+        (16, 3, 1, 0x409): "Test Variable Font",
+        (17, 3, 1, 0x409): "Thin",
+    }
+    _test_name_records(varfont, expected, isNonRIBBI=True)
+
+
 def test_updatetNameTable_axis_order(varfont):
     axes = [
         dict(

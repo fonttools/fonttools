@@ -206,7 +206,12 @@ def _updateNameRecords(varfont, axisValues):
     axisValueNameIDs = [a.ValueNameID for a in axisValues]
     ribbiNameIDs = [n for n in axisValueNameIDs if _isRibbi(nametable, n)]
     nonRibbiNameIDs = [n for n in axisValueNameIDs if n not in ribbiNameIDs]
-    elidedNameID = stat.ElidedFallbackNameID
+    # STAT 1.0 has no elided fallback name; use the existing subfamily name.
+    elidedNameID = (
+        stat.ElidedFallbackNameID
+        if stat.Version >= 0x00010001
+        else NameID.SUBFAMILY_NAME
+    )
     elidedNameIsRibbi = _isRibbi(nametable, elidedNameID)
 
     getName = nametable.getName
