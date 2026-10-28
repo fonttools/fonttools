@@ -65,7 +65,7 @@ class Circle:
     def inside(self, outer_circle, tolerance=_CIRCLE_INSIDE_TOLERANCE):
         dist = self.radius + hypot(*_vector_between(self.centre, outer_circle.centre))
         return (
-            isclose(outer_circle.radius, dist, rel_tol=_CIRCLE_INSIDE_TOLERANCE)
+            isclose(outer_circle.radius, dist, rel_tol=tolerance)
             or outer_circle.radius > dist
         )
 
