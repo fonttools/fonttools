@@ -263,7 +263,7 @@ Acknowledgments
 
 In alphabetical order:
 
-aschmitz, Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
+aschmitz, Ilie Beleniuc, Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
 Jelle Bosma, Sascha Brawer, Tom Byrer, CAOShurong, Antonio Cavedoni, ChipLab, Frédéric Coiffier,
 Vincent Connare, David Corbett, Simon Cozens, Dave Crossland,
 Zihan Dai, Simon Daniels,
