@@ -23,6 +23,8 @@ class LocationLabeler:
         self.discrete_axes = set(discrete_axes)
         self.cache = {}
         self.reverse_unavailable = False
+        self._reverse_mapper = None
+        self._forward_mapper = None
         avar = font.get("avar") if font is not None else None
         self.avar2 = (
             avar is not None
@@ -36,7 +38,7 @@ class LocationLabeler:
             " ".join(f"{tag}={value}" for tag, value in location.items()) or "default"
         )
 
-    def __call__(self, location):
+    def __call__(self, location, *, include_input=True):
         # Include every nonzero coordinate, including hidden axes. These are
         # the actual tested masters, regardless of whether public inputs can
         # reach them. Discrete zero values are meaningful, not defaults.
@@ -47,13 +49,15 @@ class LocationLabeler:
                 if value != 0 or tag in self.discrete_axes
             )
         )
-        if key in self.cache:
+        if include_input and key in self.cache:
             return self.cache[key]
         # Midpoints of F2Dot14 peaks can contain a half-unit; retain that
         # extra bit instead of rounding the nominal location to another point.
         coordinates = {tag: floatToFixedToStr(value, 15) for tag, value in key}
         normalized = self._coordinates(coordinates) if coordinates else "all zero"
         labels = [f"normalized: {normalized}"]
+        if not include_input:
+            return tuple(labels)
         if not self.avar2:
             mapped = {
                 tag: floatToFixedToStr(
@@ -74,14 +78,20 @@ class LocationLabeler:
         return self.cache[key]
 
     def _add_input_label(self, labels, location):
-        from .avar.reverse import reverse
-        from .avar.map import map as map_forward
+        from .avar.reverse import ReverseMapper
+        from .avar.map import ForwardMapper
+
+        if self._reverse_mapper is None:
+            # Build only when a report needs an input label. The formatted
+            # label cache already memoizes both matches and failed inversions.
+            self._reverse_mapper = ReverseMapper(self.font, cache_size=0)
+            self._forward_mapper = ForwardMapper(self.font)
 
         # A gvar peak is a complete post-avar location: omitted hidden outputs
         # must target zero too. reverse() otherwise leaves those unconstrained.
         target = {a.axisTag: location.get(a.axisTag, 0) for a in self.font["fvar"].axes}
-        inputs, error = reverse(
-            self.font, target, inputNormalized=True, dropZeroes=True
+        inputs, error = self._reverse_mapper.reverse(
+            target, inputNormalized=True, dropZeroes=True
         )
         tolerance = 1 / 16384
         if error > tolerance:
@@ -105,8 +115,7 @@ class LocationLabeler:
         # Pretty decimals can move an input across a steep avar segment.
         # Verify the displayed inputs, falling back to full precision when
         # shortening them would turn a good inverse into a misleading label.
-        actual = map_forward(
-            self.font,
+        actual = self._forward_mapper.map(
             {tag: float(value) for tag, value in formatted.items()},
             outputNormalized=True,
         )

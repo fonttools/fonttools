@@ -1,4 +1,8 @@
 from fontTools.varLib.models import normalizeValue
+from fontTools.varLib.models import piecewiseLinearMap
+from fontTools.varLib.varStore import VarStoreInstancer
+from fontTools.misc.fixedTools import floatToFixed, fixedToFloat
+from fontTools.misc.roundTools import otRound
 
 
 def _denormalize(v, triplet):
@@ -48,6 +52,97 @@ def _parse_coordinates(parser, items, allow_default=False):
     return location
 
 
+class ForwardMapper:
+    """Prepare a font's axis mappings for repeated forward evaluations.
+
+    map() accepts the same location and unit options as the module-level
+    map() function. Axis metadata, segment maps, delta-set indices, and the
+    VarStore evaluator are prepared once; the evaluator retains its region
+    support cache between locations. No NumPy or SciPy dependency is needed.
+
+    The font must contain fvar. Construct a new mapper after changing its
+    fvar or avar tables.
+    """
+
+    def __init__(self, font):
+        if "fvar" not in font:
+            raise ValueError("Font does not contain an 'fvar' table")
+        self.axes = tuple(font["fvar"].axes)
+        self.triples = {
+            a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in self.axes
+        }
+        self.tags = tuple(self.triples)
+        avar = font.get("avar")
+        self.version = getattr(avar, "majorVersion", 1)
+        if self.version not in (1, 2):
+            raise NotImplementedError("Unknown avar table version")
+        self.segments = (
+            {tag: dict(mapping) for tag, mapping in avar.segments.items()}
+            if avar is not None
+            else {}
+        )
+        self._instancer = None
+        self._indices = ()
+        if self.version == 2:
+            index_map = avar.table.VarIdxMap
+            self._indices = tuple(
+                index_map[i] if index_map is not None else i
+                for i in range(len(self.axes))
+            )
+            store = avar.table.VarStore
+            if store is not None:
+                self._instancer = VarStoreInstancer(store, self.axes)
+
+    def map(
+        self,
+        location,
+        *,
+        inputNormalized=False,
+        outputNormalized=False,
+        dropZeroes=False,
+    ):
+        """Map a location, retaining prepared state for the next evaluation."""
+        unknown_axes = sorted(location.keys() - self.triples.keys())
+        if unknown_axes:
+            raise ValueError(f"Unknown axis tag(s): {', '.join(unknown_axes)}")
+        normalized = {
+            tag: (
+                location.get(tag, 0)
+                if inputNormalized
+                else normalizeValue(location.get(tag, triple[1]), triple)
+            )
+            for tag, triple in self.triples.items()
+        }
+        mapped = {
+            tag: piecewiseLinearMap(value, self.segments.get(tag, {}))
+            for tag, value in normalized.items()
+        }
+        if self.version == 2:
+            instancer = self._instancer
+            if instancer is not None:
+                # Only the scalar cache is location-dependent. Keep the
+                # compiled region supports across evaluations.
+                instancer.setLocation(mapped)
+            output = {}
+            for tag, index in zip(self.tags, self._indices):
+                value = floatToFixed(mapped[tag], 14)
+                if instancer is not None:
+                    value += otRound(instancer[index])
+                    value = min(max(value, -16384), 16384)
+                output[tag] = fixedToFloat(value, 14)
+            mapped = output
+        # Filtering happens in normalized space: zero can correspond to a
+        # nonzero default when converted back to pre-fvar units.
+        if dropZeroes:
+            mapped = {tag: value for tag, value in mapped.items() if value != 0}
+        if not outputNormalized:
+            mapped = {
+                tag: _denormalize(value, self.triples[tag])
+                for tag, value in mapped.items()
+            }
+        return mapped
+
+
 def map(
     font,
     location,
@@ -68,6 +163,7 @@ def map(
     With ``reverse=True``, return the ``(location, error)`` tuple from
     :func:`fontTools.varLib.avar.reverse.reverse`; otherwise return the mapped
     location. ``pinned`` and ``vary`` are only supported for reverse mapping.
+    For repeated forward evaluations use ForwardMapper to reuse prepared state.
     """
     if reverse:
         from .reverse import reverse as reverse_map
@@ -88,35 +184,12 @@ def map(
     if "fvar" not in font:
         return None
 
-    fvar = font["fvar"]
-    axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in fvar.axes}
-    unknownAxes = sorted(tag for tag in location if tag not in axes)
-    if unknownAxes:
-        raise ValueError(f"Unknown axis tag(s): {', '.join(unknownAxes)}")
-
-    location = {
-        tag: (
-            location.get(tag, 0)
-            if inputNormalized
-            else normalizeValue(location.get(tag, triple[1]), triple)
-        )
-        for tag, triple in axes.items()
-    }
-
-    if "avar" in font:
-        location = font["avar"].renormalizeLocation(location, font, dropZeroes)
-
-    # Filter before denormalizing: a normalized zero can become a nonzero
-    # user-space default. avar v1 and fonts without avar need this too.
-    if dropZeroes:
-        location = {tag: value for tag, value in location.items() if value != 0}
-
-    if not outputNormalized:
-        location = {
-            tag: _denormalize(value, axes[tag]) for tag, value in location.items()
-        }
-
-    return location
+    return ForwardMapper(font).map(
+        location,
+        inputNormalized=inputNormalized,
+        outputNormalized=outputNormalized,
+        dropZeroes=dropZeroes,
+    )
 
 
 def main(args=None):

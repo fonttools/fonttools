@@ -40,6 +40,36 @@ The residual measures post-avar output differences, including the outputs of
 hidden and pinned axes. A non-injective map can recover different but equivalent
 inputs.
 
+For repeated forward evaluations, prepare a mapper once::
+
+    from fontTools.varLib.avar.map import ForwardMapper
+
+    mapper = ForwardMapper(font)
+    first = mapper.map({"wght": 600}, outputNormalized=True)
+    second = mapper.map({"wght": 700}, outputNormalized=True)
+
+This retains axis metadata and the VarStore region-support cache. It requires
+no NumPy or SciPy. Construct a new mapper after changing the font's fvar or
+avar tables. The module-level ``map()`` function remains available for
+individual calls.
+
+Prepare a reverse mapper to solve several targets with the same constraints::
+
+    from fontTools.varLib.avar.reverse import ReverseMapper
+
+    mapper = ReverseMapper(font, pinned={"opsz": None})
+    first, error = mapper.reverse({"wght": 0.6}, inputNormalized=True)
+    second, error = mapper.reverse({"wght": 0.8}, inputNormalized=True)
+
+The solver retains its continuous mapping, Jacobian data, starting points,
+and exact forward evaluator. It memoizes up to 128 target solutions by default;
+``cache_size=0`` disables memoization, and ``clear_cache()`` discards cached
+solutions. Unit and output-filtering options share cached solutions, but
+explicitly specified fixed-axis targets and sparsity tolerances remain distinct.
+Each call returns a fresh location dictionary. Pins and ``vary`` are fixed at
+construction, and changing the font's fvar or avar tables requires a new mapper.
+The module-level ``reverse()`` function remains available for individual calls.
+
 Reverse mapping requires the optional ``fonttools[avar]`` dependencies.
 It minimizes normalized output error, then prefers fewer non-default input
 axes among solutions within one F2Dot14 unit of the best error found. A greedy
@@ -50,7 +80,10 @@ it as the ``error`` alongside the location. CLI output is rounded to the font's
 F2Dot14 resolution for readability. The font is not modified.
 
 .. automodule:: fontTools.varLib.avar.reverse
-   :members: reverse
+   :members: reverse, ReverseMapper
+
+.. automodule:: fontTools.varLib.avar.map
+   :members: ForwardMapper
 
 .. automodule:: fontTools.varLib.avar.roundtrip
    :members: roundtrip
