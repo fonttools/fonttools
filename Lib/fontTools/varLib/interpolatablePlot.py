@@ -543,7 +543,7 @@ class InterpolatablePlot:
             labels = (name,)
             if self.location_labeler is not None:
                 labels = self.location_labeler(self.locations[master_idx])
-                if name not in ("''", " | ".join(labels)):
+                if name not in ("''", labels[0], " | ".join(labels)):
                     labels = (name, *labels)
             self.draw_location_label(labels, x=x, y=y)
             y += self.location_height + self.pad

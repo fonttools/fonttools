@@ -1,13 +1,16 @@
 import sys
+from pathlib import Path
 import pytest
 
 from fontTools.misc.fixedTools import floatToFixed
+from fontTools.misc.lazyTools import LazyList
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib import builder
 from fontTools.varLib.avar.map import map as map_forward
 from fontTools.varLib.interpolatableHelpers import LocationLabeler
+from fontTools.varLib.interpolatable import main, test_gen as interpolatable_test_gen
 
 
 @pytest.fixture
@@ -68,14 +71,14 @@ def test_labels_cache_complete_targets(avar2_font, monkeypatch):
     pytest.importorskip("scipy")
     from fontTools.varLib.avar import reverse as module
 
-    original = module.reverse
+    original = module.ReverseMapper.reverse
     calls = []
 
-    def recording_reverse(font, location, **kwargs):
+    def recording_reverse(mapper, location, **kwargs):
         calls.append(location)
-        return original(font, location, **kwargs)
+        return original(mapper, location, **kwargs)
 
-    monkeypatch.setattr(module, "reverse", recording_reverse)
+    monkeypatch.setattr(module.ReverseMapper, "reverse", recording_reverse)
     formatter = labeler(avar2_font)
     first = formatter({"wght": 0.5, "XOPQ": 0.5})
     assert first == formatter({"XOPQ": 0.5, "wght": 0.5, "GRAD": 0})
@@ -85,6 +88,94 @@ def test_labels_cache_complete_targets(avar2_font, monkeypatch):
         "normalized: XOPQ=0.5 wght=0.5",
         "input: wght=650.0",
     )
+    unreachable = formatter({"XOPQ": 1})
+    assert len(unreachable) == 1
+    assert unreachable == formatter({"XOPQ": 1, "wght": 0})
+    assert len(calls) == 2
+
+
+def test_labeler_prepares_mappers_once(avar2_font, monkeypatch):
+    pytest.importorskip("scipy")
+    from fontTools.varLib.avar import reverse as module
+
+    original = module.ReverseMapper
+    constructions = []
+
+    def recording_mapper(*args, **kwargs):
+        constructions.append(None)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(module, "ReverseMapper", recording_mapper)
+    formatter = labeler(avar2_font)
+    assert not constructions
+    formatter({"GRAD": -1})
+    solver = formatter._reverse_mapper
+    forward = formatter._forward_mapper
+    formatter({"GRAD": 1})
+    formatter({"XOPQ": 1})
+    assert len(constructions) == 1
+    assert formatter._reverse_mapper is solver
+    assert formatter._forward_mapper is forward
+
+
+def test_normalized_only_labels_do_not_build_solver(avar2_font, monkeypatch):
+    from fontTools.varLib.avar import reverse as module
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Normalized-only labels must not construct a solver")
+
+    monkeypatch.setattr(module, "ReverseMapper", forbidden)
+    formatter = labeler(avar2_font)
+    assert formatter({"GRAD": -1}, include_input=False) == ("normalized: GRAD=-1.0",)
+    assert not formatter.reverse_unavailable
+
+
+def test_successful_check_does_not_resolve_lazy_names():
+    class Glyph:
+        def draw(self, pen, **kwargs):
+            pen.moveTo((0, 0))
+            pen.lineTo((100, 0))
+            pen.lineTo((100, 100))
+            pen.closePath()
+
+    def forbidden(index):
+        pytest.fail("A successful check must not resolve master names")
+
+    assert not list(
+        interpolatable_test_gen(
+            [{"A": Glyph()}, {"A": Glyph()}], names=LazyList([forbidden] * 2)
+        )
+    )
+
+
+def test_quiet_cli_does_not_build_solver(monkeypatch):
+    from fontTools.varLib.avar import reverse as module
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Quiet diagnostics must not construct a solver")
+
+    monkeypatch.setattr(module, "ReverseMapper", forbidden)
+    font = Path(__file__).parent.parent / "ttLib/tables/data/Amstelvar-avar2.subset.ttf"
+    main(["--quiet", str(font)])
+
+
+def test_name_filter_matches_complete_labels(monkeypatch):
+    pytest.importorskip("scipy")
+    from fontTools.varLib import interpolatable
+
+    path = Path(__file__).parent.parent / "ttLib/tables/data/Amstelvar-avar2.subset.ttf"
+    with TTFont(path) as font:
+        name = " | ".join(labeler(font)({}))
+    assert "input:" in name
+    captured = []
+
+    def recording_test_gen(glyphsets, **kwargs):
+        captured.extend(kwargs["names"])
+        return iter(())
+
+    monkeypatch.setattr(interpolatable, "test_gen", recording_test_gen)
+    main(["--quiet", "--name", name, str(path)])
+    assert captured == [name]
 
 
 def test_pretty_input_is_verified(avar2_font):
@@ -136,7 +227,11 @@ def test_zero_location_is_explicit():
     assert formatter({"wght": 0}) == ("normalized: all zero", "design: default")
 
 
-def test_midway_label_does_not_change_outline_blend():
+@pytest.mark.parametrize(
+    "names",
+    [["Regular", "Bold"], ["normalized: all zero", "normalized: wght=1.0"]],
+)
+def test_midway_label_does_not_change_outline_blend(names):
     pytest.importorskip("cairo")
     from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
     from fontTools.varLib.interpolatablePlot import InterpolatablePlot
@@ -162,7 +257,7 @@ def test_midway_label_does_not_change_outline_blend():
     plot = RecordingPlot(
         None,
         glyphsets,
-        names=["Regular", "Bold"],
+        names=names,
         locations=[{}, {"wght": 1}],
         location_labeler=LocationLabeler({"wght": {-1: 100, 0: 400, 1: 900}}),
     )
@@ -173,6 +268,7 @@ def test_midway_label_does_not_change_outline_blend():
     assert "nominal midway" in plot.labels
     assert "normalized: wght=0.5" in plot.labels
     assert "design: wght=650.0" in plot.labels
+    assert plot.labels.count("normalized: wght=1.0") == 1
     assert plot.midway.glyphset1 is glyphsets[0]
     assert plot.midway.glyphset2 is glyphsets[1]
     assert plot.midway.factor == 0.5

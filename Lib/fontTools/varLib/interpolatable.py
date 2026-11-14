@@ -19,6 +19,7 @@ from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
 from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
+from fontTools.misc.lazyTools import LazyList
 from fontTools.misc.transform import Transform
 from collections import defaultdict
 from types import SimpleNamespace
@@ -175,16 +176,14 @@ def test_gen(
         allGlyphs = [Glyph(glyph_name, glyphset) for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if not glyph.doesnt_exist]) <= 1:
             continue
-        for master_idx, (glyph, glyphset, name) in enumerate(
-            zip(allGlyphs, glyphsets, names)
-        ):
+        for master_idx, glyph in enumerate(allGlyphs):
             if glyph.doesnt_exist:
                 if not ignore_missing and not sparse[master_idx]:
                     yield (
                         glyph_name,
                         {
                             "type": InterpolatableProblem.MISSING,
-                            "master": name,
+                            "master": names[master_idx],
                             "master_idx": master_idx,
                         },
                     )
@@ -199,7 +198,7 @@ def test_gen(
                     glyph_name,
                     {
                         "type": InterpolatableProblem.OPEN_PATH,
-                        "master": name,
+                        "master": names[master_idx],
                         "master_idx": master_idx,
                         "contour": ix,
                     },
@@ -885,13 +884,25 @@ def main(args=None):
                             glyphset = glyphsets[locTuple]
                             glyphset[glyphname] = ttGlyphSets[locTuple][glyphname]
 
-            names = [" | ".join(location_labeler({})) if normalized else "''"]
+            def location_name(location):
+                # Quiet diagnostics need only normalized names. Graphical
+                # panels request input labels separately; --name filtering
+                # still matches the complete names used in text/JSON output.
+                return " | ".join(
+                    location_labeler(
+                        location, include_input=not args.quiet or bool(args.name)
+                    )
+                )
+
+            names = LazyList([lambda _: location_name({})]) if normalized else ["''"]
             fonts = [font.getGlyphSet()]
             locations = [{}]
             axis_triples = {a: (-1, 0, +1) for a in sorted(axisMapping.keys())}
             for locTuple in sorted(glyphsets.keys(), key=lambda v: (len(v), v)):
                 if normalized:
-                    name = " | ".join(location_labeler(dict(locTuple)))
+                    # Resolve names only for masters mentioned by a diagnostic,
+                    # rather than solving every internal master before testing.
+                    name = lambda _, loc=dict(locTuple): location_name(loc)
                 else:
                     name = (
                         "'"
