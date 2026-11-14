@@ -19,6 +19,7 @@ import cairo
 import math
 import os
 import logging
+import textwrap
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
 
@@ -106,10 +107,21 @@ class InterpolatablePlot:
 """
     yay = r""" \o/ """
 
-    def __init__(self, out, glyphsets, names=None, **kwargs):
+    def __init__(
+        self,
+        out,
+        glyphsets,
+        names=None,
+        *,
+        locations=None,
+        location_labeler=None,
+        **kwargs,
+    ):
         self.out = out
         self.glyphsets = glyphsets
         self.names = names or [repr(g) for g in glyphsets]
+        self.locations = locations
+        self.location_labeler = location_labeler
         self.toc = {}
 
         for k, v in kwargs.items():
@@ -118,8 +130,13 @@ class InterpolatablePlot:
             setattr(self, k, v)
 
         self.panel_width = self.width / 2 - self.pad * 3
+        self.location_height = self.font_size * 4 if locations else self.font_size
         self.panel_height = (
-            self.height / 2 - self.pad * 6 - self.font_size * 2 - self.title_font_size
+            self.height / 2
+            - self.pad * 6
+            - self.font_size
+            - self.location_height
+            - self.title_font_size
         )
 
     def __enter__(self):
@@ -210,6 +227,15 @@ class InterpolatablePlot:
 
         xx = x + self.pad * 2
         xxx = x + self.pad * 4
+
+        if self.locations:
+            self.draw_label(
+                "Midways blend two masters; other masters may affect the actual instance at the nominal location.",
+                x=x,
+                y=self.height - self.pad - self.font_size,
+                width=width,
+                font_size=self.font_size * 0.7,
+            )
 
         if show_tolerance:
             self.draw_label(
@@ -514,15 +540,13 @@ class InterpolatablePlot:
             glyphset = self.glyphsets[master_idx]
             name = self.names[master_idx]
 
-            self.draw_label(
-                name,
-                x=x,
-                y=y,
-                color=self.label_color,
-                width=self.panel_width,
-                align=0.5,
-            )
-            y += self.font_size + self.pad
+            labels = (name,)
+            if self.location_labeler is not None:
+                labels = self.location_labeler(self.locations[master_idx])
+                if name not in ("''", " | ".join(labels)):
+                    labels = (name, *labels)
+            self.draw_location_label(labels, x=x, y=y)
+            y += self.location_height + self.pad
 
             if glyphset[glyphname] is not None:
                 scales.append(
@@ -552,17 +576,20 @@ class InterpolatablePlot:
             glyphset1 = self.glyphsets[master_indices[0]]
             glyphset2 = self.glyphsets[master_indices[1]]
 
-            # Draw the mid-way of the two masters
+            # This is a 50/50 outline blend, not a font evaluation. Label the
+            # nominal coordinate midpoint, without claiming other masters
+            # have no influence at that point in the font.
 
-            self.draw_label(
-                "midway interpolation",
-                x=x,
-                y=y,
-                color=self.head_color,
-                width=self.panel_width,
-                align=0.5,
-            )
-            y += self.font_size + self.pad
+            labels = ("nominal midway",)
+            if self.locations and self.location_labeler is not None:
+                loc1, loc2 = (self.locations[i] for i in master_indices[:2])
+                midpoint = {
+                    tag: (loc1.get(tag, 0) + loc2.get(tag, 0)) / 2
+                    for tag in loc1.keys() | loc2.keys()
+                }
+                labels += self.location_labeler(midpoint)
+            self.draw_location_label(labels, x=x, y=y)
+            y += self.location_height + self.pad
 
             midway_glyphset = LerpGlyphSet(glyphset1, glyphset2)
             self.draw_glyph(
@@ -598,15 +625,8 @@ class InterpolatablePlot:
         ):
             # Draw the proposed fix
 
-            self.draw_label(
-                "proposed fix",
-                x=x,
-                y=y,
-                color=self.head_color,
-                width=self.panel_width,
-                align=0.5,
-            )
-            y += self.font_size + self.pad
+            self.draw_location_label(("proposed fix",), x=x, y=y)
+            y += self.location_height + self.pad
 
             overriding1 = OverridingDict(glyphset1)
             overriding2 = OverridingDict(glyphset2)
@@ -785,6 +805,34 @@ class InterpolatablePlot:
                 color=self.head_color,
                 align=0.5,
             )
+
+    def draw_location_label(self, labels, *, x, y):
+        # Reserve the same label area in both columns. Wrap axis assignments
+        # at spaces instead of shrinking a long location into one tiny line.
+        font_size = self.font_size * 0.75 if self.locations else self.font_size
+        columns = max(1, int(self.panel_width / (font_size * 0.55)))
+        lines = [
+            line
+            for label in labels
+            for line in textwrap.wrap(
+                label, width=columns, break_long_words=False, break_on_hyphens=False
+            )
+        ]
+        line_height = min(
+            font_size + self.pad / 3, self.location_height / max(1, len(lines))
+        )
+        font_size = min(font_size, line_height)
+        for line in lines:
+            self.draw_label(
+                line,
+                x=x,
+                y=y,
+                color=self.label_color,
+                width=self.panel_width,
+                font_size=font_size,
+                align=0.5,
+            )
+            y += line_height
 
     def draw_label(
         self,
