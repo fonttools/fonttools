@@ -12,6 +12,7 @@ from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib import builder
 from fontTools.varLib.avar.map import map as map_avar, main as map_main
 from fontTools.varLib.avar.reverse import _AvarMapping, reverse, main
+from fontTools.varLib.avar.roundtrip import roundtrip, main as roundtrip_main
 
 
 def make_font(tags=("aaaa", "bbbb", "cccc"), hidden=(), positive=()):
@@ -341,6 +342,7 @@ def test_invalid_arguments(location, kwargs, message):
 
 def test_no_fvar():
     assert reverse(TTFont(), {}) is None
+    assert roundtrip(TTFont(), {}) is None
 
 
 def test_scipy_is_optional_for_forward_mapping(monkeypatch):
@@ -376,8 +378,11 @@ def test_cli_map_rejects_reverse_flags():
 @pytest.mark.parametrize("input_normalized", [False, True])
 @pytest.mark.parametrize("output_normalized", [False, True])
 @pytest.mark.parametrize("drop_zeroes", [False, True])
-def test_cli_reverse_empty_location(
-    tmp_path, capsys, input_normalized, output_normalized, drop_zeroes
+@pytest.mark.parametrize(
+    "command", [main, roundtrip_main], ids=["reverse", "roundtrip"]
+)
+def test_cli_empty_location(
+    tmp_path, capsys, input_normalized, output_normalized, drop_zeroes, command
 ):
     font = make_font(("aaaa", "bbbb"))
     add_avar2(font, [{"aaaa": (0, 1, 1)}], {"bbbb": [0.5]})
@@ -390,7 +395,7 @@ def test_cli_reverse_empty_location(
         flags.append("-o")
     if not drop_zeroes:
         flags.append("-f")
-    main([*flags, str(path)])
+    command([*flags, str(path)])
     result = {
         tag: float(value)
         for tag, value in (
@@ -438,20 +443,123 @@ def test_cli_vary(tmp_path, capsys):
     assert result == pytest.approx({"aaaa": 0.5, "bbbb": 0.25})
 
 
-def test_cli_roundtrip(tmp_path, capsys):
-    # --roundtrip forward-maps the source, then reverses it back. On this
+@pytest.mark.parametrize("input_normalized", [False, True])
+@pytest.mark.parametrize("output_normalized", [False, True])
+def test_cli_roundtrip(tmp_path, capsys, input_normalized, output_normalized):
+    # The roundtrip command forward-maps the source, then reverses it. On this
     # injective font the normalized inputs come back unchanged.
     font = make_font(("aaaa", "bbbb"))
     add_avar2(font, [{"aaaa": (0, 1, 1)}], {"bbbb": [0.5]})
     path = tmp_path / "test.ttf"
     font.save(path)
-    main(["-o", "--roundtrip", "--show-error", str(path), "aaaa=600", "bbbb=700"])
+    flags = ["--show-error"]
+    if input_normalized:
+        flags.append("-i")
+    if output_normalized:
+        flags.append("-o")
+    coords = ["aaaa=0.4", "bbbb=0.6"] if input_normalized else ["aaaa=600", "bbbb=700"]
+    roundtrip_main([*flags, str(path), *coords])
     captured = capsys.readouterr()
     result = {
         k: float(v) for k, v in (line.split("=") for line in captured.out.splitlines())
     }
-    assert result == pytest.approx({"aaaa": 0.4, "bbbb": 0.6}, abs=1 / 16384)
+    expected = (
+        {"aaaa": 0.4, "bbbb": 0.6} if output_normalized else {"aaaa": 600, "bbbb": 700}
+    )
+    assert result == pytest.approx(
+        expected, abs=1 / 16384 if output_normalized else 0.04
+    )
     assert "residual error" in captured.err
+
+
+@pytest.mark.parametrize("input_normalized", [False, True])
+@pytest.mark.parametrize("output_normalized", [False, True])
+@pytest.mark.parametrize(
+    "avar_version", [None, 1, 2], ids=["no-avar", "avar1", "avar2"]
+)
+def test_roundtrip_api_includes_hidden_outputs(
+    input_normalized, output_normalized, avar_version
+):
+    font = make_font(hidden=("cccc",))
+    if avar_version == 2:
+        add_avar2(
+            font,
+            [{"aaaa": (0, 1, 1), "bbbb": (0, 1, 1)}],
+            {"cccc": [0.5]},
+        )
+    elif avar_version == 1:
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {
+            "aaaa": {-1: -1, 0: 0, 0.5: 0.75, 1: 1},
+            "bbbb": {-1: -1, 0: 0, 1: 1},
+            "cccc": {-1: -1, 0: 0, 1: 1},
+        }
+    source = (
+        {"aaaa": 0.4, "bbbb": 0.6} if input_normalized else {"aaaa": 600, "bbbb": 700}
+    )
+    result, error = roundtrip(
+        font,
+        source,
+        inputNormalized=input_normalized,
+        outputNormalized=output_normalized,
+        dropZeroes=True,
+    )
+    assert set(result) == {"aaaa", "bbbb"}
+    target = map_avar(
+        font, source, inputNormalized=input_normalized, outputNormalized=True
+    )
+    actual = map_avar(
+        font, result, inputNormalized=output_normalized, outputNormalized=True
+    )
+    actual_error = np.linalg.norm([actual[tag] - target[tag] for tag in target])
+    assert error == pytest.approx(actual_error, abs=1e-12)
+    assert error <= 2 / 16384
+
+
+def test_cli_roundtrip_pins_and_vary(tmp_path, capsys):
+    font = make_font()
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"cccc": [0.5]})
+    path = tmp_path / "test.ttf"
+    font.save(path)
+    roundtrip_main(
+        [
+            "-o",
+            "--show-error",
+            "--vary",
+            "aaaa",
+            "--pin",
+            "bbbb=650,cccc",
+            str(path),
+            "aaaa=600",
+            "bbbb=650",
+        ]
+    )
+    captured = capsys.readouterr()
+    result = {
+        k: float(v) for k, v in (line.split("=") for line in captured.out.splitlines())
+    }
+    assert result == pytest.approx({"aaaa": 0.4, "bbbb": 0.5}, abs=1 / 16384)
+    assert "residual error" in captured.err
+
+
+@pytest.mark.parametrize(
+    "command", [main, roundtrip_main], ids=["reverse", "roundtrip"]
+)
+def test_cli_rejects_roundtrip_flag(command):
+    with pytest.raises(SystemExit, match="2"):
+        command(["--roundtrip", "font.ttf", "aaaa=600"])
+
+
+@pytest.mark.parametrize(
+    "command", [main, roundtrip_main], ids=["reverse", "roundtrip"]
+)
+def test_cli_missing_scipy(tmp_path, monkeypatch, command):
+    font = make_font(("aaaa",))
+    path = tmp_path / "test.ttf"
+    font.save(path)
+    monkeypatch.setitem(sys.modules, "scipy.optimize", None)
+    with pytest.raises(SystemExit, match=r"install fonttools\[avar\]"):
+        command([str(path), "aaaa=600"])
 
 
 def test_cli_pin_comma_separated(tmp_path, capsys):

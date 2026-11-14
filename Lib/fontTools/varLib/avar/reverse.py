@@ -471,34 +471,23 @@ def _parse_vary(parser, items):
     return tags
 
 
-def main(args=None):
-    """Find pre-fvar inputs that produce post-avar targets (invert `avar`)."""
-
+def _make_parser(prog, description, *, coords_help, input_help):
+    """Build the shared options for reverse and roundtrip commands."""
     import argparse
-    import sys
 
-    if args is None:
-        args = sys.argv[1:]
-
-    parser = argparse.ArgumentParser(
-        "fonttools varLib.avar.reverse",
-        description="Find pre-fvar inputs for post-avar targets (requires scipy).",
-    )
+    parser = argparse.ArgumentParser(prog, description=description)
     parser.add_argument("font", metavar="varfont.ttf", help="Variable-font file.")
     parser.add_argument(
         "coords",
         metavar="[AXIS=value...]",
-        help="Post-avar targets, e.g. 'wght=0.6 wdth=-0.2'. Omit for the default "
-        "location. An omitted free axis targets normalized zero.",
+        help=coords_help,
         nargs="*",
         default=[],
     )
     parser.add_argument(
         "-f", action="store_true", help="Do not omit axes at default location."
     )
-    parser.add_argument(
-        "-i", action="store_true", help="Target coordinates are normalized (-1..1)."
-    )
+    parser.add_argument("-i", action="store_true", help=input_help)
     parser.add_argument(
         "-o", action="store_true", help="Output coordinates as normalized (-1..1)."
     )
@@ -524,14 +513,12 @@ def main(args=None):
         action="store_true",
         help="Print the normalized residual error to stderr.",
     )
-    parser.add_argument(
-        "--roundtrip",
-        action="store_true",
-        help="Treat the coordinates as a pre-fvar SOURCE: forward-map them "
-        "through avar, then reverse the result (-i applies to the source). The "
-        "residual is output error, so a non-injective map may return a "
-        "different but equivalent input.",
-    )
+    return parser
+
+
+def _run_cli(parser, args, mapper):
+    """Load inputs, run a mapping operation, and print its location and error."""
+    import sys
 
     options = parser.parse_args(args)
 
@@ -545,19 +532,10 @@ def main(args=None):
     vary = _parse_vary(parser, options.vary) if options.vary else None
 
     try:
-        if options.roundtrip:
-            # Forward-map the source, then reverse the resulting location.
-            location = map_forward(
-                font,
-                location,
-                inputNormalized=options.i,
-                outputNormalized=True,
-                dropZeroes=False,
-            )
-        result = reverse(
+        result = mapper(
             font,
             location,
-            inputNormalized=options.i or options.roundtrip,
+            inputNormalized=options.i,
             outputNormalized=options.o,
             dropZeroes=not options.f,
             pinned=pinned,
@@ -573,8 +551,8 @@ def main(args=None):
     if options.show_error:
         print(f"normalized residual error: {error:g}", file=sys.stderr)
 
-    # Print at the font's F2Dot14 resolution so values read cleanly (0.6 rather
-    # than 0.59997) while still round-tripping through the forward map.
+    # Both commands print at the font's F2Dot14 resolution for readability;
+    # the library APIs retain the solver's full-precision coordinates.
     triples = {
         a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font["fvar"].axes
     }
@@ -586,6 +564,18 @@ def main(args=None):
             step = (hi - default if v >= default else default - lo) / 16384
             s = nearestMultipleShortestRepr(v, step) if step else str(float(v))
         print(f"{tag}={s}")
+
+
+def main(args=None):
+    """Find pre-fvar inputs that produce post-avar targets (invert `avar`)."""
+    parser = _make_parser(
+        "fonttools varLib.avar.reverse",
+        "Find pre-fvar inputs for post-avar targets (requires scipy).",
+        coords_help="Post-avar targets, e.g. 'wght=0.6 wdth=-0.2'. Omit for the "
+        "default location. An omitted free axis targets normalized zero.",
+        input_help="Target coordinates are normalized (-1..1).",
+    )
+    return _run_cli(parser, args, reverse)
 
 
 if __name__ == "__main__":

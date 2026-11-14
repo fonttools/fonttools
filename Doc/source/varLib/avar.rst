@@ -28,12 +28,17 @@ axis is pinned to its fvar default, overriding hidden flags::
 
     fonttools varLib.avar.reverse -i --vary wght,wdth,opsz Font.ttf wght=0.6 wdth=-0.2
 
-``--roundtrip`` instead treats the coordinates as a pre-fvar source: it
-forward-maps them through avar and then reverses the result, which is handy for
-checking how well a design location survives the round trip (``-i`` then
-applies to the source)::
+``fonttools varLib.avar.roundtrip`` takes a pre-fvar source, forward-maps it
+through avar, and reverses the result. This checks how well a design location
+survives the round trip. ``-i`` selects normalized source coordinates and
+``-o`` selects normalized recovered inputs; ``--pin``, ``--vary``, and
+``--show-error`` work as in the reverse command::
 
-    fonttools varLib.avar.reverse --roundtrip -o Font.ttf wght=700 wdth=125
+    fonttools varLib.avar.roundtrip -o Font.ttf wght=700 wdth=125
+
+The residual measures post-avar output differences, including the outputs of
+hidden and pinned axes. A non-injective map can recover different but equivalent
+inputs.
 
 Reverse mapping requires the optional ``fonttools[avar]`` dependencies.
 It minimizes normalized output error, then prefers fewer non-default input
@@ -46,3 +51,6 @@ F2Dot14 resolution for readability. The font is not modified.
 
 .. automodule:: fontTools.varLib.avar.reverse
    :members: reverse
+
+.. automodule:: fontTools.varLib.avar.roundtrip
+   :members: roundtrip
