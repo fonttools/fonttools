@@ -709,6 +709,7 @@ def main(args=None):
     fonts = []
     names = []
     locations = []
+    location_labeler = None
     sparse = None
     discrete_axes = set()
     upem = DEFAULT_UPEM
@@ -798,6 +799,8 @@ def main(args=None):
                                 location, fvarMapping
                             )
 
+            location_labeler = LocationLabeler(axisMapping, font=font)
+
             # Gather all glyphs at their "master" locations
             ttGlyphSets = {}
             glyphsets = defaultdict(dict)
@@ -882,27 +885,28 @@ def main(args=None):
                             glyphset = glyphsets[locTuple]
                             glyphset[glyphname] = ttGlyphSets[locTuple][glyphname]
 
-            names = ["''"]
+            names = [" | ".join(location_labeler({})) if normalized else "''"]
             fonts = [font.getGlyphSet()]
             locations = [{}]
             axis_triples = {a: (-1, 0, +1) for a in sorted(axisMapping.keys())}
             for locTuple in sorted(glyphsets.keys(), key=lambda v: (len(v), v)):
-                name = (
-                    "'"
-                    + " ".join(
-                        "%s=%s"
-                        % (
-                            k,
-                            floatToFixedToStr(
-                                piecewiseLinearMap(v, axisMapping[k]), 14
-                            ),
-                        )
-                        for k, v in locTuple
-                    )
-                    + "'"
-                )
                 if normalized:
-                    name += " (normalized)"
+                    name = " | ".join(location_labeler(dict(locTuple)))
+                else:
+                    name = (
+                        "'"
+                        + " ".join(
+                            "%s=%s"
+                            % (
+                                k,
+                                floatToFixedToStr(
+                                    piecewiseLinearMap(v, axisMapping[k]), 14
+                                ),
+                            )
+                            for k, v in locTuple
+                        )
+                        + "'"
+                    )
                 names.append(name)
                 fonts.append(glyphsets[locTuple])
                 locations.append(dict(locTuple))
@@ -991,6 +995,14 @@ def main(args=None):
         }
         for loc in locations
     ]
+    if locations and location_labeler is None:
+        location_labeler = LocationLabeler(
+            {
+                tag: {-1: triple[0], 0: triple[1], 1: triple[2]}
+                for tag, triple in axis_triples.items()
+            },
+            discrete_axes=discrete_axes,
+        )
     tolerance = args.tolerance or DEFAULT_TOLERANCE
     kinkiness = args.kinkiness if args.kinkiness is not None else DEFAULT_KINKINESS
 
@@ -1175,7 +1187,11 @@ def main(args=None):
             PlotterClass = InterpolatablePS if p == "ps" else InterpolatablePDF
 
             with PlotterClass(
-                ensure_parent_dir(arg), glyphsets=glyphsets, names=names
+                ensure_parent_dir(arg),
+                glyphsets=glyphsets,
+                names=names,
+                locations=locations,
+                location_labeler=location_labeler,
             ) as doc:
                 doc.add_title_page(
                     original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
@@ -1195,7 +1211,13 @@ def main(args=None):
 
             svgs = []
             glyph_starts = {}
-            with InterpolatableSVG(svgs, glyphsets=glyphsets, names=names) as svg:
+            with InterpolatableSVG(
+                svgs,
+                glyphsets=glyphsets,
+                names=names,
+                locations=locations,
+                location_labeler=location_labeler,
+            ) as svg:
                 svg.add_title_page(
                     original_args_inputs,
                     show_tolerance=False,

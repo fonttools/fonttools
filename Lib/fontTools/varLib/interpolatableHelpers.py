@@ -3,6 +3,8 @@ from fontTools.pens.basePen import AbstractPen, BasePen, DecomposingPen
 from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
+from fontTools.misc.fixedTools import floatToFixedToStr, nearestMultipleShortestRepr
+from fontTools.varLib.models import piecewiseLinearMap
 from collections import defaultdict, deque
 from math import sqrt, copysign, atan2, pi
 import itertools
@@ -10,6 +12,110 @@ import itertools
 import logging
 
 log = logging.getLogger("fontTools.varLib.interpolatable")
+
+
+class LocationLabeler:
+    """Describe tested locations without changing their coordinate space."""
+
+    def __init__(self, axis_mapping, *, font=None, discrete_axes=()):
+        self.axis_mapping = axis_mapping
+        self.font = font
+        self.discrete_axes = set(discrete_axes)
+        self.cache = {}
+        self.reverse_unavailable = False
+        avar = font.get("avar") if font is not None else None
+        self.avar2 = (
+            avar is not None
+            and getattr(avar, "majorVersion", 1) >= 2
+            and getattr(avar.table, "VarStore", None) is not None
+        )
+
+    @staticmethod
+    def _coordinates(location):
+        return (
+            " ".join(f"{tag}={value}" for tag, value in location.items()) or "default"
+        )
+
+    def __call__(self, location):
+        # Include every nonzero coordinate, including hidden axes. These are
+        # the actual tested masters, regardless of whether public inputs can
+        # reach them. Discrete zero values are meaningful, not defaults.
+        key = tuple(
+            sorted(
+                (tag, value)
+                for tag, value in location.items()
+                if value != 0 or tag in self.discrete_axes
+            )
+        )
+        if key in self.cache:
+            return self.cache[key]
+        # Midpoints of F2Dot14 peaks can contain a half-unit; retain that
+        # extra bit instead of rounding the nominal location to another point.
+        coordinates = {tag: floatToFixedToStr(value, 15) for tag, value in key}
+        normalized = self._coordinates(coordinates) if coordinates else "all zero"
+        labels = [f"normalized: {normalized}"]
+        if not self.avar2:
+            mapped = {
+                tag: floatToFixedToStr(
+                    piecewiseLinearMap(value, self.axis_mapping.get(tag, {})), 14
+                )
+                for tag, value in key
+            }
+            space = "input" if self.font is not None else "design"
+            labels.append(f"{space}: {self._coordinates(mapped)}")
+        elif not self.reverse_unavailable:
+            try:
+                self._add_input_label(labels, dict(key))
+            except ImportError:
+                # Matching and plotting can work without scipy. Do not make
+                # optional avar2 annotations a new hard dependency.
+                self.reverse_unavailable = True
+        self.cache[key] = tuple(labels)
+        return self.cache[key]
+
+    def _add_input_label(self, labels, location):
+        from .avar.reverse import reverse
+        from .avar.map import map as map_forward
+
+        # A gvar peak is a complete post-avar location: omitted hidden outputs
+        # must target zero too. reverse() otherwise leaves those unconstrained.
+        target = {a.axisTag: location.get(a.axisTag, 0) for a in self.font["fvar"].axes}
+        inputs, error = reverse(
+            self.font, target, inputNormalized=True, dropZeroes=True
+        )
+        tolerance = 1 / 16384
+        if error > tolerance:
+            return  # Retain the actual internal coordinates, not an approximation.
+        formatted = {}
+        for axis in self.font["fvar"].axes:
+            tag = axis.axisTag
+            if tag not in inputs:
+                continue
+            value = inputs[tag]
+            extent = (
+                axis.maxValue - axis.defaultValue
+                if value >= axis.defaultValue
+                else axis.defaultValue - axis.minValue
+            )
+            formatted[tag] = (
+                nearestMultipleShortestRepr(value, extent / 16384)
+                if extent
+                else str(value)
+            )
+        # Pretty decimals can move an input across a steep avar segment.
+        # Verify the displayed inputs, falling back to full precision when
+        # shortening them would turn a good inverse into a misleading label.
+        actual = map_forward(
+            self.font,
+            {tag: float(value) for tag, value in formatted.items()},
+            outputNormalized=True,
+        )
+        display_error = sqrt(
+            sum((actual[tag] - value) ** 2 for tag, value in target.items())
+        )
+        if display_error > tolerance:
+            formatted = {tag: str(value) for tag, value in inputs.items()}
+        labels.append(f"input: {self._coordinates(formatted)}")
 
 
 class InterpolatableProblem:
