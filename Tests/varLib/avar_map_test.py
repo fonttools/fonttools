@@ -2,7 +2,9 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib import builder
-from fontTools.varLib.avar.map import main, map as map_avar
+from fontTools.varLib.avar.map import ForwardMapper, _denormalize, main, map as map_avar
+from fontTools.varLib.models import normalizeValue
+from pathlib import Path
 import pytest
 
 
@@ -133,3 +135,114 @@ def test_default_location_applies_avar2_bias():
         assert map_avar(
             font, {}, inputNormalized=normalized, outputNormalized=True, dropZeroes=True
         ) == {"wght": 0.25}
+
+
+def reference_map(
+    font, location, *, inputNormalized=False, outputNormalized=False, dropZeroes=False
+):
+    triples = {
+        a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font["fvar"].axes
+    }
+    normalized = {
+        tag: (
+            location.get(tag, 0)
+            if inputNormalized
+            else normalizeValue(location.get(tag, triple[1]), triple)
+        )
+        for tag, triple in triples.items()
+    }
+    if "avar" in font:
+        normalized = font["avar"].renormalizeLocation(
+            normalized, font, dropZeroes=False
+        )
+    return {
+        tag: value if outputNormalized else _denormalize(value, triples[tag])
+        for tag, value in normalized.items()
+        if not dropZeroes or value != 0
+    }
+
+
+@pytest.mark.parametrize("input_normalized", [False, True])
+@pytest.mark.parametrize("output_normalized", [False, True])
+@pytest.mark.parametrize("drop_zeroes", [False, True])
+def test_prepared_mapper_matches_table_across_locations(
+    font, input_normalized, output_normalized, drop_zeroes
+):
+    mapper = ForwardMapper(font)
+    locations = (
+        [{"wght": 1, "wdth": 1}, {"wght": -1}, {"wght": 0.5}, {}, {"wdth": -0.25}]
+        if input_normalized
+        else [
+            {"wght": 900, "wdth": 125},
+            {"wght": 100},
+            {"wght": 650},
+            {},
+            {"wdth": 87.5},
+        ]
+    )
+    options = dict(
+        inputNormalized=input_normalized,
+        outputNormalized=output_normalized,
+        dropZeroes=drop_zeroes,
+    )
+    for location in locations:
+        assert mapper.map(location, **options) == reference_map(
+            font, location, **options
+        )
+
+
+def test_prepared_mapper_keeps_support_cache():
+    path = Path(__file__).parent.parent / "ttLib/tables/data/Amstelvar-avar2.subset.ttf"
+    mapper = ForwardMapper(TTFont(path))
+    mapper.map({"wght": 700}, outputNormalized=True)
+    supports = dict(mapper._instancer._supports)
+    assert supports
+    mapper.map({"wdth": 75}, outputNormalized=True)
+    assert all(
+        mapper._instancer._supports[i] is support for i, support in supports.items()
+    )
+
+
+@pytest.mark.parametrize("indices", [None, [0, 0], [0xFFFFFFFF, 0x12345678], [0]])
+def test_prepared_mapper_avar2_indices(indices):
+    font = TTFont()
+    font["fvar"] = newTable("fvar")
+    for tag in ("wght", "wdth"):
+        axis = Axis()
+        axis.axisTag = tag
+        axis.minValue, axis.defaultValue, axis.maxValue = 100, 400, 900
+        font["fvar"].axes.append(axis)
+    avar = font["avar"] = newTable("avar")
+    avar.majorVersion = 2
+    avar.segments = {tag: {-1: -1, 0: 0, 1: 1} for tag in ("wght", "wdth")}
+    avar.table = otTables.avar()
+    avar.table.VarIdxMap = (
+        builder.buildDeltaSetIndexMap(indices) if indices is not None else None
+    )
+    avar.table.VarStore = builder.buildVarStore(
+        builder.buildVarRegionList([{"wght": (0, 1, 1)}], ["wght", "wdth"]),
+        [builder.buildVarData([0], [[1], [32768]])],
+    )
+    mapper = ForwardMapper(font)
+    for location in ({"wght": 0.5}, {"wght": 1}, {}, {"wdth": -1}):
+        assert mapper.map(
+            location, inputNormalized=True, outputNormalized=True
+        ) == reference_map(font, location, inputNormalized=True, outputNormalized=True)
+    # A NULL store still quantizes the identity term but does not clamp it.
+    avar.table.VarStore = None
+    mapper = ForwardMapper(font)
+    for location in ({"wght": 0.5 / 16384}, {"wght": 2.5}):
+        assert mapper.map(
+            location, inputNormalized=True, outputNormalized=True
+        ) == reference_map(font, location, inputNormalized=True, outputNormalized=True)
+
+
+def test_prepared_mapper_requires_fvar():
+    with pytest.raises(ValueError, match="fvar"):
+        ForwardMapper(TTFont())
+    assert map_avar(TTFont(), {}) is None
+
+
+def test_prepared_mapper_rejects_unknown_axes(font):
+    with pytest.raises(ValueError, match="Unknown axis"):
+        ForwardMapper(font).map({"XXXX": 0})

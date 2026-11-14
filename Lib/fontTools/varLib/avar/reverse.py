@@ -2,16 +2,17 @@
 
 The numerical solver uses an unrounded forward map and its analytic Jacobian.
 Candidates are ranked using the actual forward map, including avar2 rounding
-and clipping. SciPy is optional and is imported only when reverse() is called.
+and clipping. SciPy is optional and is imported when a solver is constructed.
 """
 
 from bisect import bisect_right
+from collections import OrderedDict
 import math
 
 from fontTools.misc.fixedTools import floatToFixedToStr, nearestMultipleShortestRepr
 from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
-from .map import _denormalize, map as map_forward, _load_font, _parse_coordinates
+from .map import ForwardMapper, _denormalize, _load_font, _parse_coordinates
 
 
 def _segment(value, items):
@@ -184,270 +185,366 @@ def reverse(
     default. ``tolerance`` is only this sparsity budget, not an accuracy
     threshold. Sparsity is sought by greedy elimination, not exhaustive subset
     search. Multiple starts reduce local-minimum sensitivity but do not
-    guarantee a global optimum. Requires SciPy.
+    guarantee a global optimum. Requires SciPy. For repeated targets with the
+    same font and input constraints, use ReverseMapper.
     """
     if "fvar" not in font:
         return None
     if not math.isfinite(tolerance) or tolerance < 0:
         raise ValueError("tolerance must be finite and non-negative")
-    axes = font["fvar"].axes
-    triples = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in axes}
-    pinned = dict(pinned or {})
-    varyTags = None if vary is None else set(vary)
-    named = location.keys() | pinned.keys() | (varyTags or set())
-    unknown = sorted(named - triples.keys())
-    if unknown:
-        raise ValueError(f"Unknown axis tag(s): {', '.join(unknown)}")
-    if varyTags is not None:
-        conflict = sorted(varyTags & pinned.keys())
-        if conflict:
-            raise ValueError(
-                f"Axis(es) cannot be both varied and pinned: {', '.join(conflict)}"
-            )
-    pinned = {
-        tag: triples[tag][1] if value is None else value
-        for tag, value in pinned.items()
-    }
-    for tag, value in location.items():
-        if not math.isfinite(value) or (inputNormalized and not -1 <= value <= 1):
-            raise ValueError(f"Invalid target coordinate for {tag}: {value}")
-    if varyTags is None:
-        # By default every non-hidden axis may vary; hidden inputs stay put.
-        for axis in axes:
+    return ReverseMapper(font, pinned=pinned, vary=vary, cache_size=0).reverse(
+        location,
+        inputNormalized=inputNormalized,
+        outputNormalized=outputNormalized,
+        dropZeroes=dropZeroes,
+        tolerance=tolerance,
+    )
+
+
+class ReverseMapper:
+    """Prepare an avar inverse solver for multiple targets.
+
+    Pin and vary constraints are fixed at construction. reverse() takes the
+    target, unit flags, output filtering, and sparsity tolerance, returning the
+    same (location, error) pair as the module-level reverse() function.
+
+    The continuous mapping/Jacobian, exact forward evaluator, axis bounds,
+    and target-independent starting points are reused. Up to cache_size target
+    solutions are memoized per instance; zero disables this cache. Output
+    dictionaries are fresh, so callers may modify them safely.
+
+    The font must contain fvar. Do not change its fvar or avar tables while
+    using a mapper; build a new mapper after such changes.
+    """
+
+    def __init__(self, font, *, pinned=None, vary=None, cache_size=128):
+        if "fvar" not in font:
+            raise ValueError("Font does not contain an 'fvar' table")
+        if not isinstance(cache_size, int) or cache_size < 0:
+            raise ValueError("cache_size must be a non-negative integer")
+        self._axes = tuple(font["fvar"].axes)
+        self._triples = {
+            a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in self._axes
+        }
+        pinned = dict(pinned or {})
+        vary_tags = None if vary is None else set(vary)
+        unknown = sorted((pinned.keys() | (vary_tags or set())) - self._triples.keys())
+        if unknown:
+            raise ValueError(f"Unknown axis tag(s): {', '.join(unknown)}")
+        if vary_tags is not None:
+            conflict = sorted(vary_tags & pinned.keys())
+            if conflict:
+                raise ValueError(
+                    f"Axis(es) cannot be both varied and pinned: {', '.join(conflict)}"
+                )
+        pinned = {
+            tag: self._triples[tag][1] if value is None else value
+            for tag, value in pinned.items()
+        }
+        for axis in self._axes:
             tag = axis.axisTag
-            if axis.flags & 1:
-                if tag in pinned and pinned[tag] != axis.defaultValue:
-                    raise ValueError(f"Hidden axis {tag} must stay at its default")
+            # An explicit vary list overrides hidden flags and fixes every
+            # unlisted input; otherwise hidden inputs stay at their defaults.
+            if vary_tags is None:
+                if axis.flags & 1:
+                    if tag in pinned and pinned[tag] != axis.defaultValue:
+                        raise ValueError(f"Hidden axis {tag} must stay at its default")
+                    pinned[tag] = axis.defaultValue
+            elif tag not in vary_tags and tag not in pinned:
                 pinned[tag] = axis.defaultValue
-    else:
-        # `vary` is authoritative: pin every unlisted axis (hidden or not) to
-        # its default, so only the named axes may move.
-        for axis in axes:
+        for tag, value in pinned.items():
+            lo, _, hi = self._triples[tag]
+            if not math.isfinite(value) or not lo <= value <= hi:
+                raise ValueError(f"Pinned coordinate for {tag} must be in [{lo}, {hi}]")
+        self._pinned = pinned
+        self._cache_size = cache_size
+        self._cache = OrderedDict()
+        if not self._axes:
+            return
+        try:
+            import numpy as np
+            from scipy.optimize import least_squares
+        except ImportError as e:
+            raise ImportError(
+                "Reverse avar mapping requires scipy; install fonttools[avar]"
+            ) from e
+        self._np = np
+        self._least_squares = least_squares
+        self._mapping = _AvarMapping(font)
+        self._forward = ForwardMapper(font)
+        # Normalize inputs so weight, optical size, etc. have comparable
+        # scales. An endpoint default makes the domain one-sided. Hidden,
+        # pinned, and collapsed inputs are excluded from optimization.
+        self._lower = np.array(
+            [-1.0 if a.minValue < a.defaultValue else 0.0 for a in self._axes]
+        )
+        self._upper = np.array(
+            [1.0 if a.defaultValue < a.maxValue else 0.0 for a in self._axes]
+        )
+        self._fixed = np.array(
+            [
+                normalizeValue(
+                    pinned.get(a.axisTag, a.defaultValue), self._triples[a.axisTag]
+                )
+                for a in self._axes
+            ]
+        )
+        self._free = [
+            i
+            for i, a in enumerate(self._axes)
+            if a.axisTag not in pinned and self._lower[i] < self._upper[i]
+        ]
+        self._free_set = set(self._free)
+        # Cache each region-peak seed and its continuous forward value. Only
+        # ranking these seeds against the new target must happen per call.
+        self._peak_seeds = []
+        for support in self._mapping.supports:
+            x = self._fixed.copy()
+            for i, _, peak, _ in support:
+                if i in self._free_set:
+                    x[i] = _inverseSegment(
+                        peak, self._mapping.segments[i], self._lower[i], self._upper[i]
+                    )
+            self._peak_seeds.append((x, np.clip(self._mapping(x)[0], -1, 1)))
+        rng = np.random.default_rng(0)
+        self._random_seeds = tuple(
+            rng.uniform(self._lower, self._upper) for _ in range(4)
+        )
+
+    def clear_cache(self):
+        """Discard memoized targets; retain the prepared font and constraints."""
+        self._cache.clear()
+
+    def reverse(
+        self,
+        location,
+        *,
+        inputNormalized=False,
+        outputNormalized=False,
+        dropZeroes=False,
+        tolerance=1 / 16384,
+    ):
+        """Solve one target using the same options as module-level reverse()."""
+        if not math.isfinite(tolerance) or tolerance < 0:
+            raise ValueError("tolerance must be finite and non-negative")
+        unknown = sorted(location.keys() - self._triples.keys())
+        if unknown:
+            raise ValueError(f"Unknown axis tag(s): {', '.join(unknown)}")
+        for tag, value in location.items():
+            if not math.isfinite(value) or (inputNormalized and not -1 <= value <= 1):
+                raise ValueError(f"Invalid target coordinate for {tag}: {value}")
+        if not self._axes:
+            return {}, 0.0
+        np = self._np
+        target = np.array(
+            [
+                (
+                    location.get(a.axisTag, 0)
+                    if inputNormalized
+                    else normalizeValue(
+                        location.get(a.axisTag, a.defaultValue),
+                        self._triples[a.axisTag],
+                    )
+                )
+                for a in self._axes
+            ]
+        )
+        # Equal numeric targets can constrain different outputs: an omitted
+        # hidden/pinned axis is unconstrained, while an explicit zero is not.
+        scored = np.array(
+            [
+                a.axisTag in location or i in self._free_set
+                for i, a in enumerate(self._axes)
+            ]
+        )
+        key = (tuple(target), tuple(scored), tolerance)
+        if self._cache_size and key in self._cache:
+            coordinates, error = self._cache[key]
+            self._cache.move_to_end(key)
+        else:
+            coordinates, error = self._solve(target, scored, tolerance)
+            if self._cache_size:
+                self._cache[key] = (coordinates, error)
+                if len(self._cache) > self._cache_size:
+                    self._cache.popitem(last=False)
+        result = {}
+        for axis, value in zip(self._axes, coordinates):
+            if dropZeroes and value == 0:
+                continue
             tag = axis.axisTag
-            if tag not in varyTags and tag not in pinned:
-                pinned[tag] = triples[tag][1]
-    for tag, value in pinned.items():
-        lo, _, hi = triples[tag]
-        if not math.isfinite(value) or not lo <= value <= hi:
-            raise ValueError(f"Pinned coordinate for {tag} must be in [{lo}, {hi}]")
-
-    if not axes:
-        return {}, 0.0
-    try:
-        import numpy as np
-        from scipy.optimize import least_squares
-    except ImportError as e:
-        raise ImportError(
-            "Reverse avar mapping requires scipy; install fonttools[avar]"
-        ) from e
-
-    mapping = _AvarMapping(font)
-    target = np.array(
-        [
-            (
-                location.get(a.axisTag, 0)
-                if inputNormalized
-                else normalizeValue(
-                    location.get(a.axisTag, a.defaultValue), triples[a.axisTag]
+            result[tag] = (
+                value
+                if outputNormalized
+                else self._pinned.get(
+                    tag, float(_denormalize(value, self._triples[tag]))
                 )
             )
-            for a in axes
-        ]
-    )
-    # Optimize in normalized input space so weight, optical size, etc. have
-    # comparable scales. A default at an endpoint makes its domain one-sided.
-    # Hidden, pinned, and collapsed axes are eliminated from the optimization.
-    # Their outputs are scored only when named in `location`; otherwise they
-    # are unconstrained, since the caller cannot choose a fixed axis's output.
-    lower = np.array([-1.0 if a.minValue < a.defaultValue else 0.0 for a in axes])
-    upper = np.array([1.0 if a.defaultValue < a.maxValue else 0.0 for a in axes])
-    fixed = np.array(
-        [
-            normalizeValue(pinned.get(a.axisTag, a.defaultValue), triples[a.axisTag])
-            for a in axes
-        ]
-    )
-    free = [
-        i for i, a in enumerate(axes) if a.axisTag not in pinned and lower[i] < upper[i]
-    ]
-    # Score an axis's output error only when the caller named it in `location`
-    # or its input is free. Omitted pinned/hidden/collapsed outputs stay
-    # unconstrained: fixing the input must not force error into the objective.
-    free_set = set(free)
-    scored = np.array(
-        [a.axisTag in location or i in free_set for i, a in enumerate(axes)]
-    )
-    candidates = {}
+        return result, error
 
-    def add(x):
-        x = x.copy()
-        x[free] = np.where(abs(x[free]) < 1e-10, 0, x[free])
-        key = tuple(x)
-        if key not in candidates:
-            # Score through the public forward path, including the round trip
-            # through pre-fvar coordinates that the caller will actually use.
-            user = {
-                a.axisTag: _denormalize(v, triples[a.axisTag]) for a, v in zip(axes, x)
-            }
-            user.update(pinned)
-            actual = map_forward(font, user, outputNormalized=True, dropZeroes=False)
-            deviation = np.array([actual[tag] for tag in mapping.tags]) - target
-            error = np.linalg.norm(deviation[scored])
-            candidates[key] = (error, x)
+    def _solve(self, target, scored, tolerance):
+        np = self._np
+        least_squares = self._least_squares
+        axes = self._axes
+        triples = self._triples
+        pinned = self._pinned
+        mapping = self._mapping
+        lower, upper, fixed, free = self._lower, self._upper, self._fixed, self._free
+        candidates = {}
 
-    def best():
-        # Output accuracy comes first, up to the requested tolerance. Use the
-        # smallest residual seen across ALL candidates as the error budget's
-        # anchor, so successive axis removals cannot accumulate tolerance loss.
-        # Within that budget prefer fewer non-default inputs, then accuracy,
-        # then proximity to default. This is a preference, not an L0 penalty
-        # added to the residual, which could trade away an otherwise good fit.
-        error = min(e for e, _ in candidates.values())
-        return min(
-            (c for c in candidates.values() if c[0] <= error + tolerance),
-            key=lambda c: (np.count_nonzero(c[1]), c[0], np.dot(c[1], c[1])),
-        )
+        def add(x):
+            x = x.copy()
+            x[free] = np.where(abs(x[free]) < 1e-10, 0, x[free])
+            key = tuple(x)
+            if key not in candidates:
+                # Score through the public forward path, including the round trip
+                # through pre-fvar coordinates that the caller will actually use.
+                user = {
+                    a.axisTag: _denormalize(v, triples[a.axisTag])
+                    for a, v in zip(axes, x)
+                }
+                user.update(pinned)
+                actual = self._forward.map(
+                    user, outputNormalized=True, dropZeroes=False
+                )
+                deviation = np.array([actual[tag] for tag in mapping.tags]) - target
+                error = np.linalg.norm(deviation[scored])
+                candidates[key] = (error, x)
 
-    def solve(seed, varying):
-        x = seed.copy()
-        add(x)
-        if not varying:
-            return
-        # First seek an exact inverse without the flat plateaus introduced by
-        # clipping. At +/-1 the target is an inequality on the unclipped map.
-        # Then minimize the true clipped output error, also for unreachable
-        # targets (the two objectives need not have the same nearest point).
-        for clipped in (False, True):
-            cached = None
-
-            def evaluate(v):
-                nonlocal cached
-                if cached is not None and np.array_equal(v, cached[0]):
-                    return cached[1:]
-                x[varying] = v
-                raw, jac = mapping(x)
-                if clipped:
-                    residual = np.clip(raw, -1, 1) - target
-                    active = (raw >= -1) & (raw <= 1) & scored
-                    residual = np.where(scored, residual, 0)
-                else:
-                    residual = raw - target
-                    active = scored & ~(
-                        ((target == 1) & (raw > 1)) | ((target == -1) & (raw < -1))
-                    )
-                    residual = np.where(active, residual, 0)
-                jac = jac[:, varying] * active[:, None]
-                cached = (v.copy(), residual, jac)
-                return residual, jac
-
-            # Trust-region least squares repeatedly solves a bounded local
-            # linear problem using this Jacobian, then checks the nonlinear
-            # residual before accepting a step. Rank deficiency is expected:
-            # multiple inputs can produce the same output, especially after
-            # saturation. Avoid explicitly inverting J or forming J.T @ J.
-            result = least_squares(
-                lambda v: evaluate(v)[0],
-                x[varying],
-                jac=lambda v: evaluate(v)[1],
-                bounds=(lower[varying], upper[varying]),
-                ftol=1e-11,
-                xtol=1e-11,
-                gtol=1e-11,
-                max_nfev=200,
+        def best():
+            # Output accuracy comes first, up to the requested tolerance. Use the
+            # smallest residual seen across ALL candidates as the error budget's
+            # anchor, so successive axis removals cannot accumulate tolerance loss.
+            # Within that budget prefer fewer non-default inputs, then accuracy,
+            # then proximity to default. This is a preference, not an L0 penalty
+            # added to the residual, which could trade away an otherwise good fit.
+            error = min(e for e, _ in candidates.values())
+            return min(
+                (c for c in candidates.values() if c[0] <= error + tolerance),
+                key=lambda c: (np.count_nonzero(c[1]), c[0], np.dot(c[1], c[1])),
             )
-            x[varying] = result.x
+
+        def solve(seed, varying):
+            x = seed.copy()
             add(x)
+            if not varying:
+                return
+            # First seek an exact inverse without the flat plateaus introduced by
+            # clipping. At +/-1 the target is an inequality on the unclipped map.
+            # Then minimize the true clipped output error, also for unreachable
+            # targets (the two objectives need not have the same nearest point).
+            for clipped in (False, True):
+                cached = None
 
-    # The default promotes sparse solutions; inverting avar1 alone gives a
-    # better guess when its segment maps depart substantially from identity.
-    # Keep the target-as-input guess too, since avar2 can undo that remapping.
-    seeds = [
-        fixed.copy(),
-        np.array(
-            [
-                _inverseSegment(t, s, lo, hi)
-                for t, s, lo, hi in zip(target, mapping.segments, lower, upper)
-            ]
-        ),
-        np.clip(target, lower, upper),
-    ]
-    # Region peaks escape zero-gradient points of multi-axis tent products.
-    peaks = []
-    for support in mapping.supports:
-        x = fixed.copy()
-        for i, _, peak, _ in support:
-            if i in free:
-                x[i] = _inverseSegment(peak, mapping.segments[i], lower[i], upper[i])
-        peaks.append(x)
-    peaks.sort(
-        key=lambda x: np.linalg.norm((np.clip(mapping(x)[0], -1, 1) - target)[scored])
-    )
-    seeds.extend(peaks[:8])
-    # A few reproducible random starts explore other basins without enumerating
-    # the exponentially many region cells. This is not a global-optimum proof.
-    rng = np.random.default_rng(0)
-    seeds.extend(rng.uniform(lower, upper) for _ in range(4))
-    seen = set()
-    for seed in seeds:
-        seed = np.asarray(seed).copy()
-        for i in range(len(axes)):
-            if i not in free:
-                seed[i] = fixed[i]
-        if tuple(seed) in seen:
-            continue
-        seen.add(tuple(seed))
-        solve(seed, free)
+                def evaluate(v):
+                    nonlocal cached
+                    if cached is not None and np.array_equal(v, cached[0]):
+                        return cached[1:]
+                    x[varying] = v
+                    raw, jac = mapping(x)
+                    if clipped:
+                        residual = np.clip(raw, -1, 1) - target
+                        active = (raw >= -1) & (raw <= 1) & scored
+                        residual = np.where(scored, residual, 0)
+                    else:
+                        residual = raw - target
+                        active = scored & ~(
+                            ((target == 1) & (raw > 1)) | ((target == -1) & (raw < -1))
+                        )
+                        residual = np.where(active, residual, 0)
+                    jac = jac[:, varying] * active[:, None]
+                    cached = (v.copy(), residual, jac)
+                    return residual, jac
 
-    # Try dropping each non-default axis, refitting the others. Accept only
-    # candidates within the output-error budget, then repeat after a removal.
-    # Refitting matters: simply zeroing a coordinate misses solutions where
-    # another axis can take over its contribution. Backward elimination is
-    # greedy; finding the sparsest possible subset would be combinatorial.
-    while True:
-        _, x = best()
-        active = [i for i in free if x[i] != 0]
-        for i in active:
-            seed = x.copy()
-            seed[i] = 0
-            solve(seed, [j for j in active if j != i])
-        if np.count_nonzero(best()[1]) >= np.count_nonzero(x):
-            break
+                # Trust-region least squares repeatedly solves a bounded local
+                # linear problem using this Jacobian, then checks the nonlinear
+                # residual before accepting a step. Rank deficiency is expected:
+                # multiple inputs can produce the same output, especially after
+                # saturation. Avoid explicitly inverting J or forming J.T @ J.
+                result = least_squares(
+                    lambda v: evaluate(v)[0],
+                    x[varying],
+                    jac=lambda v: evaluate(v)[1],
+                    bounds=(lower[varying], upper[varying]),
+                    ftol=1e-11,
+                    xtol=1e-11,
+                    gtol=1e-11,
+                    max_nfev=200,
+                )
+                x[varying] = result.x
+                add(x)
 
-    # Refine against the rounded forward map on a small coordinate stencil.
-    # One tick in intermediate space is divided by the local avar1 slope, so
-    # the intermediate coordinate moves about one F2Dot14 unit even where the
-    # segment compresses (slope < 1). Differentiating the rounded avar2 mapper
-    # mostly gives zero derivatives because of quantization. Instead, use its
-    # exact residual only to rank nearby candidates once the continuous solver
-    # has located a good basin.
-    for _ in range(3):
-        error, x = best()
-        if error == 0:
-            break
-        for i in free:
-            _, slope = _segment(x[i], mapping.segments[i])
-            if not slope:
-                continue  # A flat segment cannot move the intermediate value.
-            step = 1 / (16384 * abs(slope))
-            for offset in (-1, -0.5, 0.5, 1):
-                trial = x.copy()
-                trial[i] = np.clip(x[i] + offset * step, lower[i], upper[i])
-                add(trial)
-        if np.array_equal(best()[1], x):
-            break
-
-    error, x = best()
-    result = {}
-    for axis, value in zip(axes, x):
-        if dropZeroes and value == 0:
-            continue
-        tag = axis.axisTag
-        result[tag] = (
-            float(value)
-            if outputNormalized
-            else pinned.get(tag, float(_denormalize(value, triples[tag])))
+        # The default promotes sparse solutions; inverting avar1 alone gives a
+        # better guess when its segment maps depart substantially from identity.
+        # Keep the target-as-input guess too, since avar2 can undo that remapping.
+        seeds = [
+            fixed.copy(),
+            np.array(
+                [
+                    _inverseSegment(t, s, lo, hi)
+                    for t, s, lo, hi in zip(target, mapping.segments, lower, upper)
+                ]
+            ),
+            np.clip(target, lower, upper),
+        ]
+        # Rank the prepared seeds for this target, preserving their original
+        # order on ties. Each solve works on copies of the stored coordinates.
+        peaks = sorted(
+            self._peak_seeds,
+            key=lambda item: np.linalg.norm((item[1] - target)[scored]),
         )
-    return result, float(error)
+        seeds.extend(x for x, _ in peaks[:8])
+        seeds.extend(self._random_seeds)
+        seen = set()
+        for seed in seeds:
+            seed = np.asarray(seed).copy()
+            for i in range(len(axes)):
+                if i not in free:
+                    seed[i] = fixed[i]
+            if tuple(seed) in seen:
+                continue
+            seen.add(tuple(seed))
+            solve(seed, free)
+
+        # Try dropping each non-default axis, refitting the others. Accept only
+        # candidates within the output-error budget, then repeat after a removal.
+        # Refitting matters: simply zeroing a coordinate misses solutions where
+        # another axis can take over its contribution. Backward elimination is
+        # greedy; finding the sparsest possible subset would be combinatorial.
+        while True:
+            _, x = best()
+            active = [i for i in free if x[i] != 0]
+            for i in active:
+                seed = x.copy()
+                seed[i] = 0
+                solve(seed, [j for j in active if j != i])
+            if np.count_nonzero(best()[1]) >= np.count_nonzero(x):
+                break
+
+        # Refine against the rounded forward map on a small coordinate stencil.
+        # One tick in intermediate space is divided by the local avar1 slope, so
+        # the intermediate coordinate moves about one F2Dot14 unit even where the
+        # segment compresses (slope < 1). Differentiating the rounded avar2 mapper
+        # mostly gives zero derivatives because of quantization. Instead, use its
+        # exact residual only to rank nearby candidates once the continuous solver
+        # has located a good basin.
+        for _ in range(3):
+            error, x = best()
+            if error == 0:
+                break
+            for i in free:
+                _, slope = _segment(x[i], mapping.segments[i])
+                if not slope:
+                    continue  # A flat segment cannot move the intermediate value.
+                step = 1 / (16384 * abs(slope))
+                for offset in (-1, -0.5, 0.5, 1):
+                    trial = x.copy()
+                    trial[i] = np.clip(x[i] + offset * step, lower[i], upper[i])
+                    add(trial)
+            if np.array_equal(best()[1], x):
+                break
+
+        error, x = best()
+        return tuple(float(value) for value in x), float(error)
 
 
 def _split_items(items):

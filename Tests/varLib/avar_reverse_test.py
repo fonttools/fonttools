@@ -11,7 +11,7 @@ from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables._f_v_a_r import Axis
 from fontTools.varLib import builder
 from fontTools.varLib.avar.map import map as map_avar, main as map_main
-from fontTools.varLib.avar.reverse import _AvarMapping, reverse, main
+from fontTools.varLib.avar.reverse import _AvarMapping, ReverseMapper, reverse, main
 from fontTools.varLib.avar.roundtrip import roundtrip, main as roundtrip_main
 
 
@@ -56,6 +56,133 @@ def forward(font, location):
 def assert_target(font, result, target, atol=1 / 16384):
     actual = forward(font, result)
     assert np.linalg.norm([v - target.get(tag, 0) for tag, v in actual.items()]) <= atol
+
+
+@pytest.mark.parametrize("input_normalized", [False, True])
+@pytest.mark.parametrize("output_normalized", [False, True])
+@pytest.mark.parametrize("drop_zeroes", [False, True])
+@pytest.mark.parametrize(
+    "constraints", [{}, {"pinned": {"bbbb": 650}}, {"vary": ["aaaa", "cccc"]}]
+)
+def test_reusable_solver_matches_one_shot(
+    input_normalized, output_normalized, drop_zeroes, constraints
+):
+    font = make_font(hidden=("cccc",))
+    add_avar2(
+        font,
+        [{"aaaa": (0, 1, 1)}, {"bbbb": (-1, -1, 0)}],
+        {"aaaa": [0.25, 0], "bbbb": [0.5, 0], "cccc": [0.5, -0.25]},
+    )
+    mapper = ReverseMapper(font, cache_size=0, **constraints)
+    options = dict(
+        inputNormalized=input_normalized,
+        outputNormalized=output_normalized,
+        dropZeroes=drop_zeroes,
+    )
+    sources = [{"aaaa": 600}, {"bbbb": 250}, {}]
+    targets = [
+        map_avar(font, source, outputNormalized=input_normalized) for source in sources
+    ]
+    expected = [reverse(font, target, **constraints, **options) for target in targets]
+    # Revisit targets in a different order without memoization. Mutable
+    # evaluator state and starting points must not affect later solutions.
+    for i in [0, 1, 2, 1, 0]:
+        result, error = mapper.reverse(targets[i], **options)
+        assert result == expected[i][0]
+        assert error == expected[i][1]
+
+
+def count_solves(monkeypatch, mapper):
+    calls = []
+    solve = mapper._solve
+
+    def counted(*args):
+        calls.append(None)
+        return solve(*args)
+
+    monkeypatch.setattr(mapper, "_solve", counted)
+    return calls
+
+
+def test_solver_cache_reuses_units_and_returns_fresh_results(monkeypatch):
+    mapper = ReverseMapper(make_font())
+    calls = count_solves(monkeypatch, mapper)
+    result, error = mapper.reverse({"aaaa": 600})
+    assert result == pytest.approx({"aaaa": 600, "bbbb": 400, "cccc": 400})
+    result["aaaa"] = -999
+    result, cached_error = mapper.reverse(
+        {"aaaa": 0.4}, inputNormalized=True, outputNormalized=True, dropZeroes=True
+    )
+    assert result == pytest.approx({"aaaa": 0.4})
+    assert cached_error == error
+    assert len(calls) == 1
+    mapper.clear_cache()
+    mapper.reverse({"aaaa": 600})
+    assert len(calls) == 2
+
+
+def test_solver_cache_distinguishes_omitted_fixed_outputs(monkeypatch):
+    font = make_font(("aaaa", "bbbb"), hidden=("bbbb",))
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"bbbb": [1]})
+    mapper = ReverseMapper(font)
+    calls = count_solves(monkeypatch, mapper)
+    unconstrained, error = mapper.reverse({"aaaa": 0.5}, inputNormalized=True)
+    constrained, constrained_error = mapper.reverse(
+        {"aaaa": 0.5, "bbbb": 0}, inputNormalized=True
+    )
+    assert unconstrained["aaaa"] == pytest.approx(650)
+    assert error <= 1 / 16384
+    assert constrained["aaaa"] == pytest.approx(525, abs=0.1)
+    assert constrained_error == pytest.approx(0.5 / np.sqrt(2), abs=1 / 16384)
+    assert len(calls) == 2
+
+
+def test_solver_cache_distinguishes_tolerance(monkeypatch):
+    mapper = ReverseMapper(make_font())
+    calls = count_solves(monkeypatch, mapper)
+    mapper.reverse({"aaaa": 600}, tolerance=0)
+    mapper.reverse({"aaaa": 600}, tolerance=1 / 16384)
+    mapper.reverse({"aaaa": 600}, tolerance=0)
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize("cache_size, expected_calls", [(0, 6), (2, 4)])
+def test_solver_cache_eviction(monkeypatch, cache_size, expected_calls):
+    mapper = ReverseMapper(make_font(), cache_size=cache_size)
+    calls = count_solves(monkeypatch, mapper)
+    # Touch 600 before adding 800: 700 must be evicted first.
+    for value in [600, 700, 600, 800, 600, 700]:
+        mapper.reverse({"aaaa": value})
+    assert len(calls) == expected_calls
+
+
+def test_solver_copies_constraints():
+    pinned = {"bbbb": 650}
+    vary = ["aaaa", "cccc"]
+    mapper = ReverseMapper(make_font(), pinned=pinned, vary=vary)
+    pinned["bbbb"] = 800
+    vary.clear()
+    result, error = mapper.reverse({"aaaa": 600})
+    assert result == pytest.approx({"aaaa": 600, "bbbb": 650, "cccc": 400})
+    assert error <= 1 / 16384
+
+
+@pytest.mark.parametrize("cache_size", [-1, 1.5, None])
+def test_solver_rejects_invalid_cache_size(cache_size):
+    with pytest.raises(ValueError, match="cache_size"):
+        ReverseMapper(make_font(), cache_size=cache_size)
+
+
+def test_solver_requires_fvar():
+    with pytest.raises(ValueError, match="fvar"):
+        ReverseMapper(TTFont())
+
+
+def test_empty_solver_does_not_require_scipy(monkeypatch):
+    monkeypatch.setitem(sys.modules, "scipy.optimize", None)
+    mapper = ReverseMapper(make_font(()))
+    assert mapper.reverse({}) == ({}, 0)
+    mapper.clear_cache()
 
 
 def test_identity_units_and_omitted_targets():
