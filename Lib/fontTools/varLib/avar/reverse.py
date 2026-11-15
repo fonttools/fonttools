@@ -317,13 +317,15 @@ class ReverseMapper:
         self._least_squares = least_squares
         self._mapping = _AvarMapping(font)
         self._forward = ForwardMapper(font)
+        self._batch_score = None
         self._score = partial(
             self._forward.map, outputNormalized=True, dropZeroes=False
         )
         if _mapping.COMPILED:
             from ._scorer import _ForwardScorer
 
-            self._score = _ForwardScorer(self._forward)
+            self._score = _ForwardScorer(self._forward, pinned=pinned)
+            self._batch_score = self._score.batch
         # Normalize inputs so weight, optical size, etc. have comparable
         # scales. An endpoint default makes the domain one-sided. Hidden,
         # pinned, and collapsed inputs are excluded from optimization.
@@ -597,22 +599,36 @@ class ReverseMapper:
         candidates = {}
         linear_solved = {}
 
-        def add(x):
-            x = x.copy()
-            x[free] = np.where(abs(x[free]) < 1e-10, 0, x[free])
-            key = tuple(x)
-            if key not in candidates:
-                # Score through the public forward path, including the round trip
-                # through pre-fvar coordinates that the caller will actually use.
-                user = {
-                    a.axisTag: _denormalize(v, triples[a.axisTag])
-                    for a, v in zip(axes, x)
-                }
-                user.update(pinned)
-                actual = self._score(user)
-                deviation = np.array([actual[tag] for tag in mapping.tags]) - target
-                error = np.linalg.norm(deviation[scored])
+        def add_many(points):
+            pending = {}
+            for x in points:
+                x = x.copy()
+                x[free] = np.where(abs(x[free]) < 1e-10, 0, x[free])
+                key = tuple(x)
+                if key not in candidates and key not in pending:
+                    pending[key] = x
+            if not pending:
+                return
+            if self._batch_score is not None:
+                actuals = self._batch_score(np.array(list(pending.values())))
+            else:
+                actuals = []
+                for x in pending.values():
+                    user = {
+                        a.axisTag: _denormalize(v, triples[a.axisTag])
+                        for a, v in zip(axes, x)
+                    }
+                    user.update(pinned)
+                    actual = self._score(user)
+                    actuals.append(np.array([actual[tag] for tag in mapping.tags]))
+            for (key, x), actual in zip(pending.items(), actuals):
+                # Keep the same NumPy norm and candidate insertion order; only
+                # the coordinate conversion and forward evaluations are batched.
+                error = np.linalg.norm((actual - target)[scored])
                 candidates[key] = (error, x)
+
+        def add(x):
+            add_many((x,))
 
         def best():
             # Output accuracy comes first, up to the requested tolerance. Use the
@@ -863,6 +879,7 @@ class ReverseMapper:
             # outputs and quantization may impose a strictly positive floor.
             if error <= error_floor:
                 break
+            trials = []
             for i in free:
                 _, slope = _segment(x[i], mapping.segments[i])
                 if not slope:
@@ -871,7 +888,8 @@ class ReverseMapper:
                 for offset in (-1, -0.5, 0.5, 1):
                     trial = x.copy()
                     trial[i] = np.clip(x[i] + offset * step, lower[i], upper[i])
-                    add(trial)
+                    trials.append(trial)
+            add_many(trials)
             if np.array_equal(best()[1], x):
                 break
 

@@ -268,6 +268,8 @@ def mapSegments(x, offsets, keys, values, segments):
     return z_array, slopes_array
 
 
+@cython.cfunc
+@cython.returns("void")
 @cython.locals(
     user="double[:]",
     triples="double[:, :]",
@@ -307,7 +309,7 @@ def mapSegments(x, offsets, keys, values, segments):
     delta=cython.double,
     nudge="volatile double",
 )
-def score(
+def _scoreInto(
     user,
     triples,
     seg_offsets,
@@ -323,13 +325,12 @@ def score(
     row_deltas,
     quantize,
     clamp,
-    tags,
+    z,
+    scalars,
+    out,
 ):
-    import numpy as np
-
     n = len(user)
     nr = len(offsets) - 1
-    z, scalars, out = np.empty(n), np.empty(nr), np.empty(n)
     # Volatile products prevent fused multiply-add from changing tie rounding.
     # This follows the exact forward map, not the differentiable surrogate:
     # keep normalization, segment arithmetic, delta order, and rounding intact.
@@ -401,4 +402,194 @@ def score(
                 v = max(-16384.0, min(16384.0, v))
             v /= 16384.0
         out[i] = v
+
+
+@cython.locals(
+    user="double[:]",
+    triples="double[:, :]",
+    seg_offsets="long[:]",
+    seg_keys="double[:]",
+    seg_values="double[:]",
+    offsets="long[:]",
+    axes="long[:]",
+    starts="double[:]",
+    peaks="double[:]",
+    ends="double[:]",
+    row_offsets="long[:]",
+    row_regions="long[:]",
+    row_deltas="double[:]",
+    z="double[:]",
+    scalars="double[:]",
+    out="double[:]",
+    n=cython.int,
+    nr=cython.int,
+    i=cython.int,
+    j=cython.int,
+    k=cython.int,
+    lo=cython.int,
+    hi=cython.int,
+    mid=cython.int,
+    first=cython.int,
+    last=cython.int,
+    r=cython.int,
+    f=cython.int,
+    quantize=cython.int,
+    clamp=cython.int,
+    v=cython.double,
+    start=cython.double,
+    peak=cython.double,
+    end=cython.double,
+    scalar=cython.double,
+    delta=cython.double,
+    nudge="volatile double",
+)
+def score(
+    user,
+    triples,
+    seg_offsets,
+    seg_keys,
+    seg_values,
+    offsets,
+    axes,
+    starts,
+    peaks,
+    ends,
+    row_offsets,
+    row_regions,
+    row_deltas,
+    quantize,
+    clamp,
+    tags,
+):
+    import numpy as np
+
+    n = len(user)
+    nr = len(offsets) - 1
+    z, scalars, out = np.empty(n), np.empty(nr), np.empty(n)
+    _scoreInto(
+        user,
+        triples,
+        seg_offsets,
+        seg_keys,
+        seg_values,
+        offsets,
+        axes,
+        starts,
+        peaks,
+        ends,
+        row_offsets,
+        row_regions,
+        row_deltas,
+        quantize,
+        clamp,
+        z,
+        scalars,
+        out,
+    )
     return {tag: out[i] for i, tag in enumerate(tags)}
+
+
+@cython.locals(
+    user="double[:]",
+    coordinates="double[:, :]",
+    pins="double[:]",
+    result="double[:, :]",
+    candidate=cython.int,
+    triples="double[:, :]",
+    seg_offsets="long[:]",
+    seg_keys="double[:]",
+    seg_values="double[:]",
+    offsets="long[:]",
+    axes="long[:]",
+    starts="double[:]",
+    peaks="double[:]",
+    ends="double[:]",
+    row_offsets="long[:]",
+    row_regions="long[:]",
+    row_deltas="double[:]",
+    z="double[:]",
+    scalars="double[:]",
+    out="double[:]",
+    n=cython.int,
+    nr=cython.int,
+    i=cython.int,
+    j=cython.int,
+    k=cython.int,
+    lo=cython.int,
+    hi=cython.int,
+    mid=cython.int,
+    first=cython.int,
+    last=cython.int,
+    r=cython.int,
+    f=cython.int,
+    quantize=cython.int,
+    clamp=cython.int,
+    v=cython.double,
+    start=cython.double,
+    peak=cython.double,
+    end=cython.double,
+    scalar=cython.double,
+    delta=cython.double,
+    nudge="volatile double",
+)
+def scoreBatch(
+    coordinates,
+    pins,
+    triples,
+    seg_offsets,
+    seg_keys,
+    seg_values,
+    offsets,
+    axes,
+    starts,
+    peaks,
+    ends,
+    row_offsets,
+    row_regions,
+    row_deltas,
+    quantize,
+    clamp,
+    tags,
+):
+    import numpy as np
+
+    n = len(pins)
+    nr = len(offsets) - 1
+    user, z, scalars = np.empty(n), np.empty(n), np.empty(nr)
+    result_array = np.empty((len(coordinates), n))
+    result = result_array
+    # Reuse scratch arrays across candidates, preserving the public path's
+    # normalized -> user -> normalized round trip and exact pinned values.
+    for candidate in range(len(coordinates)):
+        for i in range(n):
+            if pins[i] == pins[i]:
+                user[i] = pins[i]
+            else:
+                v = coordinates[candidate, i]
+                if v >= 0:
+                    nudge = v * (triples[i, 2] - triples[i, 1])
+                else:
+                    nudge = v * (triples[i, 1] - triples[i, 0])
+                user[i] = triples[i, 1] + nudge
+        out = result[candidate]
+        _scoreInto(
+            user,
+            triples,
+            seg_offsets,
+            seg_keys,
+            seg_values,
+            offsets,
+            axes,
+            starts,
+            peaks,
+            ends,
+            row_offsets,
+            row_regions,
+            row_deltas,
+            quantize,
+            clamp,
+            z,
+            scalars,
+            out,
+        )
+    return result_array

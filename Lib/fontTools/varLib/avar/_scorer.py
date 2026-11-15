@@ -5,10 +5,13 @@ from fontTools.varLib.varStore import NO_VARIATION_INDEX
 
 
 class _ForwardScorer:
-    def __init__(self, forward):
+    def __init__(self, forward, pinned=None):
         import numpy as np
 
         self.tags = forward.tags
+        self.pins = np.array(
+            [(pinned or {}).get(tag, np.nan) for tag in self.tags], dtype=float
+        )
         self.defaults = tuple(forward.triples[tag][1] for tag in self.tags)
         self.triples = np.array(
             [forward.triples[tag] for tag in self.tags], dtype=float
@@ -83,3 +86,6 @@ class _ForwardScorer:
             dtype=float,
         )
         return _mapping.score(user, self.triples, *self.data)
+
+    def batch(self, coordinates):
+        return _mapping.scoreBatch(coordinates, self.pins, self.triples, *self.data)

@@ -268,6 +268,25 @@ def test_packed_scorer_matches_forward(font):
         assert score(location) == forward.map(location, outputNormalized=True)
 
 
+@pytest.mark.parametrize("pinned", [{}, {"wdth": 100.1}])
+def test_batch_scorer_matches_scalar_roundtrip(font, pinned):
+    np = pytest.importorskip("numpy")
+    from fontTools.varLib.avar._scorer import _ForwardScorer
+
+    forward = ForwardMapper(font)
+    score = _ForwardScorer(forward, pinned=pinned)
+    coordinates = np.random.default_rng(0).uniform(-1, 1, (30, len(forward.tags)))
+    actual = score.batch(coordinates)
+    for values, output in zip(coordinates, actual):
+        user = {
+            tag: _denormalize(v, forward.triples[tag])
+            for tag, v in zip(forward.tags, values)
+        }
+        user.update(pinned)
+        expected = forward.map(user, outputNormalized=True)
+        np.testing.assert_array_equal(output, [expected[tag] for tag in forward.tags])
+
+
 @pytest.mark.parametrize("variant", ["normal", "null", "indices", "duplicate"])
 def test_packed_scorer_rounding_and_row_order(variant):
     pytest.importorskip("numpy")
