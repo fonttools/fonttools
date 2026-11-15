@@ -5,32 +5,17 @@ Candidates are ranked using the actual forward map, including avar2 rounding
 and clipping. SciPy is optional and is imported when a solver is constructed.
 """
 
-from bisect import bisect_left, bisect_right
+from bisect import bisect_left
 from collections import OrderedDict
+from functools import partial
 import math
 
 from fontTools.misc.fixedTools import floatToFixedToStr, nearestMultipleShortestRepr
 from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
 from . import _mapping
-from ._mapping import _tent
+from ._mapping import _segment, _tent
 from .map import ForwardMapper, _denormalize, _load_font, _parse_coordinates
-
-
-def _segment(value, items):
-    """Piecewise-linear segment value and a one-sided derivative."""
-    if not items:
-        return value, 1.0
-    keys = [k for k, _ in items]
-    i = bisect_right(keys, value)
-    if value < keys[0] or value > keys[-1] or len(items) == 1:
-        k, v = items[0 if value < keys[0] else -1]
-        return value + v - k, 1.0
-    i = min(max(i, 1), len(items) - 1)
-    a, va = items[i - 1]
-    b, vb = items[i]
-    slope = (vb - va) / (b - a)
-    return va + (value - a) * slope, slope
 
 
 def _segmentPreimages(value, items, lo, hi):
@@ -165,13 +150,16 @@ class _AvarMapping:
             *(np.array([f[j] for f in factors], dtype=float) for j in (1, 2, 3)),
         )
 
+        self._segments = _mapping.packSegments(self.segments)
         self._column_cache = OrderedDict()
 
     def __call__(self, x, columns=None):
         # H(x) = A(x) + D * s(A(x)); the evaluator applies the chain rule
         # through avar1 and differentiates product tents without dividing by
         # their factors, which can vanish at a region boundary.
-        values, slopes = zip(*(_segment(v, s) for v, s in zip(x, self.segments)))
+        values, slopes = _mapping.mapSegments(
+            self.np.asarray(x, dtype=float), *self._segments, self.segments
+        )
         # A solve may vary only a handful of inputs. Cache their packed
         # column indices, and omit every other derivative from both backends.
         key = tuple(range(len(x))) if columns is None else tuple(columns)
@@ -189,8 +177,8 @@ class _AvarMapping:
                 self._column_cache.popitem(last=False)
         self._column_cache.move_to_end(key)
         return _mapping.evaluate(
-            self.np.array(values, dtype=float),
-            self.np.array(slopes),
+            self.np.asarray(values, dtype=float),
+            self.np.asarray(slopes),
             self.deltas,
             *self._packed,
             self.supports,
@@ -325,6 +313,13 @@ class ReverseMapper:
         self._least_squares = least_squares
         self._mapping = _AvarMapping(font)
         self._forward = ForwardMapper(font)
+        self._score = partial(
+            self._forward.map, outputNormalized=True, dropZeroes=False
+        )
+        if _mapping.COMPILED:
+            from ._scorer import _ForwardScorer
+
+            self._score = _ForwardScorer(self._forward)
         # Normalize inputs so weight, optical size, etc. have comparable
         # scales. An endpoint default makes the domain one-sided. Hidden,
         # pinned, and collapsed inputs are excluded from optimization.
@@ -598,9 +593,7 @@ class ReverseMapper:
                     for a, v in zip(axes, x)
                 }
                 user.update(pinned)
-                actual = self._forward.map(
-                    user, outputNormalized=True, dropZeroes=False
-                )
+                actual = self._score(user)
                 deviation = np.array([actual[tag] for tag in mapping.tags]) - target
                 error = np.linalg.norm(deviation[scored])
                 candidates[key] = (error, x)

@@ -93,6 +93,19 @@ def test_packed_evaluator_matches_python():
                 np.testing.assert_allclose(a, b, rtol=2e-15, atol=2e-15)
 
 
+def test_packed_segments_match_scalar_mapping():
+    from fontTools.varLib.avar.reverse import _segment
+
+    segments = [[], [(0, 0.125)], [(-1, -1), (0, 0), (0.25, 0.5), (0.5, 0.5), (1, 1)]]
+    packed = _mapping.packSegments(segments)
+    points = [-2, -1, -0.5, 0, 0.25, 0.5, 1, 2]
+    points.extend(np.random.default_rng(0).uniform(-2, 2, 100))
+    for v in points:
+        actual = _mapping.mapSegments(np.full(3, v, dtype=float), *packed, segments)
+        expected = np.array([_segment(v, s) for s in segments]).T
+        np.testing.assert_allclose(actual, expected, rtol=2e-15, atol=2e-15)
+
+
 @pytest.mark.parametrize("pinned", [{}, {"bbbb": 650}])
 def test_constant_output_error_floor_needs_no_iterations(pinned):
     font = make_font(hidden=("cccc",))
