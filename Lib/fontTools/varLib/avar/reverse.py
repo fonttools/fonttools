@@ -12,6 +12,8 @@ import math
 from fontTools.misc.fixedTools import floatToFixedToStr, nearestMultipleShortestRepr
 from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
+from . import _mapping
+from ._mapping import _tent
 from .map import ForwardMapper, _denormalize, _load_font, _parse_coordinates
 
 
@@ -29,23 +31,6 @@ def _segment(value, items):
     b, vb = items[i]
     slope = (vb - va) / (b - a)
     return va + (value - a) * slope, slope
-
-
-def _tent(value, start, peak, end):
-    """Tent value and right derivative (inward at a one-sided peak)."""
-    if value < start or value > end:
-        return 0.0, 0.0
-    if value == peak:
-        if peak < end:
-            return 1.0, -1 / (end - peak)
-        return 1.0, 1 / (peak - start) if start < peak else 0.0
-    if value == end and end < 1:
-        return 0.0, 0.0
-    if value < peak:
-        slope = 1 / (peak - start)
-        return (value - start) * slope, slope
-    slope = -1 / (end - peak)
-    return (value - end) * slope, slope
 
 
 def _segmentPreimages(value, items, lo, hi):
@@ -152,31 +137,31 @@ class _AvarMapping:
                 )
             self.deltas = deltas[:, used]
 
+        # Pack region geometry once. The optional Cython evaluator consumes
+        # buffers directly, without Python objects or a NumPy C-API dependency.
+        offsets = [0]
+        factors = []
+        for support in self.supports:
+            factors.extend(support)
+            offsets.append(len(factors))
+        self._packed = (
+            np.array(offsets, dtype="l"),
+            np.array([f[0] for f in factors], dtype="l"),
+            *(np.array([f[j] for f in factors], dtype=float) for j in (1, 2, 3)),
+        )
+
     def __call__(self, x):
-        np = self.np
-        # x is normalized BEFORE avar1; z = A(x) is the intermediate location.
-        # Before clipping/rounding, the full map is H(x) = z + D * s(z), where
-        # s contains the products of per-axis tents for each region. Within a
-        # region cell this is multilinear, not generally one affine transform.
+        # H(x) = A(x) + D * s(A(x)); the evaluator applies the chain rule
+        # through avar1 and differentiates product tents without dividing by
+        # their factors, which can vanish at a region boundary.
         values, slopes = zip(*(_segment(v, s) for v, s in zip(x, self.segments)))
-        z = np.array(values)
-        jac = np.eye(len(x))
-        for deltas, support in zip(self.deltas.T, self.supports):
-            factors = [_tent(z[i], a, p, b) for i, a, p, b in support]
-            scalar = math.prod(v for v, _ in factors)
-            gradient = np.zeros(len(x))
-            for j, (i, _, _, _) in enumerate(support):
-                # Do not divide by a factor: zero factors can have nonzero
-                # derivatives at a region boundary.
-                gradient[i] = factors[j][1] * math.prod(
-                    v for k, (v, _) in enumerate(factors) if k != j
-                )
-            jac += np.outer(deltas, gradient)
-            # All regions see the same intermediate coordinates.
-            values = np.asarray(values) + deltas * scalar
-        # Chain rule: J_H = (I + D * J_s) * diag(A'). Multiplying columns by
-        # the avar1 slopes differentiates with respect to our input x, not z.
-        return np.asarray(values), jac * slopes
+        return _mapping.evaluate(
+            self.np.array(values),
+            self.np.array(slopes),
+            self.deltas,
+            *self._packed,
+            self.supports,
+        )
 
 
 def reverse(

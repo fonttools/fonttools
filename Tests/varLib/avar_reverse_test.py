@@ -13,6 +13,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.avar.map import map as map_avar, main as map_main
 from fontTools.varLib.avar.reverse import _AvarMapping, ReverseMapper, reverse, main
 from fontTools.varLib.avar.roundtrip import roundtrip, main as roundtrip_main
+from fontTools.varLib.avar import _mapping
 
 
 def make_font(tags=("aaaa", "bbbb", "cccc"), hidden=(), positive=()):
@@ -56,6 +57,40 @@ def forward(font, location):
 def assert_target(font, result, target, atol=1 / 16384):
     actual = forward(font, result)
     assert np.linalg.norm([v - target.get(tag, 0) for tag, v in actual.items()]) <= atol
+
+
+def test_packed_evaluator_matches_python():
+    font = make_font()
+    add_avar2(
+        font,
+        [
+            {},
+            {"aaaa": (0, 0.5, 0.5)},
+            {"aaaa": (-0.5, -0.5, 0.0), "bbbb": (0, 1, 1)},
+            {"aaaa": (0.5, 0.5, 0.5), "bbbb": (0, 0.5, 1), "cccc": (0, 1, 1)},
+        ],
+        {
+            "aaaa": [0.125, 0.25, -0.5, 1],
+            "bbbb": [0, -0.5, 0.75, 0],
+            "cccc": [0, 0, 0, 1],
+        },
+    )
+    mapping = _AvarMapping(font)
+    points = [np.array([v, v, v], dtype=float) for v in (-1, -0.5, 0, 0.5, 1)]
+    points.extend(np.random.default_rng(0).uniform(-1, 1, (20, 3)))
+    for index, z in enumerate(points):
+        slopes = np.array([0.5, 1, 2.0])
+        actual = _mapping.evaluate(
+            z, slopes, mapping.deltas, *mapping._packed, mapping.supports
+        )
+        expected = _mapping._evaluatePython(z, slopes, mapping.deltas, mapping.supports)
+        for a, b in zip(actual, expected):
+            if index < 5:
+                np.testing.assert_array_equal(a, b)
+            else:
+                # Compilers may contract arithmetic on random inputs. Keep
+                # exact boundary checks, with a few ULPs allowed elsewhere.
+                np.testing.assert_allclose(a, b, rtol=2e-15, atol=2e-15)
 
 
 @pytest.mark.parametrize("input_normalized", [False, True])
