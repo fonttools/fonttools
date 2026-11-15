@@ -17,6 +17,10 @@ from . import _mapping
 from ._mapping import _segment, _tent
 from .map import ForwardMapper, _denormalize, _load_font, _parse_coordinates
 
+# Inputs and outputs are normalized. Solve below the output quantization scale;
+# candidate ranking and the final stencil still use the exact rounded map.
+_SOLVER_TOLERANCE = 1e-8
+
 
 def _segmentPreimages(value, items, lo, hi):
     """Find all isolated preimages and representatives of flat intervals."""
@@ -574,7 +578,19 @@ class ReverseMapper:
         # smallest possible number of non-default coordinates. No search can
         # improve either the error or sparsity, even for an unreachable target.
         dynamic = scored & ~self._constant_outputs
-        if np.array_equal(self._default_output[dynamic], target[dynamic]):
+        nearest = np.array(target, dtype=float)
+        if self._forward.version == 2:
+            # Every avar2 output lies on the F2Dot14 grid, even with a NULL
+            # VarStore. Include both half-tick ties by comparing distances,
+            # rather than requiring the particular rounded coordinate.
+            nearest = np.floor(target * 16384 + 0.5) / 16384
+        nearest[self._constant_outputs] = self._default_output[self._constant_outputs]
+        minimum_deviation = abs(nearest - target)
+        error_floor = float(np.linalg.norm(minimum_deviation[scored]))
+        if np.array_equal(
+            abs(self._default_output[dynamic] - target[dynamic]),
+            minimum_deviation[dynamic],
+        ):
             return tuple(float(v) for v in fixed), float(
                 np.linalg.norm((self._default_output - target)[scored])
             )
@@ -680,9 +696,9 @@ class ReverseMapper:
                     x[varying],
                     jac=lambda v: evaluate(v)[1],
                     bounds=(box_lower[varying], box_upper[varying]),
-                    ftol=1e-11,
-                    xtol=1e-11,
-                    gtol=1e-11,
+                    ftol=_SOLVER_TOLERANCE,
+                    xtol=_SOLVER_TOLERANCE,
+                    gtol=_SOLVER_TOLERANCE,
                     max_nfev=200,
                 )
                 x[varying] = result.x
@@ -826,7 +842,9 @@ class ReverseMapper:
         # has located a good basin.
         for _ in range(3):
             error, x = best()
-            if error == 0:
+            # An unattainable zero is not a reason to keep probing: fixed
+            # outputs and quantization may impose a strictly positive floor.
+            if error <= error_floor:
                 break
             for i in free:
                 _, slope = _segment(x[i], mapping.segments[i])

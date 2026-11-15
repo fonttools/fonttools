@@ -123,6 +123,27 @@ def test_constant_output_error_floor_needs_no_iterations(pinned):
     assert error == 1
 
 
+@pytest.mark.parametrize("target", [1 / 65536, 1 / 32768, -1 / 32768])
+@pytest.mark.parametrize("store", [True, False])
+def test_default_attains_quantization_floor(target, store):
+    font = make_font(hidden=("cccc",))
+    avar = add_avar2(font, [{"aaaa": (0, 1, 1)}], {"cccc": [1]})
+    if not store:
+        avar.table.VarStore = None
+    solver = ReverseMapper(font)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Default inputs already attain the quantization error floor")
+
+    solver._score = forbidden
+    solver._least_squares = forbidden
+    result, error = solver.reverse(
+        {"aaaa": target}, inputNormalized=True, tolerance=0, dropZeroes=True
+    )
+    assert result == {}
+    assert error == abs(target)
+
+
 def test_changing_hidden_output_is_not_constant():
     font = make_font(hidden=("cccc",))
     add_avar2(font, [{"aaaa": (0, 1, 1)}], {"cccc": [1]})
