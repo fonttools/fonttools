@@ -93,6 +93,32 @@ def test_packed_evaluator_matches_python():
                 np.testing.assert_allclose(a, b, rtol=2e-15, atol=2e-15)
 
 
+@pytest.mark.parametrize("pinned", [{}, {"bbbb": 650}])
+def test_constant_output_error_floor_needs_no_iterations(pinned):
+    font = make_font(hidden=("cccc",))
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"bbbb": [0.5]})
+    solver = ReverseMapper(font, pinned=pinned)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("The default inputs already attain the proven error floor")
+
+    solver._least_squares = forbidden
+    target = forward(font, pinned)
+    target["cccc"] = 1
+    result, error = solver.reverse(target, inputNormalized=True)
+    assert result == {"aaaa": 400, "bbbb": pinned.get("bbbb", 400), "cccc": 400}
+    assert error == 1
+
+
+def test_changing_hidden_output_is_not_constant():
+    font = make_font(hidden=("cccc",))
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"cccc": [1]})
+    target = forward(font, {"aaaa": 650})
+    result, error = reverse(font, target, inputNormalized=True)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
 @pytest.mark.parametrize("input_normalized", [False, True])
 @pytest.mark.parametrize("output_normalized", [False, True])
 @pytest.mark.parametrize("drop_zeroes", [False, True])

@@ -105,6 +105,7 @@ class _AvarMapping:
         store = avar.table.VarStore if avar and version == 2 else None
         self.supports = []
         self.deltas = np.zeros((len(self.axes), 0))
+        self.constant_deltas = np.ones(len(self.axes), dtype=bool)
         if store is not None:
             indexMap = avar.table.VarIdxMap
             # Assemble D[output axis, region] in normalized-coordinate units.
@@ -119,6 +120,9 @@ class _AvarMapping:
                 data = store.VarData[outer]
                 if inner >= len(data.Item):
                     continue
+                # Inspect the original row, conservatively: do not infer
+                # constancy from cancellations in the assembled matrix.
+                self.constant_deltas[i] = not any(data.Item[inner])
                 for region, delta in zip(data.VarRegionIndex, data.Item[inner]):
                     deltas[i, region] += delta / 16384
             # Ignore unused regions and axes ignored by OpenType supportScalar.
@@ -314,6 +318,16 @@ class ReverseMapper:
             if a.axisTag not in pinned and self._lower[i] < self._upper[i]
         ]
         self._free_set = set(self._free)
+        self._constant_outputs = self._mapping.constant_deltas & np.array(
+            [i not in self._free_set for i in range(len(self._axes))]
+        )
+        default_output = self._forward.map(
+            {a.axisTag: pinned.get(a.axisTag, a.defaultValue) for a in self._axes},
+            outputNormalized=True,
+        )
+        self._default_output = np.array(
+            [default_output[tag] for tag in self._mapping.tags]
+        )
         # Cache each region-peak seed and its unrounded forward value. Only
         # ranking these seeds against the new target must happen per call.
         self._peak_seeds = []
@@ -453,6 +467,16 @@ class ReverseMapper:
         pinned = self._pinned
         mapping = self._mapping
         lower, upper, fixed, free = self._lower, self._upper, self._fixed, self._free
+        # Fixed inputs with zero delta rows produce constant outputs. Their
+        # residual is an unavoidable error floor. If the default free inputs
+        # fit all remaining outputs exactly, they attain that floor with the
+        # smallest possible number of non-default coordinates. No search can
+        # improve either the error or sparsity, even for an unreachable target.
+        dynamic = scored & ~self._constant_outputs
+        if np.array_equal(self._default_output[dynamic], target[dynamic]):
+            return tuple(float(v) for v in fixed), float(
+                np.linalg.norm((self._default_output - target)[scored])
+            )
         candidates = {}
 
         def add(x):
