@@ -131,6 +131,44 @@ def test_mapping_reduced_jacobian(columns):
         np.testing.assert_array_equal(reduced, full[:, columns])
 
 
+@pytest.mark.parametrize("version", [None, 1, 2])
+def test_separable_inverse_needs_no_iterations(version):
+    font = make_font()
+    if version == 2:
+        add_avar2(font, [{}], {"bbbb": [0.125]})
+    elif version == 1:
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"aaaa": {-1: -1, 0: 0, 0.5: 0.75, 1: 1}}
+    solver = ReverseMapper(font)
+    solver._least_squares = lambda *a, **kw: pytest.fail("Separable inverse used SciPy")
+    target = forward(font, {"aaaa": 650, "bbbb": 525})
+    result, error = solver.reverse(target, inputNormalized=True)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
+@pytest.mark.parametrize("saturating", [False, True])
+@pytest.mark.parametrize("zero_default", [False, True])
+def test_one_dimensional_inverse_minimizes_all_outputs(saturating, zero_default):
+    font = make_font(("aaaa", "bbbb"), hidden=("bbbb",))
+    axis = font["fvar"].axes[0]
+    if zero_default:
+        axis.minValue, axis.defaultValue, axis.maxValue = -16384, 0, 16384
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"bbbb": [2 if saturating else 1]})
+    solver = ReverseMapper(font)
+    solver._least_squares = lambda *a, **kw: pytest.fail(
+        "One-dimensional inverse used SciPy"
+    )
+    target = {"aaaa": 0.8 if saturating else 0.2, "bbbb": 0.8 if saturating else 0.6}
+    result, error = solver.reverse(target, inputNormalized=True)
+    expected = 0.8 if saturating else 0.4
+    extent = axis.maxValue - axis.defaultValue
+    assert result["aaaa"] == pytest.approx(
+        axis.defaultValue + extent * expected, abs=max(0.05, extent / 16384)
+    )
+    assert error == pytest.approx(0.2 if saturating else np.sqrt(0.08), abs=1 / 16384)
+
+
 @pytest.mark.parametrize("input_normalized", [False, True])
 @pytest.mark.parametrize("output_normalized", [False, True])
 @pytest.mark.parametrize("drop_zeroes", [False, True])

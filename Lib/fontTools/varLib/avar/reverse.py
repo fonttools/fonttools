@@ -85,6 +85,17 @@ def _jumpPreimages(peak, at_start, at_end, items, lo, hi):
     return jumps
 
 
+def _adjacentInput(value, triple, direction):
+    # Choose an open endpoint in user units, so the normalization round trip
+    # cannot round a supposedly one-sided probe back onto a jump plane.
+    user = _denormalize(math.nextafter(value, math.inf * direction), triple)
+    while True:
+        normalized = normalizeValue(user, triple)
+        if (normalized - value) * direction > 0:
+            return normalized
+        user = math.nextafter(user, math.inf * direction)
+
+
 class _AvarMapping:
     """Unrounded, piecewise-smooth forward mapping and analytic Jacobian."""
 
@@ -178,7 +189,7 @@ class _AvarMapping:
                 self._column_cache.popitem(last=False)
         self._column_cache.move_to_end(key)
         return _mapping.evaluate(
-            self.np.array(values),
+            self.np.array(values, dtype=float),
             self.np.array(slopes),
             self.deltas,
             *self._packed,
@@ -337,6 +348,28 @@ class ReverseMapper:
             if a.axisTag not in pinned and self._lower[i] < self._upper[i]
         ]
         self._free_set = set(self._free)
+        self._separable = not any(self._mapping.supports)
+        self._offset = np.sum(self._mapping.deltas, axis=1)
+        self._clipped = (
+            self._forward.version == 2 and self._forward._instancer is not None
+        )
+        self._one_dim_knots = {}
+        if not self._separable:
+            for i in self._free:
+                segments = self._mapping.segments[i]
+                lo, hi = self._lower[i], self._upper[i]
+                knots = {lo, hi, *[k for k, _ in segments if lo <= k <= hi]}
+                edges = {
+                    v
+                    for support in self._mapping.supports
+                    for axis, *values in support
+                    if axis == i
+                    for v in values
+                }
+                for edge in edges:
+                    knots.update(_segmentPreimages(edge, segments, lo, hi))
+                self._one_dim_knots[i] = sorted(knots)
+
         self._constant_outputs = self._mapping.constant_deltas & np.array(
             [i not in self._free_set for i in range(len(self._axes))]
         )
@@ -480,6 +513,58 @@ class ReverseMapper:
             )
         return result, error
 
+    def _linearCandidates(self, seed, i, lo, hi, target, scored):
+        # With every other input fixed, product tents and avar1 are affine
+        # between their knots. Split again where an output saturates, then
+        # minimize ||a*t+b-target||^2 by projecting onto the line segment.
+        np = self._np
+        points = sorted({lo, hi, *[v for v in self._one_dim_knots[i] if lo <= v <= hi]})
+        candidates = set(points)
+        if lo <= 0 <= hi:
+            candidates.add(0.0)
+        triple = self._triples[self._axes[i].axisTag]
+        for left, right in zip(points, points[1:]):
+            mid = (left + right) / 2
+            if not left < mid < right:
+                continue
+            x = seed.copy()
+            x[i] = mid
+            raw, jac = self._mapping(x, columns=[i])
+            slope = jac[:, 0]
+            cuts = {left, right}
+            if self._clipped:
+                for value, derivative in zip(raw, slope):
+                    if derivative:
+                        for edge in (-1, 1):
+                            root = mid + (edge - value) / derivative
+                            if left < root < right:
+                                cuts.add(float(root))
+            cuts = sorted(cuts)
+            for a, b in zip(cuts, cuts[1:]):
+                center = (a + b) / 2
+                values = raw + slope * (center - mid)
+                active = scored.copy()
+                if self._clipped:
+                    active &= (values > -1) & (values < 1)
+                direction = slope[active]
+                denominator = np.dot(direction, direction)
+                optimum = (
+                    center - np.dot(direction, (values - target)[active]) / denominator
+                    if denominator
+                    else 0.0
+                )
+                # Evaluate the exact knot separately: its value can differ
+                # from either limit when a tent has a collapsed edge.
+                lower = _adjacentInput(a, triple, 1)
+                upper = _adjacentInput(b, triple, -1)
+                if lower <= upper:
+                    candidates.add(float(np.clip(optimum, lower, upper)))
+                    candidates.add(float(np.clip(0, lower, upper)))
+        for value in sorted(candidates):
+            x = seed.copy()
+            x[i] = value
+            yield x
+
     def _solve(self, target, scored, tolerance):
         np = self._np
         least_squares = self._least_squares
@@ -499,6 +584,7 @@ class ReverseMapper:
                 np.linalg.norm((self._default_output - target)[scored])
             )
         candidates = {}
+        linear_solved = {}
 
         def add(x):
             x = x.copy()
@@ -539,6 +625,30 @@ class ReverseMapper:
                 x[varying] = np.clip(x[varying], box_lower[varying], box_upper[varying])
             add(x)
             if not varying:
+                return
+            if self._separable:
+                # No region depends on an input: outputs separate by axis,
+                # possibly with a constant avar2 offset. Invert each segment
+                # map directly, choosing its preimage nearest the default.
+                for i in varying:
+                    x[i] = _inverseSegment(
+                        target[i] - self._offset[i],
+                        mapping.segments[i],
+                        box_lower[i],
+                        box_upper[i],
+                    )
+                add(x)
+                return
+            if len(varying) == 1:
+                i = varying[0]
+                key = (i, tuple(v for j, v in enumerate(x) if j != i))
+                lo, hi = box_lower[i], box_upper[i]
+                ranges = linear_solved.setdefault(key, [])
+                if any(a <= lo and hi <= b for a, b in ranges):
+                    return
+                ranges.append((lo, hi))
+                for candidate in self._linearCandidates(x, i, lo, hi, target, scored):
+                    add(candidate)
                 return
             # First seek an exact inverse without the flat plateaus introduced by
             # clipping. At +/-1 the target is an inequality on the unclipped map.
@@ -606,6 +716,8 @@ class ReverseMapper:
         )
         seeds.extend(x for x, _ in peaks[:8])
         seeds.extend(self._random_seeds)
+        if self._separable or len(free) == 1:
+            seeds = [fixed.copy()]
         seen = set()
         for seed in seeds:
             seed = np.asarray(seed).copy()
@@ -617,7 +729,7 @@ class ReverseMapper:
             seen.add(tuple(seed))
             solve(seed, free)
 
-        if self._jumps:
+        if self._jumps and len(free) > 1:
             # A gradient cannot guide a solve onto a zero-width support.
             # Fit its exact boundary with the jump axes held fixed, including
             # intersections of several jump planes in the same product tent.
@@ -625,14 +737,7 @@ class ReverseMapper:
                 solve(seed, [i for i in free if i not in locked])
 
             def adjacent(value, i, direction):
-                # Work in user units so denormalizing and normalizing again
-                # cannot round an ostensibly open endpoint back onto the jump.
-                user = _denormalize(value, triples[axes[i].axisTag])
-                while True:
-                    user = math.nextafter(user, math.inf * direction)
-                    normalized = normalizeValue(user, triples[axes[i].axisTag])
-                    if (normalized - value) * direction > 0:
-                        return normalized
+                return _adjacentInput(value, triples[axes[i].axisTag], direction)
 
             for i, boundaries in self._jumps.items():
                 for index, boundary in enumerate(boundaries):
