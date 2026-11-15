@@ -114,7 +114,12 @@ def main(args=None):
             )
             fonts.append(font)
         except TTLibFileIsCollectionError:
-            collection = TTCollection(f, lazy=lazy)
+            collection = TTCollection(
+                f,
+                recalcBBoxes=recalcBBoxes,
+                recalcTimestamp=recalcTimestamp,
+                lazy=lazy,
+            )
             fonts.extend(collection.fonts)
 
     for font in fonts:
