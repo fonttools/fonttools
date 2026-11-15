@@ -119,6 +119,18 @@ def test_changing_hidden_output_is_not_constant():
     assert_target(font, result, target)
 
 
+@pytest.mark.parametrize("columns", [[], [0], [2, 0], [0, 1, 2]])
+def test_mapping_reduced_jacobian(columns):
+    font = make_font()
+    add_avar2(font, [{"aaaa": (0, 1, 1), "bbbb": (0, 1, 1)}], {"cccc": [1]})
+    mapping = _AvarMapping(font)
+    for x in (np.array([0.2, 0.7, 0.1]), np.array([0.0, 0.7, 0.1])):
+        values, full = mapping(x)
+        actual_values, reduced = mapping(x, columns=columns)
+        np.testing.assert_array_equal(actual_values, values)
+        np.testing.assert_array_equal(reduced, full[:, columns])
+
+
 @pytest.mark.parametrize("input_normalized", [False, True])
 @pytest.mark.parametrize("output_normalized", [False, True])
 @pytest.mark.parametrize("drop_zeroes", [False, True])

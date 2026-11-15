@@ -154,17 +154,36 @@ class _AvarMapping:
             *(np.array([f[j] for f in factors], dtype=float) for j in (1, 2, 3)),
         )
 
-    def __call__(self, x):
+        self._column_cache = OrderedDict()
+
+    def __call__(self, x, columns=None):
         # H(x) = A(x) + D * s(A(x)); the evaluator applies the chain rule
         # through avar1 and differentiates product tents without dividing by
         # their factors, which can vanish at a region boundary.
         values, slopes = zip(*(_segment(v, s) for v, s in zip(x, self.segments)))
+        # A solve may vary only a handful of inputs. Cache their packed
+        # column indices, and omit every other derivative from both backends.
+        key = tuple(range(len(x))) if columns is None else tuple(columns)
+        packed_columns = self._column_cache.get(key)
+        if packed_columns is None:
+            positions = {i: j for j, i in enumerate(key)}
+            packed_columns = (
+                self.np.array(key, dtype="l"),
+                self.np.array(
+                    [positions.get(i, -1) for i in self._packed[1]], dtype="l"
+                ),
+            )
+            self._column_cache[key] = packed_columns
+            if len(self._column_cache) > 64:
+                self._column_cache.popitem(last=False)
+        self._column_cache.move_to_end(key)
         return _mapping.evaluate(
             self.np.array(values),
             self.np.array(slopes),
             self.deltas,
             *self._packed,
             self.supports,
+            *packed_columns,
         )
 
 
@@ -341,7 +360,9 @@ class ReverseMapper:
                     x[i] = _inverseSegment(
                         peak, self._mapping.segments[i], self._lower[i], self._upper[i]
                     )
-            self._peak_seeds.append((x, np.clip(self._mapping(x)[0], -1, 1)))
+            self._peak_seeds.append(
+                (x, np.clip(self._mapping(x, columns=[])[0], -1, 1))
+            )
             boundaries = {}
             for i, start, peak, end in support:
                 if i not in self._free_set or (start != peak and peak != end):
@@ -531,7 +552,7 @@ class ReverseMapper:
                     if cached is not None and np.array_equal(v, cached[0]):
                         return cached[1:]
                     x[varying] = v
-                    raw, jac = mapping(x)
+                    raw, jac = mapping(x, columns=varying)
                     if clipped:
                         residual = np.clip(raw, -1, 1) - target
                         active = (raw >= -1) & (raw <= 1) & scored
@@ -542,7 +563,7 @@ class ReverseMapper:
                             ((target == 1) & (raw > 1)) | ((target == -1) & (raw < -1))
                         )
                         residual = np.where(active, residual, 0)
-                    jac = jac[:, varying] * active[:, None]
+                    jac = jac * active[:, None]
                     cached = (v.copy(), residual, jac)
                     return residual, jac
 
@@ -631,7 +652,10 @@ class ReverseMapper:
                             min(
                                 contexts,
                                 key=lambda x: np.linalg.norm(
-                                    (np.clip(mapping(x)[0], -1, 1) - target)[scored]
+                                    (
+                                        np.clip(mapping(x, columns=[])[0], -1, 1)
+                                        - target
+                                    )[scored]
                                 ),
                             )
                         )

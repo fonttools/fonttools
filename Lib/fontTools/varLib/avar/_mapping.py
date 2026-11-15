@@ -13,6 +13,8 @@ import math
 @cython.locals(
     z="double[:]",
     slopes="double[:]",
+    columns="long[:]",
+    factor_columns="long[:]",
     deltas="double[:, :]",
     offsets="long[:]",
     axes="long[:]",
@@ -43,22 +45,39 @@ import math
     delta=cython.double,
     nudge=cython.double,
 )
-def evaluate(z, slopes, deltas, offsets, axes, starts, peaks, ends, supports):
+def evaluate(
+    z,
+    slopes,
+    deltas,
+    offsets,
+    axes,
+    starts,
+    peaks,
+    ends,
+    supports,
+    columns=None,
+    factor_columns=None,
+):
     import numpy as np
 
+    if columns is None:
+        columns = np.arange(len(z), dtype="l")
+        factor_columns = axes
     if not COMPILED:
-        return _evaluatePython(z, slopes, deltas, supports)
+        return _evaluatePython(z, slopes, deltas, supports, columns)
 
     n = z.shape[0]
     nr = offsets.shape[0] - 1
     values_array = np.array(z, dtype=float, copy=True)
-    jac_array = np.eye(n)
+    jac_array = np.zeros((n, len(columns)))
     factors_array = np.empty(axes.shape[0])
     derivatives_array = np.empty(axes.shape[0])
     values = values_array
     jac = jac_array
     factors = factors_array
     derivatives = derivatives_array
+    for column in range(len(columns)):
+        jac[columns[column], column] = 1.0
     # Retain region summation order and separate multiplication/addition,
     # matching the Python evaluator at rounding-sensitive boundaries.
     for r in range(nr):
@@ -96,6 +115,9 @@ def evaluate(z, slopes, deltas, offsets, axes, starts, peaks, ends, supports):
             nudge = delta * scalar
             values[out] = values[out] + nudge
             for f in range(offsets[r], offsets[r + 1]):
+                a = factor_columns[f]
+                if a < 0:
+                    continue
                 # Do not divide by a factor: its value may be zero while
                 # its derivative and the other factors are nonzero.
                 product = 1.0
@@ -103,12 +125,11 @@ def evaluate(z, slopes, deltas, offsets, axes, starts, peaks, ends, supports):
                     if f != g:
                         product *= factors[g]
                 gradient = derivatives[f] * product
-                a = axes[f]
                 nudge = delta * gradient
                 jac[out, a] = jac[out, a] + nudge
     for out in range(n):
-        for column in range(n):
-            jac[out, column] *= slopes[column]
+        for column in range(len(columns)):
+            jac[out, column] *= slopes[columns[column]]
     return values_array, jac_array
 
 
@@ -129,19 +150,26 @@ def _tent(value, start, peak, end):
     return (value - end) * slope, slope
 
 
-def _evaluatePython(z, slopes, deltas, supports):
+def _evaluatePython(z, slopes, deltas, supports, columns=None):
     import numpy as np
 
+    if columns is None:
+        columns = np.arange(len(z), dtype="l")
+    positions = {i: j for j, i in enumerate(columns)}
     values = z.copy()
-    jac = np.eye(len(z))
+    jac = np.zeros((len(z), len(columns)))
+    for j, i in enumerate(columns):
+        jac[i, j] = 1.0
     for delta, support in zip(deltas.T, supports):
         factors = [_tent(z[i], a, p, b) for i, a, p, b in support]
         scalar = math.prod(v for v, _ in factors)
-        gradient = np.zeros(len(z))
+        gradient = np.zeros(len(columns))
         for j, (i, _, _, _) in enumerate(support):
-            gradient[i] = factors[j][1] * math.prod(
+            if i not in positions:
+                continue
+            gradient[positions[i]] = factors[j][1] * math.prod(
                 v for k, (v, _) in enumerate(factors) if k != j
             )
         jac += np.outer(delta, gradient)
         values = values + delta * scalar
-    return values, jac * slopes
+    return values, jac * slopes[columns]
