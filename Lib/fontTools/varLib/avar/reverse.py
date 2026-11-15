@@ -1,11 +1,11 @@
 """Find pre-fvar coordinates that approximate a post-avar location.
 
-The numerical solver uses an unrounded forward map and its analytic Jacobian.
+The numerical solver uses an unrounded forward map and its local Jacobian.
 Candidates are ranked using the actual forward map, including avar2 rounding
 and clipping. SciPy is optional and is imported when a solver is constructed.
 """
 
-from bisect import bisect_right
+from bisect import bisect_left, bisect_right
 from collections import OrderedDict
 import math
 
@@ -48,8 +48,8 @@ def _tent(value, start, peak, end):
     return (value - end) * slope, slope
 
 
-def _inverseSegment(value, items, lo, hi):
-    """Choose a segment preimage nearest default, including flat intervals."""
+def _segmentPreimages(value, items, lo, hi):
+    """Find all isolated preimages and representatives of flat intervals."""
     mapping = dict(items)
     points = sorted({lo, hi, *[k for k in mapping if lo <= k <= hi]})
     preimages = []
@@ -61,13 +61,47 @@ def _inverseSegment(value, items, lo, hi):
                 if va == vb
                 else a + (value - va) * (b - a) / (vb - va)
             )
+            if va == vb:
+                # A whole interval maps to this value. Its ends are needed
+                # when a jump occurs on entering or leaving the plateau.
+                preimages.extend((a, b))
+    return sorted(set(preimages))
+
+
+def _inverseSegment(value, items, lo, hi):
+    """Choose a segment preimage nearest default, including flat intervals."""
+    preimages = _segmentPreimages(value, items, lo, hi)
     if preimages:
         return min(preimages, key=abs)
+    mapping = dict(items)
+    points = sorted({lo, hi, *[k for k in mapping if lo <= k <= hi]})
     return min(points, key=lambda v: abs(piecewiseLinearMap(v, mapping) - value))
 
 
+def _jumpPreimages(peak, at_start, at_end, items, lo, hi):
+    # A collapsed tent edge jumps from zero to one at its peak. Pull that
+    # plane back through every avar1 branch, including plateau endpoints.
+    roots = _segmentPreimages(peak, items, lo, hi)
+    segments = dict(items)
+    points = sorted({lo, hi, *[k for k, _ in items if lo <= k <= hi], *roots})
+    jumps = []
+    for root in roots:
+        index = bisect_left(points, root)
+        neighbors = []
+        if index:
+            neighbors.append((points[index - 1] + root) / 2)
+        if index + 1 < len(points):
+            neighbors.append((root + points[index + 1]) / 2)
+        values = (piecewiseLinearMap(v, segments) for v in neighbors)
+        if any(
+            (at_start and value < peak) or (at_end and value > peak) for value in values
+        ):
+            jumps.append(root)
+    return jumps
+
+
 class _AvarMapping:
-    """Continuous forward mapping in pre-avar normalized coordinates."""
+    """Unrounded, piecewise-smooth forward mapping and analytic Jacobian."""
 
     def __init__(self, font):
         import numpy as np
@@ -208,7 +242,7 @@ class ReverseMapper:
     target, unit flags, output filtering, and sparsity tolerance, returning the
     same (location, error) pair as the module-level reverse() function.
 
-    The continuous mapping/Jacobian, exact forward evaluator, axis bounds,
+    The unrounded mapping/Jacobian, exact forward evaluator, axis bounds,
     and target-independent starting points are reused. Up to cache_size target
     solutions are memoized per instance; zero disables this cache. Output
     dictionaries are fresh, so callers may modify them safely.
@@ -295,9 +329,12 @@ class ReverseMapper:
             if a.axisTag not in pinned and self._lower[i] < self._upper[i]
         ]
         self._free_set = set(self._free)
-        # Cache each region-peak seed and its continuous forward value. Only
+        # Cache each region-peak seed and its unrounded forward value. Only
         # ranking these seeds against the new target must happen per call.
         self._peak_seeds = []
+        self._jumps = {}
+        self._jump_contexts = []
+        jump_preimages = {}
         for support in self._mapping.supports:
             x = self._fixed.copy()
             for i, _, peak, _ in support:
@@ -306,6 +343,48 @@ class ReverseMapper:
                         peak, self._mapping.segments[i], self._lower[i], self._upper[i]
                     )
             self._peak_seeds.append((x, np.clip(self._mapping(x)[0], -1, 1)))
+            boundaries = {}
+            for i, start, peak, end in support:
+                if i not in self._free_set or (start != peak and peak != end):
+                    continue
+                key = (i, peak, start == peak, end == peak)
+                if key not in jump_preimages:
+                    jump_preimages[key] = _jumpPreimages(
+                        peak,
+                        start == peak,
+                        end == peak,
+                        self._mapping.segments[i],
+                        self._lower[i],
+                        self._upper[i],
+                    )
+                roots = jump_preimages[key]
+                if roots:
+                    boundaries[i] = roots
+                    self._jumps.setdefault(i, set()).update(roots)
+            if boundaries:
+                # Keep a region-peak context so product tents are active even
+                # when the current best solution has zero gradient elsewhere.
+                # Hold all its jump coordinates together to test intersections
+                # that would disappear if any one coordinate moved off-plane.
+                context = x.copy()
+                for i, roots in boundaries.items():
+                    context[i] = min(roots, key=lambda value: abs(value - x[i]))
+                locked = tuple(boundaries)
+                self._jump_contexts.append((context, locked))
+                # Cover alternate avar1 preimages without forming an
+                # exponential Cartesian product across every affected axis.
+                for i, roots in boundaries.items():
+                    for value in roots:
+                        alternate = context.copy()
+                        alternate[i] = value
+                        self._jump_contexts.append((alternate, locked))
+        self._jumps = {i: sorted(values) for i, values in self._jumps.items()}
+        self._jump_contexts = [
+            (np.array(coordinates), locked)
+            for coordinates, locked in dict.fromkeys(
+                (tuple(seed), locked) for seed, locked in self._jump_contexts
+            )
+        ]
         rng = np.random.default_rng(0)
         self._random_seeds = tuple(
             rng.uniform(self._lower, self._upper) for _ in range(4)
@@ -423,8 +502,11 @@ class ReverseMapper:
                 key=lambda c: (np.count_nonzero(c[1]), c[0], np.dot(c[1], c[1])),
             )
 
-        def solve(seed, varying):
+        def solve(seed, varying, bounds=None):
             x = seed.copy()
+            box_lower, box_upper = (lower, upper) if bounds is None else bounds
+            if bounds is not None:
+                x[varying] = np.clip(x[varying], box_lower[varying], box_upper[varying])
             add(x)
             if not varying:
                 return
@@ -464,7 +546,7 @@ class ReverseMapper:
                     lambda v: evaluate(v)[0],
                     x[varying],
                     jac=lambda v: evaluate(v)[1],
-                    bounds=(lower[varying], upper[varying]),
+                    bounds=(box_lower[varying], box_upper[varying]),
                     ftol=1e-11,
                     xtol=1e-11,
                     gtol=1e-11,
@@ -504,6 +586,90 @@ class ReverseMapper:
                 continue
             seen.add(tuple(seed))
             solve(seed, free)
+
+        if self._jumps:
+            # A gradient cannot guide a solve onto a zero-width support.
+            # Fit its exact boundary with the jump axes held fixed, including
+            # intersections of several jump planes in the same product tent.
+            for seed, locked in self._jump_contexts:
+                solve(seed, [i for i in free if i not in locked])
+
+            def adjacent(value, i, direction):
+                # Work in user units so denormalizing and normalizing again
+                # cannot round an ostensibly open endpoint back onto the jump.
+                user = _denormalize(value, triples[axes[i].axisTag])
+                while True:
+                    user = math.nextafter(user, math.inf * direction)
+                    normalized = normalizeValue(user, triples[axes[i].axisTag])
+                    if (normalized - value) * direction > 0:
+                        return normalized
+
+            for i, boundaries in self._jumps.items():
+                for index, boundary in enumerate(boundaries):
+                    # Project the current best fit onto each plane as well:
+                    # other axes may need values far from the region peak.
+                    seed = best()[1].copy()
+                    seed[i] = boundary
+                    solve(seed, [j for j in free if j != i])
+                    contexts = [
+                        x
+                        for x, locked in self._jump_contexts
+                        if i in locked and x[i] == boundary
+                    ]
+                    anchors = [best()[1]]
+                    if contexts:
+                        anchors.append(
+                            min(
+                                contexts,
+                                key=lambda x: np.linalg.norm(
+                                    (np.clip(mapping(x)[0], -1, 1) - target)[scored]
+                                ),
+                            )
+                        )
+                    # Search the two adjacent intervals independently. Bounds
+                    # prevent trust-region steps from crossing this axis's
+                    # jumps and invalidating the local linear approximation.
+                    # Other axes remain free: this is not an exhaustive product
+                    # of all cells across all axes.
+                    intervals = []
+                    if lower[i] < boundary:
+                        left = boundaries[index - 1] if index else lower[i]
+                        intervals.append(
+                            (
+                                adjacent(left, i, 1) if index else left,
+                                adjacent(boundary, i, -1),
+                            )
+                        )
+                    if boundary < upper[i]:
+                        right = (
+                            boundaries[index + 1]
+                            if index + 1 < len(boundaries)
+                            else upper[i]
+                        )
+                        intervals.append(
+                            (
+                                adjacent(boundary, i, 1),
+                                (
+                                    adjacent(right, i, -1)
+                                    if index + 1 < len(boundaries)
+                                    else right
+                                ),
+                            )
+                        )
+                    for lo, hi in intervals:
+                        if lo > hi:
+                            continue  # No representable input between these jumps.
+                        box_lower, box_upper = lower.copy(), upper.copy()
+                        box_lower[i], box_upper[i] = lo, hi
+                        varying = free if lo < hi else [j for j in free if j != i]
+                        for anchor in anchors:
+                            seed = anchor.copy()
+                            seed[i] = (
+                                max(lo, hi - min((hi - lo) / 2, 1 / 16384))
+                                if hi < boundary
+                                else min(hi, lo + min((hi - lo) / 2, 1 / 16384))
+                            )
+                            solve(seed, varying, (box_lower, box_upper))
 
         # Try dropping each non-default axis, refitting the others. Accept only
         # candidates within the output-error budget, then repeat after a removal.
