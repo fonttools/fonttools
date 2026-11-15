@@ -109,6 +109,11 @@ if with_cython is True or (with_cython is None and has_cython):
         Extension("fontTools.varLib.iup", ["Lib/fontTools/varLib/iup.py"]),
     )
     ext_modules.append(
+        Extension(
+            "fontTools.varLib.avar._mapping", ["Lib/fontTools/varLib/avar/_mapping.py"]
+        ),
+    )
+    ext_modules.append(
         Extension("fontTools.feaLib.lexer", ["Lib/fontTools/feaLib/lexer.py"]),
     )
 

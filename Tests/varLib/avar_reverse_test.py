@@ -13,6 +13,7 @@ from fontTools.varLib import builder
 from fontTools.varLib.avar.map import map as map_avar, main as map_main
 from fontTools.varLib.avar.reverse import _AvarMapping, ReverseMapper, reverse, main
 from fontTools.varLib.avar.roundtrip import roundtrip, main as roundtrip_main
+from fontTools.varLib.avar import _mapping
 
 
 def make_font(tags=("aaaa", "bbbb", "cccc"), hidden=(), positive=()):
@@ -56,6 +57,200 @@ def forward(font, location):
 def assert_target(font, result, target, atol=1 / 16384):
     actual = forward(font, result)
     assert np.linalg.norm([v - target.get(tag, 0) for tag, v in actual.items()]) <= atol
+
+
+def test_packed_evaluator_matches_python():
+    font = make_font()
+    add_avar2(
+        font,
+        [
+            {},
+            {"aaaa": (0, 0.5, 0.5)},
+            {"aaaa": (-0.5, -0.5, 0.0), "bbbb": (0, 1, 1)},
+            {"aaaa": (0.5, 0.5, 0.5), "bbbb": (0, 0.5, 1), "cccc": (0, 1, 1)},
+        ],
+        {
+            "aaaa": [0.125, 0.25, -0.5, 1],
+            "bbbb": [0, -0.5, 0.75, 0],
+            "cccc": [0, 0, 0, 1],
+        },
+    )
+    mapping = _AvarMapping(font)
+    points = [np.array([v, v, v], dtype=float) for v in (-1, -0.5, 0, 0.5, 1)]
+    points.extend(np.random.default_rng(0).uniform(-1, 1, (20, 3)))
+    for index, z in enumerate(points):
+        slopes = np.array([0.5, 1, 2.0])
+        actual = _mapping.evaluate(
+            z, slopes, mapping.deltas, *mapping._packed, mapping.supports
+        )
+        expected = _mapping._evaluatePython(z, slopes, mapping.deltas, mapping.supports)
+        for a, b in zip(actual, expected):
+            if index < 5:
+                np.testing.assert_array_equal(a, b)
+            else:
+                # Compilers may contract arithmetic on random inputs. Keep
+                # exact boundary checks, with a few ULPs allowed elsewhere.
+                np.testing.assert_allclose(a, b, rtol=2e-15, atol=2e-15)
+
+
+def test_packed_segments_match_scalar_mapping():
+    from fontTools.varLib.avar.reverse import _segment
+
+    segments = [[], [(0, 0.125)], [(-1, -1), (0, 0), (0.25, 0.5), (0.5, 0.5), (1, 1)]]
+    packed = _mapping.packSegments(segments)
+    points = [-2, -1, -0.5, 0, 0.25, 0.5, 1, 2]
+    points.extend(np.random.default_rng(0).uniform(-2, 2, 100))
+    for v in points:
+        actual = _mapping.mapSegments(np.full(3, v, dtype=float), *packed, segments)
+        expected = np.array([_segment(v, s) for s in segments]).T
+        np.testing.assert_allclose(actual, expected, rtol=2e-15, atol=2e-15)
+
+
+@pytest.mark.parametrize("pinned", [{}, {"bbbb": 650}])
+def test_constant_output_error_floor_needs_no_iterations(pinned):
+    font = make_font(hidden=("cccc",))
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"bbbb": [0.5]})
+    solver = ReverseMapper(font, pinned=pinned)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("The default inputs already attain the proven error floor")
+
+    solver._least_squares = forbidden
+    target = forward(font, pinned)
+    target["cccc"] = 1
+    result, error = solver.reverse(target, inputNormalized=True)
+    assert result == {"aaaa": 400, "bbbb": pinned.get("bbbb", 400), "cccc": 400}
+    assert error == 1
+
+
+@pytest.mark.parametrize("target", [1 / 65536, 1 / 32768, -1 / 32768])
+@pytest.mark.parametrize("store", [True, False])
+def test_default_attains_quantization_floor(target, store):
+    font = make_font(hidden=("cccc",))
+    avar = add_avar2(font, [{"aaaa": (0, 1, 1)}], {"cccc": [1]})
+    if not store:
+        avar.table.VarStore = None
+    solver = ReverseMapper(font)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Default inputs already attain the quantization error floor")
+
+    solver._score = forbidden
+    solver._least_squares = forbidden
+    result, error = solver.reverse(
+        {"aaaa": target}, inputNormalized=True, tolerance=0, dropZeroes=True
+    )
+    assert result == {}
+    assert error == abs(target)
+
+
+def test_equivalent_clipped_problem_does_not_restart():
+    from types import SimpleNamespace
+
+    font = make_font(hidden=("cccc",))
+    add_avar2(font, [{"aaaa": (0, 1, 1), "bbbb": (0, 1, 1)}], {"cccc": [1]})
+    solver = ReverseMapper(font)
+    starts = []
+
+    def exact_solution(fun, x0, *, jac, **kwargs):
+        starts.append(tuple(x0))
+        x = np.array([0.5, 0.25])
+        return SimpleNamespace(x=x, fun=fun(x), jac=jac(x), optimality=0)
+
+    solver._least_squares = exact_solution
+    target = forward(font, {"aaaa": 650, "bbbb": 525})
+    result, error = solver.reverse(target, inputNormalized=True)
+    assert error == 0
+    assert_target(font, result, target)
+    # A clipped restart would start at the solution just returned. Every
+    # optimizer invocation here should instead explore a distinct seed.
+    assert len(starts) == len(set(starts))
+
+
+@pytest.mark.parametrize("case", ["clipped", "bound"])
+def test_clipped_restart_is_retained_when_problem_can_change(case):
+    from types import SimpleNamespace
+
+    font = make_font(hidden=("cccc",))
+    add_avar2(
+        font,
+        [{"aaaa": (0, 1, 1), "bbbb": (0, 1, 1)}],
+        {"cccc": [3 if case == "clipped" else 1]},
+    )
+    solver = ReverseMapper(font)
+    starts = []
+    point = np.array([0.75, 0.75] if case == "clipped" else [1, 0.25])
+
+    def solution(fun, x0, *, jac, **kwargs):
+        starts.append(tuple(x0))
+        return SimpleNamespace(
+            x=point.copy(), fun=fun(point), jac=jac(point), optimality=0
+        )
+
+    solver._least_squares = solution
+    solver.reverse({"aaaa": 0.25, "bbbb": 0.5, "cccc": 0}, inputNormalized=True)
+    # Clipping changes the first problem; a bound would change the second
+    # problem's initial point. Both need the clipped restart despite gtol.
+    assert starts.count(tuple(point)) > 1
+
+
+def test_changing_hidden_output_is_not_constant():
+    font = make_font(hidden=("cccc",))
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"cccc": [1]})
+    target = forward(font, {"aaaa": 650})
+    result, error = reverse(font, target, inputNormalized=True)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
+@pytest.mark.parametrize("columns", [[], [0], [2, 0], [0, 1, 2]])
+def test_mapping_reduced_jacobian(columns):
+    font = make_font()
+    add_avar2(font, [{"aaaa": (0, 1, 1), "bbbb": (0, 1, 1)}], {"cccc": [1]})
+    mapping = _AvarMapping(font)
+    for x in (np.array([0.2, 0.7, 0.1]), np.array([0.0, 0.7, 0.1])):
+        values, full = mapping(x)
+        actual_values, reduced = mapping(x, columns=columns)
+        np.testing.assert_array_equal(actual_values, values)
+        np.testing.assert_array_equal(reduced, full[:, columns])
+
+
+@pytest.mark.parametrize("version", [None, 1, 2])
+def test_separable_inverse_needs_no_iterations(version):
+    font = make_font()
+    if version == 2:
+        add_avar2(font, [{}], {"bbbb": [0.125]})
+    elif version == 1:
+        font["avar"] = newTable("avar")
+        font["avar"].segments = {"aaaa": {-1: -1, 0: 0, 0.5: 0.75, 1: 1}}
+    solver = ReverseMapper(font)
+    solver._least_squares = lambda *a, **kw: pytest.fail("Separable inverse used SciPy")
+    target = forward(font, {"aaaa": 650, "bbbb": 525})
+    result, error = solver.reverse(target, inputNormalized=True)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
+@pytest.mark.parametrize("saturating", [False, True])
+@pytest.mark.parametrize("zero_default", [False, True])
+def test_one_dimensional_inverse_minimizes_all_outputs(saturating, zero_default):
+    font = make_font(("aaaa", "bbbb"), hidden=("bbbb",))
+    axis = font["fvar"].axes[0]
+    if zero_default:
+        axis.minValue, axis.defaultValue, axis.maxValue = -16384, 0, 16384
+    add_avar2(font, [{"aaaa": (0, 1, 1)}], {"bbbb": [2 if saturating else 1]})
+    solver = ReverseMapper(font)
+    solver._least_squares = lambda *a, **kw: pytest.fail(
+        "One-dimensional inverse used SciPy"
+    )
+    target = {"aaaa": 0.8 if saturating else 0.2, "bbbb": 0.8 if saturating else 0.6}
+    result, error = solver.reverse(target, inputNormalized=True)
+    expected = 0.8 if saturating else 0.4
+    extent = axis.maxValue - axis.defaultValue
+    assert result["aaaa"] == pytest.approx(
+        axis.defaultValue + extent * expected, abs=max(0.05, extent / 16384)
+    )
+    assert error == pytest.approx(0.2 if saturating else np.sqrt(0.08), abs=1 / 16384)
 
 
 @pytest.mark.parametrize("input_normalized", [False, True])

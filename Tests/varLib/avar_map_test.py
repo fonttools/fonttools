@@ -246,3 +246,70 @@ def test_prepared_mapper_requires_fvar():
 def test_prepared_mapper_rejects_unknown_axes(font):
     with pytest.raises(ValueError, match="Unknown axis"):
         ForwardMapper(font).map({"XXXX": 0})
+
+
+def test_packed_scorer_matches_forward(font):
+    pytest.importorskip("numpy")
+    from fontTools.varLib.avar._scorer import _ForwardScorer
+
+    forward = ForwardMapper(font)
+    score = _ForwardScorer(forward)
+    locations = [
+        {},
+        {"wght": 100},
+        {"wght": 900, "wdth": 125},
+        {"wght": -100, "wdth": 999},
+    ]
+    for i in range(65):
+        locations.append(
+            {"wght": 100 + 800 * i / 64, "wdth": 50 + 75 * ((i * 17) % 65) / 64}
+        )
+    for location in locations:
+        assert score(location) == forward.map(location, outputNormalized=True)
+
+
+@pytest.mark.parametrize("pinned", [{}, {"wdth": 100.1}])
+def test_batch_scorer_matches_scalar_roundtrip(font, pinned):
+    np = pytest.importorskip("numpy")
+    from fontTools.varLib.avar._scorer import _ForwardScorer
+
+    forward = ForwardMapper(font)
+    score = _ForwardScorer(forward, pinned=pinned)
+    coordinates = np.random.default_rng(0).uniform(-1, 1, (30, len(forward.tags)))
+    actual = score.batch(coordinates)
+    for values, output in zip(coordinates, actual):
+        user = {
+            tag: _denormalize(v, forward.triples[tag])
+            for tag, v in zip(forward.tags, values)
+        }
+        user.update(pinned)
+        expected = forward.map(user, outputNormalized=True)
+        np.testing.assert_array_equal(output, [expected[tag] for tag in forward.tags])
+
+
+@pytest.mark.parametrize("variant", ["normal", "null", "indices", "duplicate"])
+def test_packed_scorer_rounding_and_row_order(variant):
+    pytest.importorskip("numpy")
+    from fontTools.varLib.avar._scorer import _ForwardScorer
+
+    font = TTFont(
+        Path(__file__).parent.parent / "ttLib/tables/data/Amstelvar-avar2.subset.ttf"
+    )
+    avar = font["avar"].table
+    if variant == "null":
+        avar.VarStore = None
+    elif variant == "indices":
+        avar.VarIdxMap = builder.buildDeltaSetIndexMap([0xFFFFFFFF, 0x12345678, 0, 0])
+    elif variant == "duplicate":
+        for data in avar.VarStore.VarData:
+            data.VarRegionIndex = data.VarRegionIndex[::-1] * 2
+            data.Item = [row[::-1] * 2 for row in data.Item]
+    forward = ForwardMapper(font)
+    score = _ForwardScorer(forward)
+    # Include half-tick positions and both sides of support boundaries.
+    for i in range(33):
+        location = {
+            tag: _denormalize((i - 16.5) / 32, triple)
+            for tag, triple in forward.triples.items()
+        }
+        assert score(location) == forward.map(location, outputNormalized=True)

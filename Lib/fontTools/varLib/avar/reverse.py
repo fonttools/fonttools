@@ -5,47 +5,21 @@ Candidates are ranked using the actual forward map, including avar2 rounding
 and clipping. SciPy is optional and is imported when a solver is constructed.
 """
 
-from bisect import bisect_left, bisect_right
+from bisect import bisect_left
 from collections import OrderedDict
+from functools import partial
 import math
 
 from fontTools.misc.fixedTools import floatToFixedToStr, nearestMultipleShortestRepr
 from fontTools.varLib.models import normalizeValue, piecewiseLinearMap
 from fontTools.varLib.varStore import NO_VARIATION_INDEX
+from . import _mapping
+from ._mapping import _segment, _tent
 from .map import ForwardMapper, _denormalize, _load_font, _parse_coordinates
 
-
-def _segment(value, items):
-    """Piecewise-linear segment value and a one-sided derivative."""
-    if not items:
-        return value, 1.0
-    keys = [k for k, _ in items]
-    i = bisect_right(keys, value)
-    if value < keys[0] or value > keys[-1] or len(items) == 1:
-        k, v = items[0 if value < keys[0] else -1]
-        return value + v - k, 1.0
-    i = min(max(i, 1), len(items) - 1)
-    a, va = items[i - 1]
-    b, vb = items[i]
-    slope = (vb - va) / (b - a)
-    return va + (value - a) * slope, slope
-
-
-def _tent(value, start, peak, end):
-    """Tent value and right derivative (inward at a one-sided peak)."""
-    if value < start or value > end:
-        return 0.0, 0.0
-    if value == peak:
-        if peak < end:
-            return 1.0, -1 / (end - peak)
-        return 1.0, 1 / (peak - start) if start < peak else 0.0
-    if value == end and end < 1:
-        return 0.0, 0.0
-    if value < peak:
-        slope = 1 / (peak - start)
-        return (value - start) * slope, slope
-    slope = -1 / (end - peak)
-    return (value - end) * slope, slope
+# Inputs and outputs are normalized. Solve below the output quantization scale;
+# candidate ranking and the final stencil still use the exact rounded map.
+_SOLVER_TOLERANCE = 1e-8
 
 
 def _segmentPreimages(value, items, lo, hi):
@@ -100,6 +74,17 @@ def _jumpPreimages(peak, at_start, at_end, items, lo, hi):
     return jumps
 
 
+def _adjacentInput(value, triple, direction):
+    # Choose an open endpoint in user units, so the normalization round trip
+    # cannot round a supposedly one-sided probe back onto a jump plane.
+    user = _denormalize(math.nextafter(value, math.inf * direction), triple)
+    while True:
+        normalized = normalizeValue(user, triple)
+        if (normalized - value) * direction > 0:
+            return normalized
+        user = math.nextafter(user, math.inf * direction)
+
+
 class _AvarMapping:
     """Unrounded, piecewise-smooth forward mapping and analytic Jacobian."""
 
@@ -120,6 +105,7 @@ class _AvarMapping:
         store = avar.table.VarStore if avar and version == 2 else None
         self.supports = []
         self.deltas = np.zeros((len(self.axes), 0))
+        self.constant_deltas = np.ones(len(self.axes), dtype=bool)
         if store is not None:
             indexMap = avar.table.VarIdxMap
             # Assemble D[output axis, region] in normalized-coordinate units.
@@ -134,6 +120,9 @@ class _AvarMapping:
                 data = store.VarData[outer]
                 if inner >= len(data.Item):
                     continue
+                # Inspect the original row, conservatively: do not infer
+                # constancy from cancellations in the assembled matrix.
+                self.constant_deltas[i] = not any(data.Item[inner])
                 for region, delta in zip(data.VarRegionIndex, data.Item[inner]):
                     deltas[i, region] += delta / 16384
             # Ignore unused regions and axes ignored by OpenType supportScalar.
@@ -152,31 +141,53 @@ class _AvarMapping:
                 )
             self.deltas = deltas[:, used]
 
-    def __call__(self, x):
-        np = self.np
-        # x is normalized BEFORE avar1; z = A(x) is the intermediate location.
-        # Before clipping/rounding, the full map is H(x) = z + D * s(z), where
-        # s contains the products of per-axis tents for each region. Within a
-        # region cell this is multilinear, not generally one affine transform.
-        values, slopes = zip(*(_segment(v, s) for v, s in zip(x, self.segments)))
-        z = np.array(values)
-        jac = np.eye(len(x))
-        for deltas, support in zip(self.deltas.T, self.supports):
-            factors = [_tent(z[i], a, p, b) for i, a, p, b in support]
-            scalar = math.prod(v for v, _ in factors)
-            gradient = np.zeros(len(x))
-            for j, (i, _, _, _) in enumerate(support):
-                # Do not divide by a factor: zero factors can have nonzero
-                # derivatives at a region boundary.
-                gradient[i] = factors[j][1] * math.prod(
-                    v for k, (v, _) in enumerate(factors) if k != j
-                )
-            jac += np.outer(deltas, gradient)
-            # All regions see the same intermediate coordinates.
-            values = np.asarray(values) + deltas * scalar
-        # Chain rule: J_H = (I + D * J_s) * diag(A'). Multiplying columns by
-        # the avar1 slopes differentiates with respect to our input x, not z.
-        return np.asarray(values), jac * slopes
+        # Pack region geometry once. The optional Cython evaluator consumes
+        # buffers directly, without Python objects or a NumPy C-API dependency.
+        offsets = [0]
+        factors = []
+        for support in self.supports:
+            factors.extend(support)
+            offsets.append(len(factors))
+        self._packed = (
+            np.array(offsets, dtype="l"),
+            np.array([f[0] for f in factors], dtype="l"),
+            *(np.array([f[j] for f in factors], dtype=float) for j in (1, 2, 3)),
+        )
+
+        self._segments = _mapping.packSegments(self.segments)
+        self._column_cache = OrderedDict()
+
+    def __call__(self, x, columns=None):
+        # H(x) = A(x) + D * s(A(x)); the evaluator applies the chain rule
+        # through avar1 and differentiates product tents without dividing by
+        # their factors, which can vanish at a region boundary.
+        values, slopes = _mapping.mapSegments(
+            self.np.asarray(x, dtype=float), *self._segments, self.segments
+        )
+        # A solve may vary only a handful of inputs. Cache their packed
+        # column indices, and omit every other derivative from both backends.
+        key = tuple(range(len(x))) if columns is None else tuple(columns)
+        packed_columns = self._column_cache.get(key)
+        if packed_columns is None:
+            positions = {i: j for j, i in enumerate(key)}
+            packed_columns = (
+                self.np.array(key, dtype="l"),
+                self.np.array(
+                    [positions.get(i, -1) for i in self._packed[1]], dtype="l"
+                ),
+            )
+            self._column_cache[key] = packed_columns
+            if len(self._column_cache) > 64:
+                self._column_cache.popitem(last=False)
+        self._column_cache.move_to_end(key)
+        return _mapping.evaluate(
+            self.np.asarray(values, dtype=float),
+            self.np.asarray(slopes),
+            self.deltas,
+            *self._packed,
+            self.supports,
+            *packed_columns,
+        )
 
 
 def reverse(
@@ -306,6 +317,15 @@ class ReverseMapper:
         self._least_squares = least_squares
         self._mapping = _AvarMapping(font)
         self._forward = ForwardMapper(font)
+        self._batch_score = None
+        self._score = partial(
+            self._forward.map, outputNormalized=True, dropZeroes=False
+        )
+        if _mapping.COMPILED:
+            from ._scorer import _ForwardScorer
+
+            self._score = _ForwardScorer(self._forward, pinned=pinned)
+            self._batch_score = self._score.batch
         # Normalize inputs so weight, optical size, etc. have comparable
         # scales. An endpoint default makes the domain one-sided. Hidden,
         # pinned, and collapsed inputs are excluded from optimization.
@@ -329,6 +349,38 @@ class ReverseMapper:
             if a.axisTag not in pinned and self._lower[i] < self._upper[i]
         ]
         self._free_set = set(self._free)
+        self._separable = not any(self._mapping.supports)
+        self._offset = np.sum(self._mapping.deltas, axis=1)
+        self._clipped = (
+            self._forward.version == 2 and self._forward._instancer is not None
+        )
+        self._one_dim_knots = {}
+        if not self._separable:
+            for i in self._free:
+                segments = self._mapping.segments[i]
+                lo, hi = self._lower[i], self._upper[i]
+                knots = {lo, hi, *[k for k, _ in segments if lo <= k <= hi]}
+                edges = {
+                    v
+                    for support in self._mapping.supports
+                    for axis, *values in support
+                    if axis == i
+                    for v in values
+                }
+                for edge in edges:
+                    knots.update(_segmentPreimages(edge, segments, lo, hi))
+                self._one_dim_knots[i] = sorted(knots)
+
+        self._constant_outputs = self._mapping.constant_deltas & np.array(
+            [i not in self._free_set for i in range(len(self._axes))]
+        )
+        default_output = self._forward.map(
+            {a.axisTag: pinned.get(a.axisTag, a.defaultValue) for a in self._axes},
+            outputNormalized=True,
+        )
+        self._default_output = np.array(
+            [default_output[tag] for tag in self._mapping.tags]
+        )
         # Cache each region-peak seed and its unrounded forward value. Only
         # ranking these seeds against the new target must happen per call.
         self._peak_seeds = []
@@ -342,7 +394,9 @@ class ReverseMapper:
                     x[i] = _inverseSegment(
                         peak, self._mapping.segments[i], self._lower[i], self._upper[i]
                     )
-            self._peak_seeds.append((x, np.clip(self._mapping(x)[0], -1, 1)))
+            self._peak_seeds.append(
+                (x, np.clip(self._mapping(x, columns=[])[0], -1, 1))
+            )
             boundaries = {}
             for i, start, peak, end in support:
                 if i not in self._free_set or (start != peak and peak != end):
@@ -460,6 +514,58 @@ class ReverseMapper:
             )
         return result, error
 
+    def _linearCandidates(self, seed, i, lo, hi, target, scored):
+        # With every other input fixed, product tents and avar1 are affine
+        # between their knots. Split again where an output saturates, then
+        # minimize ||a*t+b-target||^2 by projecting onto the line segment.
+        np = self._np
+        points = sorted({lo, hi, *[v for v in self._one_dim_knots[i] if lo <= v <= hi]})
+        candidates = set(points)
+        if lo <= 0 <= hi:
+            candidates.add(0.0)
+        triple = self._triples[self._axes[i].axisTag]
+        for left, right in zip(points, points[1:]):
+            mid = (left + right) / 2
+            if not left < mid < right:
+                continue
+            x = seed.copy()
+            x[i] = mid
+            raw, jac = self._mapping(x, columns=[i])
+            slope = jac[:, 0]
+            cuts = {left, right}
+            if self._clipped:
+                for value, derivative in zip(raw, slope):
+                    if derivative:
+                        for edge in (-1, 1):
+                            root = mid + (edge - value) / derivative
+                            if left < root < right:
+                                cuts.add(float(root))
+            cuts = sorted(cuts)
+            for a, b in zip(cuts, cuts[1:]):
+                center = (a + b) / 2
+                values = raw + slope * (center - mid)
+                active = scored.copy()
+                if self._clipped:
+                    active &= (values > -1) & (values < 1)
+                direction = slope[active]
+                denominator = np.dot(direction, direction)
+                optimum = (
+                    center - np.dot(direction, (values - target)[active]) / denominator
+                    if denominator
+                    else 0.0
+                )
+                # Evaluate the exact knot separately: its value can differ
+                # from either limit when a tent has a collapsed edge.
+                lower = _adjacentInput(a, triple, 1)
+                upper = _adjacentInput(b, triple, -1)
+                if lower <= upper:
+                    candidates.add(float(np.clip(optimum, lower, upper)))
+                    candidates.add(float(np.clip(0, lower, upper)))
+        for value in sorted(candidates):
+            x = seed.copy()
+            x[i] = value
+            yield x
+
     def _solve(self, target, scored, tolerance):
         np = self._np
         least_squares = self._least_squares
@@ -468,26 +574,61 @@ class ReverseMapper:
         pinned = self._pinned
         mapping = self._mapping
         lower, upper, fixed, free = self._lower, self._upper, self._fixed, self._free
+        # Fixed inputs with zero delta rows produce constant outputs. Their
+        # residual is an unavoidable error floor. If the default free inputs
+        # fit all remaining outputs exactly, they attain that floor with the
+        # smallest possible number of non-default coordinates. No search can
+        # improve either the error or sparsity, even for an unreachable target.
+        dynamic = scored & ~self._constant_outputs
+        nearest = np.array(target, dtype=float)
+        if self._forward.version == 2:
+            # Every avar2 output lies on the F2Dot14 grid, even with a NULL
+            # VarStore. Include both half-tick ties by comparing distances,
+            # rather than requiring the particular rounded coordinate.
+            nearest = np.floor(target * 16384 + 0.5) / 16384
+        nearest[self._constant_outputs] = self._default_output[self._constant_outputs]
+        minimum_deviation = abs(nearest - target)
+        error_floor = float(np.linalg.norm(minimum_deviation[scored]))
+        if np.array_equal(
+            abs(self._default_output[dynamic] - target[dynamic]),
+            minimum_deviation[dynamic],
+        ):
+            return tuple(float(v) for v in fixed), float(
+                np.linalg.norm((self._default_output - target)[scored])
+            )
         candidates = {}
+        linear_solved = {}
+
+        def add_many(points):
+            pending = {}
+            for x in points:
+                x = x.copy()
+                x[free] = np.where(abs(x[free]) < 1e-10, 0, x[free])
+                key = tuple(x)
+                if key not in candidates and key not in pending:
+                    pending[key] = x
+            if not pending:
+                return
+            if self._batch_score is not None:
+                actuals = self._batch_score(np.array(list(pending.values())))
+            else:
+                actuals = []
+                for x in pending.values():
+                    user = {
+                        a.axisTag: _denormalize(v, triples[a.axisTag])
+                        for a, v in zip(axes, x)
+                    }
+                    user.update(pinned)
+                    actual = self._score(user)
+                    actuals.append(np.array([actual[tag] for tag in mapping.tags]))
+            for (key, x), actual in zip(pending.items(), actuals):
+                # Keep the same NumPy norm and candidate insertion order; only
+                # the coordinate conversion and forward evaluations are batched.
+                error = np.linalg.norm((actual - target)[scored])
+                candidates[key] = (error, x)
 
         def add(x):
-            x = x.copy()
-            x[free] = np.where(abs(x[free]) < 1e-10, 0, x[free])
-            key = tuple(x)
-            if key not in candidates:
-                # Score through the public forward path, including the round trip
-                # through pre-fvar coordinates that the caller will actually use.
-                user = {
-                    a.axisTag: _denormalize(v, triples[a.axisTag])
-                    for a, v in zip(axes, x)
-                }
-                user.update(pinned)
-                actual = self._forward.map(
-                    user, outputNormalized=True, dropZeroes=False
-                )
-                deviation = np.array([actual[tag] for tag in mapping.tags]) - target
-                error = np.linalg.norm(deviation[scored])
-                candidates[key] = (error, x)
+            add_many((x,))
 
         def best():
             # Output accuracy comes first, up to the requested tolerance. Use the
@@ -510,6 +651,30 @@ class ReverseMapper:
             add(x)
             if not varying:
                 return
+            if self._separable:
+                # No region depends on an input: outputs separate by axis,
+                # possibly with a constant avar2 offset. Invert each segment
+                # map directly, choosing its preimage nearest the default.
+                for i in varying:
+                    x[i] = _inverseSegment(
+                        target[i] - self._offset[i],
+                        mapping.segments[i],
+                        box_lower[i],
+                        box_upper[i],
+                    )
+                add(x)
+                return
+            if len(varying) == 1:
+                i = varying[0]
+                key = (i, tuple(v for j, v in enumerate(x) if j != i))
+                lo, hi = box_lower[i], box_upper[i]
+                ranges = linear_solved.setdefault(key, [])
+                if any(a <= lo and hi <= b for a, b in ranges):
+                    return
+                ranges.append((lo, hi))
+                for candidate in self._linearCandidates(x, i, lo, hi, target, scored):
+                    add(candidate)
+                return
             # First seek an exact inverse without the flat plateaus introduced by
             # clipping. At +/-1 the target is an inequality on the unclipped map.
             # Then minimize the true clipped output error, also for unreachable
@@ -522,7 +687,7 @@ class ReverseMapper:
                     if cached is not None and np.array_equal(v, cached[0]):
                         return cached[1:]
                     x[varying] = v
-                    raw, jac = mapping(x)
+                    raw, jac = mapping(x, columns=varying)
                     if clipped:
                         residual = np.clip(raw, -1, 1) - target
                         active = (raw >= -1) & (raw <= 1) & scored
@@ -533,7 +698,7 @@ class ReverseMapper:
                             ((target == 1) & (raw > 1)) | ((target == -1) & (raw < -1))
                         )
                         residual = np.where(active, residual, 0)
-                    jac = jac[:, varying] * active[:, None]
+                    jac = jac * active[:, None]
                     cached = (v.copy(), residual, jac)
                     return residual, jac
 
@@ -547,13 +712,30 @@ class ReverseMapper:
                     x[varying],
                     jac=lambda v: evaluate(v)[1],
                     bounds=(box_lower[varying], box_upper[varying]),
-                    ftol=1e-11,
-                    xtol=1e-11,
-                    gtol=1e-11,
+                    ftol=_SOLVER_TOLERANCE,
+                    xtol=_SOLVER_TOLERANCE,
+                    gtol=_SOLVER_TOLERANCE,
                     max_nfev=200,
                 )
                 x[varying] = result.x
                 add(x)
+                if (
+                    not clipped
+                    and result.optimality < _SOLVER_TOLERANCE
+                    and np.all(result.x > box_lower[varying] + 1e-9)
+                    and np.all(result.x < box_upper[varying] - 1e-9)
+                ):
+                    # A second solve would immediately satisfy the same gtol
+                    # if clipping leaves both residual and Jacobian unchanged.
+                    # Stay away from the bounds: SciPy nudges an initial point
+                    # inward there, which can change the restarted problem.
+                    raw, jac = mapping(x, columns=varying)
+                    clipped_residual = np.where(scored, np.clip(raw, -1, 1) - target, 0)
+                    active = scored & (raw >= -1) & (raw <= 1)
+                    if np.array_equal(result.fun, clipped_residual) and np.array_equal(
+                        result.jac, jac * active[:, None]
+                    ):
+                        break
 
         # The default promotes sparse solutions; inverting avar1 alone gives a
         # better guess when its segment maps depart substantially from identity.
@@ -576,6 +758,8 @@ class ReverseMapper:
         )
         seeds.extend(x for x, _ in peaks[:8])
         seeds.extend(self._random_seeds)
+        if self._separable or len(free) == 1:
+            seeds = [fixed.copy()]
         seen = set()
         for seed in seeds:
             seed = np.asarray(seed).copy()
@@ -587,7 +771,7 @@ class ReverseMapper:
             seen.add(tuple(seed))
             solve(seed, free)
 
-        if self._jumps:
+        if self._jumps and len(free) > 1:
             # A gradient cannot guide a solve onto a zero-width support.
             # Fit its exact boundary with the jump axes held fixed, including
             # intersections of several jump planes in the same product tent.
@@ -595,14 +779,7 @@ class ReverseMapper:
                 solve(seed, [i for i in free if i not in locked])
 
             def adjacent(value, i, direction):
-                # Work in user units so denormalizing and normalizing again
-                # cannot round an ostensibly open endpoint back onto the jump.
-                user = _denormalize(value, triples[axes[i].axisTag])
-                while True:
-                    user = math.nextafter(user, math.inf * direction)
-                    normalized = normalizeValue(user, triples[axes[i].axisTag])
-                    if (normalized - value) * direction > 0:
-                        return normalized
+                return _adjacentInput(value, triples[axes[i].axisTag], direction)
 
             for i, boundaries in self._jumps.items():
                 for index, boundary in enumerate(boundaries):
@@ -622,7 +799,10 @@ class ReverseMapper:
                             min(
                                 contexts,
                                 key=lambda x: np.linalg.norm(
-                                    (np.clip(mapping(x)[0], -1, 1) - target)[scored]
+                                    (
+                                        np.clip(mapping(x, columns=[])[0], -1, 1)
+                                        - target
+                                    )[scored]
                                 ),
                             )
                         )
@@ -695,8 +875,11 @@ class ReverseMapper:
         # has located a good basin.
         for _ in range(3):
             error, x = best()
-            if error == 0:
+            # An unattainable zero is not a reason to keep probing: fixed
+            # outputs and quantization may impose a strictly positive floor.
+            if error <= error_floor:
                 break
+            trials = []
             for i in free:
                 _, slope = _segment(x[i], mapping.segments[i])
                 if not slope:
@@ -705,7 +888,8 @@ class ReverseMapper:
                 for offset in (-1, -0.5, 0.5, 1):
                     trial = x.copy()
                     trial[i] = np.clip(x[i] + offset * step, lower[i], upper[i])
-                    add(trial)
+                    trials.append(trial)
+            add_many(trials)
             if np.array_equal(best()[1], x):
                 break
 
