@@ -703,6 +703,23 @@ class ReverseMapper:
                 )
                 x[varying] = result.x
                 add(x)
+                if (
+                    not clipped
+                    and result.optimality < _SOLVER_TOLERANCE
+                    and np.all(result.x > box_lower[varying] + 1e-9)
+                    and np.all(result.x < box_upper[varying] - 1e-9)
+                ):
+                    # A second solve would immediately satisfy the same gtol
+                    # if clipping leaves both residual and Jacobian unchanged.
+                    # Stay away from the bounds: SciPy nudges an initial point
+                    # inward there, which can change the restarted problem.
+                    raw, jac = mapping(x, columns=varying)
+                    clipped_residual = np.where(scored, np.clip(raw, -1, 1) - target, 0)
+                    active = scored & (raw >= -1) & (raw <= 1)
+                    if np.array_equal(result.fun, clipped_residual) and np.array_equal(
+                        result.jac, jac * active[:, None]
+                    ):
+                        break
 
         # The default promotes sparse solutions; inverting avar1 alone gives a
         # better guess when its segment maps depart substantially from identity.

@@ -144,6 +144,56 @@ def test_default_attains_quantization_floor(target, store):
     assert error == abs(target)
 
 
+def test_equivalent_clipped_problem_does_not_restart():
+    from types import SimpleNamespace
+
+    font = make_font(hidden=("cccc",))
+    add_avar2(font, [{"aaaa": (0, 1, 1), "bbbb": (0, 1, 1)}], {"cccc": [1]})
+    solver = ReverseMapper(font)
+    starts = []
+
+    def exact_solution(fun, x0, *, jac, **kwargs):
+        starts.append(tuple(x0))
+        x = np.array([0.5, 0.25])
+        return SimpleNamespace(x=x, fun=fun(x), jac=jac(x), optimality=0)
+
+    solver._least_squares = exact_solution
+    target = forward(font, {"aaaa": 650, "bbbb": 525})
+    result, error = solver.reverse(target, inputNormalized=True)
+    assert error == 0
+    assert_target(font, result, target)
+    # A clipped restart would start at the solution just returned. Every
+    # optimizer invocation here should instead explore a distinct seed.
+    assert len(starts) == len(set(starts))
+
+
+@pytest.mark.parametrize("case", ["clipped", "bound"])
+def test_clipped_restart_is_retained_when_problem_can_change(case):
+    from types import SimpleNamespace
+
+    font = make_font(hidden=("cccc",))
+    add_avar2(
+        font,
+        [{"aaaa": (0, 1, 1), "bbbb": (0, 1, 1)}],
+        {"cccc": [3 if case == "clipped" else 1]},
+    )
+    solver = ReverseMapper(font)
+    starts = []
+    point = np.array([0.75, 0.75] if case == "clipped" else [1, 0.25])
+
+    def solution(fun, x0, *, jac, **kwargs):
+        starts.append(tuple(x0))
+        return SimpleNamespace(
+            x=point.copy(), fun=fun(point), jac=jac(point), optimality=0
+        )
+
+    solver._least_squares = solution
+    solver.reverse({"aaaa": 0.25, "bbbb": 0.5, "cccc": 0}, inputNormalized=True)
+    # Clipping changes the first problem; a bound would change the second
+    # problem's initial point. Both need the clipped restart despite gtol.
+    assert starts.count(tuple(point)) > 1
+
+
 def test_changing_hidden_output_is_not_constant():
     font = make_font(hidden=("cccc",))
     add_avar2(font, [{"aaaa": (0, 1, 1)}], {"cccc": [1]})
