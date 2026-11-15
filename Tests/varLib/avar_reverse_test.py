@@ -376,6 +376,149 @@ def test_jacobian_at_shared_tent_boundary():
     assert jac == pytest.approx(np.array([[1.25]]))
 
 
+@pytest.mark.parametrize("peak", [-1, -0.5, 0.5, 1])
+def test_reverse_zero_width_support(peak):
+    font = make_font(hidden=("cccc",))
+    add_avar2(
+        font,
+        [{"aaaa": (peak, peak, peak), "bbbb": (0, 1, 1)}],
+        {"aaaa": [-2 * peak], "cccc": [1]},
+    )
+    source = {"aaaa": 400 + (500 if peak > 0 else 300) * peak, "bbbb": 650}
+    target = forward(font, source)
+    result, error = reverse(font, target, inputNormalized=True)
+    # The inverse exists only on this exact plane. Moving aaaa even one
+    # representable input off it removes the hidden cccc contribution.
+    assert result == pytest.approx({**source, "cccc": 400}, abs=0.01)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
+def test_jump_solver_can_be_reused():
+    font = make_font(hidden=("cccc",))
+    add_avar2(
+        font,
+        [{"aaaa": (0.5, 0.5, 0.5), "bbbb": (0, 1, 1)}],
+        {"aaaa": [-1], "cccc": [1]},
+    )
+    mapper = ReverseMapper(font, cache_size=0)
+    for coordinate in [650, 525, 775, 650]:
+        source = {"aaaa": 650, "bbbb": coordinate}
+        target = forward(font, source)
+        result, error = mapper.reverse(target, inputNormalized=True)
+        assert result == pytest.approx({**source, "cccc": 400}, abs=0.01)
+        assert error <= 1 / 16384
+        assert_target(font, result, target)
+
+
+def test_reverse_intersecting_jump_planes():
+    font = make_font(("aaaa", "bbbb", "cccc", "dddd"), hidden=("dddd",))
+    add_avar2(
+        font,
+        [{"aaaa": (0.5, 0.5, 0.5), "bbbb": (-0.5, -0.5, -0.5), "cccc": (0, 1, 1)}],
+        {"aaaa": [-1], "bbbb": [1], "dddd": [1]},
+    )
+    source = {"aaaa": 650, "bbbb": 250, "cccc": 650}
+    target = forward(font, source)
+    result, error = reverse(font, target, inputNormalized=True)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
+@pytest.mark.parametrize("direction", [-1, 1])
+def test_reverse_searches_each_side_of_jump(direction):
+    font = make_font(("aaaa", "bbbb"), hidden=("bbbb",))
+    peak, width = 0.5, 1 / 128
+    distractors = [-0.875, -0.75, -0.625, -0.5, -0.375, -0.25, -0.125, -0.0625]
+    supports = [{"aaaa": (p - 1 / 64, p, p + 1 / 64)} for p in distractors]
+    supports.append(
+        {
+            "aaaa": (
+                peak if direction > 0 else peak - width,
+                peak,
+                peak + width if direction > 0 else peak,
+            )
+        }
+    )
+    add_avar2(
+        font,
+        supports,
+        {
+            "aaaa": [0.25 - p for p in distractors] + [-0.5],
+            "bbbb": [0.25] * len(distractors) + [1],
+        },
+    )
+    # The eight best region-peak seeds are distractors, and none of the
+    # ordinary guesses lands inside this narrow interval. Only this side
+    # of the jump can produce the target's hidden-axis contribution.
+    source = {"aaaa": 400 + 500 * (peak + direction * width / 2)}
+    target = forward(font, source)
+    result, error = reverse(font, target, inputNormalized=True)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
+def test_reverse_unreachable_target_nearest_on_jump():
+    font = make_font(hidden=("cccc",))
+    add_avar2(
+        font,
+        [{"aaaa": (0.5, 0.5, 0.5), "bbbb": (0, 1, 1)}],
+        {"aaaa": [-1], "cccc": [1]},
+    )
+    target = {"aaaa": 0, "bbbb": 0.5, "cccc": 0.25}
+    result, error = reverse(font, target, inputNormalized=True)
+    actual = forward(font, result)
+    assert result["aaaa"] == 650
+    assert error == pytest.approx(np.sqrt(1 / 24), abs=1 / 16384)
+    assert error == pytest.approx(
+        np.linalg.norm([actual[t] - target[t] for t in target])
+    )
+
+
+@pytest.mark.parametrize(
+    "segments, input_coordinate",
+    [
+        ({-1: -1, 0: 0, 0.25: 0.5, 1: 1}, 525),
+        # The same jump has two preimages in this folded segment map.
+        ({-1: -1, 0: 0, 0.25: 0.5, 0.5: 0, 0.75: 0.5, 1: 1}, 525),
+        # A point support becomes an interval after an avar1 plateau.
+        ({-1: -1, 0: 0, 0.25: 0.5, 0.5: 0.5, 1: 1}, 525),
+    ],
+)
+def test_reverse_jump_after_avar1(segments, input_coordinate):
+    font = make_font(hidden=("cccc",))
+    avar = add_avar2(
+        font,
+        [{"aaaa": (0.5, 0.5, 0.5), "bbbb": (0, 1, 1)}],
+        {"aaaa": [-1], "cccc": [1]},
+    )
+    avar.segments["aaaa"] = segments
+    target = forward(font, {"aaaa": input_coordinate, "bbbb": 650})
+    result, error = reverse(font, target, inputNormalized=True)
+    assert result["aaaa"] == pytest.approx(input_coordinate, abs=0.01)
+    assert error <= 1 / 16384
+    assert_target(font, result, target)
+
+
+@pytest.mark.parametrize("constraint", ["hidden", "pinned", "vary"])
+def test_jump_search_respects_fixed_inputs(constraint):
+    font = make_font(hidden=("cccc", "aaaa") if constraint == "hidden" else ("cccc",))
+    add_avar2(
+        font,
+        [{"aaaa": (0.5, 0.5, 0.5), "bbbb": (0, 1, 1)}],
+        {"aaaa": [-1], "cccc": [1]},
+    )
+    target = forward(font, {"aaaa": 650, "bbbb": 650})
+    options = (
+        {"pinned": {"aaaa": None}}
+        if constraint == "pinned"
+        else {"vary": ["bbbb"]} if constraint == "vary" else {}
+    )
+    result, error = reverse(font, target, inputNormalized=True, **options)
+    assert result["aaaa"] == 400
+    assert error >= 0.5
+
+
 def test_degenerate_and_one_sided_axes():
     font = make_font(("aaaa", "bbbb"), positive=("aaaa",))
     font["fvar"].axes[1].minValue = font["fvar"].axes[1].maxValue = 400

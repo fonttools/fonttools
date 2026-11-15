@@ -61,7 +61,7 @@ Prepare a reverse mapper to solve several targets with the same constraints::
     first, error = mapper.reverse({"wght": 0.6}, inputNormalized=True)
     second, error = mapper.reverse({"wght": 0.8}, inputNormalized=True)
 
-The solver retains its continuous mapping, Jacobian data, starting points,
+The solver retains its unrounded mapping, Jacobian data, starting points,
 and exact forward evaluator. It memoizes up to 128 target solutions by default;
 ``cache_size=0`` disables memoization, and ``clear_cache()`` discards cached
 solutions. Unit and output-filtering options share cached solutions, but
@@ -69,6 +69,14 @@ explicitly specified fixed-axis targets and sparsity tolerances remain distinct.
 Each call returns a fresh location dictionary. Pins and ``vary`` are fixed at
 construction, and changing the font's fvar or avar tables requires a new mapper.
 The module-level ``reverse()`` function remains available for individual calls.
+
+Collapsed region-support edges can introduce jumps even before rounding.
+The solver tests their exact boundaries with the affected inputs fixed, then
+searches adjacent intervals with bounds that prevent crossing those jumps.
+Boundaries are pulled back through the avar1 segment maps, including multiple
+preimages and plateau endpoints. Region contexts also test intersections of
+jump planes. This does not exhaustively enumerate combinations of intervals
+across all axes, so a global optimum is still not guaranteed.
 
 Reverse mapping requires the optional ``fonttools[avar]`` dependencies.
 It minimizes normalized output error, then prefers fewer non-default input
