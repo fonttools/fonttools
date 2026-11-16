@@ -115,6 +115,7 @@ class InterpolatablePlot:
         *,
         locations=None,
         location_labeler=None,
+        midpointFunc=None,
         **kwargs,
     ):
         self.out = out
@@ -122,6 +123,7 @@ class InterpolatablePlot:
         self.names = names or [repr(g) for g in glyphsets]
         self.locations = locations
         self.location_labeler = location_labeler
+        self.midpointFunc = midpointFunc
         self.toc = {}
 
         for k, v in kwargs.items():
@@ -576,22 +578,28 @@ class InterpolatablePlot:
             glyphset1 = self.glyphsets[master_indices[0]]
             glyphset2 = self.glyphsets[master_indices[1]]
 
-            # This is a 50/50 outline blend, not a font evaluation. Label the
-            # nominal coordinate midpoint, without claiming other masters
-            # have no influence at that point in the font.
-
-            labels = ("nominal midway",)
-            if self.locations and self.location_labeler is not None:
+            actual_midpoint = (
+                bool(self.locations)
+                and self.midpointFunc is not None
+                and any(p.get("actual_midpoint") for p in problems)
+            )
+            labels = ("actual midway" if actual_midpoint else "nominal midway",)
+            if self.locations:
                 loc1, loc2 = (self.locations[i] for i in master_indices[:2])
                 midpoint = {
                     tag: (loc1.get(tag, 0) + loc2.get(tag, 0)) / 2
                     for tag in loc1.keys() | loc2.keys()
                 }
-                labels += self.location_labeler(midpoint)
+                if self.location_labeler is not None:
+                    labels += self.location_labeler(midpoint)
             self.draw_location_label(labels, x=x, y=y)
             y += self.location_height + self.pad
 
-            midway_glyphset = LerpGlyphSet(glyphset1, glyphset2)
+            midway_glyphset = (
+                self.midpointFunc(midpoint)
+                if actual_midpoint
+                else LerpGlyphSet(glyphset1, glyphset2)
+            )
             self.draw_glyph(
                 midway_glyphset,
                 glyphname,

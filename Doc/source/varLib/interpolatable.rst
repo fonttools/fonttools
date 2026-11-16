@@ -37,10 +37,24 @@ use normalized names without solving input locations; graphical reports still
 recover input labels for the panels they display. ``--name`` filtering matches
 complete names, including recoverable input coordinates.
 
-The midway panel remains a 50/50 blend of the two displayed masters. Its
-location label gives their nominal coordinate midpoint, with input coordinates
-when recoverable. Other masters can affect the font's actual outline at that
-location, so the displayed blend need not be an actual font instance.
+For compiled variable-font inputs, candidate kink and underweight findings are
+checked against the actual outline at the coordinate midpoint. The midpoint outline
+is evaluated only for candidate findings and reused across contours. Findings
+that disappear in the actual instance are omitted; confirmed findings include
+``actual_midpoint: true`` in JSON output and show an ``actual midway`` panel.
+Contour-order and starting-point findings remain endpoint correspondence checks.
+If the corresponding midpoint contour cannot be identified, the pairwise
+finding is retained without the confirmation marker.
+
+For other findings and inputs without an instance evaluator, the midway panel
+shows a 50/50 blend of the two displayed masters. Its label gives their nominal
+coordinate midpoint, with input coordinates when recoverable. Other masters
+can affect the actual font at that location, so this blend need not be an
+actual font instance.
+
+The underweight check compares area against the geometric mean of the endpoint
+area magnitudes, preserving their common winding. A midpoint that reverses that
+winding is treated as a collapse, even if its absolute area has grown again.
 
 .. automodule:: fontTools.varLib.interpolatable
    :members:

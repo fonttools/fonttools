@@ -231,7 +231,8 @@ def test_zero_location_is_explicit():
     "names",
     [["Regular", "Bold"], ["normalized: all zero", "normalized: wght=1.0"]],
 )
-def test_midway_label_does_not_change_outline_blend(names):
+@pytest.mark.parametrize("actual", [False, True])
+def test_midway_panel_uses_checked_outline(names, actual):
     pytest.importorskip("cairo")
     from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
     from fontTools.varLib.interpolatablePlot import InterpolatablePlot
@@ -246,7 +247,7 @@ def test_midway_label_does_not_change_outline_blend(names):
             self.labels.append(label)
 
         def draw_glyph(self, glyphset, glyphname, problems, which, **kwargs):
-            if isinstance(glyphset, LerpGlyphSet):
+            if which is None:
                 self.midway = glyphset
             return 1
 
@@ -254,21 +255,40 @@ def test_midway_label_does_not_change_outline_blend(names):
             pass
 
     glyphsets = [{"A": object()}, {"A": object()}]
+    actual_glyphset = {"A": object()}
+    calls = []
+
+    def midpoint(location):
+        calls.append(location)
+        return actual_glyphset
+
     plot = RecordingPlot(
         None,
         glyphsets,
         names=names,
         locations=[{}, {"wght": 1}],
         location_labeler=LocationLabeler({"wght": {-1: 100, 0: 400, 1: 900}}),
+        midpointFunc=midpoint if actual else None,
     )
     plot.add_problem(
         "A",
-        {"type": "underweight", "master_1_idx": 0, "master_2_idx": 1},
+        {
+            "type": "underweight",
+            "master_1_idx": 0,
+            "master_2_idx": 1,
+            **({"actual_midpoint": True} if actual else {}),
+        },
     )
-    assert "nominal midway" in plot.labels
+    assert ("actual midway" if actual else "nominal midway") in plot.labels
     assert "normalized: wght=0.5" in plot.labels
     assert "design: wght=650.0" in plot.labels
     assert plot.labels.count("normalized: wght=1.0") == 1
-    assert plot.midway.glyphset1 is glyphsets[0]
-    assert plot.midway.glyphset2 is glyphsets[1]
-    assert plot.midway.factor == 0.5
+    if actual:
+        assert plot.midway is actual_glyphset
+        assert calls == [{"wght": 0.5}]
+    else:
+        assert isinstance(plot.midway, LerpGlyphSet)
+        assert plot.midway.glyphset1 is glyphsets[0]
+        assert plot.midway.glyphset2 is glyphsets[1]
+        assert plot.midway.factor == 0.5
+        assert calls == []
