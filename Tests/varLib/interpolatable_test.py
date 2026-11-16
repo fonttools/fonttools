@@ -10,6 +10,7 @@ from fontTools.ufoLib import UFOWriter, UFOLibError
 from fontTools.varLib.interpolatable import (
     main as interpolatable_main,
     print_master_tree,
+    test_gen as interpolatable_test_gen,
 )
 from types import SimpleNamespace
 from fontTools.varLib.interpolatableHelpers import find_parents_and_order
@@ -725,6 +726,93 @@ def test_print_master_tree_branches_and_roots(capsys):
         "[4] Italic\n"
         "└── [5] Bold Italic\n"
     )
+
+
+def test_progress_callback_after_each_glyph():
+    def make_glyph(count):
+        def draw(pen, **kwargs):
+            for i in range(count):
+                y = i * 300
+                pen.moveTo((0, y))
+                pen.lineTo((200, y))
+                pen.lineTo((200, y + 200))
+                pen.lineTo((0, y + 200))
+                pen.closePath()
+
+        return SimpleNamespace(draw=draw)
+
+    glyphsets = [
+        {"A": make_glyph(1), "sparse": None, "empty": make_glyph(0)},
+        {"A": make_glyph(2), "sparse": make_glyph(1), "empty": make_glyph(0)},
+    ]
+    completed = []
+    problems = interpolatable_test_gen(
+        glyphsets,
+        glyphs=["A", "sparse", "empty"],
+        progressFunc=completed.append,
+    )
+    assert next(problems)[1]["type"] == "path_count"
+    assert completed == []
+    assert list(problems) == []
+    assert completed == ["A", "sparse", "empty"]
+
+
+@pytest.mark.parametrize(
+    "terminal, progress, quiet, expected",
+    [
+        (True, True, False, True),
+        (False, True, False, False),
+        (True, False, False, False),
+        (True, True, True, False),
+    ],
+)
+def test_progress_terminal_only(
+    layered_designspace, capsys, monkeypatch, terminal, progress, quiet, expected
+):
+    stderr = StringIO()
+    monkeypatch.setattr(stderr, "isatty", lambda: terminal)
+    monkeypatch.setattr(sys, "stderr", stderr)
+    args = ["--json", "--glyphs", "A B", layered_designspace.path]
+    if progress:
+        args.append("--progress")
+    if quiet:
+        args.append("--quiet")
+    problems = interpolatable_main(args)
+    output = capsys.readouterr().out
+    if quiet:
+        assert output == ""
+    else:
+        assert json.loads(output) == problems
+    if expected:
+        assert "Checking glyphs:" in stderr.getvalue()
+        assert "2/2\n" in stderr.getvalue()
+    else:
+        assert stderr.getvalue() == ""
+
+
+@pytest.mark.parametrize(
+    "source, suffix",
+    [
+        ("MutatorSans_All_Variable.ttx", ".ttf"),
+        ("variable_ttx_interpolatable_cff2/interpolatable-test.ttx", ".otf"),
+    ],
+)
+def test_show_graph_progress(tmp_path, capsys, monkeypatch, source, suffix):
+    font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+    font.importXML(os.path.join(os.path.dirname(__file__), "data", source))
+    total = len(font.getGlyphOrder())
+    path = tmp_path / ("font" + suffix)
+    font.save(path)
+    stderr = StringIO()
+    monkeypatch.setattr(stderr, "isatty", lambda: True)
+    monkeypatch.setattr(sys, "stderr", stderr)
+    assert interpolatable_main(["--show-graph", "--progress", str(path)]) is None
+    output = capsys.readouterr().out
+    assert "[0]" in output
+    assert "Finding masters:" not in output
+    assert "Finding masters:" in stderr.getvalue()
+    assert f"{total}/{total}\n" in stderr.getvalue()
+    assert "Checking glyphs:" not in stderr.getvalue()
 
 
 @pytest.mark.parametrize(

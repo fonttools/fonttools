@@ -37,6 +37,45 @@ DEFAULT_KINKINESS_LENGTH = 0.002  # ratio of UPEM
 DEFAULT_UPEM = 1000
 
 
+def _with_progress(items, progressFunc):
+    for item in items:
+        yield item
+        if progressFunc is not None:
+            progressFunc(item)
+
+
+def _make_progress(label, total, enabled):
+    import sys
+    from time import monotonic
+
+    if not enabled or not total or not sys.stderr.isatty():
+        return None
+    stream = sys.stderr
+    done = 0
+    last_update = monotonic()
+
+    def draw():
+        filled = 20 * done // total
+        bar = "#" * filled + "-" * (20 - filled)
+        print(
+            f"\r{label}: [{bar}] {done}/{total}",
+            end="\n" if done == total else "",
+            file=stream,
+            flush=True,
+        )
+
+    def advance(glyph_name):
+        nonlocal done, last_update
+        done += 1
+        now = monotonic()
+        if done == total or now - last_update >= 0.1:
+            draw()
+            last_update = now
+
+    draw()
+    return advance
+
+
 class Glyph:
     ITEMS = (
         "recordings",
@@ -138,7 +177,12 @@ def test_gen(
     upem=DEFAULT_UPEM,
     show_all=False,
     discrete_axes=[],
+    progressFunc=None,
 ):
+    """Yield interpolation problems, calling progressFunc after each glyph.
+
+    The optional callback receives the completed glyph's name.
+    """
     if tolerance >= 10:
         tolerance *= 0.01
     assert 0 <= tolerance <= 1
@@ -171,7 +215,7 @@ def test_gen(
             i = parents[i]
         return i
 
-    for glyph_name in glyphs:
+    for glyph_name in _with_progress(glyphs, progressFunc):
         log.info("Testing glyph %s", glyph_name)
         allGlyphs = [Glyph(glyph_name, glyphset) for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if not glyph.doesnt_exist]) <= 1:
@@ -665,6 +709,11 @@ def main(args=None):
         help="Show the resolved master comparison tree and exit",
     )
     parser.add_argument(
+        "--progress",
+        action="store_true",
+        help="Show a progress bar when stderr is a terminal",
+    )
+    parser.add_argument(
         "--tolerance",
         action="store",
         type=float,
@@ -737,6 +786,7 @@ def main(args=None):
         configLogger(level="DEBUG")
 
     glyphs = args.glyphs.split() if args.glyphs else None
+    show_progress = args.progress and not args.quiet
 
     from os.path import basename
 
@@ -847,7 +897,8 @@ def main(args=None):
 
                 if glyphs is None:
                     glyphs = sorted(gvar.variations.keys())
-                for glyphname in glyphs:
+                progress = _make_progress("Finding masters", len(glyphs), show_progress)
+                for glyphname in _with_progress(glyphs, progress):
                     for var in gvar.variations[glyphname]:
                         locDict = {}
                         loc = []
@@ -872,7 +923,8 @@ def main(args=None):
 
                 if glyphs is None:
                     glyphs = sorted(charstrings.keys())
-                for glyphname in glyphs:
+                progress = _make_progress("Finding masters", len(glyphs), show_progress)
+                for glyphname in _with_progress(glyphs, progress):
                     cs = charstrings[glyphname]
                     private = cs.private
 
@@ -1073,6 +1125,7 @@ def main(args=None):
     try:
         log.info("Running on %d glyphsets", len(glyphsets))
         log.info("Locations: %s", pformat(locations))
+        progress = _make_progress("Checking glyphs", len(glyphs), show_progress)
         problems_gen = test_gen(
             glyphsets,
             glyphs=glyphs,
@@ -1085,7 +1138,11 @@ def main(args=None):
             kinkiness=kinkiness,
             show_all=args.show_all,
             discrete_axes=discrete_axes,
+            progressFunc=progress,
         )
+        if progress is not None:
+            # Finish the bar before writing diagnostics to the same terminal.
+            problems_gen = list(problems_gen)
         problems = defaultdict(list)
 
         f = (

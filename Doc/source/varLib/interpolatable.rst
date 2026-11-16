@@ -19,6 +19,9 @@ compared along a chain in input order.
 names and normalized coordinates, then exits without checking glyphs. The
 tree is written to standard output, or to the file given by ``--output``.
 
+``--progress`` shows progress on stderr when it is a terminal.
+``--quiet`` suppresses the progress bar.
+
 For inputs with location data, graphical reports show the normalized
 coordinates of every tested master.
 For variable fonts these are post-avar coordinates. Input coordinates are
