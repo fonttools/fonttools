@@ -151,7 +151,6 @@ class InterpolatableTest(unittest.TestCase):
         self.assertIsNone(interpolatable_main(ufo_paths))
 
     def test_interpolatable_cff2_json(self):
-        pytest.importorskip("scipy.sparse.csgraph")
         ttx_path = self.get_test_input(
             "variable_ttx_interpolatable_cff2", "interpolatable-test.ttx"
         )
@@ -688,10 +687,82 @@ def test_designspace_layer_name_filter(layered_designspace):
             [None, 0, None, 2],
             [0, 2, 1, 3],
         ),
+        pytest.param(
+            [{}, {"wght": 1, "wdth": 0.1}, {"wght": 1, "opsz": 0.1}],
+            set(),
+            [None, 0, 0],
+            [0, 1, 2],
+            id="incomparable-axis-sets",
+        ),
+        pytest.param(
+            [
+                {"wght": 0, "wdth": 0, "opsz": 0},
+                {"wght": 1, "wdth": 0.1, "opsz": 0},
+                {"wght": 1, "wdth": 0, "opsz": 0.1},
+            ],
+            set(),
+            [None, 0, 0],
+            [0, 1, 2],
+            id="explicit-zero-coordinates",
+        ),
+        pytest.param(
+            [
+                {},
+                {"wght": 1},
+                {"wght": 0.95, "wdth": 0.95},
+                {"wght": 1, "wdth": 1},
+            ],
+            set(),
+            [None, 0, 3, 1],
+            [0, 1, 3, 2],
+            id="fewer-coordinate-changes-before-distance",
+        ),
+        pytest.param(
+            [{}, {"wght": 0.5}, {"wght": 1, "wdth": 1}],
+            set(),
+            [None, 0, 1],
+            [0, 1, 2],
+            id="subset-with-different-values",
+        ),
+        pytest.param(
+            [
+                {"ital": 0},
+                {"ital": 0, "wght": 1, "wdth": 0.1},
+                {"ital": 0, "wght": 1, "opsz": 0.1},
+                {"ital": 1},
+                {"ital": 1, "wght": 1, "wdth": 0.1},
+                {"ital": 1, "wght": 1, "opsz": 0.1},
+            ],
+            {"ital"},
+            [None, 0, 0, None, 3, 3],
+            [0, 3, 1, 2, 4, 5],
+            id="axis-subsets-in-discrete-subspaces",
+        ),
+        pytest.param(
+            [{}, {"wght": 1 / 16384}, {"wght": 2 / 16384}],
+            set(),
+            [None, 0, 1],
+            [0, 1, 2],
+            id="nearby-masters",
+        ),
+        pytest.param(
+            [{}, {}, {"wght": 1}],
+            set(),
+            [None, None, 0],
+            [0, 1, 2],
+            id="duplicate-defaults",
+        ),
+        pytest.param(
+            [{}, {"wght": 1}, {"wght": 1}],
+            set(),
+            [None, 0, 1],
+            [0, 1, 2],
+            id="duplicate-nondefault-locations",
+        ),
     ],
 )
-def test_find_parents_and_order_scipy(locations, discrete_axes, parents, order):
-    pytest.importorskip("scipy.sparse.csgraph")
+def test_find_parents_and_order(locations, discrete_axes, parents, order, monkeypatch):
+    monkeypatch.setitem(sys.modules, "scipy.sparse.csgraph", None)
     actual_parents, actual_order = find_parents_and_order(
         [None] * len(locations), locations, discrete_axes=discrete_axes
     )
