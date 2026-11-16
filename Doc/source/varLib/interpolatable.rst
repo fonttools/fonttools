@@ -15,6 +15,10 @@ still compared to their nearest neighbors. Each subspace needs a default
 master at zero on all continuous axes. Without location data, masters are
 compared along a chain in input order.
 
+``--show-graph`` prints the resolved master comparison tree, including master
+names and normalized coordinates, then exits without checking glyphs. The
+tree is written to standard output, or to the file given by ``--output``.
+
 For inputs with location data, graphical reports show the normalized
 coordinates of every tested master.
 For variable fonts these are post-avar coordinates. Input coordinates are

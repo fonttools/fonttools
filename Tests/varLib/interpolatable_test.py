@@ -7,7 +7,10 @@ from fontTools.designspaceLib import (
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ufoLib import UFOWriter, UFOLibError
-from fontTools.varLib.interpolatable import main as interpolatable_main
+from fontTools.varLib.interpolatable import (
+    main as interpolatable_main,
+    print_master_tree,
+)
 from types import SimpleNamespace
 from fontTools.varLib.interpolatableHelpers import find_parents_and_order
 from contextlib import redirect_stdout
@@ -663,6 +666,65 @@ def test_designspace_layer_name_filter(layered_designspace):
     )
     assert problems["A"][0]["type"] == "path_count"
     assert problems["A"][0]["master_2"] == "Regular (intermediate)"
+
+
+@pytest.mark.parametrize("output_file", [False, True])
+def test_show_graph(layered_designspace, tmp_path, capsys, monkeypatch, output_file):
+    def unexpected_test(*args, **kwargs):
+        pytest.fail("--show-graph must exit before checking glyphs")
+
+    monkeypatch.setattr("fontTools.varLib.interpolatable.test_gen", unexpected_test)
+    args = ["--show-graph", layered_designspace.path]
+    if output_file:
+        path = tmp_path / "graphs" / "masters.txt"
+        args.extend(["--output", str(path)])
+    assert interpolatable_main(args) is None
+    expected = (
+        "[0] Regular (normalized: default)\n"
+        "└── [1] Regular (intermediate) (normalized: Weight=0.375)\n"
+        "    └── [2] Bold (normalized: Weight=1.0)\n"
+    )
+    if output_file:
+        assert capsys.readouterr().out == ""
+        assert path.read_text(encoding="utf-8") == expected
+    else:
+        assert capsys.readouterr().out == expected
+
+
+def test_show_graph_name_filter(layered_designspace, capsys):
+    assert (
+        interpolatable_main(
+            [
+                "--show-graph",
+                "--name",
+                "Regular",
+                "--name",
+                "Bold",
+                layered_designspace.path,
+            ]
+        )
+        is None
+    )
+    assert capsys.readouterr().out == (
+        "[0] Regular (normalized: default)\n" "└── [1] Bold (normalized: Weight=1.0)\n"
+    )
+
+
+def test_print_master_tree_branches_and_roots(capsys):
+    print_master_tree(
+        [None, 0, 0, 1, None, 4],
+        [0, 4, 1, 2, 5, 3],
+        ["Regular", "Medium", "Wide", "Bold", "Italic", "Bold Italic"],
+        [],
+    )
+    assert capsys.readouterr().out == (
+        "[0] Regular\n"
+        "├── [1] Medium\n"
+        "│   └── [3] Bold\n"
+        "└── [2] Wide\n"
+        "[4] Italic\n"
+        "└── [5] Bold Italic\n"
+    )
 
 
 @pytest.mark.parametrize(

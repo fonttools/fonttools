@@ -610,6 +610,36 @@ def ensure_parent_dir(path):
     return path
 
 
+def print_master_tree(parents, order, names, locations, discrete_axes=(), *, file=None):
+    """Print the master comparison tree with normalized locations."""
+    children = defaultdict(list)
+    for i in order:
+        children[parents[i]].append(i)
+    stack = [(i, "", "") for i in reversed(children[None])]
+    while stack:
+        i, prefix, branch = stack.pop()
+        label = f"[{i}] {names[i]}"
+        if locations:
+            coordinates = (
+                " ".join(
+                    f"{k}={v}"
+                    for k, v in sorted(locations[i].items())
+                    if v != 0 or k in discrete_axes
+                )
+                or "default"
+            )
+            location_label = f"normalized: {coordinates}"
+            if names[i] != location_label:
+                label += f" ({location_label})"
+        print(prefix + branch + label, file=file)
+        child_prefix = prefix + (
+            "    " if branch == "└── " else "│   " if branch else ""
+        )
+        for j, child in reversed(list(enumerate(children[i]))):
+            child_branch = "└── " if j == len(children[i]) - 1 else "├── "
+            stack.append((child, child_prefix, child_branch))
+
+
 def main(args=None):
     """Test for interpolatability issues between fonts"""
     import argparse
@@ -628,6 +658,11 @@ def main(args=None):
         "--show-all",
         action="store_true",
         help="Show all glyph pairs, even if no problems are found",
+    )
+    parser.add_argument(
+        "--show-graph",
+        action="store_true",
+        help="Show the resolved master comparison tree and exit",
     )
     parser.add_argument(
         "--tolerance",
@@ -890,7 +925,9 @@ def main(args=None):
                 # still matches the complete names used in text/JSON output.
                 return " | ".join(
                     location_labeler(
-                        location, include_input=not args.quiet or bool(args.name)
+                        location,
+                        include_input=(not args.quiet and not args.show_graph)
+                        or bool(args.name),
                     )
                 )
 
@@ -962,6 +999,9 @@ def main(args=None):
 
     glyphsets = []
     for font in fonts:
+        if args.show_graph:
+            glyphsets.append(None)
+            continue
         if hasattr(font, "getGlyphSet"):
             glyphset = font.getGlyphSet()
         else:
@@ -987,6 +1027,27 @@ def main(args=None):
         ]
         names = [name for name in names if name in accepted_names]
 
+    # Normalize locations
+    locations = [
+        {
+            **normalizeLocation(loc, axis_triples, allow_decreasing=True),
+            **{k: v for k, v in loc.items() if k in discrete_axes},
+        }
+        for loc in locations
+    ]
+    if args.show_graph:
+        parents, order = find_parents_and_order(
+            glyphsets, locations, discrete_axes=discrete_axes
+        )
+        if args.output is None:
+            print_master_tree(parents, order, names, locations, discrete_axes)
+        else:
+            with open(ensure_parent_dir(args.output), "w", encoding="utf-8") as f:
+                print_master_tree(
+                    parents, order, names, locations, discrete_axes, file=f
+                )
+        return
+
     if not glyphs:
         glyphs = sorted(set([gn for glyphset in glyphsets for gn in glyphset.keys()]))
 
@@ -998,14 +1059,6 @@ def main(args=None):
             for gn in diff:
                 glyphset[gn] = None
 
-    # Normalize locations
-    locations = [
-        {
-            **normalizeLocation(loc, axis_triples, allow_decreasing=True),
-            **{k: v for k, v in loc.items() if k in discrete_axes},
-        }
-        for loc in locations
-    ]
     if locations and location_labeler is None:
         location_labeler = LocationLabeler(
             {
