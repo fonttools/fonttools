@@ -12,7 +12,6 @@ from fontTools.ttLib.ttGlyphSet import LerpGlyphSet
 from fontTools.varLib import interpolatable
 from fontTools.varLib.models import VariationModel
 
-
 SQUARE = [(0, 0), (100, 0), (100, 100), (0, 100)]
 ROTATED = [(0, 0), (0, 100), (-100, 100), (-100, 0)]
 MID_SQUARE = [(0, 0), (50, 50), (0, 100), (-50, 50)]
