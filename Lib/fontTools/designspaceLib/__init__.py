@@ -2052,14 +2052,20 @@ class BaseDocReader(LogMixin):
     def readRules(self):
         # we also need to read any conditions that are outside of a condition set.
         rules = []
-        rulesElement = self.root.find(".rules")
-        if rulesElement is not None:
-            processingValue = rulesElement.attrib.get("processing", "first")
-            if processingValue not in {"first", "last"}:
+        processingValue = None
+        for rulesElement in self.root.findall(".rules"):
+            value = rulesElement.attrib.get("processing", "first")
+            if value not in {"first", "last"}:
                 raise DesignSpaceDocumentError(
                     "<rules> processing attribute value is not valid: %r, "
-                    "expected 'first' or 'last'" % processingValue
+                    "expected 'first' or 'last'" % value
                 )
+            if processingValue is not None and value != processingValue:
+                raise DesignSpaceDocumentError(
+                    "<rules> processing attributes must agree across all <rules> elements"
+                )
+            processingValue = value
+        if processingValue is not None:
             self.documentObject.rulesProcessingLast = processingValue == "last"
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
