@@ -22,6 +22,11 @@ tree is written to standard output, or to the file given by ``--output``.
 ``--progress`` shows progress on stderr when it is a terminal.
 ``--quiet`` suppresses the progress bar.
 
+``--jobs N`` (or ``-j N``) checks glyphs in batches using N worker processes.
+The default is one process; ``--jobs 0`` uses all available CPUs. Findings
+retain their original order, and progress advances as each batch completes.
+Reports are generated in the parent process.
+
 For inputs with location data, graphical reports show the normalized
 coordinates of every tested master.
 For variable fonts these are post-avar coordinates. Input coordinates are

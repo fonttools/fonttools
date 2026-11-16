@@ -215,7 +215,8 @@ def test_zero_kinkiness_disables_kink_check():
     assert not problems(glyphsets, "kink", kinkiness=0)
 
 
-def test_gvar_midpoint_corrected_by_off_axis_master(tmp_path):
+@pytest.mark.parametrize("jobs", [1, 2])
+def test_gvar_midpoint_corrected_by_off_axis_master(tmp_path, jobs):
     locations = [
         {},
         {"wght": 0.75},
@@ -286,6 +287,8 @@ def test_gvar_midpoint_corrected_by_off_axis_master(tmp_path):
     result = interpolatable.main(
         [
             "--quiet",
+            "--jobs",
+            str(jobs),
             "--glyphs",
             "A",
             "--name",

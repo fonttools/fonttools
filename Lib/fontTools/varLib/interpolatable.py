@@ -261,6 +261,7 @@ def test_gen(
     discrete_axes=[],
     progressFunc=None,
     midpointFunc=None,
+    _parents_and_order=None,
 ):
     """Yield interpolation problems, calling progressFunc after each glyph.
 
@@ -286,7 +287,7 @@ def test_gen(
         # ... risks the sparse master being the first one, and only processing a subset of the glyphs
         glyphs = {g for glyphset in glyphsets for g in glyphset.keys()}
 
-    parents, order = find_parents_and_order(
+    parents, order = _parents_and_order or find_parents_and_order(
         glyphsets, locations, discrete_axes=discrete_axes
     )
 
@@ -714,6 +715,89 @@ def test(*args, **kwargs):
     return problems
 
 
+_worker_context = None
+
+
+def _init_worker(context, args, parents_and_order):
+    import signal
+
+    global _worker_context
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    glyphsets, options = context if context is not None else main(args, _prepare=True)
+    options = dict(options)
+    options["names"] = list(range(len(glyphsets)))
+    options["progressFunc"] = None
+    options["_parents_and_order"] = parents_and_order
+    _worker_context = glyphsets, options
+
+
+def _check_batch(glyphs):
+    glyphsets, options = _worker_context
+    options = dict(options, glyphs=glyphs)
+    return list(test_gen(glyphsets, **options))
+
+
+def _parallel_test_gen(glyphsets, options, jobs, worker_args):
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+    import multiprocessing
+    import sys
+    import threading
+
+    glyphs = list(options["glyphs"])
+    if not glyphs:
+        return
+    jobs = min(jobs, len(glyphs))
+    parents_and_order = find_parents_and_order(
+        glyphsets, options["locations"], discrete_axes=options["discrete_axes"]
+    )
+    use_fork = (
+        sys.platform == "linux"
+        and "fork" in multiprocessing.get_all_start_methods()
+        and threading.active_count() == 1
+    )
+    # Fork shares the prepared glyphsets. Spawned workers load their own copy
+    # once, since glyphsets and instance callbacks need not be picklable.
+    mp_context = multiprocessing.get_context("fork" if use_fork else "spawn")
+    context = (glyphsets, options) if use_fork else None
+    batch_size = max(1, min(8, (len(glyphs) + jobs * 8 - 1) // (jobs * 8)))
+    batches = [glyphs[i : i + batch_size] for i in range(0, len(glyphs), batch_size)]
+    progress = options["progressFunc"]
+    names = options["names"]
+    with ProcessPoolExecutor(
+        max_workers=jobs,
+        mp_context=mp_context,
+        initializer=_init_worker,
+        initargs=(context, worker_args, parents_and_order),
+    ) as pool:
+        futures = {
+            pool.submit(_check_batch, batch): i for i, batch in enumerate(batches)
+        }
+        pending = {}
+        next_batch = 0
+        try:
+            for future in as_completed(futures):
+                index = futures[future]
+                pending[index] = future.result()
+                if progress is not None:
+                    for glyph in batches[index]:
+                        progress(glyph)
+                while next_batch in pending:
+                    for glyph, problem in pending.pop(next_batch):
+                        if "master_idx" in problem:
+                            problem["master"] = names[problem["master_idx"]]
+                        else:
+                            problem["master_1"] = names[problem["master_1_idx"]]
+                            problem["master_2"] = names[problem["master_2_idx"]]
+                        yield glyph, problem
+                    next_batch += 1
+        except BaseException:
+            for future in futures:
+                future.cancel()
+            if hasattr(pool, "terminate_workers"):
+                pool.terminate_workers()
+            raise
+
+
 def recursivelyAddGlyph(glyphname, glyphset, ttGlyphSet, glyf):
     if glyphname in glyphset:
         return
@@ -760,11 +844,12 @@ def print_master_tree(parents, order, names, locations, discrete_axes=(), *, fil
             stack.append((child, child_prefix, child_branch))
 
 
-def main(args=None):
+def main(args=None, *, _prepare=False):
     """Test for interpolatability issues between fonts"""
     import argparse
     import sys
 
+    argv = list(args) if args is not None else sys.argv[1:]
     parser = argparse.ArgumentParser(
         "fonttools varLib.interpolatable",
         description=main.__doc__,
@@ -788,6 +873,13 @@ def main(args=None):
         "--progress",
         action="store_true",
         help="Show a progress bar when stderr is a terminal",
+    )
+    parser.add_argument(
+        "-j",
+        "--jobs",
+        type=int,
+        default=1,
+        help="Number of worker processes; 0 uses all available CPUs (default: 1)",
     )
     parser.add_argument(
         "--tolerance",
@@ -853,7 +945,15 @@ def main(args=None):
     parser.add_argument("-v", "--verbose", action="store_true", help="Run verbosely.")
     parser.add_argument("--debug", action="store_true", help="Run with debug output.")
 
-    args = parser.parse_args(args)
+    args = parser.parse_args(argv)
+    if args.jobs < 0:
+        parser.error("--jobs must be zero or greater")
+    if not args.jobs:
+        cpu_count = getattr(os, "process_cpu_count", os.cpu_count)
+        args.jobs = cpu_count() or 1
+    if _prepare:
+        args.quiet = True
+        args.jobs = 1
 
     from fontTools import configLogger
 
@@ -1203,25 +1303,37 @@ def main(args=None):
         )
     tolerance = args.tolerance or DEFAULT_TOLERANCE
     kinkiness = args.kinkiness if args.kinkiness is not None else DEFAULT_KINKINESS
+    options = dict(
+        glyphs=glyphs,
+        names=names,
+        locations=locations,
+        sparse=sparse,
+        upem=upem,
+        ignore_missing=args.ignore_missing,
+        tolerance=tolerance,
+        kinkiness=kinkiness,
+        show_all=args.show_all,
+        discrete_axes=discrete_axes,
+        midpointFunc=midpointFunc,
+        progressFunc=None,
+    )
+    if _prepare:
+        return glyphsets, options
 
     try:
         log.info("Running on %d glyphsets", len(glyphsets))
         log.info("Locations: %s", pformat(locations))
         progress = _make_progress("Checking glyphs", len(glyphs), show_progress)
-        problems_gen = test_gen(
-            glyphsets,
-            glyphs=glyphs,
-            names=names,
-            locations=locations,
-            sparse=sparse,
-            upem=upem,
-            ignore_missing=args.ignore_missing,
-            tolerance=tolerance,
-            kinkiness=kinkiness,
-            show_all=args.show_all,
-            discrete_axes=discrete_axes,
-            progressFunc=progress,
-            midpointFunc=midpointFunc,
+        options["progressFunc"] = progress
+        problems_gen = (
+            test_gen(glyphsets, **options)
+            if args.jobs == 1
+            else _parallel_test_gen(
+                glyphsets,
+                options,
+                args.jobs,
+                argv,
+            )
         )
         if progress is not None:
             # Finish the bar before writing diagnostics to the same terminal.
