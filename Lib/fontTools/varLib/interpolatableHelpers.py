@@ -4,6 +4,7 @@ from fontTools.pens.pointPen import AbstractPointPen, SegmentToPointPen
 from fontTools.pens.recordingPen import RecordingPen, DecomposingRecordingPen
 from fontTools.misc.transform import Transform
 from fontTools.misc.fixedTools import floatToFixedToStr, nearestMultipleShortestRepr
+from fontTools.misc.treeTools import minimum_spanning_tree
 from fontTools.varLib.models import piecewiseLinearMap
 from collections import defaultdict, deque
 from math import sqrt, copysign, atan2, pi
@@ -422,55 +423,51 @@ def find_parents_and_order(glyphsets, locations, *, discrete_axes=set()):
         else:
             log.warning("No base master location found")
 
-        # Form a minimum spanning tree of the locations
-        try:
-            from scipy.sparse.csgraph import minimum_spanning_tree
+        # Form a minimum spanning tree of the locations.
+        axes = sorted({k for l in locations for k in l if k not in discrete_axes})
+        vectors = [tuple(l.get(k, 0) for k in axes) for l in locations]
+        active_axes = [
+            {k for k, v in zip(axes, vector) if v != 0} for vector in vectors
+        ]
+        discrete_locations = [
+            {k: l.get(k, 0) for k in discrete_axes} for l in locations
+        ]
+        edges = []
+        for i, j in itertools.combinations(range(len(locations)), 2):
+            if discrete_locations[i] != discrete_locations[j]:
+                continue
+            # Compare masters within the same axis subspace or one of its
+            # lower-dimensional subspaces.
+            if not (
+                active_axes[i] <= active_axes[j] or active_axes[j] <= active_axes[i]
+            ):
+                continue
+            # First change fewer coordinates, then minimize distance.
+            changed = sum(v0 != v1 for v0, v1 in zip(vectors[i], vectors[j]))
+            distance = vdiff_hypot2(vectors[i], vectors[j])
+            edges.append(((changed, distance), i, j))
 
-            graph = [[0] * len(locations) for _ in range(len(locations))]
-            axes = set()
-            for l in locations:
-                axes.update(l.keys())
-            axes = sorted(axes)
-            vectors = [tuple(l.get(k, 0) for k in axes) for l in locations]
-            for i, j in itertools.combinations(range(len(locations)), 2):
-                i_discrete_location = {
-                    k: v for k, v in zip(axes, vectors[i]) if k in discrete_axes
-                }
-                j_discrete_location = {
-                    k: v for k, v in zip(axes, vectors[j]) if k in discrete_axes
-                }
-                if i_discrete_location != j_discrete_location:
-                    continue
-                graph[i][j] = vdiff_hypot2(vectors[i], vectors[j])
+        graph = defaultdict(set)
+        for _, i, j in minimum_spanning_tree(edges):
+            graph[i].add(j)
+            graph[j].add(i)
 
-            tree = minimum_spanning_tree(graph, overwrite=True)
-            rows, cols = tree.nonzero()
-            graph = defaultdict(set)
-            for row, col in zip(rows, cols):
-                # Keep master indices JSON-serializable, like the non-SciPy path.
-                row, col = int(row), int(col)
-                graph[row].add(col)
-                graph[col].add(row)
-
-            # Traverse graph from the base and assign parents
-            parents = [None] * len(locations)
-            order = []
-            visited = set()
-            queue = deque(bases)
-            while queue:
-                i = queue.popleft()
-                visited.add(i)
-                order.append(i)
-                for j in sorted(graph[i]):
-                    if j not in visited:
-                        parents[j] = i
-                        queue.append(j)
-            assert len(order) == len(
-                parents
-            ), "Not all masters are reachable; report an issue"
-
-        except ImportError:
-            pass
+        # Traverse graph from the bases and assign parents.
+        parents = [None] * len(locations)
+        order = []
+        visited = set(bases)
+        queue = deque(bases)
+        while queue:
+            i = queue.popleft()
+            order.append(i)
+            for j in sorted(graph[i]):
+                if j not in visited:
+                    visited.add(j)
+                    parents[j] = i
+                    queue.append(j)
+        assert len(order) == len(
+            parents
+        ), "Not all masters are reachable; report an issue"
 
         log.info("Parents: %s", parents)
         log.info("Order: %s", order)

@@ -7,7 +7,11 @@ from fontTools.designspaceLib import (
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.beyond64k import upper_tables
 from fontTools.ufoLib import UFOWriter, UFOLibError
-from fontTools.varLib.interpolatable import main as interpolatable_main
+from fontTools.varLib.interpolatable import (
+    main as interpolatable_main,
+    print_master_tree,
+    test_gen as interpolatable_test_gen,
+)
 from types import SimpleNamespace
 from fontTools.varLib.interpolatableHelpers import find_parents_and_order
 from contextlib import redirect_stdout
@@ -151,7 +155,6 @@ class InterpolatableTest(unittest.TestCase):
         self.assertIsNone(interpolatable_main(ufo_paths))
 
     def test_interpolatable_cff2_json(self):
-        pytest.importorskip("scipy.sparse.csgraph")
         ttx_path = self.get_test_input(
             "variable_ttx_interpolatable_cff2", "interpolatable-test.ttx"
         )
@@ -666,6 +669,152 @@ def test_designspace_layer_name_filter(layered_designspace):
     assert problems["A"][0]["master_2"] == "Regular (intermediate)"
 
 
+@pytest.mark.parametrize("output_file", [False, True])
+def test_show_graph(layered_designspace, tmp_path, capsys, monkeypatch, output_file):
+    def unexpected_test(*args, **kwargs):
+        pytest.fail("--show-graph must exit before checking glyphs")
+
+    monkeypatch.setattr("fontTools.varLib.interpolatable.test_gen", unexpected_test)
+    args = ["--show-graph", layered_designspace.path]
+    if output_file:
+        path = tmp_path / "graphs" / "masters.txt"
+        args.extend(["--output", str(path)])
+    assert interpolatable_main(args) is None
+    expected = (
+        "[0] Regular (normalized: default)\n"
+        "└── [1] Regular (intermediate) (normalized: Weight=0.375)\n"
+        "    └── [2] Bold (normalized: Weight=1.0)\n"
+    )
+    if output_file:
+        assert capsys.readouterr().out == ""
+        assert path.read_text(encoding="utf-8") == expected
+    else:
+        assert capsys.readouterr().out == expected
+
+
+def test_show_graph_name_filter(layered_designspace, capsys):
+    assert (
+        interpolatable_main(
+            [
+                "--show-graph",
+                "--name",
+                "Regular",
+                "--name",
+                "Bold",
+                layered_designspace.path,
+            ]
+        )
+        is None
+    )
+    assert capsys.readouterr().out == (
+        "[0] Regular (normalized: default)\n" "└── [1] Bold (normalized: Weight=1.0)\n"
+    )
+
+
+def test_print_master_tree_branches_and_roots(capsys):
+    print_master_tree(
+        [None, 0, 0, 1, None, 4],
+        [0, 4, 1, 2, 5, 3],
+        ["Regular", "Medium", "Wide", "Bold", "Italic", "Bold Italic"],
+        [],
+    )
+    assert capsys.readouterr().out == (
+        "[0] Regular\n"
+        "├── [1] Medium\n"
+        "│   └── [3] Bold\n"
+        "└── [2] Wide\n"
+        "[4] Italic\n"
+        "└── [5] Bold Italic\n"
+    )
+
+
+def test_progress_callback_after_each_glyph():
+    def make_glyph(count):
+        def draw(pen, **kwargs):
+            for i in range(count):
+                y = i * 300
+                pen.moveTo((0, y))
+                pen.lineTo((200, y))
+                pen.lineTo((200, y + 200))
+                pen.lineTo((0, y + 200))
+                pen.closePath()
+
+        return SimpleNamespace(draw=draw)
+
+    glyphsets = [
+        {"A": make_glyph(1), "sparse": None, "empty": make_glyph(0)},
+        {"A": make_glyph(2), "sparse": make_glyph(1), "empty": make_glyph(0)},
+    ]
+    completed = []
+    problems = interpolatable_test_gen(
+        glyphsets,
+        glyphs=["A", "sparse", "empty"],
+        progressFunc=completed.append,
+    )
+    assert next(problems)[1]["type"] == "path_count"
+    assert completed == []
+    assert list(problems) == []
+    assert completed == ["A", "sparse", "empty"]
+
+
+@pytest.mark.parametrize(
+    "terminal, progress, quiet, expected",
+    [
+        (True, True, False, True),
+        (False, True, False, False),
+        (True, False, False, False),
+        (True, True, True, False),
+    ],
+)
+def test_progress_terminal_only(
+    layered_designspace, capsys, monkeypatch, terminal, progress, quiet, expected
+):
+    stderr = StringIO()
+    monkeypatch.setattr(stderr, "isatty", lambda: terminal)
+    monkeypatch.setattr(sys, "stderr", stderr)
+    args = ["--json", "--glyphs", "A B", layered_designspace.path]
+    if progress:
+        args.append("--progress")
+    if quiet:
+        args.append("--quiet")
+    problems = interpolatable_main(args)
+    output = capsys.readouterr().out
+    if quiet:
+        assert output == ""
+    else:
+        assert json.loads(output) == problems
+    if expected:
+        assert "Checking glyphs:" in stderr.getvalue()
+        assert "2/2\n" in stderr.getvalue()
+    else:
+        assert stderr.getvalue() == ""
+
+
+@pytest.mark.parametrize(
+    "source, suffix",
+    [
+        ("MutatorSans_All_Variable.ttx", ".ttf"),
+        ("variable_ttx_interpolatable_cff2/interpolatable-test.ttx", ".otf"),
+    ],
+)
+def test_show_graph_progress(tmp_path, capsys, monkeypatch, source, suffix):
+    font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+    font.importXML(os.path.join(os.path.dirname(__file__), "data", source))
+    total = len(font.getGlyphOrder())
+    path = tmp_path / ("font" + suffix)
+    font.save(path)
+    stderr = StringIO()
+    monkeypatch.setattr(stderr, "isatty", lambda: True)
+    monkeypatch.setattr(sys, "stderr", stderr)
+    assert interpolatable_main(["--show-graph", "--progress", str(path)]) is None
+    output = capsys.readouterr().out
+    assert "[0]" in output
+    assert "Finding masters:" not in output
+    assert "Finding masters:" in stderr.getvalue()
+    assert f"{total}/{total}\n" in stderr.getvalue()
+    assert "Checking glyphs:" not in stderr.getvalue()
+
+
 @pytest.mark.parametrize(
     "locations, discrete_axes, parents, order",
     [
@@ -688,10 +837,82 @@ def test_designspace_layer_name_filter(layered_designspace):
             [None, 0, None, 2],
             [0, 2, 1, 3],
         ),
+        pytest.param(
+            [{}, {"wght": 1, "wdth": 0.1}, {"wght": 1, "opsz": 0.1}],
+            set(),
+            [None, 0, 0],
+            [0, 1, 2],
+            id="incomparable-axis-sets",
+        ),
+        pytest.param(
+            [
+                {"wght": 0, "wdth": 0, "opsz": 0},
+                {"wght": 1, "wdth": 0.1, "opsz": 0},
+                {"wght": 1, "wdth": 0, "opsz": 0.1},
+            ],
+            set(),
+            [None, 0, 0],
+            [0, 1, 2],
+            id="explicit-zero-coordinates",
+        ),
+        pytest.param(
+            [
+                {},
+                {"wght": 1},
+                {"wght": 0.95, "wdth": 0.95},
+                {"wght": 1, "wdth": 1},
+            ],
+            set(),
+            [None, 0, 3, 1],
+            [0, 1, 3, 2],
+            id="fewer-coordinate-changes-before-distance",
+        ),
+        pytest.param(
+            [{}, {"wght": 0.5}, {"wght": 1, "wdth": 1}],
+            set(),
+            [None, 0, 1],
+            [0, 1, 2],
+            id="subset-with-different-values",
+        ),
+        pytest.param(
+            [
+                {"ital": 0},
+                {"ital": 0, "wght": 1, "wdth": 0.1},
+                {"ital": 0, "wght": 1, "opsz": 0.1},
+                {"ital": 1},
+                {"ital": 1, "wght": 1, "wdth": 0.1},
+                {"ital": 1, "wght": 1, "opsz": 0.1},
+            ],
+            {"ital"},
+            [None, 0, 0, None, 3, 3],
+            [0, 3, 1, 2, 4, 5],
+            id="axis-subsets-in-discrete-subspaces",
+        ),
+        pytest.param(
+            [{}, {"wght": 1 / 16384}, {"wght": 2 / 16384}],
+            set(),
+            [None, 0, 1],
+            [0, 1, 2],
+            id="nearby-masters",
+        ),
+        pytest.param(
+            [{}, {}, {"wght": 1}],
+            set(),
+            [None, None, 0],
+            [0, 1, 2],
+            id="duplicate-defaults",
+        ),
+        pytest.param(
+            [{}, {"wght": 1}, {"wght": 1}],
+            set(),
+            [None, 0, 1],
+            [0, 1, 2],
+            id="duplicate-nondefault-locations",
+        ),
     ],
 )
-def test_find_parents_and_order_scipy(locations, discrete_axes, parents, order):
-    pytest.importorskip("scipy.sparse.csgraph")
+def test_find_parents_and_order(locations, discrete_axes, parents, order, monkeypatch):
+    monkeypatch.setitem(sys.modules, "scipy.sparse.csgraph", None)
     actual_parents, actual_order = find_parents_and_order(
         [None] * len(locations), locations, discrete_axes=discrete_axes
     )

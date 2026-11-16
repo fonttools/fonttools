@@ -43,3 +43,39 @@ def build_n_ary_tree(leaves, n):
         assert len(root) <= n
 
     return root
+
+
+def minimum_spanning_tree(edges):
+    """Return a minimum spanning forest using Kruskal's algorithm.
+
+    The undirected graph's edges are ``(weight, node1, node2)`` tuples. Nodes
+    must be hashable, and weights must be comparable; tuple weights are
+    supported. Equal-weight edges are considered in input order. The selected
+    edges are returned in increasing weight order. Disconnected components
+    get separate trees.
+    """
+    parents = {}
+    sizes = {}
+
+    def find(node):
+        if node not in parents:
+            parents[node] = node
+            sizes[node] = 1
+        while parents[node] != node:
+            parents[node] = parents[parents[node]]
+            node = parents[node]
+        return node
+
+    tree = []
+    for edge in sorted(edges, key=lambda edge: edge[0]):
+        _, node1, node2 = edge
+        root1, root2 = find(node1), find(node2)
+        if root1 == root2:
+            continue
+        # Union by size, with path compression in find().
+        if sizes[root1] < sizes[root2]:
+            root1, root2 = root2, root1
+        parents[root2] = root1
+        sizes[root1] += sizes[root2]
+        tree.append(edge)
+    return tree

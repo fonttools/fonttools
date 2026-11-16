@@ -37,6 +37,45 @@ DEFAULT_KINKINESS_LENGTH = 0.002  # ratio of UPEM
 DEFAULT_UPEM = 1000
 
 
+def _with_progress(items, progressFunc):
+    for item in items:
+        yield item
+        if progressFunc is not None:
+            progressFunc(item)
+
+
+def _make_progress(label, total, enabled):
+    import sys
+    from time import monotonic
+
+    if not enabled or not total or not sys.stderr.isatty():
+        return None
+    stream = sys.stderr
+    done = 0
+    last_update = monotonic()
+
+    def draw():
+        filled = 20 * done // total
+        bar = "#" * filled + "-" * (20 - filled)
+        print(
+            f"\r{label}: [{bar}] {done}/{total}",
+            end="\n" if done == total else "",
+            file=stream,
+            flush=True,
+        )
+
+    def advance(glyph_name):
+        nonlocal done, last_update
+        done += 1
+        now = monotonic()
+        if done == total or now - last_update >= 0.1:
+            draw()
+            last_update = now
+
+    draw()
+    return advance
+
+
 class Glyph:
     ITEMS = (
         "recordings",
@@ -138,7 +177,12 @@ def test_gen(
     upem=DEFAULT_UPEM,
     show_all=False,
     discrete_axes=[],
+    progressFunc=None,
 ):
+    """Yield interpolation problems, calling progressFunc after each glyph.
+
+    The optional callback receives the completed glyph's name.
+    """
     if tolerance >= 10:
         tolerance *= 0.01
     assert 0 <= tolerance <= 1
@@ -171,7 +215,7 @@ def test_gen(
             i = parents[i]
         return i
 
-    for glyph_name in glyphs:
+    for glyph_name in _with_progress(glyphs, progressFunc):
         log.info("Testing glyph %s", glyph_name)
         allGlyphs = [Glyph(glyph_name, glyphset) for glyphset in glyphsets]
         if len([1 for glyph in allGlyphs if not glyph.doesnt_exist]) <= 1:
@@ -610,6 +654,36 @@ def ensure_parent_dir(path):
     return path
 
 
+def print_master_tree(parents, order, names, locations, discrete_axes=(), *, file=None):
+    """Print the master comparison tree with normalized locations."""
+    children = defaultdict(list)
+    for i in order:
+        children[parents[i]].append(i)
+    stack = [(i, "", "") for i in reversed(children[None])]
+    while stack:
+        i, prefix, branch = stack.pop()
+        label = f"[{i}] {names[i]}"
+        if locations:
+            coordinates = (
+                " ".join(
+                    f"{k}={v}"
+                    for k, v in sorted(locations[i].items())
+                    if v != 0 or k in discrete_axes
+                )
+                or "default"
+            )
+            location_label = f"normalized: {coordinates}"
+            if names[i] != location_label:
+                label += f" ({location_label})"
+        print(prefix + branch + label, file=file)
+        child_prefix = prefix + (
+            "    " if branch == "└── " else "│   " if branch else ""
+        )
+        for j, child in reversed(list(enumerate(children[i]))):
+            child_branch = "└── " if j == len(children[i]) - 1 else "├── "
+            stack.append((child, child_prefix, child_branch))
+
+
 def main(args=None):
     """Test for interpolatability issues between fonts"""
     import argparse
@@ -628,6 +702,16 @@ def main(args=None):
         "--show-all",
         action="store_true",
         help="Show all glyph pairs, even if no problems are found",
+    )
+    parser.add_argument(
+        "--show-graph",
+        action="store_true",
+        help="Show the resolved master comparison tree and exit",
+    )
+    parser.add_argument(
+        "--progress",
+        action="store_true",
+        help="Show a progress bar when stderr is a terminal",
     )
     parser.add_argument(
         "--tolerance",
@@ -702,6 +786,7 @@ def main(args=None):
         configLogger(level="DEBUG")
 
     glyphs = args.glyphs.split() if args.glyphs else None
+    show_progress = args.progress and not args.quiet
 
     from os.path import basename
 
@@ -812,7 +897,8 @@ def main(args=None):
 
                 if glyphs is None:
                     glyphs = sorted(gvar.variations.keys())
-                for glyphname in glyphs:
+                progress = _make_progress("Finding masters", len(glyphs), show_progress)
+                for glyphname in _with_progress(glyphs, progress):
                     for var in gvar.variations[glyphname]:
                         locDict = {}
                         loc = []
@@ -837,7 +923,8 @@ def main(args=None):
 
                 if glyphs is None:
                     glyphs = sorted(charstrings.keys())
-                for glyphname in glyphs:
+                progress = _make_progress("Finding masters", len(glyphs), show_progress)
+                for glyphname in _with_progress(glyphs, progress):
                     cs = charstrings[glyphname]
                     private = cs.private
 
@@ -890,7 +977,9 @@ def main(args=None):
                 # still matches the complete names used in text/JSON output.
                 return " | ".join(
                     location_labeler(
-                        location, include_input=not args.quiet or bool(args.name)
+                        location,
+                        include_input=(not args.quiet and not args.show_graph)
+                        or bool(args.name),
                     )
                 )
 
@@ -962,6 +1051,9 @@ def main(args=None):
 
     glyphsets = []
     for font in fonts:
+        if args.show_graph:
+            glyphsets.append(None)
+            continue
         if hasattr(font, "getGlyphSet"):
             glyphset = font.getGlyphSet()
         else:
@@ -987,6 +1079,27 @@ def main(args=None):
         ]
         names = [name for name in names if name in accepted_names]
 
+    # Normalize locations
+    locations = [
+        {
+            **normalizeLocation(loc, axis_triples, allow_decreasing=True),
+            **{k: v for k, v in loc.items() if k in discrete_axes},
+        }
+        for loc in locations
+    ]
+    if args.show_graph:
+        parents, order = find_parents_and_order(
+            glyphsets, locations, discrete_axes=discrete_axes
+        )
+        if args.output is None:
+            print_master_tree(parents, order, names, locations, discrete_axes)
+        else:
+            with open(ensure_parent_dir(args.output), "w", encoding="utf-8") as f:
+                print_master_tree(
+                    parents, order, names, locations, discrete_axes, file=f
+                )
+        return
+
     if not glyphs:
         glyphs = sorted(set([gn for glyphset in glyphsets for gn in glyphset.keys()]))
 
@@ -998,14 +1111,6 @@ def main(args=None):
             for gn in diff:
                 glyphset[gn] = None
 
-    # Normalize locations
-    locations = [
-        {
-            **normalizeLocation(loc, axis_triples, allow_decreasing=True),
-            **{k: v for k, v in loc.items() if k in discrete_axes},
-        }
-        for loc in locations
-    ]
     if locations and location_labeler is None:
         location_labeler = LocationLabeler(
             {
@@ -1020,6 +1125,7 @@ def main(args=None):
     try:
         log.info("Running on %d glyphsets", len(glyphsets))
         log.info("Locations: %s", pformat(locations))
+        progress = _make_progress("Checking glyphs", len(glyphs), show_progress)
         problems_gen = test_gen(
             glyphsets,
             glyphs=glyphs,
@@ -1032,7 +1138,11 @@ def main(args=None):
             kinkiness=kinkiness,
             show_all=args.show_all,
             discrete_axes=discrete_axes,
+            progressFunc=progress,
         )
+        if progress is not None:
+            # Finish the bar before writing diagnostics to the same terminal.
+            problems_gen = list(problems_gen)
         problems = defaultdict(list)
 
         f = (
