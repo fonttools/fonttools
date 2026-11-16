@@ -426,8 +426,7 @@ The rules are evaluated in this order.
 
 A document may contain multiple ``<rules>`` elements. Their rules are concatenated
 in document order, and their ``processing`` values must agree; an omitted value
-is equivalent to ``first``. Conflicting values raise an error. When writing a
-document, designspaceLib combines the rules into a single ``<rules>`` element.
+is equivalent to ``first``. Conflicting values raise an error.
 
 Rules describe designspace areas in which one glyph should be replaced by another.
 A rule has a name and a number of conditionsets. The rule also contains a list of

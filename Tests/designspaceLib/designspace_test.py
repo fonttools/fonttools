@@ -907,16 +907,30 @@ def test_normalize_rule_conditions(
     ]
 
 
-def _multiple_rules_document(processing_values):
+def _multiple_rules_document(processing_values, subs=(("a", "b"), ("b", "c"))):
     root = ET.Element("designspace", format="5.0")
-    for index, processing in enumerate(processing_values):
+    axes = ET.SubElement(root, "axes")
+    ET.SubElement(
+        axes,
+        "axis",
+        {
+            "name": "Weight",
+            "tag": "wght",
+            "minimum": "0",
+            "default": "0",
+            "maximum": "100",
+        },
+    )
+    for index, (processing, (name, with_)) in enumerate(zip(processing_values, subs)):
         rules = ET.SubElement(root, "rules")
         if processing is not None:
             rules.set("processing", processing)
         rule = ET.SubElement(rules, "rule", name=f"rule_{index}")
         conditions = ET.SubElement(rule, "conditionset")
-        ET.SubElement(conditions, "condition", name="Weight", minimum="0")
-        ET.SubElement(rule, "sub", {"name": chr(97 + index), "with": chr(98 + index)})
+        ET.SubElement(
+            conditions, "condition", name="Weight", minimum="0", maximum="100"
+        )
+        ET.SubElement(rule, "sub", {"name": name, "with": with_})
     return ET.tostring(root)
 
 
