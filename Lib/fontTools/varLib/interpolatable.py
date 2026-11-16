@@ -13,10 +13,11 @@ from fontTools.pens.recordingPen import (
     RecordingPen,
     DecomposingRecordingPen,
     lerpRecordings,
+    replayRecording,
 )
+from fontTools.pens.areaPen import AreaPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.statisticsPen import StatisticsPen, StatisticsControlPen
-from fontTools.pens.momentsPen import OpenContourError
 from fontTools.varLib.models import piecewiseLinearMap, normalizeLocation
 from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.lazyTools import LazyList
@@ -25,7 +26,7 @@ from collections import defaultdict
 from types import SimpleNamespace
 from functools import wraps
 from pprint import pformat
-from math import sqrt, atan2, pi
+from math import sqrt, copysign, atan2, pi
 import logging
 import os
 
@@ -76,9 +77,81 @@ def _make_progress(label, total, enabled):
     return advance
 
 
+def _record_glyph(glyph, glyphset):
+    pen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+    try:
+        glyph.draw(pen, outputImpliedClosingLine=True)
+    except TypeError:
+        glyph.draw(pen)
+    return pen.value
+
+
+def _contour_area(recording, glyphset=None):
+    pen = AreaPen(glyphset)
+    try:
+        replayRecording(recording, pen)
+    except (ValueError, NotImplementedError):
+        return None
+    return pen.value
+
+
+def _contour_isomorphisms(points):
+    isomorphisms = []
+    add_isomorphisms(points, isomorphisms, False)
+    add_isomorphisms(points, isomorphisms, True)
+    return isomorphisms
+
+
+def _underweight_tolerance(area0, area1, mid_area, tolerance):
+    if area0 * area1 <= 0:
+        return 1
+    expected = sqrt(abs(area0) * abs(area1))
+    # Preserve the endpoints' winding: a reversed midpoint has crossed zero
+    # area, even if its absolute area has grown again.
+    mid_area = copysign(1, area0) * mid_area
+    log.debug(
+        "underweight: midpoint area %g; threshold %g, endpoint areas %g, %g",
+        mid_area,
+        expected * tolerance,
+        area0,
+        area1,
+    )
+    if expected * tolerance <= mid_area + 1e-5:
+        return 1
+    return max(0, mid_area / expected)
+
+
+def _kink_tolerance(d0, d1, tolerance, kinkiness, upem):
+    if not kinkiness:
+        return 1
+    t = 0.1
+    length0, length1 = abs(d0), abs(d1)
+    arc_len = abs(d0 + d1)
+    if not length0 or not length1 or not arc_len:
+        return 1
+    cross = d0.real * d1.imag - d0.imag * d1.real
+    sin_mid = cross / (length0 * length1)
+    if abs(sin_mid) * tolerance * kinkiness <= t:
+        return 1
+    deviation = abs(cross) / arc_len
+    deviation_threshold = (
+        upem * DEFAULT_KINKINESS_LENGTH * DEFAULT_KINKINESS / kinkiness
+    )
+    if deviation < deviation_threshold or deviation / arc_len > t:
+        return 1
+    log.debug(
+        "kink: deviation %g; deviation_ratio %g; sin_mid %g",
+        deviation,
+        deviation / arc_len,
+        sin_mid,
+    )
+    return t / (abs(sin_mid) * kinkiness)
+
+
 class Glyph:
     ITEMS = (
         "recordings",
+        "areas",
         "greenStats",
         "controlStats",
         "greenVectors",
@@ -88,11 +161,18 @@ class Glyph:
         "points",
         "openContours",
     )
+    LAZY_ITEMS = (
+        "greenStats",
+        "controlStats",
+        "greenVectors",
+        "controlVectors",
+        "isomorphisms",
+    )
 
     def __init__(self, glyphname, glyphset):
         self.name = glyphname
         for item in self.ITEMS:
-            setattr(self, item, [])
+            setattr(self, item, LazyList() if item in self.LAZY_ITEMS else [])
         self._populate(glyphset)
 
     def _fill_in(self, ix):
@@ -106,32 +186,38 @@ class Glyph:
         if self.doesnt_exist:
             return
 
-        perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
-        try:
-            glyph.draw(perContourPen, outputImpliedClosingLine=True)
-        except TypeError:
-            glyph.draw(perContourPen)
-        self.recordings = perContourPen.value
-        del perContourPen
+        self.recordings = _record_glyph(glyph, glyphset)
+
+        def statistics(penClass, contour):
+            pen = penClass(glyphset=glyphset)
+            contour.replay(pen)
+            return pen
 
         for ix, contour in enumerate(self.recordings):
             nodeTypes = [op for op, arg in contour.value]
             self.nodeTypes.append(nodeTypes)
 
-            greenStats = StatisticsPen(glyphset=glyphset)
-            controlStats = StatisticsControlPen(glyphset=glyphset)
-            try:
-                contour.replay(greenStats)
-                contour.replay(controlStats)
-                self.openContours.append(False)
-            except OpenContourError as e:
+            area = _contour_area(contour.value, glyphset)
+            if area is None:
                 self.openContours.append(True)
                 self._fill_in(ix)
                 continue
-            self.greenStats.append(greenStats)
-            self.controlStats.append(controlStats)
-            self.greenVectors.append(contour_vector_from_stats(greenStats))
-            self.controlVectors.append(contour_vector_from_stats(controlStats))
+            self.openContours.append(False)
+            self.areas.append(area)
+            self.greenStats.append(lambda _, c=contour: statistics(StatisticsPen, c))
+            self.controlStats.append(
+                lambda _, c=contour: statistics(StatisticsControlPen, c)
+            )
+            self.greenVectors.append(
+                lambda _, i=ix, stats=self.greenStats: contour_vector_from_stats(
+                    stats[i]
+                )
+            )
+            self.controlVectors.append(
+                lambda _, i=ix, stats=self.controlStats: contour_vector_from_stats(
+                    stats[i]
+                )
+            )
 
             # Check starting point
             if nodeTypes[0] == "addComponent":
@@ -148,13 +234,9 @@ class Glyph:
             # possible starting points.
             self.points.append(points.value)
 
-            isomorphisms = []
-            self.isomorphisms.append(isomorphisms)
-
-            # Add rotations
-            add_isomorphisms(points.value, isomorphisms, False)
-            # Add mirrored rotations
-            add_isomorphisms(points.value, isomorphisms, True)
+            self.isomorphisms.append(
+                lambda _, points=points.value: _contour_isomorphisms(points)
+            )
 
     def draw(self, pen, contour_idx=None):
         if contour_idx is None:
@@ -178,10 +260,13 @@ def test_gen(
     show_all=False,
     discrete_axes=[],
     progressFunc=None,
+    midpointFunc=None,
 ):
     """Yield interpolation problems, calling progressFunc after each glyph.
 
     The optional callback receives the completed glyph's name.
+    midpointFunc, when provided with locations, returns a glyphset at a
+    normalized location to confirm candidate kink and underweight findings.
     """
     if tolerance >= 10:
         tolerance *= 0.01
@@ -189,6 +274,8 @@ def test_gen(
     if kinkiness >= 10:
         kinkiness *= 0.01
     assert 0 <= kinkiness
+    if midpointFunc is not None and not locations:
+        raise ValueError("midpointFunc requires master locations")
 
     names = names or [repr(g) for g in glyphsets]
     if sparse is None:
@@ -251,6 +338,31 @@ def test_gen(
                 continue
 
         matchings = [None] * len(glyphsets)
+        midpoints = {}
+        midpoint_points = {}
+
+        def actual_midpoint_contour(m0idx, m1idx, ix, node_types):
+            if midpointFunc is None:
+                return None
+            key = (m0idx, m1idx)
+            if key not in midpoints:
+                loc0, loc1 = locations[m0idx], locations[m1idx]
+                location = {
+                    k: (loc0.get(k, 0) + loc1.get(k, 0)) / 2
+                    for k in loc0.keys() | loc1.keys()
+                }
+                glyphset = midpointFunc(location)
+                glyph = glyphset.get(glyph_name)
+                midpoints[key] = (
+                    _record_glyph(glyph, glyphset) if glyph is not None else []
+                )
+            contours = midpoints[key]
+            if len(contours) != len(allGlyphs[m0idx].recordings):
+                return None
+            contour = contours[ix]
+            if [op for op, _ in contour.value] != node_types:
+                return None
+            return contour
 
         for m1idx in order:
             glyph1 = allGlyphs[m1idx]
@@ -348,8 +460,6 @@ def test_gen(
 
             m0Isomorphisms = glyph0.isomorphisms
             m1Isomorphisms = glyph1.isomorphisms
-            m0Vectors = glyph0.greenVectors
-            m1Vectors = glyph1.greenVectors
             recording0 = glyph0.recordings
             recording1 = glyph1.recordings
 
@@ -359,18 +469,7 @@ def test_gen(
                 matching is not None and m1Isomorphisms
             ):  # m1 is empty for composite glyphs
                 m1Isomorphisms = [m1Isomorphisms[i] for i in matching]
-                m1Vectors = [m1Vectors[i] for i in matching]
                 recording1 = [recording1[i] for i in matching]
-
-            midRecording = []
-            for c0, c1 in zip(recording0, recording1):
-                try:
-                    r = RecordingPen()
-                    r.value = list(lerpRecordings(c0.value, c1.value))
-                    midRecording.append(r)
-                except ValueError:
-                    # Mismatch because of the reordering above
-                    midRecording.append(None)
 
             for ix, (contour0, contour1) in enumerate(
                 zip(m0Isomorphisms, m1Isomorphisms)
@@ -406,71 +505,46 @@ def test_gen(
                         },
                     )
 
-                # Weight check.
-                #
-                # If contour could be mid-interpolated, and the two
-                # contours have the same area sign, proceeed.
-                #
-                # The sign difference can happen if it's a weirdo
-                # self-intersecting contour; ignore it.
-                contour = midRecording[ix]
-
-                if contour and (m0Vectors[ix][0] < 0) == (m1Vectors[ix][0] < 0):
-                    midStats = StatisticsPen(glyphset=None)
-                    contour.replay(midStats)
-
-                    midVector = contour_vector_from_stats(midStats)
-
-                    m0Vec = m0Vectors[ix]
-                    m1Vec = m1Vectors[ix]
-                    size0 = m0Vec[0] * m0Vec[0]
-                    size1 = m1Vec[0] * m1Vec[0]
-                    midSize = midVector[0] * midVector[0]
-
-                    for overweight, problem_type in enumerate(
-                        (
-                            InterpolatableProblem.UNDERWEIGHT,
-                            InterpolatableProblem.OVERWEIGHT,
+                # A geometric-mean area baseline tolerates ordinary scaling.
+                # Opposite endpoint windings can be self-intersections; skip.
+                area0 = glyph0.areas[ix]
+                area1 = glyph1.areas[ix if matching is None else matching[ix]]
+                if area0 * area1 <= 0:
+                    continue
+                mid_area = _contour_area(
+                    lerpRecordings(recording0[ix].value, recording1[ix].value)
+                )
+                if mid_area is None:
+                    continue
+                this_tolerance = _underweight_tolerance(
+                    area0, area1, mid_area, tolerance
+                )
+                if this_tolerance >= tolerance:
+                    continue
+                verified = False
+                actual = actual_midpoint_contour(m0idx, m1idx, ix, glyph0.nodeTypes[ix])
+                if actual is not None:
+                    actual_area = _contour_area(actual.value)
+                    if actual_area is not None:
+                        verified = True
+                        this_tolerance = _underweight_tolerance(
+                            area0, area1, actual_area, tolerance
                         )
-                    ):
-                        if overweight:
-                            expectedSize = max(size0, size1)
-                            continue  # disabled
-                        else:
-                            expectedSize = sqrt(size0 * size1)
-
-                        log.debug(
-                            "%s: actual size %g; threshold size %g, master sizes: %g, %g",
-                            problem_type,
-                            midSize,
-                            expectedSize,
-                            size0,
-                            size1,
-                        )
-
-                        if (
-                            not overweight and expectedSize * tolerance > midSize + 1e-5
-                        ) or (overweight and 1e-5 + expectedSize / tolerance < midSize):
-                            try:
-                                if overweight:
-                                    this_tolerance = expectedSize / midSize
-                                else:
-                                    this_tolerance = midSize / expectedSize
-                            except ZeroDivisionError:
-                                this_tolerance = 0
-                            log.debug("tolerance %g", this_tolerance)
-                            yield (
-                                glyph_name,
-                                {
-                                    "type": problem_type,
-                                    "contour": ix,
-                                    "master_1": names[m0idx],
-                                    "master_2": names[m1idx],
-                                    "master_1_idx": m0idx,
-                                    "master_2_idx": m1idx,
-                                    "tolerance": this_tolerance,
-                                },
-                            )
+                        if this_tolerance >= tolerance:
+                            continue
+                yield (
+                    glyph_name,
+                    {
+                        "type": InterpolatableProblem.UNDERWEIGHT,
+                        "contour": ix,
+                        "master_1": names[m0idx],
+                        "master_2": names[m1idx],
+                        "master_1_idx": m0idx,
+                        "master_2_idx": m1idx,
+                        "tolerance": this_tolerance,
+                        **({"actual_midpoint": True} if verified else {}),
+                    },
+                )
 
             #
             # "kink" detector
@@ -483,9 +557,6 @@ def test_gen(
                 m1 = [m1[i] for i in matchings[m1idx]]
 
             t = 0.1  # ~sin(radian(6)) for tolerance 0.95
-            deviation_threshold = (
-                upem * DEFAULT_KINKINESS_LENGTH * DEFAULT_KINKINESS / kinkiness
-            )
 
             for ix, (contour0, contour1) in enumerate(zip(m0, m1)):
                 if (
@@ -567,38 +638,42 @@ def test_gen(
                     mid_d0 = mid - mid_prev
                     mid_d1 = mid_next - mid
 
-                    sin_mid = mid_d0.real * mid_d1.imag - mid_d0.imag * mid_d1.real
-                    try:
-                        sin_mid /= abs(mid_d0) * abs(mid_d1)
-                    except ZeroDivisionError:
-                        continue
-
-                    # ...or if the angles are similar.
-                    if abs(sin_mid) * (tolerance * kinkiness) <= t:
-                        # Smooth enough.
-                        continue
-
-                    # How visible is the kink?
-
-                    cross = sin_mid * abs(mid_d0) * abs(mid_d1)
-                    arc_len = abs(mid_d0 + mid_d1)
-                    deviation = abs(cross / arc_len)
-                    if deviation < deviation_threshold:
-                        continue
-                    deviation_ratio = deviation / arc_len
-                    if deviation_ratio > t:
-                        continue
-
-                    this_tolerance = t / (abs(sin_mid) * kinkiness)
-
-                    log.debug(
-                        "kink: deviation %g; deviation_ratio %g; sin_mid %g; r_diff %g",
-                        deviation,
-                        deviation_ratio,
-                        sin_mid,
-                        r_diff,
+                    this_tolerance = _kink_tolerance(
+                        mid_d0, mid_d1, tolerance, kinkiness, upem
                     )
-                    log.debug("tolerance %g", this_tolerance)
+                    if this_tolerance >= tolerance:
+                        continue
+                    verified = False
+                    actual = actual_midpoint_contour(
+                        m0idx, m1idx, ix, glyph0.nodeTypes[ix]
+                    )
+                    if actual is not None:
+                        if actual not in midpoint_points:
+                            points = SimpleRecordingPointPen()
+                            actual.replay(SegmentToPointPen(points, False))
+                            same_points = len(points.value) == len(contour0) and all(
+                                p[1] == q[1] for p, q in zip(points.value, contour0)
+                            )
+                            midpoint_points[actual] = (
+                                points.value if same_points else None
+                            )
+                        actual_points = midpoint_points[actual]
+                        if actual_points is not None:
+                            actual_pt = complex(*actual_points[i][0])
+                            actual_prev = complex(*actual_points[i - 1][0])
+                            actual_next = complex(
+                                *actual_points[(i + 1) % len(actual_points)][0]
+                            )
+                            verified = True
+                            this_tolerance = _kink_tolerance(
+                                actual_pt - actual_prev,
+                                actual_next - actual_pt,
+                                tolerance,
+                                kinkiness,
+                                upem,
+                            )
+                            if this_tolerance >= tolerance:
+                                continue
                     yield (
                         glyph_name,
                         {
@@ -610,6 +685,7 @@ def test_gen(
                             "master_2_idx": m1idx,
                             "value": i,
                             "tolerance": this_tolerance,
+                            **({"actual_midpoint": True} if verified else {}),
                         },
                     )
 
@@ -794,6 +870,7 @@ def main(args=None):
     names = []
     locations = []
     location_labeler = None
+    midpointFunc = None
     sparse = None
     discrete_axes = set()
     upem = DEFAULT_UPEM
@@ -884,6 +961,11 @@ def main(args=None):
                             )
 
             location_labeler = LocationLabeler(axisMapping, font=font)
+
+            def midpointFunc(location, font=font):
+                return font.getGlyphSet(
+                    location=location, normalized=True, recalcBounds=False
+                )
 
             # Gather all glyphs at their "master" locations
             ttGlyphSets = {}
@@ -1139,6 +1221,7 @@ def main(args=None):
             show_all=args.show_all,
             discrete_axes=discrete_axes,
             progressFunc=progress,
+            midpointFunc=midpointFunc,
         )
         if progress is not None:
             # Finish the bar before writing diagnostics to the same terminal.
@@ -1313,6 +1396,7 @@ def main(args=None):
                 names=names,
                 locations=locations,
                 location_labeler=location_labeler,
+                midpointFunc=midpointFunc,
             ) as doc:
                 doc.add_title_page(
                     original_args_inputs, tolerance=tolerance, kinkiness=kinkiness
@@ -1338,6 +1422,7 @@ def main(args=None):
                 names=names,
                 locations=locations,
                 location_labeler=location_labeler,
+                midpointFunc=midpointFunc,
             ) as svg:
                 svg.add_title_page(
                     original_args_inputs,

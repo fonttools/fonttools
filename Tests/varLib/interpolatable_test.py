@@ -145,6 +145,7 @@ class InterpolatableTest(unittest.TestCase):
                     "master_1_idx": 2,
                     "master_2_idx": 3,
                     "tolerance": pytest.approx(0.9184032411892079),
+                    "actual_midpoint": True,
                 },
             ],
         )

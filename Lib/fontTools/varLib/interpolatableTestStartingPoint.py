@@ -6,9 +6,6 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
         matching = list(range(len(glyph0.isomorphisms)))
     contour0 = glyph0.isomorphisms[ix]
     contour1 = glyph1.isomorphisms[matching[ix]]
-    m0Vectors = glyph0.greenVectors
-    m1Vectors = [glyph1.greenVectors[i] for i in matching]
-
     c0 = contour0[0]
     # Next few lines duplicated below.
     costs = [vdiff_hypot2_complex(c0[0], c1[0]) for c1 in contour1]
@@ -40,6 +37,8 @@ def test_starting_point(glyph0, glyph1, ix, tolerance, matching):
             proposed_point <= leeway or proposed_point >= num_points - leeway
         ):
             # Try harder
+            m0Vectors = glyph0.greenVectors
+            m1Vectors = [glyph1.greenVectors[i] for i in matching]
 
             # Recover the covariance matrix from the GreenVectors.
             # This is a 2x2 matrix.
