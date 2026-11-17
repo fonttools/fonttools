@@ -350,8 +350,8 @@ class _TTGlyphGlyf(_TTGlyph):
             assert len(delta) * 2 == len(coordinateArray)
             for i, (x, y) in enumerate(delta):
                 j = 2 * i
-                coordinateArray[j] += float(x) * scalar
-                coordinateArray[j + 1] += float(y) * scalar
+                coordinateArray[j] += x * scalar
+                coordinateArray[j + 1] += y * scalar
 
         glyph = copy(glyfTable[self.name])  # Shallow copy
         width, lsb, height, tsb = _setCoordinates(

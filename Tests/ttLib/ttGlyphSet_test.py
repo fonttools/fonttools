@@ -1331,7 +1331,6 @@ class TTGlyphSetTest(object):
     )
     def test_glyf_fractional_deltas(self, composite, sparse, peak, expected):
         from copy import deepcopy
-        from decimal import Decimal
         from fontTools.pens.ttGlyphPen import TTGlyphPen
         from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
@@ -1348,12 +1347,10 @@ class TTGlyphSetTest(object):
             name, font["hmtx"].metrics, None
         )
         count = len(coordinates)
-        first = [
-            (Decimal("1.1") * (i + 1), Decimal("-0.3") * (i + 1)) for i in range(count)
-        ]
+        first = [(1.1 * (i + 1), -0.3 * (i + 1)) for i in range(count)]
         if sparse:
             first = [
-                None if i < count - 4 and i % 2 else tuple(map(float, point))
+                None if i < count - 4 and i % 2 else point
                 for i, point in enumerate(first)
             ]
         second = [(-3 * (i + 1), 5 * (i + 1)) for i in range(count)]
@@ -1376,7 +1373,13 @@ class TTGlyphSetTest(object):
         points, metrics = expected[peak]
         assert actual == points
         assert (glyph.width, glyph.lsb, glyph.height, glyph.tsb) == metrics
-        assert (first, second) == original
+        assert [var.coordinates for var in font["gvar"].variations[name][:2]] == list(
+            original
+        )
+        assert (
+            font["glyf"]._getCoordinatesAndControls(name, font["hmtx"].metrics, None)[0]
+            == coordinates
+        )
 
     @pytest.mark.parametrize("count", [7, 9])
     def test_glyf_delta_length(self, count):
