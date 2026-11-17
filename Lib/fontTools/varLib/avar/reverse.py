@@ -200,6 +200,7 @@ def reverse(
     pinned=None,
     vary=None,
     tolerance=1 / 16384,
+    partial=False,
 ):
     """Approximately invert an avar (version 1 or 2) mapping.
 
@@ -224,6 +225,9 @@ def reverse(
     by default all non-hidden axes may vary.
     Returned coordinates stay within the fvar ranges.
 
+    With ``partial=True``, only explicitly supplied output axes are scored;
+    omitted outputs are unconstrained. This is useful for reachability queries.
+
     Output error is Euclidean distance in normalized coordinates. Among
     candidates within ``tolerance`` of the smallest error found, prefer fewer
     non-default input axes, then smaller error and normalized distance from
@@ -243,6 +247,7 @@ def reverse(
         outputNormalized=outputNormalized,
         dropZeroes=dropZeroes,
         tolerance=tolerance,
+        partial=partial,
     )
 
 
@@ -456,6 +461,7 @@ class ReverseMapper:
         outputNormalized=False,
         dropZeroes=False,
         tolerance=1 / 16384,
+        partial=False,
     ):
         """Solve one target using the same options as module-level reverse()."""
         if not math.isfinite(tolerance) or tolerance < 0:
@@ -486,7 +492,7 @@ class ReverseMapper:
         # hidden/pinned axis is unconstrained, while an explicit zero is not.
         scored = np.array(
             [
-                a.axisTag in location or i in self._free_set
+                a.axisTag in location or (not partial and i in self._free_set)
                 for i, a in enumerate(self._axes)
             ]
         )
