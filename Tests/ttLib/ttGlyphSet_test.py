@@ -1277,6 +1277,119 @@ class TTGlyphSetTest(object):
         glyph.drawPoints(RecordingPointPen())
         assert glyph.width == 170
 
+    @pytest.mark.parametrize("peak", [False, True])
+    @pytest.mark.parametrize(
+        "composite, sparse, expected",
+        [
+            (
+                False,
+                False,
+                [
+                    (
+                        [
+                            (173.775, 2.425),
+                            (364.55, 4.85),
+                            (363.325, 1463.275),
+                            (170.1, 1465.7),
+                        ],
+                        (541, 181, -2, -1439),
+                    ),
+                    (
+                        [(173.1, 4.7), (363.2, 9.4), (361.3, 1470.1), (167.4, 1474.8)],
+                        (540, 185, -5, -1423),
+                    ),
+                ],
+            ),
+            (
+                False,
+                True,
+                [
+                    (
+                        [
+                            (173.775, 2.425),
+                            (364.825, 4.925),
+                            (363.325, 1463.275),
+                            (169.275, 1465.775),
+                        ],
+                        (541, 181, -2, -1439),
+                    ),
+                    (
+                        [(173.1, 4.7), (364.3, 9.7), (361.3, 1470.1), (164.1, 1475.1)],
+                        (540, 185, -5, -1423),
+                    ),
+                ],
+            ),
+            (
+                True,
+                False,
+                [
+                    ([(18.775, 32.425)], (699, 22, -2, -1476)),
+                    ([(18.1, 34.7)], (698, 24, -5, -1467)),
+                ],
+            ),
+        ],
+    )
+    def test_glyf_fractional_deltas(self, composite, sparse, peak, expected):
+        from copy import deepcopy
+        from decimal import Decimal
+        from fontTools.pens.ttGlyphPen import TTGlyphPen
+        from fontTools.ttLib.tables.TupleVariation import TupleVariation
+
+        font = TTFont(self.getpath("I.ttf"))
+        del font["HVAR"]
+        name = "I"
+        if composite:
+            pen = TTGlyphPen(font.getGlyphSet())
+            pen.addComponent("I", (1, 0, 0, 1, 20, 30))
+            font["glyf"]["composite"] = pen.glyph()
+            font["hmtx"].metrics["composite"] = (700, 20)
+            name = "composite"
+        coordinates, _ = font["glyf"]._getCoordinatesAndControls(
+            name, font["hmtx"].metrics, None
+        )
+        count = len(coordinates)
+        first = [
+            (Decimal("1.1") * (i + 1), Decimal("-0.3") * (i + 1)) for i in range(count)
+        ]
+        if sparse:
+            first = [
+                None if i < count - 4 and i % 2 else tuple(map(float, point))
+                for i, point in enumerate(first)
+            ]
+        second = [(-3 * (i + 1), 5 * (i + 1)) for i in range(count)]
+        original = deepcopy((first, second))
+        font["gvar"].variations[name] = [
+            TupleVariation({"wght": (0, 1, 1)}, first),
+            TupleVariation({"wdth": (0, 1, 1)}, second),
+            TupleVariation({"wght": (-1, -1, 0)}, []),
+        ]
+        location = {"wght": 1, "wdth": 1} if peak else {"wght": 0.25, "wdth": 0.5}
+        glyph = font.getGlyphSet(
+            location=location, normalized=True, recalcBounds=False
+        )[name]
+        instance = glyph._getGlyphInstance()
+        actual = (
+            [(component.x, component.y) for component in instance.components]
+            if composite
+            else list(instance.coordinates)
+        )
+        points, metrics = expected[peak]
+        assert actual == points
+        assert (glyph.width, glyph.lsb, glyph.height, glyph.tsb) == metrics
+        assert (first, second) == original
+
+    @pytest.mark.parametrize("count", [7, 9])
+    def test_glyf_delta_length(self, count):
+        from fontTools.ttLib.tables.TupleVariation import TupleVariation
+
+        font = TTFont(self.getpath("I.ttf"))
+        font["gvar"].variations["I"] = [
+            TupleVariation({"wght": (0, 1, 1)}, [(1, 2)] * count)
+        ]
+        glyph = font.getGlyphSet(location={"wght": 0.5}, normalized=True)["I"]
+        with pytest.raises(AssertionError):
+            glyph._getGlyphInstance()
+
     def test_varc_gvar_axes_without_fvar(self, tmp_path):
         font = TTFont(self.getpath("varc-static-gvar.ttf"))
         assert "fvar" not in font
