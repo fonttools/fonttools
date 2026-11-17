@@ -40,6 +40,86 @@ The residual measures post-avar output differences, including the outputs of
 hidden and pinned axes. A non-injective map can recover different but equivalent
 inputs.
 
+Inspecting structure and reachability
+====================================
+
+``fonttools varLib.avar.analyze`` reports structural features as JSON in the
+user-facing input space, with hidden and collapsed input axes fixed at their
+fvar defaults::
+
+    fonttools varLib.avar.analyze Font.ttf
+
+The report includes per-axis knots, segment-map slope changes, active avar2
+region boundaries pulled back through the segment maps, and regions containing
+cross-axis products. Boundary patches are described by a fixed axis coordinate
+and unions of intervals on other axes. Intervals describe support closures;
+their endpoints may have zero contribution. Hidden outputs are retained.
+These are structural candidates: overlapping regions, cancellation, and output
+clipping can make some candidates invisible. This is not a complete
+classification of critical points or topology.
+
+Extract a normalized output level set on a one- or two-axis input slice::
+
+    fonttools varLib.avar.analyze Font.ttf --axes wght,wdth --contour XOPQ=0.3 --at opsz=14
+
+Unspecified inputs stay at default. Slice coordinates and ``--at`` use user
+units. The result contains isolated points, polylines, and constant cells.
+One-dimensional roots use SciPy, and two-dimensional polylines use ContourPy.
+Curves describe the continuous map before avar2 quantization and clipping;
+levels -1 and +1 describe saturation boundaries. Two-dimensional curves are
+sampled approximations, with avar knots inserted into the grid. Slices with
+jumps are rejected to avoid interpolating across discontinuities. The grid
+is limited to 65,536 points.
+
+``fonttools varLib.avar.reachability`` checks output targets and returns JSON::
+
+    fonttools varLib.avar.reachability -i Font.ttf XOPQ=0.3
+
+Only explicitly supplied outputs are constrained; omitted outputs are free.
+``-i`` selects normalized targets; otherwise targets use pre-fvar units.
+Hidden inputs remain at default even when a hidden output is targeted. A
+``reachable`` result contains a user-coordinate witness verified with the
+rounded/clipped forward map. Conservative marginal bounds can establish
+``unreachable``. Other failed searches return ``undetermined``, with the best
+fit found and its normalized Euclidean error. Marginal bounds do not describe
+joint reachability. ``--tolerance`` sets the accepted output error (default:
+one F2Dot14 unit).
+
+Python callers can reuse a prepared checker::
+
+    from fontTools.varLib.avar.analyze import analyze, contours
+    from fontTools.varLib.avar.reachability import ReachabilityMapper
+
+    structure = analyze(font)
+    geometry = contours(font, ["wght", "wdth"], "XOPQ", 0.3, location={"opsz": 14})
+    checker = ReachabilityMapper(font)
+    result = checker.check({"XOPQ": 0.3}, inputNormalized=True)
+
+Plotting slices
+===============
+
+``fonttools varLib.avar.plot`` uses the analyzer's structural boundaries and
+contour geometry to plot an input slice next to its mapped output grid::
+
+    fonttools varLib.avar.plot Font.ttf wght wdth --output XOPQ --at opsz=14 -o avar.svg
+
+It also supports a single input axis. Omitting ``-o`` opens a Matplotlib
+window. Input coordinates use user units; colors and projected output axes
+use normalized units. Hidden inputs and other unspecified inputs stay at
+default. The mapped view shows the projected image of this particular slice,
+not the complete reachable space. Jumps in either projected output are
+rejected rather than connected by grid segments. Install
+``fonttools[avar,plot]`` for the optional numerical, contour, and plotting
+dependencies::
+
+    from fontTools.varLib.avar.plot import plot
+
+    figure = plot(font, ["wght", "wdth"], output="XOPQ", location={"opsz": 14})
+    figure.savefig("avar.svg")
+
+Prepared mapping
+================
+
 For repeated forward evaluations, prepare a mapper once::
 
     from fontTools.varLib.avar.map import ForwardMapper
@@ -69,6 +149,8 @@ explicitly specified fixed-axis targets and sparsity tolerances remain distinct.
 Each call returns a fresh location dictionary. Pins and ``vary`` are fixed at
 construction, and changing the font's fvar or avar tables requires a new mapper.
 The module-level ``reverse()`` function remains available for individual calls.
+The Python reverse APIs also accept ``partial=True`` to leave every omitted
+output unconstrained, as in the reachability checker.
 
 Collapsed region-support edges can introduce jumps even before rounding.
 The solver tests their exact boundaries with the affected inputs fixed, then
@@ -95,3 +177,12 @@ F2Dot14 resolution for readability. The font is not modified.
 
 .. automodule:: fontTools.varLib.avar.roundtrip
    :members: roundtrip
+
+.. automodule:: fontTools.varLib.avar.analyze
+   :members: analyze, contours
+
+.. automodule:: fontTools.varLib.avar.reachability
+   :members: check, ReachabilityMapper
+
+.. automodule:: fontTools.varLib.avar.plot
+   :members: plot
