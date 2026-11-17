@@ -425,7 +425,8 @@ def layered_designspace(tmp_path):
 
 
 @pytest.mark.parametrize("axes", ["continuous", "decreasing", "discrete"])
-def test_designspace_named_layer(layered_designspace, axes):
+@pytest.mark.parametrize("jobs", [1, 2])
+def test_designspace_named_layer(layered_designspace, axes, jobs):
     if axes == "decreasing":
         layered_designspace.axes[0].map = [(100, 900), (900, 100)]
         for source in layered_designspace.sources:
@@ -443,7 +444,7 @@ def test_designspace_named_layer(layered_designspace, axes):
         layered_designspace.addSource(source)
     layered_designspace.write(layered_designspace.path)
     problems = interpolatable_main(
-        ["--quiet", "--glyphs", "A", layered_designspace.path]
+        ["--quiet", "--jobs", str(jobs), "--glyphs", "A", layered_designspace.path]
     )
     assert problems["A"][0] == {
         "type": "path_count",
@@ -647,16 +648,28 @@ def test_designspace_missing_layer(layered_designspace):
         interpolatable_main(["--quiet", layered_designspace.path])
 
 
-def test_designspace_layer_name_filter(layered_designspace):
+@pytest.mark.parametrize("jobs", [1, 2])
+def test_designspace_layer_name_filter(layered_designspace, jobs):
     assert (
         interpolatable_main(
-            ["--quiet", "--name", "Regular", "--name", "Bold", layered_designspace.path]
+            [
+                "--quiet",
+                "--jobs",
+                str(jobs),
+                "--name",
+                "Regular",
+                "--name",
+                "Bold",
+                layered_designspace.path,
+            ]
         )
         is None
     )
     problems = interpolatable_main(
         [
             "--quiet",
+            "--jobs",
+            str(jobs),
             "--glyphs",
             "A",
             "--name",
@@ -676,7 +689,10 @@ def test_show_graph(layered_designspace, tmp_path, capsys, monkeypatch, output_f
         pytest.fail("--show-graph must exit before checking glyphs")
 
     monkeypatch.setattr("fontTools.varLib.interpolatable.test_gen", unexpected_test)
-    args = ["--show-graph", layered_designspace.path]
+    monkeypatch.setattr(
+        "fontTools.varLib.interpolatable._parallel_test_gen", unexpected_test
+    )
+    args = ["--show-graph", "--jobs", "2", layered_designspace.path]
     if output_file:
         path = tmp_path / "graphs" / "masters.txt"
         args.extend(["--output", str(path)])
@@ -789,6 +805,105 @@ def test_progress_terminal_only(
         assert "2/2\n" in stderr.getvalue()
     else:
         assert stderr.getvalue() == ""
+
+
+@pytest.mark.parametrize("start_method", ["default", "spawn"])
+@pytest.mark.parametrize("kind", ["path_count", "missing", "open_path"])
+def test_parallel_designspace(
+    layered_designspace, capsys, monkeypatch, start_method, kind
+):
+    if kind == "missing":
+        with UFOWriter(layered_designspace.sources[0].path) as writer:
+            glyphset = writer.getGlyphSet()
+            glyphset.deleteGlyph("A")
+            glyphset.writeContents()
+    elif kind == "open_path":
+        with UFOWriter(layered_designspace.sources[0].path) as writer:
+            glyphset = writer.getGlyphSet(layerName="intermediate", defaultLayer=False)
+            glyphset.writeGlyph(
+                "A", SimpleNamespace(width=500), draw_contours(2, open_paths=True)
+            )
+            glyphset.writeContents()
+
+    args = ["--json", "--show-all", "--glyphs", "B A", layered_designspace.path]
+    expected = interpolatable_main(args)
+    serial_output = capsys.readouterr().out
+    assert any(problem["type"] == kind for problem in expected["A"])
+
+    if start_method == "spawn":
+        # A multithreaded parent must use the spawn fallback even on Linux.
+        monkeypatch.setattr("threading.active_count", lambda: 2)
+    completed = []
+    parent_pid = os.getpid()
+
+    def progress(glyph):
+        assert os.getpid() == parent_pid
+        completed.append(glyph)
+
+    monkeypatch.setattr(
+        "fontTools.varLib.interpolatable._make_progress",
+        lambda *args: progress,
+    )
+    actual = interpolatable_main(["--jobs", "2"] + args)
+    assert actual == expected
+    assert capsys.readouterr().out == serial_output
+    assert list(actual) == list(expected)
+    assert list(json.loads(serial_output)) == ["B", "A"]
+    assert sorted(completed) == ["A", "B"]
+
+
+@pytest.mark.parametrize("start_method", ["default", "spawn"])
+@pytest.mark.parametrize(
+    "source, suffix",
+    [
+        ("MutatorSans_All_Variable.ttx", ".ttf"),
+        ("variable_ttx_interpolatable_cff2/interpolatable-test.ttx", ".otf"),
+    ],
+)
+def test_parallel_variable_font(
+    tmp_path, capsys, monkeypatch, start_method, source, suffix
+):
+    font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+    font.importXML(os.path.join(os.path.dirname(__file__), "data", source))
+    path = tmp_path / ("font" + suffix)
+    font.save(path)
+    args = ["--json", "--show-all", str(path)]
+    expected = interpolatable_main(args)
+    serial_output = capsys.readouterr().out
+
+    if start_method == "spawn":
+        monkeypatch.setattr("threading.active_count", lambda: 2)
+    assert interpolatable_main(["-j", "2"] + args) == expected
+    assert capsys.readouterr().out == serial_output
+    if suffix == ".otf":
+        assert any(p.get("actual_midpoint") for p in expected["uni0408"])
+
+
+@pytest.mark.parametrize("start_method", ["default", "spawn"])
+def test_parallel_worker_error(layered_designspace, monkeypatch, start_method):
+    from fontTools.varLib import interpolatable
+
+    if start_method == "spawn":
+        monkeypatch.setattr("threading.active_count", lambda: 2)
+    args = ["--tolerance", "-1", layered_designspace.path]
+    glyphsets, options = interpolatable_main(args, _prepare=True)
+    # Tolerance is validated by test_gen, after input preparation succeeds.
+    with pytest.raises(AssertionError):
+        list(interpolatable._parallel_test_gen(glyphsets, options, 2, args))
+
+
+def test_jobs_all_cpus(layered_designspace, monkeypatch):
+    cpu_count = "process_cpu_count" if hasattr(os, "process_cpu_count") else "cpu_count"
+    monkeypatch.setattr(os, cpu_count, lambda: 2)
+    args = ["--quiet", "--show-all", layered_designspace.path]
+    assert interpolatable_main(["--jobs", "0"] + args) == interpolatable_main(args)
+
+
+def test_jobs_negative(capsys):
+    with pytest.raises(SystemExit) as error:
+        interpolatable_main(["--jobs", "-1", "font.ttf"])
+    assert error.value.code == 2
+    assert "--jobs must be zero or greater" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
