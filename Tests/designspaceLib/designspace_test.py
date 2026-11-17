@@ -907,6 +907,74 @@ def test_normalize_rule_conditions(
     ]
 
 
+def _multiple_rules_document(processing_values, subs=(("a", "b"), ("b", "c"))):
+    root = ET.Element("designspace", format="5.0")
+    axes = ET.SubElement(root, "axes")
+    ET.SubElement(
+        axes,
+        "axis",
+        {
+            "name": "Weight",
+            "tag": "wght",
+            "minimum": "0",
+            "default": "0",
+            "maximum": "100",
+        },
+    )
+    for index, (processing, (name, with_)) in enumerate(zip(processing_values, subs)):
+        rules = ET.SubElement(root, "rules")
+        if processing is not None:
+            rules.set("processing", processing)
+        rule = ET.SubElement(rules, "rule", name=f"rule_{index}")
+        conditions = ET.SubElement(rule, "conditionset")
+        ET.SubElement(
+            conditions, "condition", name="Weight", minimum="0", maximum="100"
+        )
+        ET.SubElement(rule, "sub", {"name": name, "with": with_})
+    return ET.tostring(root)
+
+
+@pytest.mark.parametrize(
+    "processing_values",
+    [
+        (None, None),
+        (None, "first"),
+        ("first", None),
+        ("first", "first"),
+        ("last", "last"),
+    ],
+)
+def test_multiple_rules_roundtrip(processing_values):
+    doc = DesignSpaceDocument.fromstring(_multiple_rules_document(processing_values))
+    assert [rule.name for rule in doc.rules] == ["rule_0", "rule_1"]
+    assert processRules(doc.rules, {"Weight": 50}, ["a"]) == ["c"]
+    assert doc.rulesProcessingLast is (processing_values[0] == "last")
+
+    xml = doc.tostring()
+    assert len(ET.fromstring(xml).findall("rules")) == 1
+    restored = DesignSpaceDocument.fromstring(xml)
+    assert restored.rulesProcessingLast is doc.rulesProcessingLast
+    assert [rule.name for rule in restored.rules] == ["rule_0", "rule_1"]
+    assert processRules(restored.rules, {"Weight": 50}, ["a"]) == ["c"]
+
+
+@pytest.mark.parametrize(
+    "processing_values",
+    [("first", "last"), ("last", "first"), (None, "last"), ("last", None)],
+)
+def test_multiple_rules_conflicting_processing(processing_values):
+    with pytest.raises(DesignSpaceDocumentError, match="processing.*must agree"):
+        DesignSpaceDocument.fromstring(_multiple_rules_document(processing_values))
+
+
+@pytest.mark.parametrize("invalid_processing", ["", "middle"])
+def test_multiple_rules_invalid_processing(invalid_processing):
+    with pytest.raises(DesignSpaceDocumentError, match="processing.*not valid"):
+        DesignSpaceDocument.fromstring(
+            _multiple_rules_document(("first", invalid_processing))
+        )
+
+
 def test_rulesDocument(tmpdir):
     # tests of rules in a document, roundtripping.
     tmpdir = str(tmpdir)

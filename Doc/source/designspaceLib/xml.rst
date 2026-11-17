@@ -424,6 +424,10 @@ The ``<rules>`` element contains one or more ``<rule>`` elements.
 
 The rules are evaluated in this order.
 
+A document may contain multiple ``<rules>`` elements. Their rules are concatenated
+in document order, and their ``processing`` values must agree; an omitted value
+is equivalent to ``first``. Conflicting values raise an error.
+
 Rules describe designspace areas in which one glyph should be replaced by another.
 A rule has a name and a number of conditionsets. The rule also contains a list of
 glyphname pairs: the glyphs that need to be substituted. For a rule to be triggered
