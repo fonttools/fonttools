@@ -13,7 +13,8 @@ class ReachabilityMapper:
 
     Only explicitly supplied outputs are constrained, including any hidden
     outputs in the target. Results contain normalized targets and outputs and
-    a witness in user units. ``reachable`` means that forward evaluation of
+    a witness in user units, omitting inputs at their fvar defaults.
+    ``reachable`` means that forward evaluation of
     that witness meets the requested tolerance. ``unreachable`` means marginal
     bounds exclude the target. Otherwise the result is ``undetermined``: a
     numerical search does not establish non-reachability.
@@ -92,7 +93,9 @@ class ReachabilityMapper:
             error = math.hypot(*(actual[tag] - value for tag, value in target.items()))
         result.update(
             status="reachable" if error <= tolerance else "undetermined",
-            input=witness,
+            input={
+                tag: value for tag, value in witness.items() if value != triples[tag][1]
+            },
             output=actual,
             error=error,
         )

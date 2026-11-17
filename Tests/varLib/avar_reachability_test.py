@@ -29,7 +29,7 @@ def test_empty_target_and_default_need_no_scipy(monkeypatch):
     for target in ({}, {"wght": 0}):
         result = check(make_font(), target, inputNormalized=True)
         assert result["status"] == "reachable"
-        assert result["input"] == {"wght": 0, "wdth": 0, "priv": 0}
+        assert result["input"] == {}
 
 
 def test_tolerance_near_output_cube_boundary():
@@ -46,7 +46,8 @@ def test_hidden_output_target_leaves_omitted_outputs_free():
     for value in (0.25, 0.75, 0.25):
         result = mapper.check({"priv": value}, inputNormalized=True)
         assert result["status"] == "reachable"
-        assert result["input"]["priv"] == 0
+        assert "priv" not in result["input"]
+        assert "wdth" not in result["input"]
         assert result["input"]["wght"] == pytest.approx(value)
         assert result["output"]["priv"] == value
         assert result["error"] == 0
@@ -59,7 +60,23 @@ def test_joint_infeasibility_is_not_claimed_from_marginal_bounds():
     assert result["status"] == "undetermined"
     assert result["error"] > 0.3
     assert result["errorLowerBound"] == 0
-    assert result["input"]["priv"] == 0
+    assert "priv" not in result["input"]
+
+
+def test_witness_omits_nonzero_defaults():
+    pytest.importorskip("scipy")
+    from fontTools.varLib.avar.map import ForwardMapper
+
+    font = make_font()
+    for axis in font["fvar"].axes:
+        axis.minValue, axis.defaultValue, axis.maxValue = 100, 400, 900
+    result = check(font, {"wght": 0.5}, inputNormalized=True)
+    assert result["status"] == "reachable"
+    assert result["input"] == {"wght": 650}
+    assert (
+        ForwardMapper(font).map(result["input"], outputNormalized=True)
+        == result["output"]
+    )
 
 
 def test_partial_reverse_cache_distinguishes_scored_axes():

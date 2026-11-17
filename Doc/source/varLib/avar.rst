@@ -79,7 +79,9 @@ Only explicitly supplied outputs are constrained; omitted outputs are free.
 ``-i`` selects normalized targets; otherwise targets use pre-fvar units.
 Hidden inputs remain at default even when a hidden output is targeted. A
 ``reachable`` result contains a user-coordinate witness verified with the
-rounded/clipped forward map. Conservative marginal bounds can establish
+rounded/clipped forward map. Its ``input`` dictionary omits axes at their
+fvar defaults; omitted inputs implicitly use those defaults. Conservative
+marginal bounds can establish
 ``unreachable``. Other failed searches return ``undetermined``, with the best
 fit found and its normalized Euclidean error. Marginal bounds do not describe
 joint reachability. ``--tolerance`` sets the accepted output error (default:
