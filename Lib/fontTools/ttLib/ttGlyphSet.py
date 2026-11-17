@@ -321,7 +321,6 @@ class _TTGlyphGlyf(_TTGlyph):
 
     def _getGlyphInstance(self):
         from fontTools.varLib.iup import iup_delta
-        from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
         from fontTools.varLib.models import supportScalar
 
         glyphSet = self.glyphSet
@@ -332,6 +331,7 @@ class _TTGlyphGlyf(_TTGlyph):
         coordinates, _ = glyfTable._getCoordinatesAndControls(
             self.name, hMetrics, vMetrics
         )
+        coordinateArray = coordinates.array
         origCoords, endPts = None, None
         for var in variations:
             scalar = supportScalar(glyphSet.location, var.axes)
@@ -347,7 +347,11 @@ class _TTGlyphGlyf(_TTGlyph):
                         control[1] if control[0] >= 1 else list(range(len(control[1])))
                     )
                 delta = iup_delta(delta, origCoords, endPts)
-            coordinates += GlyphCoordinates(delta) * scalar
+            assert len(delta) * 2 == len(coordinateArray)
+            for i, (x, y) in enumerate(delta):
+                j = 2 * i
+                coordinateArray[j] += x * scalar
+                coordinateArray[j + 1] += y * scalar
 
         glyph = copy(glyfTable[self.name])  # Shallow copy
         width, lsb, height, tsb = _setCoordinates(
