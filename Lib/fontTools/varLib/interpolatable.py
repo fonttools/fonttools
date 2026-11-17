@@ -197,16 +197,28 @@ class Glyph:
             nodeTypes = [op for op, arg in contour.value]
             self.nodeTypes.append(nodeTypes)
 
-            area = _contour_area(contour.value, glyphset)
+            stats_contour = contour
+            try:
+                if nodeTypes[0] == "addComponent":
+                    # Reuse the expanded outline for area and both statistics pens.
+                    stats_contour = DecomposingRecordingPen(
+                        glyphset, skipMissingComponents=True
+                    )
+                    contour.replay(stats_contour)
+                area = _contour_area(stats_contour.value, glyphset)
+            except (ValueError, NotImplementedError):
+                area = None
             if area is None:
                 self.openContours.append(True)
                 self._fill_in(ix)
                 continue
             self.openContours.append(False)
             self.areas.append(area)
-            self.greenStats.append(lambda _, c=contour: statistics(StatisticsPen, c))
+            self.greenStats.append(
+                lambda _, c=stats_contour: statistics(StatisticsPen, c)
+            )
             self.controlStats.append(
-                lambda _, c=contour: statistics(StatisticsControlPen, c)
+                lambda _, c=stats_contour: statistics(StatisticsControlPen, c)
             )
             self.greenVectors.append(
                 lambda _, i=ix, stats=self.greenStats: contour_vector_from_stats(
