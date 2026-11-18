@@ -267,6 +267,12 @@ def _extractSubSpace(
                     axisLabels=None,
                 )
             )
+            if axis.map:
+                subAxis = subDoc.axes[-1]
+                axisMap = dict(subAxis.map)
+                for user in (subAxis.minimum, subAxis.default, subAxis.maximum):
+                    axisMap[user] = axis.map_forward(user)
+                subAxis.map = sorted(axisMap.items())
 
     subDoc.axisMappings = mappings = []
     subDocAxes = {axis.name for axis in subDoc.axes}
