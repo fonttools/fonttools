@@ -2664,6 +2664,65 @@ class InstantiateAvar2Test(object):
         dead = TupleVariation({"wght": (0.5, 0.75, 1.0)}, [10] * 4)
         assert instancer._isTupleVariationDead(dead, {"wght": (0.0, 0.25)})
 
+    @pytest.mark.parametrize(
+        "support, reachable, dead",
+        [
+            ((0.5, 0.75, 1), (0, 0.5), True),
+            ((-1, -0.75, -0.5), (-0.5, 0), True),
+            ((-1, -1, 0), (0, 0.25), True),
+            ((0, 1, 1), (-0.25, 0), True),
+            ((0.5, 0.5, 1), (0, 0.5), False),
+            ((-1, -0.5, -0.5), (-0.5, 0), False),
+            ((0.5, 0.75, 1), (0, 0.75), False),
+            ((-1, 0, 1), (0, 0), False),
+            ((0.5, 0.25, 1), (0, 0.25), False),
+            ((-1, 0.5, 1), (-1, -0.5), False),
+        ],
+    )
+    def test_culling_zero_endpoint_support(self, support, reachable, dead):
+        tv = TupleVariation({"wght": support}, [100])
+        assert instancer._isTupleVariationDead(tv, {"wght": reachable}) == dead
+
+    @pytest.mark.parametrize("weight", [100, 400, 900, (400, 600)])
+    @pytest.mark.parametrize("suffix", ["", "-negative"])
+    def test_coupled_pin_prunes_mvar_and_hvar_endpoints(self, weight, suffix):
+        # Weight remains variable in final space when pinned to 400: avar2
+        # adds a nonnegative width-dependent delta. Negative-weight support
+        # then touches the reachable range only at its zero-valued endpoint.
+        if suffix and isinstance(weight, tuple):
+            weight = (200, 400)
+        original = ttLib.TTFont(
+            os.path.join(TESTDATA, f"avar2-region-endpoints{suffix}.ttf"),
+            recalcTimestamp=False,
+        )
+        partial = instancer.instantiateVariableFont(original, {"wght": weight})
+        for tag in ("MVAR", "HVAR"):
+            assert partial[tag].table.VarStore.VarRegionList.RegionCount == 1
+
+        for width in (75, 100, 112.5, 125):
+            location = {
+                "wght": weight if isinstance(weight, int) else sum(weight) / 2,
+                "wdth": width,
+            }
+            oldCoords = _avar2_final_coords(original, location)
+            newCoords = _avar2_final_coords(partial, location)
+            for tag in ("MVAR", "HVAR"):
+                oldStore = varStore.VarStoreInstancer(
+                    original[tag].table.VarStore, original["fvar"].axes, oldCoords
+                )
+                newStore = varStore.VarStoreInstancer(
+                    partial[tag].table.VarStore, partial["fvar"].axes, newCoords
+                )
+                if tag == "MVAR":
+                    oldIdx = original[tag].table.ValueRecord[0].VarIdx
+                    newIdx = partial[tag].table.ValueRecord[0].VarIdx
+                else:
+                    oldMap = original[tag].table.AdvWidthMap
+                    newMap = partial[tag].table.AdvWidthMap
+                    oldIdx = oldMap.mapping["A"] if oldMap else 1
+                    newIdx = newMap.mapping["A"] if newMap else 1
+                assert newStore[newIdx] == pytest.approx(oldStore[oldIdx], abs=0.02)
+
     @pytest.mark.parametrize("gvarTag", ["gvar", "GVAR"])
     def test_cull_glyph_variations(self, gvarTag):
         font = ttLib.TTFont()

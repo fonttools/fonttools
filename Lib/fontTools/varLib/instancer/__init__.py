@@ -2326,11 +2326,12 @@ def _isTupleVariationDead(tv, reachableRanges):
         if tag not in tv.axes:
             continue
         start, peak, end = tv.axes[tag]
-        # Region is dead if entirely outside reachable range. Strict
-        # comparisons: supportScalar returns 1 (not 0) at v == peak, so a
-        # tent whose peak sits exactly on the reachable boundary (peak ==
-        # start == hi, or peak == end == lo) is still live there.
-        if hi < start or lo > end:
+        # Invalid/zero-peak tents have constant support under OpenType.
+        if peak == 0 or start > peak or peak > end or start < 0 < end:
+            continue
+        # Endpoints have zero support unless they are also the peak.
+        # Preserve one-sided peaks exactly on a reachable boundary.
+        if (hi <= start and hi < peak) or (lo >= end and lo > peak):
             return True
     return False
 
