@@ -123,8 +123,16 @@ def compact_class_pairs(
         classes2[i].append(g)
     all_pairs = {}
     for i, class1 in enumerate(subtable.Class1Record):
+        if not classes1.get(i):
+            continue
         for j, class2 in enumerate(class1.Class2Record):
             if is_really_zero(class2):
+                continue
+            if j == 0:
+                # Class 0 includes glyphs absent from ClassDef2, which the
+                # compactor's explicit glyph lists cannot represent.
+                return [subtable]
+            if not classes2.get(j):
                 continue
             all_pairs[(tuple(sorted(classes1[i])), tuple(sorted(classes2[j])))] = (
                 getattr(class2, "Value1", None),

@@ -67,6 +67,88 @@ def test_compact_extended_layout(extended_header, extended_formats, extension, l
     assert getXML(font["GPOS"].toXML, font) == getXML(expected["GPOS"].toXML, expected)
 
 
+@pytest.mark.parametrize("level", [0, 1, 5, 9])
+def test_compact_empty_coverage_class_subtable(level):
+    from fontTools.otlLib.optimize.gpos import compact
+
+    path = Path(__file__).parents[1] / "cffLib" / "data" / "LinLibertine_RBI.otf"
+    with TTFont(path) as font:
+        subtable = font["GPOS"].table.LookupList.Lookup[2].SubTable[1]
+        assert subtable.Format == 2
+        assert subtable.Coverage.glyphs == []
+        assert subtable.Class1Count == 9
+        assert subtable.Class2Count == 7
+
+        compact(font, level)
+        output = BytesIO()
+        font.save(output)
+
+    output.seek(0)
+    with TTFont(output) as reopened:
+        assert reopened["GPOS"].table.LookupList.Lookup
+
+
+@pytest.mark.parametrize("level", [0, 1, 5, 9])
+@pytest.mark.parametrize("explicit_class0", [False, True])
+def test_compact_keeps_class2_zero_values(level, explicit_class0):
+    from fontTools.otlLib.builder import buildValue
+    from fontTools.otlLib.optimize.gpos import compact
+    from fontTools.ttLib.tables import otTables
+
+    fb = FontBuilder(1000)
+    fb.setupGlyphOrder([".notdef", "a", "b", "c", "d"])
+    fb.setupPost()
+    addOpenTypeFeaturesFromString(fb.font, "feature kern { pos a b 1; } kern;")
+    subtable = otTables.PairPos()
+    subtable.Format = 2
+    subtable.Coverage = otTables.Coverage()
+    subtable.Coverage.glyphs = ["a", "b"]
+    subtable.ValueFormat1, subtable.ValueFormat2 = 4, 0
+    subtable.ClassDef1 = otTables.ClassDef()
+    subtable.ClassDef1.classDefs = {"b": 1}
+    subtable.ClassDef2 = otTables.ClassDef()
+    subtable.ClassDef2.classDefs = {"c": 1}
+    if explicit_class0:
+        subtable.ClassDef2.classDefs["a"] = 0
+    subtable.Class1Count, subtable.Class2Count = 2, 2
+    subtable.Class1Record = []
+    for values in ([-50, 10], [-30, 0]):
+        row = otTables.Class1Record()
+        row.Class2Record = []
+        for value in values:
+            cell = otTables.Class2Record()
+            cell.Value1, cell.Value2 = buildValue({"XAdvance": value}), None
+            row.Class2Record.append(cell)
+        subtable.Class1Record.append(row)
+    fb.font["GPOS"].table.LookupList.Lookup[0].SubTable = [subtable]
+
+    def kerning(font):
+        pairs = {}
+        for left in font.getGlyphOrder():
+            for right in font.getGlyphOrder():
+                pairs[left, right] = 0
+                for st in font["GPOS"].table.LookupList.Lookup[0].SubTable:
+                    if left not in st.Coverage.glyphs:
+                        continue
+                    row = st.ClassDef1.classDefs.get(left, 0)
+                    column = st.ClassDef2.classDefs.get(right, 0)
+                    value = st.Class1Record[row].Class2Record[column].Value1
+                    pairs[left, right] = getattr(value, "XAdvance", 0)
+                    break
+        return pairs
+
+    before = kerning(fb.font)
+    assert before["a", "d"] == -50
+    assert before["a", "c"] == 10
+    assert before["b", "d"] == -30
+    compact(fb.font, level)
+    output = BytesIO()
+    fb.font.save(output)
+    output.seek(0)
+    with TTFont(output) as reopened:
+        assert kerning(reopened) == before
+
+
 def test_main(tmpdir: Path):
     """Check that calling the main function on an input TTF works."""
     glyphs = ".notdef space A Aacute B D".split()
