@@ -1582,6 +1582,29 @@ class Glyph(object):
         """Removes TrueType hinting instructions from the glyph."""
         self.trim(remove_hinting=True, extended=extended)
 
+    def _getComponentInfos(self, glyfTable):
+        # Like GlyphComponent.getComponentInfo() for each component, except that
+        # components anchored with point numbers get the equivalent XY offset,
+        # since pens can only position components with a transformation.
+        allCoords = None
+        for compo in self.components:
+            if not hasattr(compo, "firstPt"):
+                yield compo.getComponentInfo()
+                continue
+            if allCoords is None:
+                allCoords, _, _ = self.getCoordinates(glyfTable)
+            # same as in _getCoordinates: the transform is applied _before_
+            # computing the offset between the two points
+            xx, xy, yx, yy = 1, 0, 0, 1
+            if hasattr(compo, "transform"):
+                [[xx, xy], [yx, yy]] = compo.transform
+            coordinates, _, _ = glyfTable[compo.glyphName].getCoordinates(glyfTable)
+            x1, y1 = allCoords[compo.firstPt]
+            x2, y2 = coordinates[compo.secondPt]
+            dx = x1 - (x2 * xx + y2 * yx)
+            dy = y1 - (x2 * xy + y2 * yy)
+            yield compo.glyphName, (xx, xy, yx, yy, dx, dy)
+
     def draw(self, pen, glyfTable, offset=0):
         """Draws the glyph using the supplied pen object.
 
@@ -1593,8 +1616,7 @@ class Glyph(object):
         """
 
         if self.isComposite():
-            for component in self.components:
-                glyphName, transform = component.getComponentInfo()
+            for glyphName, transform in self._getComponentInfos(glyfTable):
                 pen.addComponent(glyphName, transform)
             return
 
@@ -1695,8 +1717,7 @@ class Glyph(object):
         """
 
         if self.isComposite():
-            for component in self.components:
-                glyphName, transform = component.getComponentInfo()
+            for glyphName, transform in self._getComponentInfos(glyfTable):
                 pen.addComponent(glyphName, transform)
             return
 
@@ -1896,10 +1917,9 @@ class GlyphComponent(object):
         component's transformation matrix, even when the two-by-two ``.transform``
         matrix is not present.
         """
-        # XXX Ignoring self.firstPt & self.lastpt for now: I need to implement
-        # something equivalent in fontTools.objects.glyph (I'd rather not
-        # convert it to an absolute offset, since it is valuable information).
-        # This method will now raise "AttributeError: x" on glyphs that use
+        # XXX Ignoring self.firstPt & self.secondPt here: resolving them needs the
+        # other components and the glyf table, see Glyph._getComponentInfos.
+        # This method will raise "AttributeError: x" on components that use
         # this TT feature.
         if hasattr(self, "transform"):
             [[xx, xy], [yx, yy]] = self.transform

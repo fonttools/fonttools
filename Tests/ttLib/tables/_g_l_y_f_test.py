@@ -657,6 +657,60 @@ class GlyphTest:
             ]
         )
 
+    @pytest.mark.parametrize(
+        "method, penClass", [("draw", RecordingPen), ("drawPoints", RecordingPointPen)]
+    )
+    def test_draw_components_with_anchor_points(self, method, penClass):
+        # https://github.com/fonttools/fonttools/issues/1559
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((0, 0))
+        pen.lineTo((100, 0))
+        pen.lineTo((100, 100))
+        pen.lineTo((0, 100))
+        pen.closePath()
+        glyphSet["a"] = a = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent("a", (1, 0, 0, 1, 10, 20))
+        glyphSet["b"] = b = pen.glyph()
+
+        # align the new component's pt 0 to pt 2 of the points added so far
+        comp1 = GlyphComponent()
+        comp1.glyphName = "a"
+        comp1.firstPt = 2
+        comp1.secondPt = 0
+        comp1.flags = 0
+        b.components.append(comp1)
+
+        # align the new component's pt 1 to pt 6 of the points added so far;
+        # the transform is applied before the two points are matched
+        comp2 = GlyphComponent()
+        comp2.glyphName = "a"
+        comp2.firstPt = 6
+        comp2.secondPt = 1
+        comp2.transform = [[0.707107, 0.707107], [-0.707107, 0.707107]]  # rotate 45 deg
+        comp2.flags = WE_HAVE_A_TWO_BY_TWO
+        b.components.append(comp2)
+
+        pen = penClass()
+        getattr(b, method)(pen, glyphSet)
+
+        transforms = [args[1] for _, args, *_ in pen.value]
+        assert [args[0] for _, args, *_ in pen.value] == ["a", "a", "a"]
+        assert transforms[:2] == [(1, 0, 0, 1, 10, 20), (1, 0, 0, 1, 110, 120)]
+        assert transforms[2] == pytest.approx(
+            (0.707107, 0.707107, -0.707107, 0.707107, 139.2893, 149.2893)
+        )
+
+        # the components drawn must land where getCoordinates puts them
+        decomposed = [
+            Transform(*t).transformPoint(pt) for t in transforms for pt in a.coordinates
+        ]
+        assert list(sum(decomposed, ())) == pytest.approx(
+            list(sum(b.getCoordinates(glyphSet)[0], ()))
+        )
+
     def test_get_components_nested(self):
         # check that getCoordinates will correctly round with nested
         glyphSet = {}
