@@ -521,10 +521,10 @@ class Builder(object):
             table.sCapHeight = self.os2_["capheight"]
             version = 2
         if "loweropsize" in self.os2_:
-            table.usLowerOpticalPointSize = self.os2_["loweropsize"]
+            table.usLowerOpticalPointSize = self.os2_["loweropsize"] / 20
             version = 5
         if "upperopsize" in self.os2_:
-            table.usUpperOpticalPointSize = self.os2_["upperopsize"]
+            table.usUpperOpticalPointSize = self.os2_["upperopsize"] / 20
             version = 5
 
         def checkattr(table, attrs):
