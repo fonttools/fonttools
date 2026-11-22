@@ -1,11 +1,16 @@
 from collections import OrderedDict
 from fontTools.designspaceLib import AxisDescriptor
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import otTables as ot
 from fontTools import varLib
+from fontTools.varLib.errors import VarLibError
 from fontTools.varLib.featureVars import (
     addFeatureVariations,
+    addFeatureVariationsRaw,
     overlayFeatureVariations,
     overlayBox,
+    remapFeatures,
+    ShifterVisitor,
 )
 import pytest
 
@@ -515,6 +520,137 @@ def test_addFeatureVariations_null_substitution(
     )
     assert substitution.Feature.LookupListIndex == [1]
     assert gsub.LookupList.Lookup[1].SubTable[0].mapping == {"B": "B.alt"}
+
+
+def _addLookupVariationRecord(gsub, featureIndex, lookupIndices):
+    """Attach a version 1.1 FeatureVariations table with one LookupVariationRecord."""
+    fv = gsub.FeatureVariations
+    if fv is None:
+        fv = ot.FeatureVariations()
+        fv.Version = 0x00010001
+        fv.FeatureVariationCount = 0
+        fv.FeatureVariationRecord = []
+        gsub.FeatureVariations = fv
+    else:
+        fv.Version = 0x00010001
+    if gsub.Version < 0x00010001:
+        gsub.Version = 0x00010001
+    lvr = ot.LookupVariationRecord()
+    lvr.FeatureIndex = featureIndex
+    lvr.FeatureLookupsTable = ot.FeatureLookupsTable()
+    lvr.FeatureLookupsTable.Version = 0x00010000
+    lvr.FeatureLookupsTable.Flags = 0
+    lcr = ot.LookupConditionRecord()
+    lcr.ConditionTable = None
+    lcr.LookupIndexList = ot.LookupIndexList()
+    lcr.LookupIndexList.LookupIndexCount = len(lookupIndices)
+    lcr.LookupIndexList.LookupIndex = list(lookupIndices)
+    lvr.FeatureLookupsTable.LookupConditionCount = 1
+    lvr.FeatureLookupsTable.LookupConditionRecord = [lcr]
+    existing = list(getattr(fv, "LookupVariationRecord", []))
+    existing.append(lvr)
+    fv.LookupVariationRecord = existing
+    fv.LookupVariationCount = len(existing)
+    return lvr
+
+
+def _snapshotGsub(gsub):
+    """Capture the subset of GSUB state that addFeatureVariations may touch."""
+    features = [fr.FeatureTag for fr in gsub.FeatureList.FeatureRecord]
+    lookupIndices = [
+        list(fr.Feature.LookupListIndex) for fr in gsub.FeatureList.FeatureRecord
+    ]
+    lookupCount = len(gsub.LookupList.Lookup)
+    lvrs = [
+        (
+            lvr.FeatureIndex,
+            list(
+                lvr.FeatureLookupsTable.LookupConditionRecord[
+                    0
+                ].LookupIndexList.LookupIndex
+            ),
+        )
+        for lvr in getattr(gsub.FeatureVariations, "LookupVariationRecord", [])
+    ]
+    return features, lookupIndices, lookupCount, lvrs
+
+
+def test_addFeatureVariations_rejects_unsupported_version(varfont):
+    # Set up a font that already has a version 1.1 FeatureVariations table
+    # with a LookupVariationRecord. Adding new conditional substitutions
+    # should fail without mutating the font.
+    addFeatureVariations(varfont, [([{"wght": (-1.0, 0.0)}], {"A": "A.alt"})])
+    gsub = varfont["GSUB"].table
+    ss01_index = len(gsub.FeatureList.FeatureRecord)
+    rec = ot.FeatureRecord()
+    rec.FeatureTag = "ss01"
+    rec.Feature = ot.Feature()
+    rec.Feature.LookupListIndex = [0]
+    rec.Feature.LookupCount = 1
+    gsub.FeatureList.FeatureRecord.append(rec)
+    gsub.FeatureList.FeatureCount = len(gsub.FeatureList.FeatureRecord)
+    _addLookupVariationRecord(gsub, ss01_index, [0])
+    before = _snapshotGsub(gsub)
+
+    with pytest.raises(
+        VarLibError, match="Unsupported FeatureVariations table version"
+    ):
+        addFeatureVariations(
+            varfont, [([{"wght": (0.5, 1.0)}], {"B": "B.alt"})], featureTag="ccmp"
+        )
+    assert _snapshotGsub(gsub) == before
+
+
+def test_addFeatureVariationsRaw_rejects_unsupported_version(varfont):
+    addFeatureVariations(varfont, [([{"wght": (-1.0, 0.0)}], {"A": "A.alt"})])
+    gsub = varfont["GSUB"].table
+    _addLookupVariationRecord(gsub, 0, [0])
+    before = _snapshotGsub(gsub)
+
+    with pytest.raises(
+        VarLibError, match="Unsupported FeatureVariations table version"
+    ):
+        addFeatureVariationsRaw(varfont, gsub, [({"wght": (0.5, 1.0)}, [0])], "rvrn")
+    assert _snapshotGsub(gsub) == before
+
+
+def test_ShifterVisitor_shifts_LookupIndexList():
+    lil = ot.LookupIndexList()
+    lil.LookupIndexCount = 3
+    lil.LookupIndex = [0, 2, 5]
+    ShifterVisitor(7).visit(lil)
+    assert lil.LookupIndex == [7, 9, 12]
+
+
+def test_remapFeatures_remaps_LookupVariationRecord_FeatureIndex():
+    # Build a minimal layout table with a FeatureVariations table version 1.1
+    # that references an existing feature by its original index. After remap,
+    # the LookupVariationRecord should point to the new feature index.
+    table = ot.GSUB()
+    table.Version = 0x00010001
+    table.ScriptList = ot.ScriptList()
+    table.ScriptList.ScriptRecord = []
+    table.ScriptList.ScriptCount = 0
+    table.FeatureList = ot.FeatureList()
+    table.FeatureList.FeatureRecord = []
+    table.FeatureList.FeatureCount = 0
+    table.LookupList = ot.LookupList()
+    table.LookupList.Lookup = []
+    table.LookupList.LookupCount = 0
+
+    fv = ot.FeatureVariations()
+    fv.Version = 0x00010001
+    fv.FeatureVariationCount = 0
+    fv.FeatureVariationRecord = []
+    lvr = ot.LookupVariationRecord()
+    lvr.FeatureIndex = 3
+    lvr.FeatureLookupsTable = None
+    fv.LookupVariationRecord = [lvr]
+    fv.LookupVariationCount = 1
+    table.FeatureVariations = fv
+
+    remapFeatures(table, {3: 0, 1: 2, 2: 1, 0: 3})
+    assert fv.LookupVariationRecord[0].FeatureIndex == 0
 
 
 if __name__ == "__main__":
