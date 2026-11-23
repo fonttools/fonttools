@@ -496,8 +496,9 @@ def spline_error_factor(n):
 
         (n-1 - 2*k) / (4*(n-1)) + c*v - v**3        c = (n-3) / (4*(n-1))
 
-    largest for ``k = 1``, at ``v = sqrt(c/3)``. The last pieces mirror the
-    first.
+    largest for ``k = 1``: from ``n = 9`` at ``v = sqrt(c/3)``, and for fewer
+    pieces at ``v = -1/2``, where that piece meets the first and is below the
+    first piece's largest value. The last pieces mirror the first.
 
     Args:
         n (int): Number of quadratic Bezier curves in the spline, at least 2.
