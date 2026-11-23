@@ -11,6 +11,17 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.BitmapGlyphMetrics import SmallGlyphMetrics
+from fontTools.ttLib.tables.E_B_D_T_ import (
+    EbdtComponent,
+    ebdt_bitmap_format_1,
+    ebdt_bitmap_format_8,
+)
+from fontTools.ttLib.tables.E_B_L_C_ import (
+    SbitLineMetrics,
+    Strike,
+    eblc_index_sub_table_1,
+)
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.subset.svg import etree
@@ -550,6 +561,144 @@ class SubsetTest:
         subsetfont = TTFont(subsetpath)
         assert "x" in subsetfont["CBDT"].strikeData[0]
         assert "y" in subsetfont["CBDT"].strikeData[0]
+
+    @staticmethod
+    def _make_ebdt_composite_font():
+        # Glyph order: .notdef a b c d e f g h i j k l (gids 0-12).
+        # `f` (gid 6) is an EBDT format 8 composite of a (1), c (3) and
+        # l (12); the components carry format 1 bitmaps of their own.
+        glyph_order = [".notdef"] + [chr(c) for c in range(ord("a"), ord("l") + 1)]
+
+        def small_metrics(height, width):
+            metrics = SmallGlyphMetrics()
+            metrics.height = height
+            metrics.width = width
+            metrics.BearingX = 0
+            metrics.BearingY = height
+            metrics.Advance = width
+            return metrics
+
+        fb = FontBuilder(1000, isTTF=True)
+        fb.setupGlyphOrder(glyph_order)
+        fb.setupCharacterMap({ord(g): g for g in glyph_order[1:]})
+        fb.setupGlyf({g: Glyph() for g in glyph_order})
+        fb.setupHorizontalMetrics({g: (500, 0) for g in glyph_order})
+        fb.setupHorizontalHeader(ascent=800, descent=-200)
+        fb.setupNameTable(
+            {
+                "familyName": "EBDTTest",
+                "styleName": "Regular",
+                "uniqueFontIdentifier": "EBDTTest",
+                "fullName": "EBDTTest",
+                "psName": "EBDTTest",
+            }
+        )
+        fb.setupOS2()
+        fb.setupPost()
+        font = fb.font
+
+        strike = {}
+        for name in ("a", "c", "l"):
+            glyph = ebdt_bitmap_format_1(None, font)
+            glyph.metrics = small_metrics(2, 8)
+            glyph.imageData = b"\xff\xff"
+            strike[name] = glyph
+        glyph = ebdt_bitmap_format_8(None, font)
+        glyph.metrics = small_metrics(10, 10)
+        glyph.componentArray = []
+        for name, xoff in (("a", 0), ("c", 1), ("l", 2)):
+            comp = EbdtComponent()
+            comp.name = name
+            comp.xOffset = xoff
+            comp.yOffset = 0
+            glyph.componentArray.append(comp)
+        strike["f"] = glyph
+        ebdt = newTable("EBDT")
+        ebdt.version = 2.0
+        ebdt.strikeData = [strike]
+        font["EBDT"] = ebdt
+
+        strike = Strike()
+        bst = strike.bitmapSizeTable
+        for direction in ("hori", "vert"):
+            m = SbitLineMetrics()
+            m.ascender = 10
+            m.descender = 0
+            m.widthMax = 10
+            m.caretSlopeNumerator = 0
+            m.caretSlopeDenominator = 0
+            m.caretOffset = 0
+            m.minOriginSB = 0
+            m.minAdvanceSB = 0
+            m.maxBeforeBL = 0
+            m.minAfterBL = 0
+            m.pad1 = 0
+            m.pad2 = 0
+            vars(bst)[direction] = m
+        bst.colorRef = 0
+        bst.ppemX = 16
+        bst.ppemY = 16
+        bst.bitDepth = 1
+        bst.flags = 1
+        for image_format, names in ((8, ["f"]), (1, ["a", "c", "l"])):
+            ist = eblc_index_sub_table_1(None, font)
+            ist.indexFormat = 1
+            ist.imageFormat = image_format
+            ist.names = names
+            ist.locations = []
+            strike.indexSubTables.append(ist)
+        eblc = newTable("EBLC")
+        eblc.version = 2.0
+        eblc.strikes = [strike]
+        font["EBLC"] = eblc
+        return font
+
+    def _subset_ebdt_font(self, gids):
+        fontpath = self.temp_path(".ttf")
+        subsetpath = self.temp_path(".ttf")
+        self._make_ebdt_composite_font().save(fontpath)
+        # EBDT/EBLC are dropped by default; keep them.
+        options = subset.Options()
+        options.drop_tables = [
+            t for t in options.drop_tables if t not in ("EBDT", "EBLC")
+        ]
+        subsetter = subset.Subsetter(options)
+        font = TTFont(fontpath)
+        subsetter.populate(gids=gids)
+        subsetter.subset(font)
+        retained_order = font.getGlyphOrder()
+        font.save(subsetpath)
+        return retained_order, TTFont(subsetpath)
+
+    @staticmethod
+    def _ebdt_components(font):
+        glyph = font["EBDT"].strikeData[0]["f"]
+        glyph.ensureDecompiled()
+        return [(font.getGlyphID(c.name), c.name) for c in glyph.componentArray]
+
+    def test_subset_ebdt_composite_components_kept(self):
+        # All components of the composite are in the subset already;
+        # their glyph IDs must be remapped to the new glyph order.
+        _, subsetfont = self._subset_ebdt_font([0, 1, 3, 6, 12])
+        assert subsetfont.getGlyphOrder() == [".notdef", "a", "c", "f", "l"]
+        assert self._ebdt_components(subsetfont) == [
+            (1, "a"),
+            (2, "c"),
+            (4, "l"),
+        ]
+
+    def test_subset_ebdt_composite_components_closed_over(self):
+        # The components are not requested; the subsetter must retain
+        # them (and their bitmaps) and remap the component references.
+        retained_order, subsetfont = self._subset_ebdt_font([0, 3, 6, 9, 12])
+        assert retained_order == [".notdef", "a", "c", "f", "i", "l"]
+        components = self._ebdt_components(subsetfont)
+        assert [gid for gid, _ in components] == [1, 2, 5]
+        assert [retained_order[gid] for gid, _ in components] == ["a", "c", "l"]
+        strike_gids = {
+            subsetfont.getGlyphID(name) for name in subsetfont["EBDT"].strikeData[0]
+        }
+        assert {retained_order[gid] for gid in strike_gids} == {"a", "c", "f", "l"}
 
     def test_sbix(self):
         fontpath = self.compile_font(self.getpath("sbix.ttx"), ".ttf")
