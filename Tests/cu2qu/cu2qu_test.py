@@ -371,5 +371,19 @@ def test_cu2qu_nan_coordinate():
         curves_to_quadratic([cubic], [1.0])
 
 
+def test_cu2qu_nan_tolerance():
+    # Used to recurse without end.
+    nan = float("nan")
+    for cubic in (
+        [(0, 0), (0, 100), (100, 200), (354, 300)],
+        [(5, 5), (5, 5), (5, 5), (5, 5)],
+    ):
+        with pytest.raises(ApproxNotFoundError):
+            curve_to_quadratic(cubic, nan)
+        with pytest.raises(ApproxNotFoundError):
+            curves_to_quadratic([cubic], [nan])
+        assert curve_to_quadratic(cubic, nan, all_quadratic=False) == cubic
+
+
 if __name__ == "__main__":
     unittest.main()

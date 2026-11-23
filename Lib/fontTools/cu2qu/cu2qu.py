@@ -340,9 +340,9 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
     if abs(p2) <= tolerance and abs(p1) <= tolerance:
         return True
 
-    # Split.
+    # Split. The test is written for a NaN to end the recursion as well.
     mid = (p0 + 3 * (p1 + p2) + p3) * 0.125
-    if abs(mid) > tolerance:
+    if not abs(mid) <= tolerance:
         return False
     deriv3 = (p3 + p2 - p1 - p0) * 0.125
     return cubic_farthest_fit_inside(
