@@ -14,13 +14,14 @@
 
 import collections
 import math
+import random
 import unittest
 import os
 import json
 
 import pytest
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
-from fontTools.cu2qu.cu2qu import MAX_N, spline_error_factor
+from fontTools.cu2qu.cu2qu import MAX_N, QUADRATIC_MAX_D3, spline_error_factor
 from fontTools.cu2qu.errors import ApproxNotFoundError
 
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
@@ -339,6 +340,42 @@ def test_cu2qu_third_difference_at_the_limit(x, n):
     # three of up to 128 times: exactly that much still fits.
     cubic = [(0, 0), (0, 100), (100, 200), (x, 300)]
     assert len(curve_to_quadratic(cubic, 1.0)) == n + 2
+
+
+def test_cu2qu_single_quadratic_limit():
+    # A single quadratic is not tried for a third difference of more than
+    # QUADRATIC_MAX_D3 times the tolerance, because a quadratic with the end
+    # points of a cubic gets at least sqrt(3)/36 of the cubic's third
+    # difference away from it, wherever its off-curve point is.
+    assert QUADRATIC_MAX_D3 > 36 / math.sqrt(3)
+    cubic = [(0, 0), (30, 100), (-20, 180), (120, 250)]
+    c0, c1, c2, c3 = [complex(*p) for p in cubic]
+    least = math.sqrt(3) / 36 * abs(c3 - 3 * c2 + 3 * c1 - c0)
+    closest = (3 * (c1 + c2) - c0 - c3) / 4
+    rnd = random.Random(1)
+    for i in range(100):
+        q = closest
+        if i:
+            q += complex(rnd.uniform(-20, 20), rnd.uniform(-20, 20))
+        distance = spline_distance(cubic, [cubic[0], (q.real, q.imag), cubic[3]])
+        if i:
+            assert distance > least * (1 - 1e-4)
+        else:
+            assert distance == pytest.approx(least, rel=1e-4)
+
+    # Below the limit a single quadratic is tried, and comes back if it fits.
+    small = [(0, 0), (20, 20), (40, 20), (63, 0)]  # third difference (3, 0)
+    for spline in (
+        curve_to_quadratic(small, 1.0),
+        curves_to_quadratic([small, small], [1.0, 1.0])[1],
+    ):
+        assert len(spline) == 3
+        assert spline_distance(small, spline) <= 1.0
+    # Above it, two; and for all the curves converted together.
+    large = [(0, 0), (20, 20), (40, 20), (85, 0)]  # third difference (25, 0)
+    assert len(curve_to_quadratic(large, 1.0)) == 4
+    splines = curves_to_quadratic([small, large], [1.0, 1.0])
+    assert [len(spline) for spline in splines] == [4, 4]
 
 
 def test_cu2qu_more_quadratics_fit_too():
