@@ -408,6 +408,17 @@ def test_cu2qu_nan_coordinate():
         curves_to_quadratic([cubic], [1.0])
 
 
+def test_cu2qu_fit_test_ends():
+    # The single quadratic for these is exactly as far from its cubic as the
+    # tolerance. The fit test used to split its error curve without end:
+    # RecursionError, or a crash of the interpreter with the compiled module.
+    for cubic, tolerance in (
+        ([(0, 0), (0, 0), (0, 0), (25, 0)], 100 / 27),
+        ([(-45, -3), (-30, -2), (0, 5), (0, 9)], 20 / 3),
+    ):
+        assert len(curve_to_quadratic(cubic, tolerance)) == 3
+
+
 def test_cu2qu_nan_tolerance():
     # Used to recurse without end.
     nan = float("nan")

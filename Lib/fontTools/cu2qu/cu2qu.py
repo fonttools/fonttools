@@ -30,6 +30,9 @@ __all__ = ["curve_to_quadratic", "curves_to_quadratic"]
 
 MAX_N = 100
 
+# How many times the fit test halves a curve at most.
+MAX_HALVINGS = 64
+
 NAN = float("NaN")
 
 
@@ -317,8 +320,8 @@ def calc_intersect(a, b, c, d):
     p2=cython.complex,
     p3=cython.complex,
 )
-@cython.locals(mid=cython.complex, deriv3=cython.complex)
-def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
+@cython.locals(mid=cython.complex, deriv3=cython.complex, depth=cython.int)
+def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance, depth):
     """Check if a cubic Bezier lies within a given distance of the origin.
 
     "Origin" means *the* origin (0,0), not the start of the curve. Note that no
@@ -331,6 +334,8 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
         p2 (complex): Second handle of curve.
         p3 (complex): End point of curve.
         tolerance (double): Distance from origin.
+        depth (int): How many times the curve tested was halved to get this
+            piece of it: 0 for the curve itself.
 
     Returns:
         bool: True if the cubic Bezier ``p`` entirely lies within a distance
@@ -344,10 +349,18 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
     mid = (p0 + 3 * (p1 + p2) + p3) * 0.125
     if not abs(mid) <= tolerance:
         return False
+    # A curve that touches the tolerance can be split without end: a control
+    # point stays the last bit outside while the middle stays inside, and one
+    # half is the same curve again. After this many halvings the points of a
+    # piece differ by rounding alone, and the piece is where its middle is.
+    if depth == MAX_HALVINGS:
+        return True
     deriv3 = (p3 + p2 - p1 - p0) * 0.125
     return cubic_farthest_fit_inside(
-        p0, (p0 + p1) * 0.5, mid - deriv3, mid, tolerance
-    ) and cubic_farthest_fit_inside(mid, mid + deriv3, (p2 + p3) * 0.5, p3, tolerance)
+        p0, (p0 + p1) * 0.5, mid - deriv3, mid, tolerance, depth + 1
+    ) and cubic_farthest_fit_inside(
+        mid, mid + deriv3, (p2 + p3) * 0.5, p3, tolerance, depth + 1
+    )
 
 
 @cython.cfunc
@@ -418,7 +431,7 @@ def cubic_approx_quadratic(cubic, tolerance):
     c3 = cubic[3]
     c1 = c0 + (q1 - c0) * (2 / 3)
     c2 = c3 + (q1 - c3) * (2 / 3)
-    if not cubic_farthest_fit_inside(0, c1 - cubic[1], c2 - cubic[2], 0, tolerance):
+    if not cubic_farthest_fit_inside(0, c1 - cubic[1], c2 - cubic[2], 0, tolerance, 0):
         return None
     return c0, q1, c3
 
