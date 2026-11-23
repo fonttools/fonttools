@@ -387,81 +387,123 @@ def cubic_approx_quadratic(cubic, tolerance):
 
 
 @cython.cfunc
-@cython.locals(n=cython.int, tolerance=cython.double)
-@cython.locals(i=cython.int)
-@cython.locals(all_quadratic=cython.int)
+@cython.locals(n=cython.int, i=cython.int)
 @cython.locals(
     c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex
 )
-@cython.locals(
-    q0=cython.complex,
-    q1=cython.complex,
-    next_q1=cython.complex,
-    q2=cython.complex,
-    d1=cython.complex,
-)
-def cubic_approx_spline(cubic, n, tolerance, all_quadratic):
-    """Approximate a cubic Bezier curve with a spline of n quadratics.
+def cubic_spline(cubic, n):
+    """Approximate a cubic Bezier curve with a spline of n > 1 quadratics.
+
+    The cubic is split into ``n`` pieces of equal parameter length, and each
+    piece gives one off-curve point: between the two that its end tangents
+    suggest (see `cubic_approx_control`), going from the first for the first
+    piece to the second for the last. On-curve points are implied, halfway
+    between consecutive off-curve points.
+
+    How far the spline gets from the cubic depends only on ``n`` and on the
+    cubic's third difference (see `spline_error_factor`), so nothing is tested
+    here: `cubic_spline_n` gives the ``n`` for a tolerance.
 
     Args:
         cubic (sequence): Four complex numbers representing control points of
             the cubic Bezier curve.
-        n (int): Number of quadratic Bezier curves in the spline.
-        tolerance (double): Permitted deviation from the original curve.
+        n (int): Number of quadratic Bezier curves in the spline, at least 2.
 
     Returns:
         A list of ``n+2`` complex numbers, representing control points of the
-        quadratic spline if it fits within the given tolerance, or ``None`` if
-        no suitable spline could be calculated.
+        quadratic spline.
     """
-
-    if n == 1:
-        return cubic_approx_quadratic(cubic, tolerance)
-    if n == 2 and all_quadratic == False:
-        return cubic
-
     cubics = split_cubic_into_n_iter(cubic[0], cubic[1], cubic[2], cubic[3], n)
-
-    # calculate the spline of quadratics and check errors at the same time.
-    next_cubic = next(cubics)
-    next_q1 = cubic_approx_control(
-        0, next_cubic[0], next_cubic[1], next_cubic[2], next_cubic[3]
-    )
-    q2 = cubic[0]
-    d1 = 0j
-    spline = [cubic[0], next_q1]
-    for i in range(1, n + 1):
-        # Current cubic to convert
-        c0, c1, c2, c3 = next_cubic
-
-        # Current quadratic approximation of current cubic
-        q0 = q2
-        q1 = next_q1
-        if i < n:
-            next_cubic = next(cubics)
-            next_q1 = cubic_approx_control(
-                i / (n - 1), next_cubic[0], next_cubic[1], next_cubic[2], next_cubic[3]
-            )
-            spline.append(next_q1)
-            q2 = (q1 + next_q1) * 0.5
-        else:
-            q2 = c3
-
-        # End-point deltas
-        d0 = d1
-        d1 = q2 - c3
-
-        if abs(d1) > tolerance or not cubic_farthest_fit_inside(
-            d0,
-            q0 + (q1 - q0) * (2 / 3) - c1,
-            q2 + (q1 - q2) * (2 / 3) - c2,
-            d1,
-            tolerance,
-        ):
-            return None
+    spline = [cubic[0]]
+    for i in range(n):
+        c0, c1, c2, c3 = next(cubics)
+        spline.append(cubic_approx_control(i / (n - 1), c0, c1, c2, c3))
     spline.append(cubic[3])
-
     return spline
+
+
+def spline_error_factor(n):
+    """Return how far the spline of n > 1 quadratics gets from its cubic.
+
+    The distance is between points at equal parameters, and it is returned as
+    a multiple of ``abs(d)``, where ``d`` is the cubic's third difference
+    ``p3 - 3*p2 + 3*p1 - p0`` over ``n**3``: the third difference of each of
+    the ``n`` pieces. Nothing else about the cubic matters.
+
+    That is because the two points that `cubic_approx_control` goes between
+    are ``d/2`` apart, and the points halfway between them, for two consecutive
+    pieces, have the point where the cubic was split as their midpoint. So the
+    off-curve point of piece ``k`` is ``d * (1 - 2*k/(n-1)) / 4`` from such a
+    halfway point, the implied on-curve point before it is ``d * (n - 2*k) /
+    (4*(n-1))`` from the cubic, and the spline minus the cubic is ``d`` times
+    a polynomial in the parameter ``u`` of the piece, from 0 to 1. For the
+    first piece that is::
+
+        u**2 * (1 + g) - u**3                       g = (n-2) / (4*(n-1))
+
+    largest at ``u = 2*(1+g)/3``. For piece ``k`` in between it is, with
+    ``v = u - 1/2``::
+
+        (n-1 - 2*k) / (4*(n-1)) + c*v - v**3        c = (n-3) / (4*(n-1))
+
+    largest for ``k = 1``, at ``v = sqrt(c/3)``. The last pieces mirror the
+    first.
+
+    Args:
+        n (int): Number of quadratic Bezier curves in the spline, at least 2.
+
+    Returns:
+        float: The largest distance between the spline and the cubic, over
+        ``abs(d)``: 4/27 for 2, 27/128 for 3, growing with ``n`` towards
+        ``1/4 + sqrt(3)/36``.
+    """
+    # Not typed, and no pow(), for the same result everywhere.
+    g = (n - 2) / (4 * (n - 1))
+    error = (4 / 27) * (1 + g) * (1 + g) * (1 + g)
+    if n > 3:
+        c = (n - 3) / (4 * (n - 1))
+        w = c / 3
+        error = max(error, c + 2 * w * math.sqrt(w))
+    return error
+
+
+# By n, the longest third difference that a cubic may have, as a multiple of
+# the tolerance, for its spline of n quadratics to be within tolerance: 54 for
+# two quadratics, 128 for three, about 272 for four, ...
+SPLINE_MAX_D3 = [0.0, 0.0] + [
+    n * n * n / spline_error_factor(n) for n in range(2, MAX_N + 1)
+]
+
+
+@cython.cfunc
+@cython.returns(cython.int)
+@cython.locals(tolerance=cython.double, d3=cython.double, limit=cython.double)
+@cython.locals(n=cython.int)
+@cython.locals(
+    p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex
+)
+def cubic_spline_n(cubic, tolerance):
+    """Return the least n > 1 for which `cubic_spline` is within tolerance.
+
+    Args:
+        cubic (sequence): Four complex numbers representing control points of
+            the cubic Bezier curve.
+        tolerance (double): Permitted deviation from the original curve.
+
+    Returns:
+        int: The least number of quadratic Bezier curves, from 2 to ``MAX_N``,
+        whose spline is within ``tolerance`` of ``cubic``, or 0 if none is.
+    """
+    p0 = cubic[0]
+    p1 = cubic[1]
+    p2 = cubic[2]
+    p3 = cubic[3]
+    d3 = abs(p3 - 3 * p2 + 3 * p1 - p0)
+    for n in range(2, MAX_N + 1):
+        limit = SPLINE_MAX_D3[n]
+        if d3 <= tolerance * limit:
+            return n
+    return 0
 
 
 @cython.locals(max_err=cython.double)
@@ -492,16 +534,21 @@ def curve_to_quadratic(curve, max_err, all_quadratic=True):
 
     curve = [complex(*p) for p in curve]
 
-    for n in range(1, MAX_N + 1):
-        spline = cubic_approx_spline(curve, n, max_err, all_quadratic)
-        if spline is not None:
-            # done. go home
-            return [(s.real, s.imag) for s in spline]
+    spline = cubic_approx_quadratic(curve, max_err)
+    if spline is None:
+        if not all_quadratic:
+            spline = curve
+        else:
+            # No need to try: how many quadratics it takes is known.
+            n = cubic_spline_n(curve, max_err)
+            if not n:
+                raise ApproxNotFoundError(curve)
+            spline = cubic_spline(curve, n)
 
-    raise ApproxNotFoundError(curve)
+    return [(s.real, s.imag) for s in spline]
 
 
-@cython.locals(l=cython.int, last_i=cython.int, i=cython.int)
+@cython.locals(n=cython.int, n_i=cython.int)
 @cython.locals(all_quadratic=cython.int)
 def curves_to_quadratic(curves, max_errors, all_quadratic=True):
     """Return quadratic Bezier splines approximating the input cubic Beziers.
@@ -547,22 +594,28 @@ def curves_to_quadratic(curves, max_errors, all_quadratic=True):
     if not curves:
         return []
 
-    l = len(curves)
-    splines = [None] * l
-    last_i = i = 0
-    n = 1
-    while True:
-        spline = cubic_approx_spline(curves[i], n, max_errors[i], all_quadratic)
+    # A single quadratic each, if every curve fits one.
+    splines = []
+    for curve, max_err in zip(curves, max_errors):
+        spline = cubic_approx_quadratic(curve, max_err)
         if spline is None:
-            if n == MAX_N:
-                break
-            n += 1
-            last_i = i
-            continue
-        splines[i] = spline
-        i = (i + 1) % l
-        if i == last_i:
-            # done. go home
-            return [[(s.real, s.imag) for s in spline] for spline in splines]
+            break
+        splines.append(spline)
+    else:
+        return [[(s.real, s.imag) for s in spline] for spline in splines]
 
-    raise ApproxNotFoundError(curves)
+    if not all_quadratic:
+        splines = curves
+    else:
+        # The same number of quadratics for all: the most that any takes. A
+        # spline of more quadratics than a curve takes is within tolerance too.
+        n = 0
+        for curve, max_err in zip(curves, max_errors):
+            n_i = cubic_spline_n(curve, max_err)
+            if not n_i:
+                raise ApproxNotFoundError(curves)
+            if n_i > n:
+                n = n_i
+        splines = [cubic_spline(curve, n) for curve in curves]
+
+    return [[(s.real, s.imag) for s in spline] for spline in splines]
