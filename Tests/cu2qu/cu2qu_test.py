@@ -14,12 +14,15 @@
 
 import collections
 import math
+import random
 import unittest
 import os
 import json
 
 import pytest
 from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
+from fontTools.cu2qu.cu2qu import MAX_N, QUADRATIC_MAX_D3, spline_error_factor
+from fontTools.cu2qu.errors import ApproxNotFoundError
 
 DATADIR = os.path.join(os.path.dirname(__file__), "data")
 
@@ -283,6 +286,151 @@ def test_curves_to_quadratic_rejects_mismatched_max_errors():
 
 def test_curves_to_quadratic_empty_input():
     assert curves_to_quadratic([], []) == []
+
+
+def spline_distance(cubic, spline, steps=512):
+    """Largest distance between a cubic and its spline at equal parameters."""
+    cubic = [complex(*p) for p in cubic]
+    spline = [complex(*p) for p in spline]
+    n = len(spline) - 2
+    distance = 0
+    for k in range(n):
+        q0 = spline[0] if k == 0 else (spline[k] + spline[k + 1]) / 2
+        q1 = spline[k + 1]
+        q2 = spline[-1] if k == n - 1 else (spline[k + 1] + spline[k + 2]) / 2
+        for j in range(steps + 1):
+            u = j / steps
+            t = (k + u) / n
+            q = (1 - u) ** 2 * q0 + 2 * u * (1 - u) * q1 + u**2 * q2
+            c = (
+                (1 - t) ** 3 * cubic[0]
+                + 3 * t * (1 - t) ** 2 * cubic[1]
+                + 3 * t**2 * (1 - t) * cubic[2]
+                + t**3 * cubic[3]
+            )
+            distance = max(distance, abs(q - c))
+    return distance
+
+
+@pytest.mark.parametrize("n", [2, 3, 4, 5, 6, 7, 12, 25, 60, MAX_N])
+def test_cu2qu_number_of_quadratics_is_computed(n):
+    # How far the spline of n quadratics gets from a cubic is known from n and
+    # the cubic's third difference, so the number of quadratics is computed and
+    # the spline is not tested. Check that the distance is the one expected,
+    # and that n is the least that fits.
+    cubic = [(0, 0), (30, 100), (-20, 180), (120, 250)]
+    d3 = abs(complex(120 + 3 * 20 + 3 * 30, 250 - 3 * 180 + 3 * 100))
+    error = spline_error_factor(n) * d3 / n**3
+
+    spline = curve_to_quadratic(cubic, error * (1 + 1e-9))
+    assert len(spline) == n + 2
+    assert spline_distance(cubic, spline) == pytest.approx(error, rel=1e-4)
+
+    if n < MAX_N:
+        spline = curve_to_quadratic(cubic, error * (1 - 1e-9))
+        assert len(spline) == n + 3
+    else:
+        with pytest.raises(ApproxNotFoundError):
+            curve_to_quadratic(cubic, error * (1 - 1e-9))
+
+
+@pytest.mark.parametrize("x, n", [(354, 2), (355, 3), (428, 3), (429, 4)])
+def test_cu2qu_third_difference_at_the_limit(x, n):
+    # Two quadratics take a third difference of up to 54 times the tolerance,
+    # three of up to 128 times: exactly that much still fits.
+    cubic = [(0, 0), (0, 100), (100, 200), (x, 300)]
+    assert len(curve_to_quadratic(cubic, 1.0)) == n + 2
+
+
+def test_cu2qu_single_quadratic_limit():
+    # A single quadratic is not tried for a third difference of more than
+    # QUADRATIC_MAX_D3 times the tolerance, because a quadratic with the end
+    # points of a cubic gets at least sqrt(3)/36 of the cubic's third
+    # difference away from it, wherever its off-curve point is.
+    assert QUADRATIC_MAX_D3 > 36 / math.sqrt(3)
+    cubic = [(0, 0), (30, 100), (-20, 180), (120, 250)]
+    c0, c1, c2, c3 = [complex(*p) for p in cubic]
+    least = math.sqrt(3) / 36 * abs(c3 - 3 * c2 + 3 * c1 - c0)
+    closest = (3 * (c1 + c2) - c0 - c3) / 4
+    rnd = random.Random(1)
+    for i in range(100):
+        q = closest
+        if i:
+            q += complex(rnd.uniform(-20, 20), rnd.uniform(-20, 20))
+        distance = spline_distance(cubic, [cubic[0], (q.real, q.imag), cubic[3]])
+        if i:
+            assert distance > least * (1 - 1e-4)
+        else:
+            assert distance == pytest.approx(least, rel=1e-4)
+
+    # Below the limit a single quadratic is tried, and comes back if it fits.
+    small = [(0, 0), (20, 20), (40, 20), (63, 0)]  # third difference (3, 0)
+    for spline in (
+        curve_to_quadratic(small, 1.0),
+        curves_to_quadratic([small, small], [1.0, 1.0])[1],
+    ):
+        assert len(spline) == 3
+        assert spline_distance(small, spline) <= 1.0
+    # Above it, two; and for all the curves converted together.
+    large = [(0, 0), (20, 20), (40, 20), (85, 0)]  # third difference (25, 0)
+    assert len(curve_to_quadratic(large, 1.0)) == 4
+    splines = curves_to_quadratic([small, large], [1.0, 1.0])
+    assert [len(spline) for spline in splines] == [4, 4]
+
+
+def test_cu2qu_more_quadratics_fit_too():
+    # curves_to_quadratic gives all its curves the number of quadratics of the
+    # one that takes most: a spline of more quadratics must not be farther.
+    limits = [n**3 / spline_error_factor(n) for n in range(2, MAX_N + 1)]
+    assert limits[:2] == [54, 128]
+    assert limits == sorted(limits)
+
+
+def test_curves_to_quadratic_same_number_of_quadratics():
+    curves = [
+        [(0, 0), (2, 2), (4, 2), (6, 0)],  # takes one quadratic,
+        [(0, 0), (0, 100), (100, 200), (354, 300)],  # two,
+        [(0, 0), (0, 100), (100, 200), (428, 300)],  # three
+    ]
+    assert [len(s) for s in curves_to_quadratic(curves[:1], [1.0])] == [3]
+    assert [len(s) for s in curves_to_quadratic(curves[:2], [1.0] * 2)] == [4, 4]
+    assert [len(s) for s in curves_to_quadratic(curves, [1.0] * 3)] == [5, 5, 5]
+    # Each curve has its own tolerance.
+    assert [len(s) for s in curves_to_quadratic(curves, [1.0, 1.0, 3.0])] == [4, 4, 4]
+
+
+def test_cu2qu_nan_coordinate():
+    # Used to recurse without end.
+    cubic = [(0, 0), (float("nan"), 0), (1, 1), (2, 2)]
+    with pytest.raises(ApproxNotFoundError):
+        curve_to_quadratic(cubic, 1.0)
+    with pytest.raises(ApproxNotFoundError):
+        curves_to_quadratic([cubic], [1.0])
+
+
+def test_cu2qu_fit_test_ends():
+    # The single quadratic for these is exactly as far from its cubic as the
+    # tolerance. The fit test used to split its error curve without end:
+    # RecursionError, or a crash of the interpreter with the compiled module.
+    for cubic, tolerance in (
+        ([(0, 0), (0, 0), (0, 0), (25, 0)], 100 / 27),
+        ([(-45, -3), (-30, -2), (0, 5), (0, 9)], 20 / 3),
+    ):
+        assert len(curve_to_quadratic(cubic, tolerance)) == 3
+
+
+def test_cu2qu_nan_tolerance():
+    # Used to recurse without end.
+    nan = float("nan")
+    for cubic in (
+        [(0, 0), (0, 100), (100, 200), (354, 300)],
+        [(5, 5), (5, 5), (5, 5), (5, 5)],
+    ):
+        with pytest.raises(ApproxNotFoundError):
+            curve_to_quadratic(cubic, nan)
+        with pytest.raises(ApproxNotFoundError):
+            curves_to_quadratic([cubic], [nan])
+        assert curve_to_quadratic(cubic, nan, all_quadratic=False) == cubic
 
 
 if __name__ == "__main__":
