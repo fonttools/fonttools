@@ -411,6 +411,50 @@ class NameTableTest(unittest.TestCase):
         # addMultilingualName adds a new name ID
         self.assertEqual(271, nameID)
 
+    def test_decompile_truncated_records(self):
+        table = table__n_a_m_e()
+        data = struct.pack(">HHH", 0, 100, 6 + 100 * nameRecordSize) + b"\0" * 5
+        with CapturingLogHandler(log, "ERROR") as captor:
+            table.decompile(data, ttFont=None)
+
+        self.assertEqual(table.names, [])
+        self.assertEqual(
+            [record.getMessage() for record in captor.records],
+            ["skipping malformed name record #0"],
+        )
+
+    def test_decompile_truncated_records_keeps_earlier_names(self):
+        table = table__n_a_m_e()
+        data = (
+            struct.pack(">HHH", 0, 3, 6 + nameRecordSize)
+            + struct.pack(">HHHHHH", 1, 0, 0, 1, 6, 0)
+            + b"Family"
+        )
+        with CapturingLogHandler(log, "ERROR") as captor:
+            table.decompile(data, ttFont=None)
+
+        self.assertEqual(table.getDebugName(1), "Family")
+        self.assertEqual(
+            [
+                record.getMessage()
+                for record in captor.records
+                if "skipping malformed name record" in record.msg
+            ],
+            ["skipping malformed name record #1"],
+        )
+
+    def test_decompile_badOffset_keeps_later_names(self):
+        table = table__n_a_m_e()
+        data = (
+            struct.pack(">HHH", 0, 2, 6 + 2 * nameRecordSize)
+            + struct.pack(">HHHHHH", 1, 0, 0, 1, 6, 8765)
+            + struct.pack(">HHHHHH", 1, 0, 0, 2, 6, 0)
+            + b"Family"
+        )
+        table.decompile(data, ttFont=None)
+        self.assertEqual(table.getDebugName(2), "Family")
+        self.assertIsNone(table.getDebugName(1))
+
     def test_decompile_badOffset(self):
         # https://github.com/fonttools/fonttools/issues/525
         table = table__n_a_m_e()

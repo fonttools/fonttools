@@ -68,7 +68,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
         for i in range(n):
             if len(data) < 12:
                 log.error("skipping malformed name record #%d", i)
-                continue
+                break
             name, data = sstruct.unpack2(nameRecordFormat, data, NameRecord())
             name.string = stringData[name.offset : name.offset + name.length]
             if name.offset + name.length > len(stringData):
