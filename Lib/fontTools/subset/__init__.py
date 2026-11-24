@@ -2004,6 +2004,33 @@ def subset_glyphs(self, s):
 
 # CBDT will inherit it
 @_add_method(ttLib.getTableClass("EBDT"))
+def closure_glyphs(self, s):
+    from fontTools.ttLib.tables.E_B_D_T_ import ComponentBitmapGlyph
+
+    decompose = s.glyphs
+    while decompose:
+        components = set()
+        for g in decompose:
+            for strike in self.strikeData:
+                if g not in strike:
+                    continue
+                glyph = strike[g]
+                if not isinstance(glyph, ComponentBitmapGlyph):
+                    continue
+                # Decompile now, while the font still has its original
+                # glyph order, so that the components' glyph codes are
+                # resolved to the correct glyph names; decompiling lazily
+                # at save time would name them after the new glyph order.
+                glyph.ensureDecompiled()
+                for comp in glyph.componentArray:
+                    components.add(comp.name)
+        components -= s.glyphs
+        s.glyphs.update(components)
+        decompose = components
+
+
+# CBDT will inherit it
+@_add_method(ttLib.getTableClass("EBDT"))
 def subset_glyphs(self, s):
     strikeData = [
         {g: strike[g] for g in s.glyphs if g in strike} for strike in self.strikeData
@@ -3943,6 +3970,25 @@ class Subsetter(object):
                 )
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_cffed = frozenset(self.glyphs)
+
+        for table in ("EBDT", "CBDT"):
+            if table in font:
+                with timer("close glyph list over '%s'" % table):
+                    log.info(
+                        "Closing glyph list over '%s': %d glyphs before",
+                        table,
+                        len(self.glyphs),
+                    )
+                    log.glyphs(self.glyphs, font=font)
+                    font[table].closure_glyphs(self)
+                    self.glyphs.intersection_update(realGlyphs)
+                    log.info(
+                        "Closed glyph list over '%s': %d glyphs after",
+                        table,
+                        len(self.glyphs),
+                    )
+                    log.glyphs(self.glyphs, font=font)
+        self.glyphs_ebdted = frozenset(self.glyphs)
 
         self.glyphs_retained = frozenset(self.glyphs)
 
