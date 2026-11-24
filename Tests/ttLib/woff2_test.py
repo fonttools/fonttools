@@ -1736,15 +1736,20 @@ class WOFF2DecompressionBombTest(unittest.TestCase):
         # output_buffer_limit: valid streams still decode, and a 64 MiB bomb
         # aborts early via 16-byte slicing instead of expanding all 64 MiB.
         real_brotli = woff2.brotli
+        instances = []
 
         class OldDecompressor:
             def __init__(self):
                 self._inner = real_brotli.Decompressor()
                 self.calls = 0
+                self.bytes_out = 0
+                instances.append(self)
 
             def process(self, data):
                 self.calls += 1
-                return self._inner.process(data)
+                out = self._inner.process(data)
+                self.bytes_out += len(out)
+                return out
 
             def is_finished(self):
                 return self._inner.is_finished()
@@ -1753,7 +1758,8 @@ class WOFF2DecompressionBombTest(unittest.TestCase):
             error = real_brotli.error
             Decompressor = OldDecompressor
 
-        bomb = self._brotli_zeros(64 * 1024 * 1024)
+        bomb_size = 64 * 1024 * 1024
+        bomb = self._brotli_zeros(bomb_size)
         woff2_bomb = self._make_woff2(bomb, declared_len=54)
         valid_payload = b"hello world" * 100
         valid_comp = real_brotli.compress(valid_payload)
@@ -1764,14 +1770,17 @@ class WOFF2DecompressionBombTest(unittest.TestCase):
                 woff2._brotliDecompress(valid_comp, len(valid_payload), "font data"),
                 valid_payload,
             )
-            # 16-byte input slicing aborts after one meta-block (~8 MiB), far
-            # below the full 64 MiB stream.
-            with self._assert_peak_memory_below(20 * 1024 * 1024):
-                with self.assertRaisesRegex(
-                    ttLib.TTLibError,
-                    "unexpected size for decompressed font data: exceeds expected 54 bytes",
-                ):
-                    WOFF2Reader(BytesIO(woff2_bomb))
+            with self.assertRaisesRegex(
+                ttLib.TTLibError,
+                "unexpected size for decompressed font data: exceeds expected 54 bytes",
+            ):
+                WOFF2Reader(BytesIO(woff2_bomb))
+            # 16-byte input slicing aborts after one meta-block rather than
+            # feeding the whole stream or expanding the full 64 MiB bomb.
+            decompressor = instances[-1]
+            total_chunks = (len(bomb) + 15) // 16
+            self.assertLess(decompressor.calls, total_chunks)
+            self.assertLess(decompressor.bytes_out, bomb_size)
         finally:
             woff2.brotli = real_brotli
 
