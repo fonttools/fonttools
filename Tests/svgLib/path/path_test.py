@@ -1,10 +1,12 @@
 from fontTools.misc import etree
 from fontTools.misc.textTools import tobytes
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib import SVGPath
 
 import os
 from tempfile import NamedTemporaryFile
+import pytest
 
 SVG_DATA = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -81,6 +83,27 @@ class SVGPathTest(object):
             ("curveTo", ((250.0, 700.0), (400.0, 700.0), (400.0, 800.0))),
             ("endPath", ()),
         ]
+
+
+@pytest.mark.parametrize(
+    "radii, used_radii",
+    [
+        ('rx="999"', 'rx="10" ry="5"'),
+        ('ry="8"', 'rx="8" ry="5"'),
+        ('rx="20" ry="2"', 'rx="10" ry="2"'),
+    ],
+)
+def test_oversized_rect_radii(radii, used_radii):
+    def draw_rect(attrs):
+        pen = RecordingPen()
+        SVGPath.fromstring(f'<rect width="20" height="10" {attrs}/>').draw(pen)
+        return pen
+
+    result = draw_rect(radii)
+    assert result.value == draw_rect(used_radii).value
+    bounds_pen = BoundsPen(None)
+    result.replay(bounds_pen)
+    assert bounds_pen.bounds == (0, 0, 20, 10)
 
 
 def test_no_external_entity_expansion(tmp_path):

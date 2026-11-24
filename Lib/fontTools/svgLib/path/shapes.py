@@ -118,7 +118,9 @@ class PathBuilder(object):
 
         rx = _prefer_non_zero(rx, ry)
         ry = _prefer_non_zero(ry, rx)
-        # TODO there are more rules for adjusting rx, ry
+        # Clamp each radius after resolving an omitted value from the other axis.
+        rx = min(rx, w / 2)
+        ry = min(ry, h / 2)
 
         self._start_path()
         self.M(x + rx, y)
