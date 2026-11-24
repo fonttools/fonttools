@@ -23,6 +23,7 @@ from fontTools.ttLib.sfnt import (
     SFNTDirectoryEntry,
     sfntDirectoryEntrySize,
     calcChecksum,
+    _checkWoffDecompressedSize,
 )
 from fontTools.ttLib.tables import ttProgram, _g_l_y_f
 import logging
@@ -38,6 +39,78 @@ try:
     haveBrotli = True
 except ImportError:
     pass
+
+
+def _brotliDecompress(data, expectedSize, description):
+    """Decompress Brotli `data`, aborting if output exceeds `expectedSize`."""
+    decompressor = brotli.Decompressor()
+    chunks = []
+    total = 0
+    try:
+        chunk = decompressor.process(data, output_buffer_limit=expectedSize + 1)
+    except TypeError:
+        # brotli < 1.2.0 / brotlicffi < 1.2.0.0 does not accept
+        # output_buffer_limit. Fall back to small input slices so an overrun
+        # aborts after at most one Brotli meta-block (~8-16 MiB) instead of
+        # expanding the entire stream into gigabytes.
+        log.warning(
+            "Installed brotli does not support output_buffer_limit; "
+            "upgrade to brotli >= 1.2.1 or brotlicffi >= 1.2.1.0 for "
+            "strictly bounded WOFF2 decompression"
+        )
+        decompressor = brotli.Decompressor()
+        chunkSize = 16
+        for i in range(0, len(data), chunkSize):
+            chunk = decompressor.process(data[i : i + chunkSize])
+            total += len(chunk)
+            if total > expectedSize:
+                raise TTLibError(
+                    "unexpected size for decompressed %s: exceeds expected %d bytes"
+                    % (description, expectedSize)
+                )
+            if chunk:
+                chunks.append(chunk)
+        if not decompressor.is_finished():
+            raise TTLibError("unexpected end of compressed %s" % description)
+        decompressed = chunks[0] if len(chunks) == 1 else b"".join(chunks)
+        if len(decompressed) != expectedSize:
+            raise TTLibError(
+                "unexpected size for decompressed %s: expected %d, found %d"
+                % (description, expectedSize, len(decompressed))
+            )
+        return decompressed
+
+    total += len(chunk)
+    if total > expectedSize:
+        raise TTLibError(
+            "unexpected size for decompressed %s: exceeds expected %d bytes"
+            % (description, expectedSize)
+        )
+    if chunk:
+        chunks.append(chunk)
+
+    while not decompressor.is_finished():
+        if decompressor.can_accept_more_data():
+            raise TTLibError("unexpected end of compressed %s" % description)
+        chunk = decompressor.process(b"", output_buffer_limit=expectedSize - total + 1)
+        total += len(chunk)
+        if total > expectedSize:
+            raise TTLibError(
+                "unexpected size for decompressed %s: exceeds expected %d bytes"
+                % (description, expectedSize)
+            )
+        if chunk:
+            chunks.append(chunk)
+        elif not decompressor.is_finished():
+            raise TTLibError("unexpected end of compressed %s" % description)
+
+    decompressed = chunks[0] if len(chunks) == 1 else b"".join(chunks)
+    if len(decompressed) != expectedSize:
+        raise TTLibError(
+            "unexpected size for decompressed %s: expected %d, found %d"
+            % (description, expectedSize, len(decompressed))
+        )
+    return decompressed
 
 
 class WOFF2Reader(SFNTReader):
@@ -64,6 +137,12 @@ class WOFF2Reader(SFNTReader):
             raise TTLibError("Not a WOFF2 font (not enough data)")
         sstruct.unpack(woff2DirectoryFormat, data, self)
 
+        self.file.seek(0, 2)
+        fileSize = self.file.tell()
+        if self.length != fileSize:
+            raise TTLibError("reported 'length' doesn't match the actual file size")
+        self.file.seek(woff2DirectorySize)
+
         self.tables = OrderedDict()
         offset = 0
         for i in range(self.numTables):
@@ -75,18 +154,26 @@ class WOFF2Reader(SFNTReader):
             offset += entry.length
 
         totalUncompressedSize = offset
-        compressedData = self.file.read(self.totalCompressedSize)
-        decompressedData = brotli.decompress(compressedData)
-        if len(decompressedData) != totalUncompressedSize:
+        pos = self.file.tell()
+        available = max(0, fileSize - pos)
+        if self.totalCompressedSize > available:
             raise TTLibError(
-                "unexpected size for decompressed font data: expected %d, found %d"
-                % (totalUncompressedSize, len(decompressedData))
+                "unexpected end of compressed font data: expected %d bytes but got %d"
+                % (self.totalCompressedSize, available)
             )
+        _checkWoffDecompressedSize(
+            self.totalCompressedSize, totalUncompressedSize, "WOFF2 font data"
+        )
+        compressedData = self.file.read(self.totalCompressedSize)
+        if len(compressedData) != self.totalCompressedSize:
+            raise TTLibError(
+                "unexpected end of compressed font data: expected %d bytes but got %d"
+                % (self.totalCompressedSize, len(compressedData))
+            )
+        decompressedData = _brotliDecompress(
+            compressedData, totalUncompressedSize, "font data"
+        )
         self.transformBuffer = BytesIO(decompressedData)
-
-        self.file.seek(0, 2)
-        if self.length != self.file.tell():
-            raise TTLibError("reported 'length' doesn't match the actual file size")
 
         self.flavorData = WOFF2FlavorData(self)
 
@@ -1338,8 +1425,8 @@ class WOFF2FlavorData(WOFFFlavorData):
 
         self.transformedTables = set(transformedTables)
 
-    def _decompress(self, rawData):
-        return brotli.decompress(rawData)
+    def _decompress(self, rawData, expectedSize):
+        return _brotliDecompress(rawData, expectedSize, "WOFF metadata")
 
 
 def unpackBase128(data):
