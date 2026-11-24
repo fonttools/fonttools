@@ -63,11 +63,11 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
                 log.warning("'%s' timestamp out of range; ignoring top bytes", stamp)
                 value &= 0xFFFFFFFF
                 setattr(self, stamp, value)
-            if value < 0x7C259DC0:  # January 1, 1970 00:00:00
+            if value < -mac_epoch_diff:  # January 1, 1970 00:00:00
                 log.warning(
                     "'%s' timestamp seems very low; regarding as unix timestamp", stamp
                 )
-                value += 0x7C259DC0
+                value -= mac_epoch_diff
                 setattr(self, stamp, value)
 
     def compile(self, ttFont):
