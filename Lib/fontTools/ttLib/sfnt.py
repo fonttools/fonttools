@@ -16,7 +16,7 @@ a table's length changes you need to rewrite the whole file anyway.
 from __future__ import annotations
 
 from collections.abc import KeysView
-from io import BytesIO
+from io import BytesIO, UnsupportedOperation
 from types import SimpleNamespace
 from fontTools.misc.textTools import Tag
 from fontTools.misc import sstruct
@@ -101,6 +101,20 @@ class SFNTReader(object):
 
         # Load flavor data if any
         if self.flavor == "woff":
+            totalUncompressedSize = sum(e.origLength for e in tables.values())
+            totalCompressedSize = sum(e.length for e in tables.values())
+            try:
+                pos = self.file.tell()
+                self.file.seek(0, 2)
+                fileSize = self.file.tell()
+                self.file.seek(pos)
+            except (UnsupportedOperation, OSError, TypeError):
+                pass
+            else:
+                totalCompressedSize = min(totalCompressedSize, fileSize)
+            _checkWoffDecompressedSize(
+                totalCompressedSize, totalUncompressedSize, "WOFF font data"
+            )
             self.flavorData = WOFFFlavorData(self)
 
     def has_key(self, tag: str | bytes) -> bool:
@@ -181,6 +195,101 @@ ZOPFLI_LEVELS = {
     8: 50,
     9: 100,
 }
+
+# Limits on decompressed WOFF / WOFF2 data to guard against decompression bombs.
+# WOFF_MAX_DECOMPRESSED_SIZE matches OpenType Sanitizer's 300 MiB file limit and
+# WOFF_MAX_COMPRESSION_RATIO matches google/woff2's 100x plausible ratio. Small
+# streams below WOFF_MIN_RATIO_CHECK_SIZE are exempt from the ratio check so
+# synthetic or sparse fonts don't trigger false positives. Set
+# WOFF_MAX_DECOMPRESSED_SIZE, WOFF_MAX_METADATA_SIZE, or
+# WOFF_MAX_COMPRESSION_RATIO to None to disable that check (set
+# WOFF_MIN_RATIO_CHECK_SIZE to 0 or None to apply the ratio check to all sizes).
+WOFF_MAX_DECOMPRESSED_SIZE = 300 * 1024 * 1024  # 300 MiB
+WOFF_MAX_METADATA_SIZE = 10 * 1024 * 1024  # 10 MiB
+WOFF_MAX_COMPRESSION_RATIO = 100
+WOFF_MIN_RATIO_CHECK_SIZE = 1 * 1024 * 1024  # 1 MiB
+
+_UNSET = object()
+
+
+def _checkWoffDecompressedSize(
+    compressedSize,
+    uncompressedSize,
+    description,
+    maxSize=_UNSET,
+):
+    """Validate declared WOFF/WOFF2 decompressed size against absolute and ratio limits."""
+    limit = WOFF_MAX_DECOMPRESSED_SIZE if maxSize is _UNSET else maxSize
+    if limit is not None and uncompressedSize > limit:
+        raise TTLibError(
+            "decompressed %s size %d exceeds maximum allowed size %d"
+            % (description, uncompressedSize, limit)
+        )
+    minSize = WOFF_MIN_RATIO_CHECK_SIZE or 0
+    if (
+        WOFF_MAX_COMPRESSION_RATIO is not None
+        and uncompressedSize > minSize
+        and uncompressedSize > compressedSize * WOFF_MAX_COMPRESSION_RATIO
+    ):
+        raise TTLibError(
+            "decompressed %s size %d exceeds maximum compression ratio %d "
+            "(compressed size %d)"
+            % (
+                description,
+                uncompressedSize,
+                WOFF_MAX_COMPRESSION_RATIO,
+                compressedSize,
+            )
+        )
+
+
+_READ_CHUNK_SIZE = 1024 * 1024  # 1 MiB
+
+
+def _readExactBytes(file, size, offset=None):
+    """Read `size` bytes from `file` in bounded chunks so a truncated file
+    declaring a huge length cannot cause CPython's BufferedReader to
+    pre-allocate gigabytes in a single `read(size)` call.
+    Returns `(data, size)` on success or `(None, got)` if truncated.
+    """
+    if offset is not None:
+        file.seek(offset)
+    if size <= _READ_CHUNK_SIZE:
+        data = file.read(size)
+        if len(data) != size:
+            return None, len(data)
+        return data, size
+    chunks = []
+    remaining = size
+    while remaining > 0:
+        chunk = file.read(min(remaining, _READ_CHUNK_SIZE))
+        if not chunk:
+            return None, size - remaining
+        chunks.append(chunk)
+        remaining -= len(chunk)
+    return b"".join(chunks), size
+
+
+def _zlibDecompress(rawData, expectedSize, description):
+    """Decompress zlib `rawData`, aborting if output exceeds `expectedSize`."""
+    import zlib
+
+    decompressor = zlib.decompressobj()
+    # max_length=0 means unbounded in zlib, so always pass expectedSize + 1.
+    data = decompressor.decompress(rawData, expectedSize + 1)
+    if len(data) > expectedSize or decompressor.unconsumed_tail:
+        raise TTLibError(
+            "unexpected size for decompressed %s: exceeds expected %d bytes"
+            % (description, expectedSize)
+        )
+    if not decompressor.eof:
+        raise TTLibError("unexpected end of compressed %s" % description)
+    if len(data) != expectedSize:
+        raise TTLibError(
+            "unexpected size for decompressed %s: expected %d but got %d"
+            % (description, expectedSize, len(data))
+        )
+    return data
 
 
 def compress(data, level=ZLIB_COMPRESSION_LEVEL):
@@ -531,9 +640,8 @@ class DirectoryEntry(object):
             return "<%s at %x>" % (self.__class__.__name__, id(self))
 
     def loadData(self, file):
-        file.seek(self.offset)
-        data = file.read(self.length)
-        if len(data) != self.length:
+        data, got = _readExactBytes(file, self.length, self.offset)
+        if data is None:
             # A corrupt or truncated table directory entry can point past the
             # end of the file; raise a TTLibError instead of a bare assertion
             # (which is also silently skipped under `python -O`).
@@ -544,7 +652,7 @@ class DirectoryEntry(object):
                 % (
                     Tag(tag) if tag is not None else "????",
                     self.length,
-                    len(data),
+                    got,
                     self.offset,
                 )
             )
@@ -587,8 +695,6 @@ class WOFFDirectoryEntry(DirectoryEntry):
             self.zlibCompressionLevel = ZLIB_COMPRESSION_LEVEL
 
     def decodeData(self, rawData):
-        import zlib
-
         if self.length == self.origLength:
             data = rawData
         else:
@@ -603,12 +709,9 @@ class WOFFDirectoryEntry(DirectoryEntry):
                     "smaller than original length %d"
                     % (tag, self.length, self.origLength)
                 )
-            data = zlib.decompress(rawData)
-            if len(data) != self.origLength:
-                raise TTLibError(
-                    "unexpected size for decompressed WOFF table '%s': "
-                    "expected %d but got %d" % (tag, self.origLength, len(data))
-                )
+            description = "WOFF table '%s'" % tag
+            _checkWoffDecompressedSize(len(rawData), self.origLength, description)
+            data = _zlibDecompress(rawData, self.origLength, description)
         return data
 
     def encodeData(self, data):
@@ -640,14 +743,21 @@ class WOFFFlavorData:
             # (untrusted) WOFF header; validate them with real checks rather
             # than bare assertions, which are silently skipped under `python -O`.
             if reader.metaLength:
-                reader.file.seek(reader.metaOffset)
-                rawData = reader.file.read(reader.metaLength)
-                if len(rawData) != reader.metaLength:
+                _checkWoffDecompressedSize(
+                    reader.metaLength,
+                    reader.metaOrigLength,
+                    "WOFF metadata",
+                    maxSize=WOFF_MAX_METADATA_SIZE,
+                )
+                rawData, got = _readExactBytes(
+                    reader.file, reader.metaLength, reader.metaOffset
+                )
+                if rawData is None:
                     raise TTLibError(
                         "unexpected end of WOFF metadata: expected %d bytes "
-                        "but got %d" % (reader.metaLength, len(rawData))
+                        "but got %d" % (reader.metaLength, got)
                     )
-                data = self._decompress(rawData)
+                data = self._decompress(rawData, expectedSize=reader.metaOrigLength)
                 if len(data) != reader.metaOrigLength:
                     raise TTLibError(
                         "unexpected size for decompressed WOFF metadata: "
@@ -655,19 +765,18 @@ class WOFFFlavorData:
                     )
                 self.metaData = data
             if reader.privLength:
-                reader.file.seek(reader.privOffset)
-                data = reader.file.read(reader.privLength)
-                if len(data) != reader.privLength:
+                data, got = _readExactBytes(
+                    reader.file, reader.privLength, reader.privOffset
+                )
+                if data is None:
                     raise TTLibError(
                         "unexpected end of WOFF private data: expected %d "
-                        "bytes but got %d" % (reader.privLength, len(data))
+                        "bytes but got %d" % (reader.privLength, got)
                     )
                 self.privData = data
 
-    def _decompress(self, rawData):
-        import zlib
-
-        return zlib.decompress(rawData)
+    def _decompress(self, rawData, expectedSize):
+        return _zlibDecompress(rawData, expectedSize, "WOFF metadata")
 
 
 def calcChecksum(data):

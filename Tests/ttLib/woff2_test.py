@@ -112,13 +112,25 @@ class WOFF2ReaderTest(unittest.TestCase):
             WOFF2Reader(BytesIO(data + self.file.read()))
 
     def test_incorrect_uncompressed_size(self):
-        decompress_backup = brotli.decompress
-        brotli.decompress = lambda data: b""  # return empty byte string
+        data = self.file.read()
+        header = sstruct.unpack(woff2DirectoryFormat, data[:woff2DirectorySize])
+        bio = BytesIO(data)
+        bio.seek(woff2DirectorySize)
+        for _ in range(header["numTables"]):
+            WOFF2DirectoryEntry().fromFile(bio)
+        dir_end = bio.tell()
+        empty_stream = brotli.compress(b"")
+        header["totalCompressedSize"] = len(empty_stream)
+        header["length"] = dir_end + len(empty_stream)
+        bad_woff2 = (
+            sstruct.pack(woff2DirectoryFormat, header)
+            + data[woff2DirectorySize:dir_end]
+            + empty_stream
+        )
         with self.assertRaisesRegex(
             ttLib.TTLibError, "unexpected size for decompressed"
         ):
-            WOFF2Reader(self.file)
-        brotli.decompress = decompress_backup
+            WOFF2Reader(BytesIO(bad_woff2))
 
     def test_incorrect_file_size(self):
         data = self.file.read(woff2DirectorySize)
@@ -1568,6 +1580,200 @@ class CubicTest(unittest.TestCase):
         ttf.save(out)
 
         assert pen1.value == pen2.value
+
+
+class WOFF2DecompressionBombTest(unittest.TestCase):
+    @staticmethod
+    def _assert_peak_memory_below(limit):
+        from contextlib import contextmanager
+
+        try:
+            import tracemalloc
+        except ImportError:
+            tracemalloc = None
+
+        @contextmanager
+        def _cm():
+            if tracemalloc is None:
+                yield
+                return
+            tracemalloc.start()
+            try:
+                yield
+                _, peak = tracemalloc.get_traced_memory()
+            finally:
+                tracemalloc.stop()
+            assert peak < limit
+
+        return _cm()
+
+    @staticmethod
+    def _brotli_zeros(size):
+        compressor = brotli.Compressor(quality=5)
+        chunk = b"\x00" * (1024 * 1024)
+        parts = []
+        remaining = size
+        while remaining > 0:
+            n = min(len(chunk), remaining)
+            parts.append(compressor.process(chunk[:n]))
+            remaining -= n
+        parts.append(compressor.finish())
+        return b"".join(parts)
+
+    @staticmethod
+    def _make_woff2(
+        comp_stream,
+        declared_len=0,
+        num_tables=1,
+        meta_comp=b"",
+        meta_orig=0,
+        total_compressed_size=None,
+    ):
+        entry = (
+            (bytechr(getKnownTagIndex("head")) + packBase128(declared_len))
+            if num_tables == 1
+            else b""
+        )
+        body = entry + comp_stream
+        meta_offset = woff2DirectorySize + len(body) if meta_comp else 0
+        total_len = woff2DirectorySize + len(body) + len(meta_comp)
+        header = struct.pack(
+            ">4s4sIHHIIHHIIIII",
+            b"wOF2",
+            b"\x00\x01\x00\x00",
+            total_len,
+            num_tables,
+            0,
+            min(declared_len + 12, 0xFFFFFFFF),
+            (
+                len(comp_stream)
+                if total_compressed_size is None
+                else total_compressed_size
+            ),
+            1,
+            0,
+            meta_offset,
+            len(meta_comp),
+            meta_orig,
+            0,
+            0,
+        )
+        return header + body + meta_comp
+
+    def test_lying_header_bounded_decompression(self):
+        bomb = self._brotli_zeros(64 * 1024 * 1024)
+        for num_tables, declared in ((1, 54), (0, 0)):
+            woff2_data = self._make_woff2(
+                bomb, declared_len=declared, num_tables=num_tables
+            )
+            with self._assert_peak_memory_below(2 * 1024 * 1024):
+                with self.assertRaisesRegex(
+                    ttLib.TTLibError,
+                    "unexpected size for decompressed font data: exceeds expected",
+                ):
+                    ttLib.TTFont(BytesIO(woff2_data))
+
+    def test_declared_size_and_ratio_limits(self):
+        bomb = self._brotli_zeros(64 * 1024 * 1024)
+        # Honest 2 GiB bomb exceeds WOFF_MAX_DECOMPRESSED_SIZE
+        woff2_huge = self._make_woff2(bomb, declared_len=2 * 1024**3)
+        with self.assertRaisesRegex(ttLib.TTLibError, "exceeds maximum allowed size"):
+            ttLib.TTFont(BytesIO(woff2_huge))
+
+        # Honest 64 MiB bomb from ~200 B stream exceeds WOFF_MAX_COMPRESSION_RATIO
+        woff2_ratio = self._make_woff2(bomb, declared_len=64 * 1024 * 1024)
+        with self.assertRaisesRegex(
+            ttLib.TTLibError, "exceeds maximum compression ratio"
+        ):
+            ttLib.TTFont(BytesIO(woff2_ratio))
+
+    def test_metadata_decompression_bomb(self):
+        empty_font = brotli.compress(b"")
+        bomb = self._brotli_zeros(64 * 1024 * 1024)
+
+        # Lying metaOrigLength=0 must abort via bounded brotli decompression
+        woff2_lying = self._make_woff2(
+            empty_font, num_tables=0, meta_comp=bomb, meta_orig=0
+        )
+        with self._assert_peak_memory_below(2 * 1024 * 1024):
+            with self.assertRaisesRegex(
+                ttLib.TTLibError,
+                "unexpected size for decompressed WOFF metadata: exceeds expected",
+            ):
+                ttLib.TTFont(BytesIO(woff2_lying))
+
+        # Honest metaOrigLength exceeding WOFF_MAX_METADATA_SIZE
+        woff2_huge = self._make_woff2(
+            empty_font, num_tables=0, meta_comp=bomb, meta_orig=64 * 1024 * 1024
+        )
+        with self.assertRaisesRegex(ttLib.TTLibError, "exceeds maximum allowed size"):
+            ttLib.TTFont(BytesIO(woff2_huge))
+
+    def test_truncated_compressed_size_on_real_file_does_not_preallocate(self):
+        import tempfile
+
+        woff2_data = self._make_woff2(
+            b"", num_tables=0, total_compressed_size=0xFFFFFFFF
+        )
+        with tempfile.NamedTemporaryFile(suffix=".woff2") as f:
+            f.write(woff2_data)
+            f.flush()
+            with self._assert_peak_memory_below(2 * 1024 * 1024):
+                with self.assertRaisesRegex(
+                    ttLib.TTLibError, "unexpected end of compressed font data"
+                ):
+                    ttLib.TTFont(f.name, lazy=True)
+
+    def test_truncated_brotli_stream_raises_error(self):
+        valid = brotli.compress(b"A" * 100)
+        truncated = valid[:-2]
+        woff2_data = self._make_woff2(truncated, declared_len=100)
+        with self.assertRaises((brotli.error, ttLib.TTLibError)):
+            WOFF2Reader(BytesIO(woff2_data))
+
+    def test_old_brotli_chunked_fallback(self):
+        # Simulate brotli < 1.2.0 where Decompressor.process() does not accept
+        # output_buffer_limit: valid streams still decode, and a 64 MiB bomb
+        # aborts early via 16-byte slicing instead of expanding all 64 MiB.
+        real_brotli = woff2.brotli
+
+        class OldDecompressor:
+            def __init__(self):
+                self._inner = real_brotli.Decompressor()
+                self.calls = 0
+
+            def process(self, data):
+                self.calls += 1
+                return self._inner.process(data)
+
+            def is_finished(self):
+                return self._inner.is_finished()
+
+        class OldBrotli:
+            error = real_brotli.error
+            Decompressor = OldDecompressor
+
+        bomb = self._brotli_zeros(64 * 1024 * 1024)
+        woff2_bomb = self._make_woff2(bomb, declared_len=54)
+        valid_payload = b"hello world" * 100
+        valid_comp = real_brotli.compress(valid_payload)
+
+        woff2.brotli = OldBrotli
+        try:
+            self.assertEqual(
+                woff2._brotliDecompress(valid_comp, len(valid_payload), "font data"),
+                valid_payload,
+            )
+            # 16-byte input slicing aborts after one meta-block (~8 MiB), far
+            # below the full 64 MiB stream.
+            with self._assert_peak_memory_below(20 * 1024 * 1024):
+                with self.assertRaisesRegex(
+                    ttLib.TTLibError,
+                    "unexpected size for decompressed font data: exceeds expected 54 bytes",
+                ):
+                    WOFF2Reader(BytesIO(woff2_bomb))
+        finally:
+            woff2.brotli = real_brotli
 
 
 if __name__ == "__main__":
