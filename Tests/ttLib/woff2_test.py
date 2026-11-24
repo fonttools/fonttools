@@ -1711,18 +1711,21 @@ class WOFF2DecompressionBombTest(unittest.TestCase):
 
     def test_truncated_compressed_size_on_real_file_does_not_preallocate(self):
         import tempfile
+        from pathlib import Path
 
         woff2_data = self._make_woff2(
             b"", num_tables=0, total_compressed_size=0xFFFFFFFF
         )
-        with tempfile.NamedTemporaryFile(suffix=".woff2") as f:
-            f.write(woff2_data)
-            f.flush()
+        # A NamedTemporaryFile can't be reopened by name on Windows while it is
+        # still open, so write the file inside a temporary directory instead.
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+            path = Path(tmpdir) / "test.woff2"
+            path.write_bytes(woff2_data)
             with self._assert_peak_memory_below(2 * 1024 * 1024):
                 with self.assertRaisesRegex(
                     ttLib.TTLibError, "unexpected end of compressed font data"
                 ):
-                    ttLib.TTFont(f.name, lazy=True)
+                    ttLib.TTFont(path, lazy=True)
 
     def test_truncated_brotli_stream_raises_error(self):
         valid = brotli.compress(b"A" * 100)
