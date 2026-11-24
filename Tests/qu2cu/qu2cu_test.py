@@ -124,6 +124,35 @@ class Qu2CuTest:
         with pytest.raises(ValueError, match="max_err must be greater than zero"):
             quadratic_to_curves([[(0, 0), (0, 1), (1, 1)]], tolerance)
 
+    def test_reject_nan_tolerance(self):
+        # Used to recurse without end in the fit test.
+        spline = curve_to_quadratic([(0, 0), (0, 100), (100, 200), (200, 200)], 1)
+        with pytest.raises(ValueError, match="max_err must be greater than zero"):
+            quadratic_to_curves([spline], float("nan"))
+
+    @pytest.mark.parametrize("all_cubic", [False, True])
+    @pytest.mark.parametrize(
+        "spline, tolerance",
+        [
+            (
+                [(0, 0), (0, 0), (12.5, 0), (75, 0), (150, 0)],
+                1.1718750000000078,
+            ),
+            (
+                [(19, 27), (16, 19), (6, 9), (-6, 4), (-14, 3)]
+                + [(-15, 5), (-4, 8), (22, 12), (46, 13)],
+                0.4999999999999975,
+            ),
+        ],
+    )
+    def test_fit_test_ends(self, spline, tolerance, all_cubic):
+        # An error curve of these touches the tolerance. The fit test used to
+        # split it without end: RecursionError, or a crash of the interpreter
+        # with the compiled module.
+        curves = quadratic_to_curves([spline], tolerance, all_cubic)
+        assert curves[0][0] == spline[0]
+        assert curves[-1][-1] == spline[-1]
+
     def test_main(self):
         # Just for coverage
         qu2cu_main()
