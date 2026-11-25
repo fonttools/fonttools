@@ -1,3 +1,6 @@
+4.69.1 (released 2026-11-25)
+----------------------------
+
 - Re-release of 4.69.0 with complete PyPI provenance. Uploading 4.69.0 hit PyPI's project
   size limit, so most of its files had to be uploaded by hand without attestations.
   No code changes (#4461).
