@@ -1315,8 +1315,9 @@ def _split_segment_at_t(c, t):
     raise ValueError("Unknown curve degree")
 
 
+@cython.locals(depth=cython.int)
 def _curve_curve_intersections_t(
-    curve1, curve2, precision=1e-3, range1=None, range2=None
+    curve1, curve2, precision=1e-3, range1=None, range2=None, depth=0
 ):
     bounds1 = _curve_bounds(curve1)
     bounds2 = _curve_bounds(curve2)
@@ -1335,7 +1336,7 @@ def _curve_curve_intersections_t(
         return 0.5 * (r[0] + r[1])
 
     # If they do overlap but they're tiny, approximate
-    if rectArea(bounds1) < precision and rectArea(bounds2) < precision:
+    if depth >= 64 or (rectArea(bounds1) < precision and rectArea(bounds2) < precision):
         return [(midpoint(range1), midpoint(range2))]
 
     c11, c12 = _split_segment_at_t(curve1, 0.5)
@@ -1346,25 +1347,53 @@ def _curve_curve_intersections_t(
     c21_range = (range2[0], midpoint(range2))
     c22_range = (midpoint(range2), range2[1])
 
+    if not all(
+        math.isfinite(value)
+        for segment in (c11, c12, c21, c22)
+        for point in segment
+        for value in point
+    ):
+        return [(midpoint(range1), midpoint(range2))]
+
     found = []
     found.extend(
         _curve_curve_intersections_t(
-            c11, c21, precision, range1=c11_range, range2=c21_range
+            c11,
+            c21,
+            precision,
+            range1=c11_range,
+            range2=c21_range,
+            depth=depth + 1,
         )
     )
     found.extend(
         _curve_curve_intersections_t(
-            c12, c21, precision, range1=c12_range, range2=c21_range
+            c12,
+            c21,
+            precision,
+            range1=c12_range,
+            range2=c21_range,
+            depth=depth + 1,
         )
     )
     found.extend(
         _curve_curve_intersections_t(
-            c11, c22, precision, range1=c11_range, range2=c22_range
+            c11,
+            c22,
+            precision,
+            range1=c11_range,
+            range2=c22_range,
+            depth=depth + 1,
         )
     )
     found.extend(
         _curve_curve_intersections_t(
-            c12, c22, precision, range1=c12_range, range2=c22_range
+            c12,
+            c22,
+            precision,
+            range1=c12_range,
+            range2=c22_range,
+            depth=depth + 1,
         )
     )
 
