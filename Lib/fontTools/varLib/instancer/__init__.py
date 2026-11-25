@@ -2845,6 +2845,7 @@ def instantiateVariableFont(
     _checkFeatureVariationConditions(varfont)
 
     if static:
+        axisLimits = dict(axisLimits)
         unspecified = []
         for axis in varfont["fvar"].axes:
             if axis.axisTag not in axisLimits:
