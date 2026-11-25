@@ -99,3 +99,6 @@ jobs:
         path: dist
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@v1.14.3
+      with:
+        # so a re-run can finish an upload that stopped halfway
+        skip-existing: true
