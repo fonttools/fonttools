@@ -133,6 +133,43 @@ def test_ttLib_open_save_ttcollection_optimize_font_speed(
     assert coll[0].getGlyphOrder() == TTCollection(ttcollection_path)[0].getGlyphOrder()
 
 
+@pytest.mark.parametrize("font_number", [None, 1])
+@pytest.mark.parametrize(
+    "options, field, values",
+    [
+        (["--no-recalc-timestamp"], "modified", [3_000_000_000, 3_100_000_000]),
+        (["--no-lazy", "-b"], "xMin", [-1234, -1234]),
+    ],
+)
+def test_ttLib_open_save_ttcollection_no_recalc(
+    tmp_path, font_number, options, field, values
+):
+    input_path = tmp_path / "input.ttc"
+    output_path = tmp_path / ("output.ttc" if font_number is None else "output.ttf")
+    with TTCollection() as collection:
+        for value in values:
+            font = TTFont(recalcTimestamp=False, recalcBBoxes=False)
+            font.importXML(TEST_DATA / "TestTTF-Regular.ttx")
+            setattr(font["head"], field, value)
+            collection.fonts.append(font)
+        collection.save(input_path)
+
+    with TTCollection(input_path) as original:
+        assert [getattr(font["head"], field) for font in original] == values
+
+    args = [*options, "-o", str(output_path), str(input_path)]
+    if font_number is not None:
+        args.extend(["-y", str(font_number)])
+    __main__.main(args)
+
+    if font_number is None:
+        with TTCollection(output_path) as result:
+            assert [getattr(font["head"], field) for font in result] == values
+    else:
+        with TTFont(output_path) as result:
+            assert getattr(result["head"], field) == values[font_number]
+
+
 def test_ttLib_open_multiple_fonts_save_ttcollection(tmp_path, ttfont_path):
     output_path = tmp_path / "TestTTF.ttc"
 
