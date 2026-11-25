@@ -2,6 +2,7 @@ from fontTools.pens.recordingPen import (
     RecordingPen,
     DecomposingRecordingPen,
     RecordingPointPen,
+    lerpRecordings,
 )
 import pytest
 
@@ -79,3 +80,38 @@ class RecordingPointPenTest:
         pen.replay(pen2)
 
         assert pen2.value == pen.value
+
+
+class LerpRecordingsTest:
+    @pytest.mark.parametrize(
+        "factor, expected",
+        [
+            (0, [(0, 0), (0, 100), None]),
+            (0.5, [(5, 0), (0, 105), None]),
+            (1, [(10, 0), (0, 110), None]),
+        ],
+    )
+    def test_offcurve_only_contour(self, factor, expected):
+        first = [("qCurveTo", ((0, 0), (0, 100), None)), ("closePath", ())]
+        second = [("qCurveTo", ((10, 0), (0, 110), None)), ("closePath", ())]
+        assert list(lerpRecordings(first, second, factor)) == [
+            ("qCurveTo", expected),
+            ("closePath", []),
+        ]
+
+    @pytest.mark.parametrize("last", [((100, 0),), (), ((100, 0), None)])
+    def test_mismatched_sentinel(self, last):
+        points = ((0, 0), (0, 100))
+        first = [("qCurveTo", (*points, None))]
+        second = [("qCurveTo", (*points, *last))]
+        for recordings in ((first, second), (second, first)):
+            with pytest.raises(ValueError, match="Mismatched qCurveTo operands"):
+                list(lerpRecordings(*recordings))
+
+    def test_oncurve_contour(self):
+        start = ("moveTo", [(0, 0)])
+        close = ("closePath", [])
+        first = [start, ("qCurveTo", iter([(0, 100), (100, 0)])), close]
+        second = [start, ("qCurveTo", [(0, 110), (90, 0)]), close]
+        expected = ("qCurveTo", [(0, 105), (95, 0)])
+        assert list(lerpRecordings(first, second)) == [start, expected, close]

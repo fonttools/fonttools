@@ -323,11 +323,23 @@ def lerpRecordings(recording1, recording2, factor=0.5):
             raise ValueError("Mismatched operations: %s, %s" % (op1, op2))
         if op1 == "addComponent":
             raise ValueError("Cannot interpolate components")
-        else:
-            mid_args = [
-                (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
-                for (x1, y1), (x2, y2) in zip(args1, args2)
-            ]
+
+        # A trailing None marks a qCurveTo with no on-curve points.
+        has_sentinel = False
+        if op1 == "qCurveTo":
+            args1, args2 = tuple(args1), tuple(args2)
+            has_sentinel = any(args and args[-1] is None for args in (args1, args2))
+        if has_sentinel:
+            if len(args1) != len(args2) or args1[-1] is not args2[-1]:
+                raise ValueError("Mismatched qCurveTo operands")
+            args1, args2 = args1[:-1], args2[:-1]
+
+        mid_args = [
+            (x1 + (x2 - x1) * factor, y1 + (y2 - y1) * factor)
+            for (x1, y1), (x2, y2) in zip(args1, args2)
+        ]
+        if has_sentinel:
+            mid_args.append(None)
         yield (op1, mid_args)
 
 
