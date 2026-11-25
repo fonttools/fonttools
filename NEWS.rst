@@ -1,3 +1,6 @@
+4.69.0 (released 2026-11-25)
+----------------------------
+
 - [svgPathPen] Add opt-in ``precision`` parameter to ``SVGPathPen`` (and
   ``--precision`` CLI option, defaulting to 2 decimal places) for rounded, compact
   numbers (#3547, #4358).
