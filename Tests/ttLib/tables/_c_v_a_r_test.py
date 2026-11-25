@@ -1,8 +1,10 @@
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
-from fontTools.ttLib import TTLibError, getTableModule, newTable
+from fontTools.ttLib import TTFont, TTLibError, getTableModule, newTable
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
+from io import BytesIO
+import array
 import unittest
 
 CVAR_DATA = deHexStr(
@@ -83,6 +85,18 @@ class CVARTableTest(unittest.TestCase):
         font, cvar = self.makeFont()
         cvar.variations = CVAR_VARIATIONS
         self.assertEqual(hexStr(cvar.compile(font)), hexStr(CVAR_PRIVATE_POINT_DATA))
+
+    def test_save_too_many_points(self):
+        tables, cvar = self.makeFont()
+        font = TTFont()
+        for tag, table in tables.items():
+            font[tag] = table
+        font["cvt "].values = array.array("h", [0] * 32769)
+        cvar.variations = [
+            TupleVariation({"wght": (0.0, 1.0, 1.0)}, [0] * 32768 + [None])
+        ]
+        with self.assertRaisesRegex(TTLibError, "more than 32767 point numbers"):
+            font.save(BytesIO())
 
     def test_compile_shared_points(self):
         font, cvar = self.makeFont()

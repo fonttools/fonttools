@@ -2,6 +2,7 @@ from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables.TupleVariation import (
     log,
     TupleVariation,
@@ -582,6 +583,24 @@ class TupleVariationTest(unittest.TestCase):
         allPoints = set(range(numPointsInGlyph))
         self.assertSetEqual(allPoints, decompile(compile(allPoints)))
         self.assertSetEqual(allPoints, decompile(compile(set())))
+
+    def test_decompilePoints_roundTrip_max_count(self):
+        points = set(range(32767))
+        data = TupleVariation.compilePoints(points)
+        decoded, offset = TupleVariation.decompilePoints_(40000, data, 0, "gvar")
+        self.assertSetEqual(points, set(decoded))
+        self.assertEqual(offset, len(data))
+
+    def test_compilePoints_too_many_points(self):
+        with self.assertRaisesRegex(TTLibError, "more than 32767 point numbers"):
+            TupleVariation.compilePoints(set(range(32768)))
+
+    def test_decompilePoints_roundTrip_all_points_large(self):
+        data = TupleVariation.compilePoints(set())
+        self.assertEqual(data, b"\0")
+        decoded, offset = TupleVariation.decompilePoints_(40000, data, 0, "gvar")
+        self.assertSetEqual(set(range(40000)), set(decoded))
+        self.assertEqual(offset, 1)
 
     def test_compileDeltas_points(self):
         var = TupleVariation({}, [None, (1, 0), (2, 0), None, (4, 0), None])

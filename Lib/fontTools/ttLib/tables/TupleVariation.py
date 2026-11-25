@@ -6,6 +6,7 @@ from fontTools.misc.fixedTools import (
     otRound,
 )
 from fontTools.misc.textTools import safeEval
+from fontTools.ttLib import TTLibError
 import array
 from collections import Counter, defaultdict
 import logging
@@ -227,6 +228,8 @@ class TupleVariation(object):
         points = list(points)
         points.sort()
         numPoints = len(points)
+        if numPoints > 0x7FFF:
+            raise TTLibError("Cannot encode more than 32767 point numbers")
 
         result = bytearray()
         # The binary representation starts with the total number of points in the set,
