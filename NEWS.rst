@@ -1,3 +1,110 @@
+- [svgPathPen] Add opt-in ``precision`` parameter to ``SVGPathPen`` (and
+  ``--precision`` CLI option, defaulting to 2 decimal places) for rounded, compact
+  numbers (#3547, #4358).
+- [subset] Add ``--retain-all-variation-sequences`` option to retain all Unicode
+  variation sequences for selected base codepoints without listing selectors explicitly
+  (#3865, #4353).
+- [merge] Print usage and exit cleanly for ``pyftmerge --help`` / ``-h`` (#524, #4356).
+- [cmap] Reject format 2 subtables where a byte is used as both a single-byte code and
+  a two-byte lead byte instead of silently dropping mappings (#1524, #4324).
+- [glyf] Round component XY offsets when calculating glyph bounds so instanced bounds
+  match the compiled table (#3795, #4374).
+- [feaLib/otlLib] Preserve the given contour point order for ``LigatureCaretByIndex``
+  rules instead of sorting point indices (#3608, #4357).
+- [otlLib] Fix shadowed class-pair kerning rules in ``ClassPairPosSubtableBuilder`` by
+  partitioning overlapping first-glyph classes while preserving pair iteration order
+  (#2793, #4381).
+- [varLib.iup] Validate IUP optimization both before and after rounding coordinates and
+  explicit deltas (#3636, #4382).
+- [otlLib] Balance ``SingleSubst`` subtable splitting by total lookup size times
+  subtable count (#3259, #4383).
+- [varLib.interpolatable] Handle sparse Designspace sources (separate UFOs or named
+  layers) without spurious missing-glyph errors (#4385, #4386).
+- [cffLib] Reconnect ``CharStrings.varStore`` after importing a variable CFF2 font from
+  TTX so ``getGlyphSet(location=...)`` renders variations (#4387, #4388).
+- [misc.filesystem] Fall back to copying over the target in ``WriteZipFS.close()`` when
+  ``os.replace()`` raises ``PermissionError`` on Windows, fixing saving ``.ufoz`` files
+  already open for reading (#4391, #4392).
+- [cffLib] Speed up subroutine renumbering by avoiding repeated linear index searches
+  (#4390).
+- [setup.py] Force Cython regeneration on free-threaded Python builds so published
+  ``cp313t``/``cp314t`` wheels do not re-enable the GIL on import (#4393, #4394).
+- [unicodedata] Generate ``Mirrored.py`` bidi mirroring data via
+  ``MetaTools/buildUCD.py`` (#3810, #4399).
+- [subset] Map ``Device`` variation indices whose delta sets are missing from ``GDEF``
+  ``VarStore`` to ``NO_VARIATION_INDEX`` (#4396).
+- [cffLib] Fix 4.68.0 regressions in ``CFF2ToCFF`` (load ``FDSelect`` before dropping
+  the CFF2 glyph order, #4401) and ``CFFToCFF2`` (load glyph order before removing the
+  ``CFF`` table, #4404).
+- [subset] Make ``COLR`` v0 layer ordering in COLRv1 tables (#4402) and tie-breaking
+  for ``bsln``/``prop`` default values (#4418) deterministic across runs.
+- [merge] Accept in-memory ``TTFont`` objects alongside filenames in ``Merger.merge()``
+  (#3764, #4407), and handle oversized BMP ``cmap`` format 4 subtables cleanly (#3698,
+  #4408).
+- [scaleUpem] Avoid emitting ``PaintScaleUniform`` when scaling a COLRv1 font by a
+  factor of 2, which overflows ``F2Dot14`` (#4405).
+- [reorderGlyphs] Fix ``CFF2`` charstring loading before reordering (#4411), reorder
+  ``FDSelect`` for CID-keyed ``CFF``/``CFF2`` fonts (#4416), and skip null coverages
+  such as ``MATH`` tables without horizontal variants (#4412).
+- [psCharStrings] Ignore unknown or reserved Type 1 and Type 2 charstring operators
+  instead of silently truncating the charstring (#4410).
+- [subset] Skip ``--recalc-max-context`` when the ``OS/2`` table is version 0 or 1,
+  which lack ``usMaxContext`` (#4417).
+- [cu2qu.ufo] Do not mark glyphs as modified or redraw curves when
+  ``all_quadratic=False`` leaves them cubic (#4419).
+- [ttLib] Apply ``--optimize-font-speed`` to every font, including fonts inside
+  collections (``.ttc``/``.otc``) (#4420).
+- [diff] Fix ``--color auto`` TTY detection, ``-t`` with only identical tables, and
+  errors during the binary check (#4421).
+- [subset] Preserve all standard ``name`` IDs (0-255) by default in ``pyftsubset``
+  (#4400, #4403).
+- [varLib.avar] Add reverse coordinate mapping for avar v1 and v2
+  (``varLib.avar.reverse`` and ``avar.map(..., reverse=True)``) with reusable
+  forward/reverse mappers, jump-boundary handling, and a compiled fast path (#4424,
+  #4432, #4433, #4434).
+- [varLib.avar] Add ``analyze``, ``reachability``, and ``plot`` APIs and CLIs for
+  inspecting avar mappings (#4444), handle default locations consistently in
+  ``varLib.avar.map`` (#4425), and return ``varLib.avar.plan``'s exit code from
+  ``varLib.avarPlanner`` (#4428).
+- [mtiLib] Match ``subtable end`` case-insensitively so uppercase variants do not hang
+  parsing (#4429).
+- [fontBuilder] Key axes by name in ``FontBuilder.setupAvar()`` so Designspace-style
+  ``AxisMappingDescriptor`` avar 2 mappings work (#4426).
+- [feaLib] Warn and skip duplicate ``languagesystem`` statements instead of raising an
+  error (#4423).
+- [varLib.interpolatable] Show normalized and lazy input coordinates for master and
+  midway locations (#4431, #4432), restrict master-tree comparisons to compatible axis
+  subspaces with ``--show-graph`` and opt-in terminal progress reporting (#4440), and
+  confirm candidate kink/underweight reports at the actual normalized midpoint (#4441).
+- [varLib.interpolatable] Add ``-j``/``--jobs`` batched worker processes (#4442) and
+  reuse expanded component outlines across statistics passes (#4443).
+- [ttGlyphSet] Speed up TrueType variable glyph instancing by accumulating scaled
+  ``gvar`` deltas in a single pass (#4445).
+- [designspaceLib] Validate ``processing`` across multiple ``<rules>`` elements and
+  reject conflicting values (#4409, #4439).
+- [varLib.instancer] Cull ``avar`` v2 variation regions that touch the reachable range
+  only at a zero-support endpoint (#4449).
+- [subset] Remap and retain component glyph IDs for composite ``EBDT``/``CBDT`` bitmap
+  glyphs (formats 8 and 9) (#4413, #4453).
+- [cu2qu] Compute the required number of quadratic segments directly in
+  ``curve_to_quadratic()`` instead of trial-building splines (#4452).
+- [ttLib] **SECURITY** Bound WOFF and WOFF2 font data and metadata decompression
+  against memory-exhaustion denial of service (``GHSA-868m-5w35-h9cq``): enforce
+  configurable pre-decompression size and ratio limits in ``fontTools.ttLib.sfnt``
+  (``WOFF_MAX_DECOMPRESSED_SIZE``, ``WOFF_MAX_METADATA_SIZE``,
+  ``WOFF_MAX_COMPRESSION_RATIO``, ``WOFF_MIN_RATIO_CHECK_SIZE``), switch zlib and
+  Brotli decoding to bounded streaming (with a chunked fallback for
+  ``brotli < 1.2.0``), and read table, metadata, and private payloads in bounded
+  chunks. Private ``_decompress(rawData, expectedSize)`` helpers now require
+  ``expectedSize``.
+- [qu2cu] Stop the curve fit test after 64 halvings and on a NaN error, as cu2qu
+  now does, so near-tolerance curves no longer recurse without end (a crash in the
+  compiled module); a NaN ``max_err`` now raises ``ValueError`` (#4455).
+- [head] Fix the offset added to very low ``created``/``modified`` timestamps that
+  are read as Unix time, which fell 4800 seconds short of the 1970 epoch (#4456).
+- [ttx] Show the axis name in a comment beside ``AxisIndex`` values in ``STAT``
+  XML dumps (#3219, #4398).
+
 4.68.0 (released 2026-10-27)
 ----------------------------
 
