@@ -2941,6 +2941,24 @@ class InstantiateVariableFontTest(object):
 
         assert _dump_ttx(instance) == expected
 
+    @pytest.mark.parametrize("static", [False, True])
+    def test_axis_limits_unchanged(self, varfont, static):
+        limits = {"wght": 400}
+
+        instancer.instantiateVariableFont(varfont, limits, static=static)
+
+        assert limits == {"wght": 400}
+
+    @pytest.mark.parametrize("reuse_limits", [True, False], ids=["reuse", "fresh"])
+    def test_reuse_static_axis_limits(self, varfont, varfont3, reuse_limits):
+        limits = {"wght": 400}
+
+        for font in (varfont, varfont3):
+            instance = instancer.instantiateVariableFont(
+                font, limits if reuse_limits else limits.copy(), static=True
+            )
+            assert "fvar" not in instance
+
     def test_move_weight_width_axis_default(self, varfont2):
         # https://github.com/fonttools/fonttools/issues/2885
         assert varfont2["OS/2"].usWeightClass == 400
