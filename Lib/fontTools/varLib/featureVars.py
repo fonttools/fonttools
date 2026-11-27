@@ -57,6 +57,13 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag="rvrn"):
     featureTags = [featureTag] if isinstance(featureTag, str) else sorted(featureTag)
     processLast = "rvrn" not in featureTags or len(featureTags) > 1
 
+    # Reject unsupported FeatureVariations table versions upfront, so the
+    # font is not left with stale LookupVariationRecord state after the
+    # feature list and lookup list have already been modified.
+    gsubTable = font.get("GSUB")
+    if gsubTable is not None:
+        _checkFeatureVariationsVersion(gsubTable.table)
+
     _checkSubstitutionGlyphsExist(
         glyphNames=set(font.getGlyphOrder()),
         substitutions=conditionalSubstitutions,
@@ -114,6 +121,20 @@ def _existingVariableFeatures(table):
             for ftsr in fvr.FeatureTableSubstitution.SubstitutionRecord:
                 existingFeatureVarsTags.add(features[ftsr.FeatureIndex].FeatureTag)
     return existingFeatureVarsTags
+
+
+def _checkFeatureVariationsVersion(table):
+    """Raise if the FeatureVariations table uses an unsupported version."""
+    if table is None:
+        return
+    featureVariations = getattr(table, "FeatureVariations", None)
+    if featureVariations is None:
+        return
+    if featureVariations.Version != 0x00010000:
+        raise VarLibError(
+            "Unsupported FeatureVariations table version: "
+            f"0x{featureVariations.Version:08x} (expected 0x00010000)."
+        )
 
 
 def _checkSubstitutionGlyphsExist(glyphNames, substitutions):
@@ -362,6 +383,11 @@ def addFeatureVariationsRaw(font, table, conditionalSubstitutions, featureTag="r
     """Low level implementation of addFeatureVariations that directly
     models the possibilities of the FeatureVariations table."""
 
+    # Reject unsupported FeatureVariations table versions upfront, so the
+    # font is not left with stale state when this function is called directly
+    # (bypassing addFeatureVariations).
+    _checkFeatureVariationsVersion(table)
+
     featureTags = [featureTag] if isinstance(featureTag, str) else sorted(featureTag)
     processLast = "rvrn" not in featureTags or len(featureTags) > 1
     featureList = ot._getLayoutList(table, "FeatureList")
@@ -564,6 +590,14 @@ def visit(visitor, obj, attr, value):
     setattr(obj, attr, visitor.shift + value)
 
 
+@ShifterVisitor.register_attr(ot.LookupIndexList, "LookupIndex")
+def visit(visitor, obj, attr, value):
+    # LookupIndex is an array of indices into GSUB/GPOS LookupList, referenced
+    # from LookupConditionRecord in FeatureVariations table version 1.1.
+    shift = visitor.shift
+    setattr(obj, attr, [i + shift for i in value])
+
+
 def buildSubstitutionLookups(gsub, allSubstitutions, processLast=False):
     """Build the lookups for the glyph substitutions, return a dict mapping
     the substitution to lookup indices."""
@@ -708,6 +742,10 @@ def remapFeatures(table, featureRemap):
                 continue
             for ftsr in fvr.FeatureTableSubstitution.SubstitutionRecord:
                 ftsr.FeatureIndex = featureRemap[ftsr.FeatureIndex]
+        # FeatureVariations table version 1.1 also stores feature indices on
+        # each LookupVariationRecord, which need remapping too.
+        for lvr in getattr(table.FeatureVariations, "LookupVariationRecord", []):
+            lvr.FeatureIndex = featureRemap[lvr.FeatureIndex]
 
 
 def _remapLangSys(langSys, featureRemap):
