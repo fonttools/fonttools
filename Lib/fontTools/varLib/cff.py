@@ -24,9 +24,9 @@ from functools import partial
 
 from .errors import (
     VarLibCFFDictMergeError,
+    VarLibCFFMergeError,
     VarLibCFFPointTypeMergeError,
     VarLibCFFHintTypeMergeError,
-    VarLibMergeError,
 )
 
 # Backwards compatibility
@@ -590,12 +590,12 @@ class CFF2CharStringMergePen(T2CharStringPen):
             # masks are represented by two cmd's: first has only op names,
             # second has only args.
             if lastOp in ["hintmask", "cntrmask"]:
-                coord = list(cmd[1])
-                if not allEqual(coord):
-                    raise VarLibMergeError(
-                        "Hintmask values cannot differ between source fonts."
+                masks = cmd[1][0]
+                if not allEqual(masks):
+                    raise VarLibCFFMergeError(
+                        f"Glyph '{self.glyphName}': {lastOp} values differ between source fonts."
                     )
-                cmd[1] = [coord[0][0]]
+                cmd[1] = [masks[0]]
             else:
                 coords = cmd[1]
                 new_coords = []
