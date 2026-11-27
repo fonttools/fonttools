@@ -140,7 +140,10 @@ class EllipticalArc(object):
 
             point1 = _map_point(point_transform, point1)
             point2 = _map_point(point_transform, point2)
-            target_point = _map_point(point_transform, target_point)
+            if i == num_segments - 1:
+                target_point = self.target_point
+            else:
+                target_point = _map_point(point_transform, target_point)
 
             yield point1, point2, target_point
 

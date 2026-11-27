@@ -1,4 +1,5 @@
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.pointPen import SegmentToPointPen
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.svgLib import parse_path
 
 import pytest
@@ -485,6 +486,38 @@ def test_arc_to_cubic_bezier():
         assert len(points1) == len(points2)
         for pt1, pt2 in zip(points1, points2):
             assert pt1 == pytest.approx(pt2, rel=1e-5)
+
+
+TWO_HALF_CIRCLE_ARCS = "M10,0 A10,10 0 1,1 -10,0 A10,10 0 1,1 10,0 Z"
+
+
+@pytest.mark.parametrize(
+    "pathdef, endpoint",
+    [
+        (TWO_HALF_CIRCLE_ARCS, (10.0, 0.0)),
+        ("M0,0 A100,50 30 0 1 1,2", (1.0, 2.0)),
+    ],
+    ids=["closed", "off-axis"],
+)
+def test_arc_cubic_ends_at_target(pathdef, endpoint):
+    pen = RecordingPen()
+    parse_path(pathdef, pen)
+
+    command, points = pen.value[-2]
+    assert command == "curveTo"
+    assert points[-1] == endpoint
+
+
+def test_closed_arc_point_pen():
+    pen = RecordingPen()
+    parse_path(TWO_HALF_CIRCLE_ARCS, pen)
+
+    point_pen = RecordingPointPen()
+    pen.replay(SegmentToPointPen(point_pen, guessSmooth=False))
+    points = [args for command, args, _ in point_pen.value if command == "addPoint"]
+    on_curve = [point for point in points if point[1] is not None]
+
+    assert (len(points), len(on_curve)) == (12, 4)
 
 
 class ArcRecordingPen(RecordingPen):
