@@ -1439,6 +1439,16 @@ class Parser(object):
         statements = table.statements
         numbers = (
             "FSType",
+            "SubscriptXSize",
+            "SubscriptYSize",
+            "SubscriptXOffset",
+            "SubscriptYOffset",
+            "SuperscriptXSize",
+            "SuperscriptYSize",
+            "SuperscriptXOffset",
+            "SuperscriptYOffset",
+            "StrikeoutSize",
+            "StrikeoutPosition",
             "TypoAscender",
             "TypoDescender",
             "TypoLineGap",
@@ -1465,6 +1475,8 @@ class Parser(object):
                 value = None
                 if self.cur_token_ in numbers:
                     value = self.expect_number_()
+                elif self.is_cur_keyword_("FamilyClass"):
+                    value = self.expect_any_number_()
                 elif self.is_cur_keyword_("Panose"):
                     value = []
                     for i in range(10):

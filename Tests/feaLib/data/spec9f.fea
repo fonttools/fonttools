@@ -16,4 +16,16 @@ table OS/2 {
    WeightClass 800;
    WidthClass 3;
    Vendor "ADBE";
+#test-fea2fea: FamilyClass 2053;
+   FamilyClass 0x0805;
+   SubscriptXSize 650;
+   SubscriptYSize 600;
+   SubscriptXOffset -50;
+   SubscriptYOffset 75;
+   SuperscriptXSize 640;
+   SuperscriptYSize 590;
+   SuperscriptXOffset 40;
+   SuperscriptYOffset 350;
+   StrikeoutSize 45;
+   StrikeoutPosition 250;
 } OS/2;

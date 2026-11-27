@@ -2025,6 +2025,13 @@ class ParserTest(unittest.TestCase):
             "table OS/2 { UnicodeRange 0 200; } OS/2;",
         )
 
+    def test_table_OS_2_family_class_hex(self):
+        doc = self.parse("table OS/2 { FamilyClass 0x0805; } OS/2;")
+        field = doc.statements[0].statements[0]
+        self.assertEqual(field.asFea(), "FamilyClass 2053;")
+        reparsed = self.parse(doc.asFea()).statements[0].statements[0]
+        self.assertEqual(reparsed.value, 2053)
+
     def test_table_badEnd(self):
         self.assertRaisesRegex(
             FeatureLibError,
