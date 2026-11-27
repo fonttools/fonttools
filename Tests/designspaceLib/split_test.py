@@ -256,6 +256,58 @@ def test_split_variable_font_preserves_zero_axis_default():
     assert axis.maximum == 20
 
 
+@pytest.mark.parametrize("new_default", [400, 500])
+@pytest.mark.parametrize("map_type", ["mapped", "explicit_cut_nodes", "unmapped"])
+def test_split_variable_font_preserves_axis_map(new_default, map_type):
+    doc = DesignSpaceDocument()
+    axis = doc.addAxisDescriptor(
+        name="Weight", tag="wght", minimum=100, default=400, maximum=900
+    )
+    if map_type != "unmapped":
+        axis.map = [(100, 100), (330, 302), (400, 400), (567, 659), (900, 900)]
+    if map_type == "explicit_cut_nodes":
+        axis.map = sorted(
+            axis.map + [(user, axis.map_forward(user)) for user in (200, 500, 800)]
+        )
+    original_map = list(axis.map)
+    for user in (100, 200, 400, 500, 800, 900):
+        doc.addSourceDescriptor(
+            name=f"Master{user}",
+            filename=f"Master{user}.ufo",
+            location={"Weight": axis.map_forward(user)},
+        )
+    doc.addVariableFontDescriptor(
+        name="Subset",
+        axisSubsets=[
+            RangeAxisSubsetDescriptor(
+                name="Weight",
+                userMinimum=200,
+                userDefault=new_default,
+                userMaximum=800,
+            )
+        ],
+    )
+
+    ((_, subset),) = splitVariableFonts(doc)
+    subset_axis = subset.axes[0]
+
+    for user in (200, 300, 330, 400, 500, 567, 700, 800):
+        assert subset_axis.map_forward(user) == pytest.approx(axis.map_forward(user))
+    assert axis.map == original_map
+    assert [source.name for source in subset.sources] == [
+        f"Master{user}" for user in (200, 400, 500, 800)
+    ]
+    if map_type == "unmapped":
+        assert subset_axis.map == []
+    else:
+        assert {200, new_default, 800} <= {user for user, _ in subset_axis.map}
+        assert subset_axis.map == sorted(set(subset_axis.map))
+        if map_type == "explicit_cut_nodes":
+            assert subset_axis.map == [
+                (user, design) for user, design in original_map if 200 <= user <= 800
+            ]
+
+
 @pytest.mark.parametrize(
     ["condition", "expected_set"],
     [
