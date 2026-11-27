@@ -490,6 +490,28 @@ class Builder(object):
                 panose.bXHeight,
             ) = self.os2_["panose"]
             table.panose = panose
+        if "familyclass" in self.os2_:
+            table.sFamilyClass = self.os2_["familyclass"]
+        if "subscriptxsize" in self.os2_:
+            table.ySubscriptXSize = self.os2_["subscriptxsize"]
+        if "subscriptysize" in self.os2_:
+            table.ySubscriptYSize = self.os2_["subscriptysize"]
+        if "subscriptxoffset" in self.os2_:
+            table.ySubscriptXOffset = self.os2_["subscriptxoffset"]
+        if "subscriptyoffset" in self.os2_:
+            table.ySubscriptYOffset = self.os2_["subscriptyoffset"]
+        if "superscriptxsize" in self.os2_:
+            table.ySuperscriptXSize = self.os2_["superscriptxsize"]
+        if "superscriptysize" in self.os2_:
+            table.ySuperscriptYSize = self.os2_["superscriptysize"]
+        if "superscriptxoffset" in self.os2_:
+            table.ySuperscriptXOffset = self.os2_["superscriptxoffset"]
+        if "superscriptyoffset" in self.os2_:
+            table.ySuperscriptYOffset = self.os2_["superscriptyoffset"]
+        if "strikeoutsize" in self.os2_:
+            table.yStrikeoutSize = self.os2_["strikeoutsize"]
+        if "strikeoutposition" in self.os2_:
+            table.yStrikeoutPosition = self.os2_["strikeoutposition"]
         if "typoascender" in self.os2_:
             table.sTypoAscender = self.os2_["typoascender"]
         if "typodescender" in self.os2_:

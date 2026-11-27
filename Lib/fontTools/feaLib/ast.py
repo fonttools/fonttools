@@ -1919,6 +1919,17 @@ class OS2Field(Statement):
 
         numbers = (
             "FSType",
+            "FamilyClass",
+            "SubscriptXSize",
+            "SubscriptYSize",
+            "SubscriptXOffset",
+            "SubscriptYOffset",
+            "SuperscriptXSize",
+            "SuperscriptYSize",
+            "SuperscriptXOffset",
+            "SuperscriptYOffset",
+            "StrikeoutSize",
+            "StrikeoutPosition",
             "TypoAscender",
             "TypoDescender",
             "TypoLineGap",

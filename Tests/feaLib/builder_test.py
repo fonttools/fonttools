@@ -280,9 +280,9 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(font, feapath)
         self.expect_ttx(font, self.getpath("%s.ttx" % name))
         # Check that:
-        # 1) tables do compile (only G* tables as long as we have a mock font)
+        # 1) these tables compile with the mock font
         # 2) dumping after save-reload yields the same TTX dump as before
-        for tag in ("GDEF", "GSUB", "GPOS"):
+        for tag in ("GDEF", "GSUB", "GPOS", "OS/2"):
             if tag in font:
                 data = font[tag].compile(font)
                 font[tag].decompile(data, font)
