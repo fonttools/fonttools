@@ -9,6 +9,7 @@ from fontTools.designspaceLib import (
     DesignSpaceDocument,
     DiscreteAxisDescriptor,
     RangeAxisSubsetDescriptor,
+    SourceDescriptor,
     VariableFontDescriptor,
 )
 from fontTools.designspaceLib.split import (
@@ -117,6 +118,44 @@ def test_split(datadir, tmpdir, test_ds, expected_interpolable_spaces):
                 assert data_out.read_text(encoding="utf-8") == temp_out.read_text(
                     encoding="utf-8"
                 )
+
+
+def test_split_preserves_variable_font_filenames(tmp_path):
+    doc = DesignSpaceDocument()
+    doc.addAxisDescriptor(
+        name="Weight", tag="wght", minimum=400, default=400, maximum=700
+    )
+    for name, weight in [("Thin", 400), ("Thick", 700)]:
+        doc.addSource(
+            SourceDescriptor(
+                name=name,
+                filename=f"masters/{name}.ufo",
+                designLocation={"Weight": weight},
+            )
+        )
+    for name in ["BodyVF", "DisplayVF"]:
+        doc.addVariableFont(
+            VariableFontDescriptor(
+                name=name,
+                filename=f"fonts/{name}.ttf",
+                axisSubsets=[RangeAxisSubsetDescriptor(name="Weight")],
+            )
+        )
+
+    for name, split_doc in splitVariableFonts(doc):
+        output = tmp_path / f"{name}.designspace"
+        split_doc.write(output)
+        restored = DesignSpaceDocument.fromfile(output)
+        assert [(vf.name, vf.filename) for vf in restored.variableFonts] == [
+            (name, f"fonts/{name}.ttf")
+        ]
+
+    for name, converted in convert5to4(doc).items():
+        output = tmp_path / f"v4-{name}.designspace"
+        converted.write(output)
+        restored = DesignSpaceDocument.fromfile(output)
+        assert restored.formatTuple == (4, 1)
+        assert restored.variableFonts == []
 
 
 @pytest.mark.parametrize(

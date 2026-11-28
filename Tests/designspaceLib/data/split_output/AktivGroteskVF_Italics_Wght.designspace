@@ -47,6 +47,13 @@
       </location>
     </source>
   </sources>
+  <variable-fonts>
+    <variable-font name="AktivGroteskVF_Italics_Wght">
+      <axis-subsets>
+        <axis-subset name="Weight"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
   <instances>
     <instance name="Aktiv Grotesk Hair Italic" familyname="Aktiv Grotesk" stylename="Hair Italic" filename="../instances/AktivGrotesk_HairIt.ufo" postscriptfontname="AktivGrotesk-HairItalic" stylemapfamilyname="Aktiv Grotesk Hair" stylemapstylename="italic">
       <location>

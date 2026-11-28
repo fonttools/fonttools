@@ -36,6 +36,13 @@
       </location>
     </source>
   </sources>
+  <variable-fonts>
+    <variable-font name="MutatorSansVariable_Weight">
+      <axis-subsets>
+        <axis-subset name="weight"/>
+      </axis-subsets>
+    </variable-font>
+  </variable-fonts>
   <instances>
     <instance name="MutatorMathTest Sans Light Condensed" familyname="MutatorMathTest" stylename="Sans Light Condensed" filename="MutatorMathTest-Sans Light Condensed.ttf" postscriptfontname="MutatorMathTest-SansLightCondensed" stylemapfamilyname="MutatorMathTest Sans Light Condensed" stylemapstylename="regular">
       <location>

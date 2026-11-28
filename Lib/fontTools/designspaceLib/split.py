@@ -7,7 +7,7 @@ from __future__ import annotations
 import itertools
 import logging
 import math
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple, cast
 
 from fontTools.designspaceLib import (
     AxisDescriptor,
@@ -146,7 +146,7 @@ def splitInterpolable(
         subDoc = _extractSubSpace(
             doc,
             {**interpolableUserRegion, **discreteUserLocation},
-            keepVFs=True,
+            variableFonts=doc.getVariableFonts(),
             makeNames=makeNames,
             expandLocations=expandLocations,
             makeInstanceFilename=makeInstanceFilename,
@@ -163,6 +163,9 @@ def splitVariableFonts(
     """Convert each variable font listed in this document into a standalone
     designspace. This can be used to compile all the variable fonts from a
     format 5 designspace using tools that can only deal with 1 VF at a time.
+
+    Each result retains its variable-font descriptor, including its filename.
+    Use :func:`convert5to4` to omit this metadata for format 4 consumers.
 
     Args:
       - ``makeNames``: Whether to compute the instance family and style
@@ -183,7 +186,7 @@ def splitVariableFonts(
         vfDoc = _extractSubSpace(
             doc,
             vfUserRegion,
-            keepVFs=False,
+            variableFonts=(vf,),
             makeNames=makeNames,
             expandLocations=expandLocations,
             makeInstanceFilename=makeInstanceFilename,
@@ -209,6 +212,7 @@ def convert5to4(
     vfs = {}
     for _location, subDoc in splitInterpolable(doc):
         for vfName, vfDoc in splitVariableFonts(subDoc):
+            vfDoc.variableFonts = []
             vfDoc.formatVersion = "4.1"
             vfs[vfName] = vfDoc
     return vfs
@@ -218,7 +222,7 @@ def _extractSubSpace(
     doc: DesignSpaceDocument,
     userRegion: Region,
     *,
-    keepVFs: bool,
+    variableFonts: Iterable[VariableFontDescriptor],
     makeNames: bool,
     expandLocations: bool,
     makeInstanceFilename: MakeInstanceFilenameCallable,
@@ -344,23 +348,21 @@ def _extractSubSpace(
         vfDefault.localisedFamilyName = oldDefault.localisedFamilyName
 
     # Variable fonts: keep only the ones that fall within the kept axis ranges
-    if keepVFs:
-        # Note: call getVariableFont() to make the implicit VFs explicit
-        for vf in doc.getVariableFonts():
-            vfUserRegion = getVFUserRegion(doc, vf)
-            if regionInRegion(vfUserRegion, userRegion):
-                subDoc.addVariableFont(
-                    VariableFontDescriptor(
-                        name=vf.name,
-                        filename=vf.filename,
-                        axisSubsets=[
-                            axisSubset
-                            for axisSubset in vf.axisSubsets
-                            if isinstance(userRegion[axisSubset.name], Range)
-                        ],
-                        lib=vf.lib,
-                    )
+    for vf in variableFonts:
+        vfUserRegion = getVFUserRegion(doc, vf)
+        if regionInRegion(vfUserRegion, userRegion):
+            subDoc.addVariableFont(
+                VariableFontDescriptor(
+                    name=vf.name,
+                    filename=vf.filename,
+                    axisSubsets=[
+                        axisSubset
+                        for axisSubset in vf.axisSubsets
+                        if isinstance(userRegion[axisSubset.name], Range)
+                    ],
+                    lib=vf.lib,
                 )
+            )
 
     # Instances: same as Sources + compute missing names
     for instance in doc.instances:

@@ -67,6 +67,36 @@
       </location>
     </source>
   </sources>
+  <variable-fonts>
+    <variable-font name="SourceSerif4Variable-Roman">
+      <axis-subsets>
+        <axis-subset name="weight"/>
+        <axis-subset name="optical"/>
+      </axis-subsets>
+      <lib>
+        <dict>
+          <key>public.skipExportGlyphs</key>
+          <array>
+            <string>caron.alt</string>
+            <string>commabelowcmb.alt</string>
+            <string>tonos.cap</string>
+            <string>f.ligalong</string>
+            <string>dieresiscmb.tight</string>
+            <string>IJ</string>
+            <string>Tbar</string>
+            <string>colontriangularmod</string>
+            <string>crossmark</string>
+            <string>ij</string>
+            <string>overline</string>
+            <string>similar</string>
+            <string>tbar</string>
+            <string>triangularbullet</string>
+            <string>turkicdsccmb</string>
+          </array>
+        </dict>
+      </lib>
+    </variable-font>
+  </variable-fonts>
   <instances>
     <instance name="Source Serif 4 Caption ExtraLight" familyname="Source Serif 4" stylename="Caption ExtraLight" filename="Source Serif 4-Caption ExtraLight.ttf" postscriptfontname="SourceSerif4Roman-CaptionExtraLight" stylemapfamilyname="Source Serif 4 Caption ExtraLight" stylemapstylename="regular">
       <location>
