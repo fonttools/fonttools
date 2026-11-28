@@ -1083,6 +1083,15 @@ class DeltaSetIndexMap(getFormatSwitchingBaseTableClass("uint8")):
         rawTable["EntryFormat"] = self.getEntryFormat(mapping)
         return rawTable
 
+    def toXML(self, xmlWriter, font, attrs=None, name=None):
+        # The binary format is derived from the mapping length in preWrite
+        name = name or self.__class__.__name__
+        xmlWriter.begintag(name, attrs or [])
+        xmlWriter.newline()
+        self.toXML2(xmlWriter, font)
+        xmlWriter.endtag(name)
+        xmlWriter.newline()
+
     def toXML2(self, xmlWriter, font):
         # Make xml dump less verbose, by omitting no-op entries like:
         #   <Map index="..." outer="65535" inner="65535"/>

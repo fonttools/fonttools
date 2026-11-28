@@ -172,7 +172,7 @@
         </ClipBox>
       </Clip>
     </ClipList>
-    <VarIndexMap Format="0">
+    <VarIndexMap>
       <!-- Omitted values default to 0xFFFF/0xFFFF (no variations) -->
       <Map index="0" outer="0" inner="1"/>
       <Map index="1"/>

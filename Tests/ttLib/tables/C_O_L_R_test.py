@@ -546,7 +546,7 @@ COLR_V1_XML = [
 ]
 
 COLR_V1_VAR_XML = [
-    '<VarIndexMap Format="0">',
+    "<VarIndexMap>",
     "  <!-- Omitted values default to 0xFFFF/0xFFFF (no variations) -->",
     '  <Map index="0" outer="1" inner="0"/>',
     '  <Map index="1"/>',
@@ -648,10 +648,12 @@ class COLR_V1_Test(object):
 
 
 class COLR_V1_Variable_Test(object):
-    def test_round_trip_xml(self, font):
+    @pytest.mark.parametrize("map_tag", ["<VarIndexMap>", '<VarIndexMap Format="0">'])
+    def test_round_trip_xml(self, font, map_tag):
         colr = table_C_O_L_R_()
         xml = COLR_V1_XML + COLR_V1_VAR_XML
-        for name, attrs, content in parseXML(xml):
+        input_xml = COLR_V1_XML + [map_tag] + COLR_V1_VAR_XML[1:]
+        for name, attrs, content in parseXML(input_xml):
             colr.fromXML(name, attrs, content, font)
         compiled = colr.compile(font)
 
