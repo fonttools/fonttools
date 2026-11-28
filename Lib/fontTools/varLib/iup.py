@@ -394,6 +394,41 @@ def _rot_set(s: set, k: int, n: int):
     return {(v + k) % n for v in s}
 
 
+def _iup_circular_solution(chain, costs, n):
+    # A candidate ending at i covers one lap if its chain visits i - n.
+    # Number the predecessor tree in preorder so each subtree is an interval.
+    # The last slot represents the common root, chain index -1.
+    count = 2 * n
+    size = [1] * (count + 1)
+    for i in reversed(range(count)):
+        size[chain[i]] += size[i]
+
+    # Allocate each child's interval from the right of its parent's interval.
+    # Once all children have taken their slots, order[i] is i's own label.
+    order = [0] * (count + 1)
+    order[-1] = count
+    for i in range(count):
+        parent = chain[i]
+        order[i] = order[parent]
+        order[parent] -= size[i]
+
+    best = n - 1  # Its chain always reaches -1.
+    best_cost = costs[best]
+    for end in range(n, count):
+        start = end - n
+        if order[start] <= order[end] < order[start] + size[start]:
+            cost = costs[end] - costs[start]
+            if cost <= best_cost:
+                best, best_cost = end, cost
+
+    solution = set()
+    i = best
+    while i > best - n:
+        solution.add(i % n)
+        i = chain[i]
+    return solution
+
+
 def iup_contour_optimize(
     deltas: _DeltaSegment, coords: _PointSegment, tolerance: Real = 0.0
 ) -> _DeltaOrNoneSegment:
@@ -513,27 +548,8 @@ def iup_contour_optimize(
                 rounded_coords + rounded_coords if rounded_coords is not None else None
             ),
         )
-        best_sol, best_cost = None, n + 1
-
-        for start in range(n - 1, len(costs) - 1):
-            # Assemble solution.
-            solution = set()
-            i = start
-            while i > start - n:
-                solution.add(i % n)
-                i = chain[i]
-            if i == start - n:
-                cost = costs[start] - costs[start - n]
-                if cost <= best_cost:
-                    best_sol, best_cost = solution, cost
-
-        # if not forced <= best_sol:
-        # 	print("coord", coords)
-        # 	print("deltas", deltas)
-        # 	print("len", len(deltas))
-        assert forced <= best_sol, (forced, best_sol)
-
-        deltas = [deltas[i] if i in best_sol else None for i in range(n)]
+        solution = _iup_circular_solution(chain, costs, n)
+        deltas = [deltas[i] if i in solution else None for i in range(n)]
 
     return deltas
 
