@@ -120,6 +120,16 @@ class IupTest:
         assert chain1 == chain2, f
         assert costs1 == costs2, f
 
+    @pytest.mark.parametrize(
+        "rotation, expected",
+        [(0, [0, 7, 11]), (1, [6, 10, 11]), (6, [1, 5, 6]), (11, [0, 1, 8])],
+    )
+    def test_optimize_circular_ties(self, rotation, expected):
+        coords = [((i + rotation) % 12, 0) for i in range(12)]
+        deltas = [(10 * x, 0) for x, y in coords]
+        optimized = iup.iup_contour_optimize(deltas, coords)
+        assert [i for i, d in enumerate(optimized) if d is not None] == expected
+
     @pytest.mark.parametrize("delta", [1, -2])
     def test_optimize_preserves_rounded_deltas(self, delta):
         coords = [(0, 0), (0.125, 10), (0.25, 20)]
