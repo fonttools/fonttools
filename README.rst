@@ -282,6 +282,8 @@ spicysharkco, sulaimwn, Adam Twardoch, Adrien Tétar, Vitaly Volkov, Paul Wise, 
 Copyrights
 ~~~~~~~~~~
 
+Copyright (c) 2026 oxura.
+
 | Copyright (c) 1999-2004 Just van Rossum, LettError
   (just@letterror.com)
 | See `LICENSE <LICENSE>`__ for the full license.

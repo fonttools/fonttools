@@ -42,6 +42,10 @@ When you run the ``pytest`` command, the tests will run against the
 installed fontTools package, or the first one found in the
 ``PYTHONPATH``.
 
+Source distributions include the TFM and VOLT test fixtures. From an
+unpacked archive, run ``pytest Tests/tfmLib Tests/voltLib`` with its ``Lib``
+directory on ``PYTHONPATH`` to check those formats.
+
 You can also use `tox <https://tox.readthedocs.io/en/latest/>`__ to
 automatically run tests on different Python versions in isolated virtual
 environments::
