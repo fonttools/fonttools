@@ -419,13 +419,17 @@ def _extFileName(glyphName):
     return "%" + quote(glyphName, safe="", encoding="utf-8", errors="surrogatepass")
 
 
-def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
+def _writeExtFileImageData(
+    strikeIndex, glyphName, bitmapObject, writer, ttFont, tableTag=None
+):
     try:
         folder = os.path.dirname(writer.file.name)
     except AttributeError:
         # fall back to current directory if output file's directory isn't found
         folder = "."
     folder = os.path.join(folder, "bitmaps")
+    if tableTag is not None:
+        folder = os.path.join(folder, tableTag)
     filename = _extFileName(glyphName) + bitmapObject.fileExtension
     if not os.path.isdir(folder):
         os.makedirs(folder)

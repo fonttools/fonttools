@@ -55,7 +55,7 @@ Dump options
              file as hex data instead of assembly. This saves some time
              and makes the TTX file smaller.
 -z <format>  Specify a bitmap data export option for EBDT:
-             {'raw', 'row', 'bitwise', 'extfile'} or for the CBDT:
+             {'raw', 'row', 'bitwise', 'extfile'} or for CBDT and sbix:
              {'raw', 'extfile'} Each option does one of the following:
 
              -z raw
