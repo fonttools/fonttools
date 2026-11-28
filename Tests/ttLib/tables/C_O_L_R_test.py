@@ -655,6 +655,7 @@ class COLR_V1_Variable_Test(object):
         input_xml = COLR_V1_XML + [map_tag] + COLR_V1_VAR_XML[1:]
         for name, attrs, content in parseXML(input_xml):
             colr.fromXML(name, attrs, content, font)
+        assert "<VarIndexMap>" in getXML(colr.toXML, font)
         compiled = colr.compile(font)
 
         colr = table_C_O_L_R_()
