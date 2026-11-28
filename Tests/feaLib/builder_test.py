@@ -967,6 +967,19 @@ class BuilderTest(unittest.TestCase):
         font = self.build('table OS/2 { Vendor "AB"; } OS/2;')
         self.assertEqual(font["OS/2"].achVendID, "AB  ")
 
+    def test_OS2_optical_point_sizes_in_twips(self):
+        # LowerOpSize/UpperOpSize are given in twips (20 x point size) in the
+        # .fea file, whereas the OS/2 table object keeps them in points.
+        # 125 twips is not a whole point size, so it must survive as 6.25.
+        font = self.build("table OS/2 { LowerOpSize 125; UpperOpSize 240; } OS/2;")
+        os2 = font["OS/2"]
+        self.assertEqual(os2.usLowerOpticalPointSize, 6.25)
+        self.assertEqual(os2.usUpperOpticalPointSize, 12)
+        data = os2.compile(font)
+        self.assertEqual(os2.version, 5)
+        self.assertEqual(int.from_bytes(data[-4:-2], "big"), 125)
+        self.assertEqual(int.from_bytes(data[-2:], "big"), 240)
+
     def test_STAT_design_axis_name(self):
         self.assertRaisesRegex(
             FeatureLibError,
